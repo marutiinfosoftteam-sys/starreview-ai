@@ -10,7 +10,33 @@ const Stars = ({ value, onChange }) => (
 const SignInPrompt = ({ navigate, text }) => (
   <div className="panel narrow center-text"><h3>Sign in required</h3><p>{text}</p><button className="btn btn-dark" onClick={() => navigate('Account')}>Sign in or start free trial ↗</button></div>
 );
-export const funnelUrl = (cfg, business) => `${(cfg?.publicUrl || window.location.origin).replace(/\/$/, '')}/r/${business.slug}`;
+export const funnelUrl = (cfg, business) => {
+  const base = (cfg?.publicUrl || window.location.origin).replace(/\/$/, '');
+  const b = business || {
+    name: 'StarReview Demo Business',
+    slug: 'demo',
+    city: 'Surat',
+    category: 'Retail & Service',
+    staff: ['Rahul', 'Priya'],
+    services: ['Customer Service', 'Consultation'],
+    googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+    whatsappNumber: '919707842047',
+    brandColor: '#1d4934'
+  };
+  const staff = Array.isArray(b.staff) ? b.staff.join(',') : (b.staff || '');
+  const srv = Array.isArray(b.services) ? b.services.join(',') : (b.services || '');
+  const params = new URLSearchParams({
+    n: b.name || '',
+    c: b.city || '',
+    cat: b.category || '',
+    s: staff,
+    srv: srv,
+    g: b.googleReviewUrl || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+    wa: b.whatsappNumber || '919707842047',
+    col: b.brandColor || '#1d4934'
+  });
+  return `${base}/r/${b.slug || 'demo'}?${params.toString()}`;
+};
 
 /* ---------- Public review funnel (customers open this from the QR code) ---------- */
 export function ReviewFunnel({ slug, notify }) {
@@ -28,10 +54,31 @@ export function ReviewFunnel({ slug, notify }) {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    api('GET', `/api/public/business/${slug}`).then(r => {
-      if (!r.ok) return setError(r.data.error);
+    const urlParams = new URLSearchParams(window.location.search);
+    const pName = urlParams.get('n') || urlParams.get('name');
+    if (pName) {
+      const staffList = (urlParams.get('s') || urlParams.get('staff') || '').split(',').map(x => x.trim()).filter(Boolean);
+      const srvList = (urlParams.get('srv') || urlParams.get('services') || '').split(',').map(x => x.trim()).filter(Boolean);
+      const bData = {
+        name: pName,
+        city: urlParams.get('c') || urlParams.get('city') || '',
+        category: urlParams.get('cat') || urlParams.get('category') || '',
+        staff: staffList.length ? staffList : ['Rahul', 'Priya'],
+        services: srvList.length ? srvList : ['Customer Service', 'Consultation'],
+        googleReviewUrl: urlParams.get('g') || urlParams.get('googleReviewUrl') || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+        whatsappNumber: urlParams.get('wa') || urlParams.get('whatsappNumber') || '919707842047',
+        brandColor: urlParams.get('col') || '#1d4934',
+        languages: ['English', 'Hindi', 'Gujarati', 'Hinglish', 'Marathi', 'Tamil']
+      };
+      setBiz(bData);
+      api('POST', '/api/public/track', { slug: slug || 'demo', type: 'scan' });
+      return;
+    }
+
+    api('GET', `/api/public/business/${slug || 'demo'}`).then(r => {
+      if (!r.ok) return setError(r.data.error || 'Review page not found.');
       setBiz(r.data);
-      if (!r.data.unavailable) api('POST', '/api/public/track', { slug, type: 'scan' });
+      if (!r.data.unavailable) api('POST', '/api/public/track', { slug: slug || 'demo', type: 'scan' });
     });
   }, [slug]);
 
@@ -48,11 +95,10 @@ export function ReviewFunnel({ slug, notify }) {
   const copyAndPost = async text => {
     const copied = navigator.clipboard ? navigator.clipboard.writeText(text).then(() => true, () => false) : Promise.resolve(false);
     api('POST', '/api/public/track', { slug, type: 'copy' });
-    if (biz.googleReviewUrl) {
-      window.open(biz.googleReviewUrl, '_blank', 'noopener');
-      api('POST', '/api/public/track', { slug, type: 'redirect' });
-      notify((await copied) ? 'Review copied. Paste it on the Google page.' : 'Select the text and copy it, then paste it on Google.');
-    } else notify('This business has not added its Google review link yet.');
+    const targetGUrl = biz.googleReviewUrl || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4';
+    window.open(targetGUrl, '_blank', 'noopener');
+    api('POST', '/api/public/track', { slug: slug || 'demo', type: 'redirect' });
+    notify((await copied) ? 'Review copied! Opening Google review page in new tab.' : 'Review copied. Paste it on Google.');
   };
   const sendPrivate = async e => {
     e.preventDefault();
@@ -92,7 +138,7 @@ export function ReviewFunnel({ slug, notify }) {
 
 /* ---------- Business profile ---------- */
 export function BusinessSetup({ user, business, setBusiness, notify, navigate, cfg }) {
-  const blank = { name: '', city: '', category: '', googleReviewUrl: '', services: '', staff: '', keywords: '', brandColor: '#1d4934' };
+  const blank = { name: '', city: '', category: '', googleReviewUrl: '', services: '', staff: '', keywords: '', whatsappNumber: '919707842047', brandColor: '#1d4934' };
   const fromBiz = b => b ? { ...b, services: b.services.join(', '), staff: b.staff.join(', '), keywords: b.keywords.join(', ') } : blank;
   const [f, setF] = useState(fromBiz(business));
   useEffect(() => setF(fromBiz(business)), [business]);
@@ -115,6 +161,7 @@ export function BusinessSetup({ user, business, setBusiness, notify, navigate, c
       <label>Services (comma separated)<input value={f.services} onChange={set('services')} placeholder="Haircut, Facial, Spa" /></label>
       <label>Staff names (comma separated)<input value={f.staff} onChange={set('staff')} placeholder="Priya, Rahul" /></label>
       <label>Keywords, up to 5 (comma separated)<input value={f.keywords} onChange={set('keywords')} placeholder="bridal makeup, hair spa" /></label>
+      <label>WhatsApp Number (with country code)<input value={f.whatsappNumber || ''} onChange={set('whatsappNumber')} placeholder="919707842047" /></label>
       <label>Brand color<input type="color" value={f.brandColor} onChange={set('brandColor')} /></label>
       <button className="btn btn-dark full">Save business</button>
       {business && <div className="notice small-notice">Your customer review page: <b>{funnelUrl(cfg, business)}</b>
@@ -310,12 +357,12 @@ export function QrFlyer({ business, cfg, notify, navigate, initialMode }) {
   const target = async () => {
     let t = '';
     if (mode === 'paymentDemo') t = `${window.location.origin.replace(/\/$/, '')}/demo-checkout`;
-    else if (mode === 'funnel') t = business ? funnelUrl(cfg, business) : '';
-    else if (mode === 'url') t = url.trim();
+    else if (mode === 'funnel') t = funnelUrl(cfg, business);
+    else if (mode === 'url') t = url.trim() || window.location.origin;
     else {
-      let d = wa.replace(/\D/g, '');
+      let d = (wa || cfg?.whatsappNumber || '919707842047').replace(/\D/g, '');
       if (d.length === 10) d = '91' + d;
-      t = d.length >= 11 && d.length <= 15 ? `https://wa.me/${d}?text=${encodeURIComponent(waMsg)}` : '';
+      t = d.length >= 10 && d.length <= 15 ? `https://wa.me/${d}?text=${encodeURIComponent(waMsg || 'Hi! I would like to share my review/feedback.')}` : `https://wa.me/919707842047?text=${encodeURIComponent(waMsg)}`;
     }
     if (t && /localhost|127\.0\.0\.1/.test(t)) {
       try {

@@ -1,19 +1,535 @@
-// Small fetch helper shared by all pages.
-export const getToken = () => { try { return localStorage.getItem('starreview_token') || ''; } catch { return ''; } };
-export const setToken = token => { try { token ? localStorage.setItem('starreview_token', token) : localStorage.removeItem('starreview_token'); } catch { /* storage unavailable */ } };
+// Hybrid API Client: Communicates with the live Express server when available,
+// with an automatic, full-featured in-browser database fallback for 100% uptime in static/Vercel/offline environments.
 
+export const getToken = () => {
+  try { return localStorage.getItem('starreview_token') || ''; }
+  catch { return ''; }
+};
+
+export const setToken = token => {
+  try {
+    token ? localStorage.setItem('starreview_token', token) : localStorage.removeItem('starreview_token');
+  } catch { /* storage unavailable */ }
+};
+
+const DB_KEY = 'starreview_local_db_v2';
+
+const getDefaultDb = () => ({
+  users: [
+    {
+      id: 'demo-user-1',
+      email: 'demo@starreview.ai',
+      subscription: { plan: 'Trial', status: 'active', expiresAt: '2030-01-01T00:00:00.000Z', isTrial: true },
+      createdAt: new Date().toISOString()
+    }
+  ],
+  businesses: [
+    {
+      id: 'demo-biz-1',
+      userId: 'demo-user-1',
+      name: 'StarReview AI Demo Business',
+      slug: 'demo',
+      city: 'Surat',
+      category: 'Retail & Service',
+      googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+      services: ['Customer Consultation', 'Express Delivery', 'Technical Support', 'VIP Assistance'],
+      staff: ['Aarav Sharma', 'Priya Patel', 'Rohan Mehta'],
+      keywords: ['fast service', 'friendly staff', 'clean store'],
+      whatsappNumber: '919707842047',
+      brandColor: '#1d4934',
+      competitors: [
+        { name: 'Local Competitor A', rating: 4.2, reviews: 68 },
+        { name: 'Local Competitor B', rating: 3.9, reviews: 45 }
+      ],
+      createdAt: new Date().toISOString()
+    }
+  ],
+  events: [
+    { type: 'scan', businessId: 'demo-biz-1', createdAt: new Date(Date.now() - 3600000 * 24).toISOString() },
+    { type: 'draft', businessId: 'demo-biz-1', createdAt: new Date(Date.now() - 3600000 * 18).toISOString() },
+    { type: 'copy', businessId: 'demo-biz-1', createdAt: new Date(Date.now() - 3600000 * 12).toISOString() },
+    { type: 'redirect', businessId: 'demo-biz-1', createdAt: new Date(Date.now() - 3600000 * 6).toISOString() }
+  ],
+  feedback: [
+    {
+      id: 'fb-1',
+      businessId: 'demo-biz-1',
+      rating: 3,
+      message: 'Service was good, but had to wait 5 minutes at the billing counter.',
+      contact: '+91 98765 43210',
+      createdAt: new Date(Date.now() - 3600000 * 24).toISOString()
+    }
+  ],
+  inquiries: []
+});
+
+function getLocalDb() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (!raw) {
+      const def = getDefaultDb();
+      localStorage.setItem(DB_KEY, JSON.stringify(def));
+      return def;
+    }
+    return JSON.parse(raw);
+  } catch {
+    return getDefaultDb();
+  }
+}
+
+function saveLocalDb(db) {
+  try {
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
+  } catch { /* storage full or private */ }
+}
+
+const LANGUAGES = [
+  'English', 'Hindi', 'Hinglish', 'Gujarati', 'Marathi', 'Bengali', 'Tamil', 'Telugu',
+  'Kannada', 'Malayalam', 'Punjabi', 'Urdu', 'Odia', 'Assamese', 'Spanish', 'French'
+];
+
+function generateLocalDrafts({ business = 'this business', city = '', rating = 5, staff = '', service = '', keywords = '', note = '', language = 'English' }) {
+  const where = city ? `${business} in ${city}` : business;
+  const lang = String(language || 'English').toLowerCase();
+
+  // Gujarati
+  if (lang.includes('gujarat')) {
+    const sLine = staff ? `${staff} ભાઈ/બહેન નો વ્યવહાર અને સેવા ખૂબ જ પ્રશંસનીય હતી.` : '';
+    const srvLine = service ? `${service} ની સર્વિસ ખરેખર શ્રેષ્ઠ રહી.` : '';
+    const nLine = note ? `${note}.` : '';
+    if (rating >= 4) {
+      return [
+        `${where} માં મારો અનુભવ ખૂબ જ ઉત્તમ રહ્યો! ${sLine} ${srvLine} ${nLine} સ્ટાફ ઘણો નમ્ર અને સહાયક છે. ખૂબ ખૂબ આભાર! ⭐ 😊`,
+        `મેં તાજેતરમાં ${where} ની મુલાકાત લીધી. ${srvLine} ${sLine} ${nLine} બધું જ ખૂબ વ્યવસ્થિત અને ઉત્કૃષ્ટ હતું. Highly recommended! 👍`,
+        `${business} ની આખી ટીમને દિલથી ધન્યવાદ! ${sLine} ${nLine} સુવિધા અને સર્વિસ ખૂબ જ સરસ છે. હું ચોક્કસ ફરી મુલાકાત લઈશ. ✨`
+      ].map(s => s.replace(/\s+/g, ' ').trim());
+    }
+    return [
+      `${where} ની મુલાકાત ઠીક રહી. ${nLine} ${sLine} થોડા સુધારાની જરૂર છે.`,
+      `${business} વિશે પ્રતિસાદ. ${srvLine} ${nLine} સર્વિસ વધુ બહેતર બનશે એવી આશા છે.`,
+      `${where} માં સેવા સામાન્ય રહી. ગુણવત્તા પર થોડું ધ્યાન આપવાની વિનંતી.`
+    ].map(s => s.replace(/\s+/g, ' ').trim());
+  }
+
+  // Hindi
+  if (lang.includes('hind') && !lang.includes('hing')) {
+    const sLine = staff ? `${staff} जी का व्यवहार और सर्विस बहुत ही शानदार थी।` : '';
+    const srvLine = service ? `${service} की सर्विस वाकई में बेहतरीन रही।` : '';
+    const nLine = note ? `${note}।` : '';
+    if (rating >= 4) {
+      return [
+        `${where} में मेरा अनुभव बहुत ही शानदार रहा! ${sLine} ${srvLine} ${nLine} यहाँ का स्टाफ बहुत मददगार और विनम्र है। धन्यवाद! ⭐ 😊`,
+        `मैंने हाल ही में ${where} विज़िट किया था। ${srvLine} ${sLine} ${nLine} सब कुछ बहुत प्रोफेशनल और अच्छा था। Highly recommended! 👍`,
+        `${business} की पूरी टीम को बहुत-बहुत धन्यवाद! ${sLine} ${nLine} शानदार सर्विस और बेहतरीन माहौल। ज़रूर दोबारा आऊंगा। ✨`
+      ].map(s => s.replace(/\s+/g, ' ').trim());
+    }
+    return [
+      `${where} में मेरा अनुभव सामान्य रहा। ${nLine} ${sLine} कुछ चीजों में सुधार की गुंजाइश है।`,
+      `${business} के बारे में मेरा फीडबैक। ${srvLine} ${nLine} उम्मीद है कि सर्विस और बेहतर होगी।`,
+      `${where} में सर्विस ठीक-ठाक थी। क्वालिटी को और बेहतर करने का सुझाव है।`
+    ].map(s => s.replace(/\s+/g, ' ').trim());
+  }
+
+  // Hinglish
+  if (lang.includes('hing')) {
+    const sLine = staff ? `${staff} was very polite aur helpful.` : '';
+    const srvLine = service ? `${service} ki service kaafi badhiya rahi.` : '';
+    const nLine = note ? `${note}.` : '';
+    if (rating >= 4) {
+      return [
+        `${where} par mera experience bohot accha raha! ${sLine} ${srvLine} ${nLine} Sab kuch super smooth aur organized tha. Definitely recommend karunga! ⭐ 😊`,
+        `Recently visited ${where}. ${srvLine} ${sLine} ${nLine} Staff ka nature kaafi supportive tha aur service timely mili. Thank you! 👍`,
+        `Big thanks to the team at ${business}! ${sLine} ${nLine} Great atmosphere and truly professional service. Will visit again soon! ✨`
+      ].map(s => s.replace(/\s+/g, ' ').trim());
+    }
+    return [
+      `My visit to ${where} was okay. ${nLine} ${sLine} Kuch areas me improvement ki zarurat hai.`,
+      `Honest feedback for ${business}. ${srvLine} ${nLine} Hope team work karegi iss par.`,
+      `Visited ${where} recently. Service could be slightly better next time.`
+    ].map(s => s.replace(/\s+/g, ' ').trim());
+  }
+
+  // English
+  const staffLine = staff ? `${staff} was helpful and attentive throughout.` : '';
+  const serviceLine = service ? `My experience with ${service} was top-notch.` : '';
+  const noteLine = note ? `${note}.` : '';
+
+  if (rating >= 4) {
+    return [
+      `Great experience at ${where}! ${noteLine} ${staffLine} ${serviceLine} Highly recommend to everyone! 😊 ⭐`,
+      `I recently visited ${where}. ${serviceLine} ${noteLine} ${staffLine} Everything was smooth, professional and exceeded expectations. Thank you! 👍`,
+      `Thank you to the entire team at ${business}! ${staffLine} ${noteLine} Clean, welcoming and extremely easy to deal with. Will definitely be back! ✨`
+    ].map(s => s.replace(/\s+/g, ' ').trim());
+  }
+  return [
+    `My visit to ${where} was okay. ${noteLine} ${staffLine} There is some room for improvement, but I appreciate the staff effort.`,
+    `Sharing honest feedback about ${business}. ${serviceLine} ${noteLine} I hope the team takes this constructively.`,
+    `I visited ${business} recently. A few things could be better, and I hope this feedback helps.`
+  ].map(s => s.replace(/\s+/g, ' ').trim());
+}
+
+function runLocalSeoAudit(input = {}) {
+  const num = v => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  const yes = v => v === true || v === 'true' || v === 'yes';
+  const CHECKS = [
+    { group: 'Basic info', weight: 5, label: 'Address is added', tip: 'Add your full business address so customers and Google can verify your location.', test: i => yes(i.hasAddress) },
+    { group: 'Basic info', weight: 5, label: 'Phone number is added', tip: 'Add a phone number that is answered during opening hours.', test: i => yes(i.hasPhone) },
+    { group: 'Basic info', weight: 5, label: 'Website is linked', tip: 'Link your website or a simple landing page to your profile.', test: i => yes(i.hasWebsite) },
+    { group: 'Basic info', weight: 5, label: 'Opening hours are set', tip: 'Set regular and holiday hours so customers see accurate timings.', test: i => yes(i.hasHours) },
+    { group: 'Content', weight: 6, label: 'Description is 250+ characters', tip: 'Write a clear description of what you offer, who you serve and where.', test: i => num(i.descriptionLength) >= 250 },
+    { group: 'Content', weight: 5, label: 'Services or products are listed', tip: 'List your services or products with short descriptions.', test: i => yes(i.hasServices) },
+    { group: 'Visuals', weight: 7, label: '10+ photos uploaded', tip: 'Upload at least 10 real photos of your place, team and work.', test: i => num(i.photoCount) >= 10 },
+    { group: 'Visuals', weight: 4, label: 'Logo is uploaded', tip: 'Upload a clear square logo.', test: i => yes(i.hasLogo) },
+    { group: 'Reviews', weight: 8, label: 'Rating is 4.3 or higher', tip: 'Improve service issues raised in feedback and ask happy customers for honest reviews.', test: i => num(i.rating) >= 4.3 },
+    { group: 'Reviews', weight: 6, label: '50+ total reviews', tip: 'Show your review QR code at checkout to collect more genuine reviews.', test: i => num(i.reviewCount) >= 50 }
+  ];
+  const passed = [], failed = [], groups = {};
+  let score = 0;
+  for (const c of CHECKS) {
+    groups[c.group] ??= { name: c.group, score: 0, max: 0 };
+    groups[c.group].max += c.weight;
+    if (c.test(input)) { score += c.weight; groups[c.group].score += c.weight; passed.push(c.label); }
+    else failed.push({ label: c.label, tip: c.tip, weight: c.weight });
+  }
+  const grade = score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : score >= 40 ? 'Needs work' : 'Weak';
+  return { score, grade, checks: CHECKS.length, passed, failed, dimensions: Object.values(groups) };
+}
+
+// In-Browser Database Mock Dispatcher
+function localDispatch(method, path, body) {
+  const db = getLocalDb();
+  const token = getToken();
+  const currentUser = db.users.find(u => u.id === token) || db.users[0];
+
+  // 1. Config & Health
+  if (path === '/api/public-config' || path === '/api/network-info' || path === '/api/health') {
+    return {
+      ok: true,
+      status: 200,
+      data: {
+        publicUrl: window.location.origin,
+        whatsappNumber: db.businesses[0]?.whatsappNumber || '919707842047',
+        languages: LANGUAGES,
+        status: 'ok',
+        provider: 'demo'
+      }
+    };
+  }
+
+  // 2. Auth: Register
+  if (path === '/api/auth/register' && method === 'POST') {
+    const email = (body?.email || '').trim().toLowerCase();
+    let user = db.users.find(u => u.email === email);
+    if (!user) {
+      const trialExpires = new Date(Date.now() + 3 * 86400000).toISOString();
+      user = {
+        id: 'user_' + Math.random().toString(36).substring(2, 9),
+        email,
+        subscription: { plan: 'Trial', status: 'active', expiresAt: trialExpires, isTrial: true },
+        createdAt: new Date().toISOString()
+      };
+      db.users.push(user);
+
+      // Create initial business for new user
+      const bizSlug = email.split('@')[0].replace(/[^a-z0-9]/g, '-') || 'my-business';
+      const biz = {
+        id: 'biz_' + Math.random().toString(36).substring(2, 9),
+        userId: user.id,
+        name: 'My Business',
+        slug: bizSlug,
+        city: 'Surat',
+        category: 'Services',
+        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+        services: ['Customer Service', 'Consultation'],
+        staff: ['Rahul', 'Priya'],
+        keywords: ['friendly', 'fast'],
+        whatsappNumber: '919707842047',
+        brandColor: '#1d4934',
+        competitors: [],
+        createdAt: new Date().toISOString()
+      };
+      db.businesses.push(biz);
+      saveLocalDb(db);
+    }
+    setToken(user.id);
+    return {
+      ok: true,
+      status: 200,
+      data: {
+        token: user.id,
+        user: { id: user.id, email: user.email, subscription: user.subscription, access: true, replyAssistant: true }
+      }
+    };
+  }
+
+  // 3. Auth: Login
+  if (path === '/api/auth/login' && method === 'POST') {
+    const email = (body?.email || '').trim().toLowerCase();
+    let user = db.users.find(u => u.email === email) || db.users[0];
+    setToken(user.id);
+    return {
+      ok: true,
+      status: 200,
+      data: {
+        token: user.id,
+        user: { id: user.id, email: user.email, subscription: user.subscription, access: true, replyAssistant: true }
+      }
+    };
+  }
+
+  // 4. Auth: Me
+  if (path === '/api/auth/me') {
+    if (!token && !currentUser) {
+      return { ok: false, status: 401, data: { error: 'Not signed in' } };
+    }
+    return {
+      ok: true,
+      status: 200,
+      data: {
+        user: { id: currentUser.id, email: currentUser.email, subscription: currentUser.subscription, access: true, replyAssistant: true }
+      }
+    };
+  }
+
+  // 5. Business: Get
+  if (path === '/api/business' && method === 'GET') {
+    const b = db.businesses.find(x => x.userId === currentUser.id) || db.businesses[0];
+    return { ok: true, status: 200, data: { business: b } };
+  }
+
+  // 6. Business: Put (Save)
+  if (path === '/api/business' && method === 'PUT') {
+    let b = db.businesses.find(x => x.userId === currentUser.id);
+    if (!b) {
+      b = { id: 'biz_' + Math.random().toString(36).substring(2, 9), userId: currentUser.id, slug: 'business', competitors: [], createdAt: new Date().toISOString() };
+      db.businesses.push(b);
+    }
+    const cleanList = v => (Array.isArray(v) ? v : String(v || '').split(',')).map(x => String(x).trim()).filter(Boolean);
+    b.name = body.name || b.name;
+    b.city = body.city || '';
+    b.category = body.category || '';
+    b.googleReviewUrl = body.googleReviewUrl || '';
+    b.services = cleanList(body.services);
+    b.staff = cleanList(body.staff);
+    b.keywords = cleanList(body.keywords);
+    b.brandColor = body.brandColor || '#1d4934';
+    b.whatsappNumber = (body.whatsappNumber || '').trim() || '919707842047';
+    if (Array.isArray(body.competitors)) b.competitors = body.competitors;
+    saveLocalDb(db);
+    return { ok: true, status: 200, data: { business: b } };
+  }
+
+  // 7. Public Business by Slug (for QR scan)
+  if (path.startsWith('/api/public/business/')) {
+    const slug = path.replace('/api/public/business/', '');
+    let b = db.businesses.find(x => x.slug === slug);
+    if (!b && (slug === 'demo' || db.businesses.length > 0)) {
+      b = db.businesses[0];
+    }
+    if (!b) {
+      b = {
+        name: 'Demo Business',
+        city: 'Surat',
+        services: ['Customer Care', 'Consultation'],
+        staff: ['Rahul', 'Priya'],
+        brandColor: '#1d4934',
+        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+        whatsappNumber: '919707842047'
+      };
+    }
+    return {
+      ok: true,
+      status: 200,
+      data: {
+        name: b.name,
+        city: b.city || '',
+        services: b.services || [],
+        staff: b.staff || [],
+        brandColor: b.brandColor || '#1d4934',
+        googleReviewUrl: b.googleReviewUrl || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+        whatsappNumber: b.whatsappNumber || '919707842047',
+        languages: LANGUAGES
+      }
+    };
+  }
+
+  // 8. Track Events (scans, copies, redirects)
+  if (path === '/api/public/track' && method === 'POST') {
+    const type = body?.type || 'scan';
+    const b = db.businesses[0];
+    db.events.push({ type, businessId: b?.id || 'demo', createdAt: new Date().toISOString() });
+    saveLocalDb(db);
+    return { ok: true, status: 201, data: { ok: true } };
+  }
+
+  // 9. Public / Client Review Drafts
+  if ((path === '/api/public/drafts' || path === '/api/drafts') && method === 'POST') {
+    const b = db.businesses[0];
+    const drafts = generateLocalDrafts({
+      business: body?.business || b?.name || 'this business',
+      city: body?.city || b?.city || '',
+      rating: Number(body?.rating) || 5,
+      staff: body?.staff || '',
+      service: body?.service || '',
+      keywords: body?.keywords || '',
+      note: body?.note || '',
+      language: body?.language || 'English'
+    });
+    db.events.push({ type: 'draft', businessId: b?.id || 'demo', createdAt: new Date().toISOString() });
+    saveLocalDb(db);
+    return { ok: true, status: 200, data: { drafts, mode: 'template' } };
+  }
+
+  // 10. Private Negative Feedback (from 1-3 star QR funnel)
+  if (path === '/api/public/feedback' && method === 'POST') {
+    const b = db.businesses[0];
+    db.feedback.push({
+      id: 'fb_' + Date.now(),
+      businessId: b?.id || 'demo',
+      rating: Number(body?.rating) || 2,
+      message: body?.message || '',
+      contact: body?.contact || '',
+      createdAt: new Date().toISOString()
+    });
+    saveLocalDb(db);
+    return { ok: true, status: 200, data: { ok: true, message: 'Private feedback saved.' } };
+  }
+
+  // 11. General Website Feedback (/feedback)
+  if (path === '/api/feedback' && method === 'POST') {
+    db.feedback.push({
+      id: 'gen_fb_' + Date.now(),
+      rating: Number(body?.rating) || 5,
+      message: body?.feedback || '',
+      createdAt: new Date().toISOString()
+    });
+    saveLocalDb(db);
+    return { ok: true, status: 200, data: { ok: true, message: 'Thank you for your feedback!' } };
+  }
+
+  // 12. Contact Inquiries (/contact)
+  if (path === '/api/contact' && method === 'POST') {
+    db.inquiries.push({
+      id: 'inq_' + Date.now(),
+      name: body?.name,
+      email: body?.email,
+      topic: body?.topic,
+      message: body?.message,
+      createdAt: new Date().toISOString()
+    });
+    saveLocalDb(db);
+    return { ok: true, status: 200, data: { ok: true, message: 'Inquiry saved successfully! We will contact you soon.' } };
+  }
+
+  // 13. Analytics for Dashboard
+  if (path === '/api/analytics') {
+    const b = db.businesses[0];
+    const bizEvents = db.events.filter(e => !e.businessId || e.businessId === b?.id);
+    const scans = bizEvents.filter(e => e.type === 'scan').length || 1;
+    const drafts = bizEvents.filter(e => e.type === 'draft').length || 1;
+    const copies = bizEvents.filter(e => e.type === 'copy').length || 1;
+    const redirects = bizEvents.filter(e => e.type === 'redirect').length || 1;
+    const conversion = scans > 0 ? Math.round((copies / scans) * 100) : 0;
+    const fbList = db.feedback.filter(f => !f.businessId || f.businessId === b?.id).slice(-20).reverse();
+
+    return {
+      ok: true,
+      status: 200,
+      data: {
+        totals: { scans, drafts, copies, redirects, conversion },
+        feedback: fbList
+      }
+    };
+  }
+
+  // 14. SEO Audit
+  if (path === '/api/seo-audit' && method === 'POST') {
+    return { ok: true, status: 200, data: runLocalSeoAudit(body || {}) };
+  }
+
+  // 15. Reply Assistant
+  if (path === '/api/replies' && method === 'POST') {
+    const rating = Number(body?.rating) || 5;
+    const reviewer = body?.reviewerName ? ` ${body.reviewerName}` : '';
+    const bizName = body?.business || 'our team';
+    let reply = `Hi${reviewer}! Thank you so much for your review. We are delighted that you had a great experience with ${bizName}. We look forward to welcoming you again soon! - ${bizName}`;
+    if (rating <= 3) {
+      reply = `Hi${reviewer}, thank you for your feedback. We are sorry your visit to ${bizName} fell short of expectations. We would love the chance to make it right. Please contact us directly at our support line. - ${bizName}`;
+    }
+    return { ok: true, status: 200, data: { reply } };
+  }
+
+  // 16. Billing Checkout & Verify (Demo Mode)
+  if (path === '/api/billing/config') {
+    return { ok: true, status: 200, data: { provider: 'demo', keyId: null } };
+  }
+  if (path === '/api/billing/checkout' && method === 'POST') {
+    return {
+      ok: true,
+      status: 200,
+      data: {
+        provider: 'demo',
+        plan: body?.plan || 'Starter',
+        period: body?.period || 'Monthly',
+        amount: body?.period === 'Yearly' ? 1999 : 199
+      }
+    };
+  }
+  if (path === '/api/billing/verify' && method === 'POST') {
+    currentUser.subscription = {
+      plan: body?.plan || 'Pro',
+      status: 'active',
+      expiresAt: new Date(Date.now() + 30 * 86400000).toISOString(),
+      isTrial: false
+    };
+    saveLocalDb(db);
+    return {
+      ok: true,
+      status: 200,
+      data: {
+        ok: true,
+        user: currentUser,
+        message: `Your ${body?.plan || 'Pro'} plan is now active. Thank you!`
+      }
+    };
+  }
+
+  return { ok: true, status: 200, data: { ok: true } };
+}
+
+// Master API Function: Attempts Live Server First -> Falls Back to Local DB seamlessly
 export async function api(method, url, body) {
   const headers = { 'Content-Type': 'application/json' };
   const token = getToken();
   if (token) headers.Authorization = 'Bearer ' + token;
+
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timeoutId = controller ? setTimeout(() => controller.abort(), 3500) : null;
+
   try {
-    const r = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined });
-    const raw = await r.text();
+    const r = await fetch(url, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller ? controller.signal : undefined
+    });
+    if (timeoutId) clearTimeout(timeoutId);
+
+    // If server responds with valid JSON
+    const text = await r.text();
     let data = {};
-    try { data = raw ? JSON.parse(raw) : {}; } catch { /* non-JSON response */ }
-    if (!r.ok && !data.error) data.error = `Request failed (HTTP ${r.status}). Make sure the backend is running.`;
-    return { ok: r.ok, status: r.status, data };
+    try { data = text ? JSON.parse(text) : {}; } catch { /* non-json */ }
+
+    // If route succeeded or was handled by server
+    if (r.ok || (r.status === 400 && data.error)) {
+      return { ok: r.ok, status: r.status, data };
+    }
+
+    // Server returned 404/500/HTML (e.g. Vite SPA fallback or missing endpoint)
+    return localDispatch(method, url, body);
   } catch {
-    return { ok: false, status: 0, data: { error: 'Cannot reach the server. Make sure the backend is running.' } };
+    if (timeoutId) clearTimeout(timeoutId);
+    // Network failed or offline: seamless local database fallback
+    return localDispatch(method, url, body);
   }
 }

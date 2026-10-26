@@ -86,12 +86,26 @@ export default function App() {
   };
 
   const slugMap = Object.fromEntries(Object.entries(routeMap).map(([path, name]) => [name, path]));
-  const pageFromPath = () => {
-    const p = window.location.pathname.replace(/\/$/, '') || '/';
-    return p.startsWith('/r/') ? 'Review' : (routeMap[p] || 'Home');
+  const getReviewSlug = () => {
+    const p = window.location.pathname.replace(/\/$/, '') || '';
+    if (p.startsWith('/r/')) {
+      return p.split('/')[2] || 'demo';
+    }
+    try {
+      const search = new URLSearchParams(window.location.search);
+      return search.get('r') || search.get('review') || '';
+    } catch {
+      return '';
+    }
   };
 
-  const reviewSlug = window.location.pathname.split('/')[2] || '';
+  const pageFromPath = () => {
+    const p = window.location.pathname.replace(/\/$/, '') || '/';
+    if (p.startsWith('/r/') || getReviewSlug()) return 'Review';
+    return routeMap[p] || 'Home';
+  };
+
+  const reviewSlug = getReviewSlug() || 'demo';
   const [page, setPage] = useState(pageFromPath);
   const [menu, setMenu] = useState(false);
   const [rating, setRating] = useState(5);
@@ -2207,19 +2221,17 @@ export default function App() {
             e.preventDefault();
             const form = e.currentTarget;
             const fields = form.querySelectorAll('input,select,textarea');
-            try {
-              const r = await fetch('/api/contact', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: fields[0].value, email: fields[1].value, topic: fields[2].value, message: fields[3].value })
-              });
-              const raw = await r.text();
-              let d = {};
-              try { d = raw ? JSON.parse(raw) : {}; } catch {}
-              notify(d.message || 'Inquiry saved.');
+            const r = await api('POST', '/api/contact', {
+              name: fields[0].value,
+              email: fields[1].value,
+              topic: fields[2].value,
+              message: fields[3].value
+            });
+            if (r.ok) {
+              notify(r.data.message || 'Inquiry submitted successfully! We will contact you shortly.');
               form.reset();
-            } catch (err) {
-              notify(err.message || 'Could not send inquiry.');
+            } else {
+              notify(r.data.error || 'Could not send inquiry.');
             }
           }}>
             <label>Your name<input required placeholder="Full name" /></label>

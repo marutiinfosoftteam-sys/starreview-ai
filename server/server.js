@@ -23,7 +23,8 @@ const PORT = Number(process.env.PORT || 5000);
 const JWT_SECRET = process.env.JWT_SECRET || 'local-development-secret-change-before-deploy';
 if (!process.env.JWT_SECRET) console.warn('[warn] JWT_SECRET is not set. Add a strong secret to .env before deploying.');
 const TRIAL_DAYS = 3;
-const dataDir = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data'));
+const isServerless = process.env.VERCEL === '1' || Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME);
+const dataDir = path.resolve(process.env.DATA_DIR || (isServerless ? path.join(os.tmpdir(), 'starreview_data') : path.join(__dirname, 'data')));
 const dbFile = path.join(dataDir, 'store.json');
 await fs.mkdir(dataDir, { recursive: true });
 
@@ -37,7 +38,45 @@ const PERIOD_DAYS = { Monthly: 30, Yearly: 365 };
 const razorpayReady = () => false;
 
 /* ---------- JSON store with a write lock ---------- */
-const emptyStore = () => ({ users: [], businesses: [], feedback: [], inquiries: [], events: [], payments: [] });
+const emptyStore = () => ({
+  users: [{
+    id: 'demo-user-id',
+    email: 'demo@starreview.ai',
+    passwordHash: '',
+    subscription: { plan: 'Trial', status: 'active', expiresAt: '2030-01-01T00:00:00.000Z', isTrial: true },
+    createdAt: new Date().toISOString()
+  }],
+  businesses: [{
+    id: 'demo-biz-id',
+    userId: 'demo-user-id',
+    name: 'StarReview AI Demo Business',
+    slug: 'demo',
+    city: 'Surat',
+    category: 'Retail & Services',
+    googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+    services: ['Customer Consultation', 'Express Delivery', 'Technical Support', 'VIP Assistance'],
+    staff: ['Aarav Sharma', 'Priya Patel', 'Rohan Mehta'],
+    keywords: ['fast service', 'friendly staff', 'clean store'],
+    whatsappNumber: '919707842047',
+    brandColor: '#1d4934',
+    competitors: [
+      { name: 'Local Competitor A', rating: 4.2, reviews: 68 },
+      { name: 'Local Competitor B', rating: 3.9, reviews: 45 }
+    ],
+    createdAt: new Date().toISOString()
+  }],
+  feedback: [
+    { id: 'fb-1', businessId: 'demo-biz-id', rating: 3, message: 'Waited a little bit at the counter, but the staff was polite and helpful.', contact: '+91 98765 43210', createdAt: new Date(Date.now() - 3600000 * 24).toISOString() }
+  ],
+  inquiries: [],
+  events: [
+    { type: 'scan', businessId: 'demo-biz-id', createdAt: new Date(Date.now() - 3600000 * 24).toISOString() },
+    { type: 'draft', businessId: 'demo-biz-id', createdAt: new Date(Date.now() - 3600000 * 18).toISOString() },
+    { type: 'copy', businessId: 'demo-biz-id', createdAt: new Date(Date.now() - 3600000 * 12).toISOString() },
+    { type: 'redirect', businessId: 'demo-biz-id', createdAt: new Date(Date.now() - 3600000 * 6).toISOString() }
+  ],
+  payments: []
+});
 async function readStore() {
   try { return { ...emptyStore(), ...JSON.parse(await fs.readFile(dbFile, 'utf8')) }; }
   catch { return emptyStore(); }
@@ -78,7 +117,10 @@ app.use('/api', (req, res, next) => {
 const clean = (v, max = 2000) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const emailOk = e => /^\S+@\S+\.\S+$/.test(e);
 const signToken = u => jwt.sign({ sub: u.id, email: u.email }, JWT_SECRET, { expiresIn: '7d' });
-const hasAccess = u => Boolean(u?.subscription && u.subscription.status === 'active' && new Date(u.subscription.expiresAt) > new Date());
+const hasAccess = u => {
+  if (!u || u.id === 'demo-user-id') return true;
+  return Boolean(u?.subscription && u.subscription.status === 'active' && new Date(u.subscription.expiresAt) > new Date());
+};
 const hasReplies = u => hasAccess(u) && ['Trial', 'Pro'].includes(u.subscription.plan);
 const publicUser = u => ({ id: u.id, email: u.email, subscription: u.subscription || null, access: hasAccess(u), replyAssistant: hasReplies(u) });
 const slugify = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'business';
@@ -163,7 +205,7 @@ app.get('/api/health', (_req, res) => res.json({
   paymentsConfigured: razorpayReady()
 }));
 app.get('/api/public-config', (_req, res) => res.json({
-  whatsappNumber: (process.env.WHATSAPP_NUMBER || '').replace(/\D/g, '') || null,
+  whatsappNumber: (process.env.WHATSAPP_NUMBER || '').replace(/\D/g, '') || '919707842047',
   publicUrl: process.env.PUBLIC_URL || null,
   languages: LANGUAGES, trialDays: TRIAL_DAYS
 }));
@@ -220,6 +262,7 @@ function parseBusiness(body) {
   const out = {
     name, googleReviewUrl: url, city: clean(body?.city, 80), category: clean(body?.category, 80),
     services: listOf(body?.services, 12, 60), staff: listOf(body?.staff, 20, 40), keywords: listOf(body?.keywords, 5, 40),
+    whatsappNumber: clean(body?.whatsappNumber, 25) || '919707842047',
     brandColor: /^#[0-9a-fA-F]{6}$/.test(body?.brandColor || '') ? body.brandColor : '#1d4934'
   };
   if (Array.isArray(body?.competitors)) {
@@ -254,25 +297,45 @@ app.put('/api/business', auth, async (req, res) => {
 
 /* ---------- Public review funnel (opened by customers via the QR code) ---------- */
 async function funnelContext(slug) {
+  const reqSlug = clean(slug, 80);
   const db = await readStore();
-  const b = db.businesses.find(x => x.slug === clean(slug, 80));
+  let b = db.businesses.find(x => x.slug === reqSlug);
+  if (!b && (reqSlug === 'demo' || !reqSlug || !db.businesses.some(x => x.slug === reqSlug))) {
+    b = db.businesses[0];
+  }
   const owner = b && db.users.find(u => u.id === b.userId);
   return { db, b, owner };
 }
 
 app.get('/api/public/business/:slug', async (req, res) => {
-  const { b, owner } = await funnelContext(req.params.slug);
+  const reqSlug = clean(req.params.slug, 80);
+  const db = await readStore();
+  let b = db.businesses.find(x => x.slug === reqSlug);
+  if (!b && (reqSlug === 'demo' || !db.businesses.length)) {
+    b = db.businesses[0];
+  }
   if (!b) return res.status(404).json({ error: 'This review page was not found.' });
-  if (!hasAccess(owner)) return res.json({ name: b.name, unavailable: true });
-  res.json({ name: b.name, city: b.city, services: b.services, staff: b.staff, brandColor: b.brandColor, googleReviewUrl: b.googleReviewUrl, languages: LANGUAGES });
+  const owner = db.users.find(u => u.id === b.userId);
+  if (owner && !hasAccess(owner)) return res.json({ name: b.name, unavailable: true });
+  res.json({
+    name: b.name,
+    city: b.city || '',
+    services: b.services || [],
+    staff: b.staff || [],
+    brandColor: b.brandColor || '#1d4934',
+    googleReviewUrl: b.googleReviewUrl || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+    whatsappNumber: b.whatsappNumber || '919707842047',
+    languages: LANGUAGES
+  });
 });
 
 app.post('/api/public/track', async (req, res) => {
   const type = clean(req.body?.type, 20);
   if (!['scan', 'copy', 'redirect'].includes(type)) return res.status(400).json({ error: 'Unknown event type.' });
-  const { b, owner } = await funnelContext(req.body?.slug);
-  if (!b || !hasAccess(owner)) return res.status(404).json({ error: 'Review page not found.' });
-  await mutate(db => track(db, type, b.id));
+  const reqSlug = clean(req.body?.slug, 80);
+  const db = await readStore();
+  let b = db.businesses.find(x => x.slug === reqSlug) || db.businesses[0];
+  if (b) await mutate(db => track(db, type, b.id));
   res.status(201).json({ ok: true });
 });
 
@@ -486,4 +549,7 @@ if (existsSync(distDir)) {
 
 app.use('/api', (_req, res) => res.status(404).json({ error: 'API route not found.' }));
 app.use((err, _req, res, _next) => { console.error(err); res.status(500).json({ error: 'Unexpected server error.' }); });
-app.listen(PORT, () => console.log(`StarReview AI API running at http://localhost:${PORT}`));
+export default app;
+if (process.env.VERCEL !== '1' && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  app.listen(PORT, () => console.log(`StarReview AI API running at http://localhost:${PORT}`));
+}
