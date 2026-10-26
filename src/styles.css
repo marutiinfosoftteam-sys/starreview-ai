@@ -70,58 +70,77 @@
 }
 
 /* ── Pricing Toggle Pill (ReviewFlow AI Style in StarReview Palette) ── */
+.pricing-toggle-wrap,
 .sr-pricing-toggle-wrap {
   display: flex;
   justify-content: center;
-  margin: 0 auto 36px;
+  margin: 15px auto 45px;
+  position: relative;
+  z-index: 10;
 }
+.pricing-toggle-pill,
 .sr-pricing-pill {
-  background: #eef2ec;
-  border: 1px solid #dfe6de;
-  padding: 4px;
+  background: #f1f5f0;
+  border: 1.5px solid #dce5dd;
+  padding: 5px;
   border-radius: 999px;
   display: inline-flex;
-  gap: 4px;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(29, 73, 52, 0.05);
 }
+.pricing-tab-btn,
 .sr-toggle-btn {
-  border: none;
+  border: none !important;
   background: transparent;
-  padding: 10px 18px;
+  padding: 10px 20px;
   border-radius: 999px;
   font-size: 13px;
-  font-weight: 600;
-  color: #5d6b61;
+  font-weight: 700;
+  color: #556658;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s ease;
+  transition: all 0.22s ease;
   font-family: inherit;
+  outline: none;
 }
+.pricing-tab-btn:hover,
 .sr-toggle-btn:hover {
-  color: #1d4934;
+  color: #17251c;
 }
+.pricing-tab-btn.active,
 .sr-toggle-btn.active {
-  background: #ffffff;
-  color: #17261d;
-  box-shadow: 0 3px 10px rgba(23,41,29,0.08);
-  font-weight: 700;
+  background: #ffffff !important;
+  color: #17251c !important;
+  box-shadow: 0 4px 14px rgba(20, 45, 30, 0.08);
 }
+.pricing-tab-btn.active.pro-tab,
 .sr-toggle-btn.active.pro-mode {
-  background: #1d4934;
-  color: #ffffff;
+  background: #1d4934 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(29, 73, 52, 0.25);
 }
+.tab-badge-pill,
 .sr-badge-pill {
   font-size: 10px;
-  padding: 2px 7px;
+  padding: 3px 9px;
   border-radius: 999px;
-  font-weight: 700;
-  background: #dfe6de;
-  color: #526356;
+  font-weight: 800;
+  background: #dfe7e0;
+  color: #4b5a4e;
+  margin-left: 6px;
+  display: inline-block;
 }
+.pricing-tab-btn.active .tab-badge-pill,
 .sr-toggle-btn.active .sr-badge-pill {
-  background: #e0eee0;
-  color: #285d3c;
+  background: #dcfce7;
+  color: #166534;
+}
+.pricing-tab-btn.active.pro-tab .tab-badge-pill,
+.sr-toggle-btn.active.pro-mode .sr-badge-pill {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
 }
 .sr-toggle-btn.active.pro-mode .sr-badge-pill {
   background: rgba(255,255,255,0.22);
@@ -1874,6 +1893,7 @@
   margin: 0 auto;
 }
 .pricing-grid-modern {
+  margin-top: 15px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 22px;

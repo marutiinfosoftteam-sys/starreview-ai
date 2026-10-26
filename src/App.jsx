@@ -311,7 +311,8 @@ export default function App() {
             className={`pricing-tab-btn ${pricingTab === 'without-reply' ? 'active' : ''}`}
             onClick={() => setPricingTab('without-reply')}
           >
-            <i className="fa-solid fa-layer-group"></i> Without Review Reply
+            <i className="fa-solid fa-layer-group"></i>
+            <span>Without Review Reply</span>
             <span className="tab-badge-pill">Standard Plans</span>
           </button>
           <button
@@ -319,7 +320,8 @@ export default function App() {
             className={`pricing-tab-btn ${pricingTab === 'with-reply' ? 'active pro-tab' : ''}`}
             onClick={() => setPricingTab('with-reply')}
           >
-            <i className="fa-solid fa-robot"></i> With Review Reply
+            <i className="fa-solid fa-robot"></i>
+            <span>With Review Reply</span>
             <span className="tab-badge-pill">Pro Plans</span>
           </button>
         </div>
