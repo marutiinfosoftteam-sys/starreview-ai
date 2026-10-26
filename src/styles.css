@@ -468,3 +468,447 @@
   .sr-reply-showcase { padding: 28px 20px; }
   .sr-pricing-pill { flex-direction: column; width: 100%; }
 }
+
+/* ==========================================================================
+   HOW IT WORKS — 3-STEP VISUAL ROADMAP (REVIEWFLOW AI STYLE IN STARREVIEW THEME)
+   ========================================================================== */
+
+.sr-works-page {
+  padding-top: 40px;
+  padding-bottom: 90px;
+}
+
+.sr-works-hero {
+  text-align: center;
+  max-width: 860px;
+  margin: 0 auto 50px;
+}
+
+.sr-works-hero .eyebrow {
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.sr-works-hero h1 {
+  font-family: Manrope, sans-serif;
+  font-size: clamp(36px, 4.8vw, 56px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -2px;
+  color: #17251c;
+  margin: 0 0 18px;
+}
+
+.sr-works-hero h1 span {
+  color: #2f6747;
+  font-style: normal;
+}
+
+.sr-works-hero p {
+  font-size: 15px;
+  color: #637266;
+  line-height: 1.75;
+  max-width: 680px;
+  margin: 0 auto 32px;
+}
+
+/* Quick Metrics Bar */
+.sr-metrics-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  max-width: 740px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #e1e9df;
+  border-radius: 16px;
+  padding: 22px 24px;
+  box-shadow: 0 8px 24px rgba(29, 73, 52, 0.05);
+}
+
+.sr-metric-item {
+  text-align: center;
+  border-right: 1px solid #e6ece4;
+  padding: 0 12px;
+}
+
+.sr-metric-item:last-child {
+  border-right: none;
+}
+
+.sr-metric-val {
+  font-family: Manrope, sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: #17261d;
+  line-height: 1.1;
+  margin-bottom: 5px;
+}
+
+.sr-metric-val span {
+  color: #34714b;
+  font-size: 24px;
+}
+
+.sr-metric-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  color: #718075;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* 3-Step Visual Roadmap Container */
+.sr-roadmap-section {
+  max-width: 1050px;
+  margin: 0 auto 70px;
+}
+
+.sr-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  margin-top: 40px;
+}
+
+.sr-step-card {
+  background: #ffffff;
+  border: 1px solid #e3e9e1;
+  border-radius: 22px;
+  padding: 38px 42px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  box-shadow: 0 6px 24px rgba(24, 45, 30, 0.03);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.sr-step-card:hover {
+  border-color: #bcdbc0;
+  box-shadow: 0 16px 36px rgba(29, 73, 52, 0.08);
+  transform: translateY(-2px);
+}
+
+.sr-step-card.reverse .sr-step-info {
+  order: 2;
+}
+
+.sr-step-card.reverse .sr-step-preview {
+  order: 1;
+}
+
+.sr-step-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #245e39;
+  background: #e4f2e5;
+  padding: 5px 12px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.sr-step-info h3 {
+  font-family: Manrope, sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #17251c;
+  letter-spacing: -0.6px;
+  margin: 0 0 12px;
+  line-height: 1.25;
+}
+
+.sr-step-info p {
+  font-size: 13px;
+  color: #5d6c60;
+  line-height: 1.7;
+  margin: 0 0 18px;
+}
+
+.sr-step-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sr-step-bullets li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  color: #455448;
+  line-height: 1.55;
+  font-weight: 500;
+}
+
+.sr-step-bullets li i {
+  color: #2d7345;
+  font-size: 14px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+/* Phone Mockup */
+.sr-step-preview {
+  background: #f6faf4;
+  border: 1px solid #e1ebe0;
+  border-radius: 18px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.sr-phone-mockup {
+  background: #ffffff;
+  border: 1px solid #dce5da;
+  border-radius: 16px;
+  padding: 22px 20px;
+  box-shadow: 0 10px 28px rgba(25, 45, 32, 0.06);
+}
+
+.sr-mockup-header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #edf2ec;
+  margin-bottom: 16px;
+}
+
+.sr-mockup-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #1d4934;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sr-mockup-biz-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #17251c;
+  line-height: 1.2;
+}
+
+.sr-mockup-biz-sub {
+  font-size: 10px;
+  color: #79877b;
+  margin-top: 2px;
+}
+
+.sr-mockup-stars {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin: 14px 0;
+  color: #e9aa35;
+  font-size: 26px;
+}
+
+.sr-mockup-btn {
+  background: #f1f6ef;
+  color: #3b5040;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 11px 16px;
+  border-radius: 10px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sr-mockup-btn.blue {
+  background: #1a73e8;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(26, 115, 232, 0.3);
+  font-size: 13px;
+  padding: 12px 18px;
+}
+
+.sr-mockup-btn.blue:hover {
+  background: #1557b0;
+}
+
+.sr-mockup-draft-chip {
+  background: #f2f8f0;
+  border: 1px solid #c9e4c6;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 11px;
+  color: #1b4d2e;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.sr-mockup-draft-chip.alt {
+  background: #fbfdfa;
+  border-color: #e4eae1;
+  color: #48574a;
+}
+
+.sr-mockup-shield {
+  background: #fef9ed;
+  border: 1px solid #fae4a8;
+  border-radius: 10px;
+  padding: 11px 13px;
+  font-size: 11px;
+  color: #8c5310;
+  line-height: 1.45;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.sr-mockup-shield i {
+  color: #d97706;
+  font-size: 13px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.sr-copied-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #e4f5e7;
+  color: #287343;
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+/* Comparison Section */
+.sr-compare-section {
+  max-width: 1050px;
+  margin: 0 auto 70px;
+}
+
+.sr-compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 36px;
+}
+
+.sr-compare-box {
+  border-radius: 20px;
+  padding: 32px 30px;
+  position: relative;
+}
+
+.sr-compare-bad {
+  background: #fff8f8;
+  border: 1px solid #fedcdc;
+}
+
+.sr-compare-bad h4 {
+  color: #b91c1c;
+  font-family: Manrope, sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  margin: 0 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.sr-compare-bad ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.sr-compare-bad li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  color: #7f2323;
+  line-height: 1.55;
+}
+
+.sr-compare-bad li i {
+  color: #dc2626;
+  font-size: 13px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.sr-compare-good {
+  background: #f3f8f1;
+  border: 2px solid #a3d9a9;
+  box-shadow: 0 10px 30px rgba(29, 73, 52, 0.07);
+}
+
+.sr-compare-good h4 {
+  color: #1a5231;
+  font-family: Manrope, sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  margin: 0 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.sr-compare-good ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.sr-compare-good li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  color: #1f452b;
+  line-height: 1.55;
+}
+
+.sr-compare-good li i {
+  color: #1e7e34;
+  font-size: 13px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+/* Responsive adjustments */
+@media(max-width: 900px) {
+  .sr-step-card, .sr-step-card.reverse {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 28px 24px;
+  }
+  .sr-step-card.reverse .sr-step-info { order: 1; }
+  .sr-step-card.reverse .sr-step-preview { order: 2; }
+  .sr-compare-grid { grid-template-columns: 1fr; }
+  .sr-metrics-bar { grid-template-columns: 1fr; gap: 14px; }
+  .sr-metric-item { border-right: none; border-bottom: 1px solid #e6ece4; padding-bottom: 12px; }
+  .sr-metric-item:last-child { border-bottom: none; }
+}

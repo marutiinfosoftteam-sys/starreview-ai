@@ -636,25 +636,103 @@ export default function App() {
               </div>
             </div>
 
-            {/* 6. HOW IT WORKS */}
+            {/* 6. HOW IT WORKS IN 3 SIMPLE STEPS */}
             <section className="section wrap steps-section">
               <div className="section-heading">
-                <div className="eyebrow">HOW IT WORKS</div>
-                <h2>From QR scan to <em>feedback.</em></h2>
+                <div className="eyebrow">THE 3-STEP MAGIC FLOW</div>
+                <h2>How It Works In <em>3 Simple Steps</em></h2>
+                <p>A friction-free mobile review flow that turns in-store visitors into published 5-star Google Business reviews on autopilot.</p>
               </div>
-              <div className="steps-grid">
-                {[
-                  ['01', 'Set up your business', 'Add your services, staff and Google review link to get your own review page.'],
-                  ['02', 'Share a QR code', 'Display it at checkout, on a table, or in a follow-up message.'],
-                  ['03', 'Customers pick and draft', 'Happy customers get editable review drafts in their language. Unhappy ones are routed to private feedback.'],
-                  ['04', 'Copy and post', 'One tap copies the draft and opens your Google review form.']
-                ].map(s => (
-                  <div className="step" key={s[0]}>
-                    <div className="step-number">{s[0]}</div>
-                    <h3>{s[1]}</h3>
-                    <p>{s[2]}</p>
+              <div className="sr-steps-list" style={{ marginTop: 24 }}>
+                {/* Step 1 */}
+                <div className="sr-step-card">
+                  <div className="sr-step-info">
+                    <div className="sr-step-tag"><i className="fa-solid fa-qrcode"></i> Step 1: Scan &amp; Launch</div>
+                    <h3>Customer Scans Your Google Business Review QR</h3>
+                    <p>Display your designer Google Review QR standee on dining tables, counters or bills. Patrons point their phone camera — no app required.</p>
+                    <ul className="sr-step-bullets">
+                      <li><i className="fa-solid fa-circle-check"></i> Instant browser launch in under 1 second on iOS and Android</li>
+                      <li><i className="fa-solid fa-circle-check"></i> Customized with your business branding, logo, and friendly greeting</li>
+                      <li><i className="fa-solid fa-circle-check"></i> Supports 24+ languages with instant language selection</li>
+                    </ul>
                   </div>
-                ))}
+                  <div className="sr-step-preview">
+                    <div className="sr-phone-mockup">
+                      <div className="sr-mockup-header">
+                        <div className="sr-mockup-avatar"><i className="fa-solid fa-store"></i></div>
+                        <div>
+                          <div className="sr-mockup-biz-name">Your Google Business Profile</div>
+                          <div className="sr-mockup-biz-sub">Google Maps Verified Listing</div>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'center', padding: '6px 0' }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: '#17251c', margin: '0 0 4px' }}>How was your visit today?</p>
+                        <span style={{ fontSize: 10, color: '#768578' }}>Tap stars to share feedback</span>
+                        <div className="sr-mockup-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+                      </div>
+                      <div className="sr-mockup-btn">
+                        <i className="fa-solid fa-hand-pointer"></i> Customer taps 5 Stars
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div className="sr-step-card reverse">
+                  <div className="sr-step-info">
+                    <div className="sr-step-tag"><i className="fa-solid fa-wand-magic-sparkles"></i> Step 2: AI Magic Reviews</div>
+                    <h3>AI-Powered Review Generation &amp; Smart Filter</h3>
+                    <p>StarReview AI solves customer writer's block while shielding your public reputation:</p>
+                    <ul className="sr-step-bullets">
+                      <li><i className="fa-solid fa-circle-check"></i> <div><strong>Happy Customers (4–5 Stars):</strong> 3 personalized AI review drafts with target SEO keywords.</div></li>
+                      <li><i className="fa-solid fa-circle-check"></i> <div><strong>Unhappy Customers (1–3 Stars):</strong> Routed to private feedback form before negative reviews hit Google.</div></li>
+                    </ul>
+                  </div>
+                  <div className="sr-step-preview">
+                    <div className="sr-phone-mockup">
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#1b4d2e', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <i className="fa-solid fa-sparkles"></i> AI Generated Review Suggestions:
+                      </div>
+                      <div className="sr-mockup-draft-chip">
+                        "Outstanding service and very polite staff! Everything was quick and high quality. Will definitely return! ⭐⭐⭐⭐⭐"
+                      </div>
+                      <div className="sr-mockup-draft-chip alt">
+                        "Superb experience from start to finish. Clean atmosphere and very professional team. Highly recommend!"
+                      </div>
+                      <div className="sr-mockup-shield">
+                        <i className="fa-solid fa-shield-halved"></i>
+                        <div><strong>Private Feedback Shield:</strong> 1-3 star ratings stay private for your eyes only.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="sr-step-card">
+                  <div className="sr-step-info">
+                    <div className="sr-step-tag"><i className="fa-brands fa-google"></i> Step 3: Google Maps 1-Tap Post</div>
+                    <h3>1-Tap Copy &amp; Publish to Google My Business</h3>
+                    <p>The review is automatically copied to clipboard. Tapping "Continue to Google" opens Google Maps directly with 5 stars selected!</p>
+                    <ul className="sr-step-bullets">
+                      <li><i className="fa-solid fa-circle-check"></i> Automatically opens Google Maps on customer's logged-in account</li>
+                      <li><i className="fa-solid fa-circle-check"></i> Injected service keywords boost your Google Business Profile local search rank</li>
+                      <li><i className="fa-solid fa-circle-check"></i> Boosts Google Maps 3-Pack local ranking with authentic keyword velocity</li>
+                    </ul>
+                    <div style={{ marginTop: 20 }}>
+                      <button className="btn btn-dark btn-sm" onClick={() => navigate('How it works')}>Explore full roadmap &amp; comparison <span>↗</span></button>
+                    </div>
+                  </div>
+                  <div className="sr-step-preview">
+                    <div className="sr-phone-mockup" style={{ textAlign: 'center', padding: '16px 14px' }}>
+                      <div className="sr-copied-badge"><i className="fa-solid fa-check"></i></div>
+                      <div style={{ fontWeight: 800, color: '#17251c', fontSize: 15, marginBottom: 4 }}>Review Copied!</div>
+                      <p style={{ fontSize: 11, color: '#68776b', margin: '0 0 14px' }}>Paste and publish to Google in 1 tap.</p>
+                      <div className="sr-mockup-btn blue" style={{ cursor: 'pointer' }} onClick={() => copy("Outstanding service and very polite staff! Everything was quick and high quality. Will definitely return!")}>
+                        <i className="fa-brands fa-google"></i> Continue to Google Reviews
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -793,25 +871,187 @@ export default function App() {
       )}
 
       {/* ====================================================================
-          HOW IT WORKS PAGE
+          HOW IT WORKS PAGE (FULL REVIEWFLOW 3-STEP ROADMAP IN STARREVIEW PALETTE)
           ==================================================================== */}
       {page === 'How it works' && (
-        <PageShell title="A better feedback loop, in four steps." subtitle="Keep the experience clear for customers and actionable for your team.">
-          <div className="steps-grid big-steps">
-            {[
-              ['01', 'Set up your business', 'Add your business details, services, staff, keywords and Google review link.'],
-              ['02', 'Print your QR flyer', 'Create a QR code and a print-ready A6 flyer in your brand color.'],
-              ['03', 'Customers share feedback', 'Customers choose a rating, staff, service and language, then edit one of three drafts. Low ratings go to a private form.'],
-              ['04', 'Track, reply and improve', 'See scans and conversions, draft replies to reviews and run a profile health check.']
-            ].map(s => (
-              <div className="step" key={s[0]}>
-                <div className="step-number">{s[0]}</div>
-                <h3>{s[1]}</h3>
-                <p>{s[2]}</p>
+        <main className="wrap sr-works-page">
+          {/* HERO SECTION */}
+          <section className="sr-works-hero">
+            <div className="eyebrow">
+              <span className="pulse"></span> THE GOOGLE MAGIC REVIEW QR EXPERIENCE
+            </div>
+            <h1>How <span>StarReview AI</span> Turns Customers into 5-Star Reviews</h1>
+            <p>
+              We generate review QR codes for Google My Business. See how our <strong>Google Magic Review QR</strong> helps your customers write and post authentic 5-star Google reviews in 3 easy steps.
+            </p>
+
+            {/* Quick Metrics Bar */}
+            <div className="sr-metrics-bar">
+              <div className="sr-metric-item">
+                <div className="sr-metric-val">10 <span>Sec</span></div>
+                <div className="sr-metric-lbl">Scan to Publish</div>
               </div>
-            ))}
+              <div className="sr-metric-item">
+                <div className="sr-metric-val">3.4<span>x</span></div>
+                <div className="sr-metric-lbl">Review Conversion Rate</div>
+              </div>
+              <div className="sr-metric-item">
+                <div className="sr-metric-val">100<span>%</span></div>
+                <div className="sr-metric-lbl">Zero App Required</div>
+              </div>
+            </div>
+          </section>
+
+          {/* 3-STEP VISUAL ROADMAP */}
+          <section className="sr-roadmap-section">
+            <div className="section-heading">
+              <div className="eyebrow">THE 3-STEP FLOW</div>
+              <h2>How It Works In <em>3 Simple Steps</em></h2>
+              <p>A friction-free mobile review flow that turns satisfied in-store visitors into published 5-star Google Business reviews on autopilot.</p>
+            </div>
+
+            <div className="sr-steps-list">
+              {/* STEP 1 */}
+              <div className="sr-step-card">
+                <div className="sr-step-info">
+                  <div className="sr-step-tag"><i className="fa-solid fa-qrcode"></i> Step 1: Scan &amp; Launch</div>
+                  <h3>Customer Scans Your Google Business Review QR</h3>
+                  <p>Display your designer <strong>Google Business Review QR</strong> standee on dining tables, checkout counters, reception desks, or invoices. The customer points their phone camera — no app download or sign-up needed.</p>
+                  <ul className="sr-step-bullets">
+                    <li><i className="fa-solid fa-circle-check"></i> Instant browser launch in under 1 second on both iOS and Android</li>
+                    <li><i className="fa-solid fa-circle-check"></i> Tailored with your business branding, logo, and friendly custom greeting</li>
+                    <li><i className="fa-solid fa-circle-check"></i> Supports 24+ languages with instant language selection for international and regional patrons</li>
+                  </ul>
+                </div>
+                <div className="sr-step-preview">
+                  <div className="sr-phone-mockup">
+                    <div className="sr-mockup-header">
+                      <div className="sr-mockup-avatar"><i className="fa-solid fa-store"></i></div>
+                      <div>
+                        <div className="sr-mockup-biz-name">Your Google Business Profile</div>
+                        <div className="sr-mockup-biz-sub">Google Maps Verified Listing</div>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: '#17251c', margin: '0 0 4px' }}>How was your visit today?</p>
+                      <span style={{ fontSize: 11, color: '#768578' }}>Tap stars to share feedback</span>
+                      <div className="sr-mockup-stars">
+                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                      </div>
+                    </div>
+                    <div className="sr-mockup-btn">
+                      <i className="fa-solid fa-hand-pointer"></i> Customer taps 5 Stars
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* STEP 2 */}
+              <div className="sr-step-card reverse">
+                <div className="sr-step-info">
+                  <div className="sr-step-tag"><i className="fa-solid fa-wand-magic-sparkles"></i> Step 2: AI Magic Reviews</div>
+                  <h3>AI-Powered Review Generation &amp; Smart Filter</h3>
+                  <p><strong>StarReview AI</strong> instantly solves customer writer's block while shielding your business reputation:</p>
+                  <ul className="sr-step-bullets">
+                    <li><i className="fa-solid fa-circle-check"></i> <div><strong>Happy Customers (4–5 Stars):</strong> Given 3 personalized, human-like AI review options infused with your target SEO keywords (friendly staff, speedy service, signature products).</div></li>
+                    <li><i className="fa-solid fa-circle-check"></i> <div><strong>Unhappy Customers (1–3 Stars):</strong> Safely guided to a private internal feedback form sent straight to you, solving grievances before a public negative review hits Google.</div></li>
+                  </ul>
+                </div>
+                <div className="sr-step-preview">
+                  <div className="sr-phone-mockup">
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#1b4d2e', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <i className="fa-solid fa-sparkles"></i> AI Generated Review Suggestions:
+                    </div>
+                    <div className="sr-mockup-draft-chip">
+                      "Outstanding service and very polite staff! Everything was quick and high quality. Will definitely return! ⭐⭐⭐⭐⭐"
+                    </div>
+                    <div className="sr-mockup-draft-chip alt">
+                      "Superb experience from start to finish. Clean atmosphere and very professional team. Highly recommend!"
+                    </div>
+                    <div className="sr-mockup-shield">
+                      <i className="fa-solid fa-shield-halved"></i>
+                      <div><strong>Private Feedback Shield:</strong> 1-3 star ratings stay private for your eyes only.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* STEP 3 */}
+              <div className="sr-step-card">
+                <div className="sr-step-info">
+                  <div className="sr-step-tag"><i className="fa-brands fa-google"></i> Step 3: Google Maps 1-Tap Post</div>
+                  <h3>1-Tap Copy &amp; Publish to Google My Business</h3>
+                  <p>The chosen review is automatically copied to the customer's phone clipboard. With one tap on "Continue to Google", Google Maps opens with 5 stars selected — the customer simply taps "Paste" and "Post"!</p>
+                  <ul className="sr-step-bullets">
+                    <li><i className="fa-solid fa-circle-check"></i> Automatically opens Google Maps on their logged-in Google account</li>
+                    <li><i className="fa-solid fa-circle-check"></i> Injected service keywords boost your Google Business Profile local search rank</li>
+                    <li><i className="fa-solid fa-circle-check"></i> Your monthly review velocity climbs, outranking competitors in the Google Maps 3-Pack</li>
+                  </ul>
+                </div>
+                <div className="sr-step-preview">
+                  <div className="sr-phone-mockup" style={{ textAlign: 'center', padding: '16px 14px' }}>
+                    <div className="sr-copied-badge">
+                      <i className="fa-solid fa-check"></i>
+                    </div>
+                    <div style={{ fontWeight: 800, color: '#17251c', fontSize: 15, marginBottom: 4 }}>Review Copied!</div>
+                    <p style={{ fontSize: 11, color: '#68776b', margin: '0 0 16px' }}>Click below to open Google Maps and paste your review in 1 tap.</p>
+                    <div className="sr-mockup-btn blue" style={{ cursor: 'pointer' }} onClick={() => copy("Outstanding service and very polite staff! Everything was quick and high quality. Will definitely return!")}>
+                      <i className="fa-brands fa-google"></i> Continue to Google Reviews
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* TRADITIONAL VS STARREVIEW COMPARISON SECTION */}
+          <section className="sr-compare-section">
+            <div className="section-heading">
+              <div className="eyebrow">HEAD TO HEAD COMPARISON</div>
+              <h2>Normal QR Code vs <em>Google Magic Review QR</em></h2>
+              <p>Why standard Google QR codes fail to produce results, and how our <strong>Google Magic Review QR</strong> delivers 300%+ more reviews.</p>
+            </div>
+
+            <div className="sr-compare-grid">
+              {/* Bad Way */}
+              <div className="sr-compare-box sr-compare-bad">
+                <h4><i className="fa-solid fa-circle-xmark"></i> Standard Google Review QR</h4>
+                <ul>
+                  <li><i className="fa-solid fa-xmark"></i> Forces patrons to write reviews in an intimidating blank box (70%+ abandonment rate).</li>
+                  <li><i className="fa-solid fa-xmark"></i> Zero defense against unhappy guests posting instant 1-star ratings publicly.</li>
+                  <li><i className="fa-solid fa-xmark"></i> Short reviews lack the keywords required to climb Google Maps rankings.</li>
+                  <li><i className="fa-solid fa-xmark"></i> No scan tracking, copy metrics, or funnel conversion visibility.</li>
+                </ul>
+              </div>
+
+              {/* Good Way */}
+              <div className="sr-compare-box sr-compare-good">
+                <h4><i className="fa-solid fa-circle-check"></i> StarReview AI – Magic Review QR</h4>
+                <ul>
+                  <li><i className="fa-solid fa-check"></i> Instant, human-like AI written reviews eliminate writer's block in 10 seconds.</li>
+                  <li><i className="fa-solid fa-check"></i> Private sentiment filter routes 1-3 star feedback internally before Google sees it.</li>
+                  <li><i className="fa-solid fa-check"></i> Automatically embeds your target business services and location SEO keywords.</li>
+                  <li><i className="fa-solid fa-check"></i> Comprehensive dashboard tracks scans, AI generations, and clipboard copies.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* CTA CARD */}
+          <div className="cta-wrap">
+            <div className="cta-card">
+              <div>
+                <div className="eyebrow">READY TO GROW?</div>
+                <h2>Ready to turn visits into<br /><em>5-star Google reviews?</em></h2>
+                <p>Join businesses boosting review conversion with smart QR and AI assistance.</p>
+              </div>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <button className="btn btn-dark" onClick={() => navigate('Account')}>Get started free <span>↗</span></button>
+                <button className="btn btn-white" onClick={() => navigate('Try the demo')}>Try live demo <span>▶</span></button>
+              </div>
+            </div>
           </div>
-        </PageShell>
+        </main>
       )}
 
       {/* ====================================================================
