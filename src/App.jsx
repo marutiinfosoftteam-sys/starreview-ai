@@ -838,7 +838,6 @@ export default function App() {
               </div>
             </section>
           </main>
-          <Footer navigate={navigate} />
         </>
       )}
 
@@ -1055,29 +1054,247 @@ export default function App() {
       )}
 
       {/* ====================================================================
-          AI VS QR COMPARISON PAGE
+          AI VS QR COMPARISON PAGE (FULL REVIEWFLOW STYLE IN STARREVIEW THEME)
           ==================================================================== */}
       {page === 'AI vs QR' && (
-        <PageShell title="A QR code is the start, not the whole experience." subtitle="Compare a plain review link with a guided feedback flow that helps customers know what to do next.">
-          <div className="compare-grid">
-            <article className="compare-card plain">
-              <span className="compare-kicker">BASIC QR LINK</span>
-              <h3>One scan, blank page.</h3>
-              {['Opens a blank review box', 'No help writing the review', 'Low ratings go straight to Google', 'No scan or conversion tracking'].map(x => (
-                <p key={x}>− {x}</p>
-              ))}
-            </article>
-            <article className="compare-card smart">
-              <span className="compare-kicker">STARREVIEW AI</span>
-              <h3>A thoughtful feedback journey.</h3>
-              {['Guided rating, staff and service flow', '3 editable AI drafts in 24 languages', 'Private feedback for low ratings', 'Scan, draft, copy and redirect analytics'].map(x => (
-                <p key={x}>✓ {x}</p>
-              ))}
-              <button className="btn btn-dark" onClick={() => navigate('Try the demo')}>Try the demo ↗</button>
-            </article>
-          </div>
-          <p className="fineprint">Customer reviews should reflect genuine experiences. StarReview AI never posts reviews for customers. Every draft is editable and based on what the customer chose.</p>
-        </PageShell>
+        <main className="wrap vs-page-wrapper">
+          {/* 1. HERO SECTION */}
+          <section className="vs-hero">
+            <div className="vs-hero-shell">
+              <div className="vs-hero-copy">
+                <div className="vs-badge">
+                  <i className="fa-solid fa-code-compare"></i> Google Magic Review QR vs Normal QR
+                </div>
+                <h1>Standard QR Codes Only Redirect.<br /><span>StarReview AI Helps Customers Write 5-Star Reviews.</span></h1>
+                <p>
+                  Compare a standard, static <strong>Google Business Review QR</strong> with the <strong>Google Magic Review QR</strong> powered by <strong>StarReview AI</strong>. Discover how an <strong>AI-Powered Review QR</strong> guides customers, personalizes authentic review drafts, supports 24+ languages, and boosts your <strong>Google My Business Review QR</strong> conversion rate by 300%.
+                </p>
+                <div className="vs-hero-actions">
+                  <button className="btn btn-dark" onClick={() => navigate('Account')}>
+                    Start 3-Day Free Trial <i className="fa-solid fa-arrow-right" style={{ marginLeft: 6 }}></i>
+                  </button>
+                  <button className="btn btn-light" onClick={() => {
+                    const el = document.getElementById('comparison-table');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}>
+                    <i className="fa-solid fa-table-columns" style={{ marginRight: 6 }}></i> View Full Comparison
+                  </button>
+                </div>
+              </div>
+
+              <div className="vs-hero-visual">
+                <div className="compare-flow-card basic-flow">
+                  <div className="flow-label">Normal QR Code</div>
+                  <div className="flow-icon"><i className="fa-solid fa-qrcode"></i></div>
+                  <strong>Scan → Google Box</strong>
+                  <span>Blank screen &amp; writer's block</span>
+                </div>
+                <div className="flow-arrow"><i className="fa-solid fa-arrow-right"></i></div>
+                <div className="compare-flow-card smart-flow">
+                  <div className="flow-label">Google Magic Review QR</div>
+                  <div className="flow-icon"><i className="fa-solid fa-wand-magic-sparkles"></i></div>
+                  <strong>Scan → AI Review Flow</strong>
+                  <span>Instant personalized drafts</span>
+                  <div className="mini-feature-row">
+                    <span>24+ Languages</span>
+                    <span>Keyword SEO</span>
+                    <span>1-Tap Copy</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 2. SIDE-BY-SIDE SUMMARY CARDS */}
+          <section className="vs-section-intro">
+            <div className="eyebrow" style={{ justifyContent: 'center' }}>SIDE-BY-SIDE COMPARISON</div>
+            <h2>Normal QR Code vs Google Magic Review QR</h2>
+            <p>The difference isn't the QR code itself — it is the frictionless experience that happens the second your customer scans it.</p>
+          </section>
+
+          <section className="vs-summary-grid">
+            {/* Traditional QR Card */}
+            <div className="summary-card traditional">
+              <div className="card-topline">
+                <span>Traditional Normal QR</span>
+                <i className="fa-solid fa-arrow-right"></i>
+                <span>Empty Google Form</span>
+              </div>
+              <div className="summary-chip bad">
+                <i className="fa-solid fa-xmark"></i> Standard Static QR
+              </div>
+              <h3>Standard Google Review QR Code</h3>
+              <p className="card-desc">A generic barcode that dumps customers directly into an intimidating, empty Google review text box with zero help or direction.</p>
+              <ul className="summary-points bad">
+                <li>
+                  <span className="point-icon"><i className="fa-solid fa-xmark"></i></span>
+                  <div>
+                    <strong>Customer Writer's Block</strong>
+                    <span>Customers stare at a blank text box, struggle to find words, and over 70% give up without posting anything.</span>
+                  </div>
+                </li>
+                <li>
+                  <span className="point-icon"><i className="fa-solid fa-xmark"></i></span>
+                  <div>
+                    <strong>Weak Local SEO Value</strong>
+                    <span>Reviews often end up as 1-word comments like "Good" or "Nice", missing your target keywords, services, and staff names.</span>
+                  </div>
+                </li>
+                <li>
+                  <span className="point-icon"><i className="fa-solid fa-xmark"></i></span>
+                  <div>
+                    <strong>No Multi-Language Assistance</strong>
+                    <span>Cannot adapt to international tourists or regional language speakers who prefer reviewing in their native tongue.</span>
+                  </div>
+                </li>
+                <li>
+                  <span className="point-icon"><i className="fa-solid fa-xmark"></i></span>
+                  <div>
+                    <strong>Unfiltered Negative Public Reviews</strong>
+                    <span>Unhappy customers post directly to Google Maps, damaging your public rating without giving you a chance to resolve issues.</span>
+                  </div>
+                </li>
+                <li>
+                  <span className="point-icon"><i className="fa-solid fa-xmark"></i></span>
+                  <div>
+                    <strong>Zero Funnel Analytics</strong>
+                    <span>You have no data on how many patrons scanned, how many copied drafts, or where drop-offs occurred.</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            {/* StarReview AI Card */}
+            <div className="summary-card reviewflow">
+              <div className="card-topline smart">
+                <span>Google Magic Review QR</span>
+                <i className="fa-solid fa-arrow-right"></i>
+                <span>Smart AI Funnel</span>
+              </div>
+              <div className="summary-chip good">
+                <i className="fa-solid fa-wand-magic-sparkles"></i> StarReview AI Magic QR
+              </div>
+              <h3>AI-Powered Review QR by StarReview AI</h3>
+              <p className="card-desc">An intelligent <strong>Google Magic Review QR</strong> funnel that crafts human-like, keyword-optimized review options ready to publish in 10 seconds.</p>
+              <ul className="summary-points good">
+                <li>
+                  <span className="point-icon"><i className="fa-solid fa-check"></i></span>
+                  <div>
+                    <strong>3 Human-Like AI Drafts</strong>
+                    <span>Customers pick from 3 genuine, natural review variations tailored to their positive experience. Zero writer's block.</span>
+                  </div>
+                </li>
+                <li>
+                  <span className="point-icon"><i className="fa-solid fa-check"></i></span>
+                  <div>
+                    <strong>Injected Google Business Review QR Keywords</strong>
+                    <span>Drafts naturally incorporate your specific dishes, treatments, staff names, and local business SEO keywords.</span>
+                  </div>
+                </li>
+                <li>
+                  <span className="point-icon"><i className="fa-solid fa-check"></i></span>
+                  <div>
+                    <strong>24+ Native Languages</strong>
+                    <span>Customers choose English, Hindi, Spanish, Arabic, or regional languages with effortless 1-tap switching.</span>
+                  </div>
+                </li>
+                <li>
+                  <span className="point-icon"><i className="fa-solid fa-check"></i></span>
+                  <div>
+                    <strong>Smart Negative Review Shield</strong>
+                    <span>1 to 3 star ratings are directed to a private management feedback form, keeping your public Google score safe.</span>
+                  </div>
+                </li>
+                <li>
+                  <span className="point-icon"><i className="fa-solid fa-check"></i></span>
+                  <div>
+                    <strong>Real-Time Conversion Tracking</strong>
+                    <span>Measure scan counts, generated reviews, clipboard copies, and actual Google My Business Review QR growth.</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* 3. DETAILED COMPARISON TABLE */}
+          <section className="vs-table-section" id="comparison-table">
+            <div className="vs-table-heading">
+              <div className="vs-table-kicker">Feature Breakdown</div>
+              <h2>Side-by-Side Capabilities</h2>
+              <p>A detailed point-by-point comparison between basic QR codes and StarReview AI.</p>
+            </div>
+
+            <div className="vs-table-wrapper">
+              <table className="vs-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: '38%' }}>Feature / Capability</th>
+                    <th style={{ width: '31%' }}>Basic Review QR Code</th>
+                    <th style={{ width: '31%' }} className="rf-col">StarReview AI</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ['AI Review Draft Suggestions', 'Helps customers draft authentic feedback without writer\'s block', 'Blank Text Box', '3 Instant AI Drafts'],
+                    ['Language Support & Reviewer Chooser', 'Multi-language generation with on-screen language dropdown', 'Single Language Only', '24+ Languages + Chooser'],
+                    ['SEO Keyword, Staff & Service Injection', 'Injects your high-ranking business keywords into review drafts', 'None (Generic Text)', 'Custom Keywords & Staff'],
+                    ['Natural Human-Style Writing & Emojis', 'Drafts written with natural conversational tone and appropriate emojis', 'Plain / None', 'Human Tone + Emojis'],
+                    ['Negative Feedback Interceptor (1–3 Stars)', 'Routes poor customer ratings to private manager feedback', 'Goes Public on Google', 'Private Offline Form'],
+                    ['1-Tap Copy & Auto-Redirect', 'Copies AI review draft to clipboard and opens Google Review popup', 'Manual Typing', '1-Tap Copy & Open Google'],
+                    ['Review Customization & Length Limits', 'Configure review character count, tone, and active services', 'Not Configurable', 'Full Business Controls'],
+                    ['Real-Time Interaction Tracking', 'Track QR scans, generated drafts, clicks, and copied reviews', 'Zero Tracking', 'Deep Activity Metrics'],
+                    ['Printable Designer Standees', 'Custom A6 flyers and table tent cards ready for print', 'Raw Square QR Only', 'Ready-to-Print Standees']
+                  ].map(([feat, desc, basicVal, smartVal]) => (
+                    <tr key={feat}>
+                      <td className="feature-title-cell">
+                        {feat}
+                        <small>{desc}</small>
+                      </td>
+                      <td>
+                        <span className="status-pill no"><i className="fa-solid fa-xmark"></i> {basicVal}</span>
+                      </td>
+                      <td className="rf-col">
+                        <span className="status-pill yes"><i className="fa-solid fa-check"></i> {smartVal}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* 4. DEEP DIVE HIGHLIGHTS */}
+          <section className="vs-deep-dive">
+            <div className="deep-dive-grid">
+              <div className="deep-dive-card">
+                <div className="deep-dive-icon"><i className="fa-solid fa-wand-magic-sparkles"></i></div>
+                <h4>Bypasses Writer's Block Instantly</h4>
+                <p>Most satisfied customers genuinely want to leave 5 stars, but abandon when forced to compose a paragraph from scratch. Our <strong>Google Magic Review QR</strong> creates 3 distinct, authentic drafts ready to copy and post in seconds.</p>
+              </div>
+
+              <div className="deep-dive-card">
+                <div className="deep-dive-icon"><i className="fa-solid fa-language"></i></div>
+                <h4>24+ Native Languages &amp; On-Screen Chooser</h4>
+                <p>Customers can select their preferred language directly on the review screen. The <strong>AI-Powered Review QR</strong> generates natural regional idioms and phrases, unlocking reviews from diverse demographic segments.</p>
+              </div>
+
+              <div className="deep-dive-card">
+                <div className="deep-dive-icon"><i className="fa-solid fa-magnifying-glass-chart"></i></div>
+                <h4>Supercharges Google Maps SEO</h4>
+                <p>Google’s algorithm heavily ranks listings whose reviews mention specific high-intent keywords. StarReview AI seamlessly integrates your target services, menu items, and staff names into your <strong>Google My Business Review QR</strong> flow.</p>
+              </div>
+            </div>
+          </section>
+
+          {/* 5. UPGRADE CTA BANNER */}
+          <section className="vs-cta-banner">
+            <h2>Upgrade to Google Magic Review QR Today</h2>
+            <p>Join smart business owners using <strong>StarReview AI</strong> to transform daily foot traffic into genuine, high-converting 5-star Google Business reviews effortlessly.</p>
+            <button className="vs-cta-btn" onClick={() => navigate('Account')}>
+              Start 3-Day Free Trial <i className="fa-solid fa-arrow-right"></i>
+            </button>
+          </section>
+        </main>
       )}
 
       {/* ====================================================================
@@ -1333,6 +1550,7 @@ export default function App() {
           ♡ <span>Feedback</span>
         </button>
       )}
+      {page !== 'Review' && <Footer navigate={navigate} />}
     </>
   );
 }
@@ -1352,69 +1570,93 @@ function PageShell({ title, subtitle, children }) {
 
 function Footer({ navigate }) {
   const groups = [
-    ['Solutions', ['Platform features', 'AI vs Normal QR', 'AI SEO analyzer', 'How it works', 'Growing businesses']],
-    ['Plans & Scale', ['Source code & commercial license', 'Pricing & free trial', 'Multi-business plan', 'Apply for agency', 'Start 3-day free trial', 'Payment QR Demo']],
-    ['Company', ['About us', 'Contact support', 'Frequently asked questions', 'HTML sitemap', 'XML sitemap']],
-    ['Access', ['Operator sign in', 'Partner sign in', 'Join partner program (40%)', 'Business onboard']],
-    ['Policies', ['Privacy policy', 'Terms of service', 'Cookie policy']]
+    {
+      title: 'Solutions',
+      items: [
+        ['Platform Features', 'Features'],
+        ['AI vs Normal QR', 'AI vs QR'],
+        ['Source Code', 'Features'],
+        ['AI SEO Analyzer', 'Features'],
+        ['How It Works', 'How it works'],
+        ['Growing Businesses', 'Features']
+      ]
+    },
+    {
+      title: 'Plans & Scale',
+      items: [
+        ['★ Source Code & License', 'Pricing'],
+        ['Pricing & Free Trial', 'Pricing'],
+        ['Multi-Business Plan', 'Pricing'],
+        ['Apply for Agency', 'Contact'],
+        ['Start 3-Day Free Trial', 'Account'],
+        ['Payment QR Demo', 'Demo checkout']
+      ]
+    },
+    {
+      title: 'Company',
+      items: [
+        ['About Us', 'Features'],
+        ['Contact Support', 'Contact'],
+        ['Frequently Asked Questions', 'How it works'],
+        ['HTML Sitemap', 'Sitemap'],
+        ['XML Sitemap', 'Sitemap']
+      ]
+    },
+    {
+      title: 'Access',
+      items: [
+        ['Operator Sign In', 'Account'],
+        ['Partner Sign In', 'Account'],
+        ['Join Partner Program (40%)', 'Contact'],
+        ['Business Onboard', 'Account'],
+        ['Privacy Policy', 'Privacy policy'],
+        ['Terms of Service', 'Terms of service'],
+        ['Cookie Policy', 'Cookie policy']
+      ]
+    }
   ];
-  const targets = {
-    'Platform features': 'Features',
-    'AI vs Normal QR': 'AI vs QR',
-    'AI SEO analyzer': 'SEO analyzer',
-    'How it works': 'How it works',
-    'Growing businesses': 'Features',
-    'Source code & commercial license': 'Source code',
-    'Pricing & free trial': 'Pricing',
-    'Multi-business plan': 'Multi-business plan',
-    'Apply for agency': 'Apply for agency',
-    'Start 3-day free trial': 'Account',
-    'Payment QR Demo': 'Payment QR Demo',
-    'About us': 'About us',
-    'Contact support': 'Contact',
-    'Frequently asked questions': 'Frequently asked questions',
-    'HTML sitemap': 'Sitemap',
-    'XML sitemap': 'Sitemap',
-    'Operator sign in': 'Account',
-    'Partner sign in': 'Account',
-    'Join partner program (40%)': 'Partner program',
-    'Business onboard': 'Business onboarding',
-    'Privacy policy': 'Privacy policy',
-    'Terms of service': 'Terms of service',
-    'Cookie policy': 'Cookie policy'
-  };
 
   return (
     <footer className="footer">
-      <div className="wrap footer-main footer-expanded">
-        <div>
-          <button className="brand footer-brand" onClick={() => navigate('Home')}>
+      <div className="wrap footer-container">
+        {/* Brand Column */}
+        <div className="footer-brand-box">
+          <button className="brand" onClick={() => navigate('Home')} style={{ textAlign: 'left', padding: 0 }}>
             <span className="brand-mark">✦</span>
             <span>StarReview <b>AI</b></span>
           </button>
-          <p>AI-powered review growth for local businesses. Help customers share genuine feedback, respond thoughtfully, and build trust.</p>
-          <p className="footer-powered">Powered by <strong>StarReview AI</strong></p>
+          <div className="footer-brand-motto">Helping customers share better reviews</div>
+          <p className="footer-brand-tagline">
+            AI-Powered Google Review Growth System — helping local businesses gather authentic 5-star reviews, resolve private feedback, and boost local search rankings.
+          </p>
+          <div className="footer-powered-link">
+            Powered by <strong>StarReview AI</strong>
+          </div>
         </div>
-        {groups.map(([heading, items]) => (
-          <div className="footer-column" key={heading}>
-            <b>{heading}</b>
-            {items.map(item => (
-              <button key={item} onClick={() => navigate(targets[item] || 'Home')}>{item}</button>
+
+        {/* 4 Nav Columns */}
+        {groups.map(col => (
+          <div className="footer-nav-col" key={col.title}>
+            <h4>{col.title}</h4>
+            {col.items.map(([label, target]) => (
+              <button key={label} onClick={() => navigate(target)}>{label}</button>
             ))}
           </div>
         ))}
       </div>
-      <div className="wrap footer-bottom">
+
+      {/* Bottom Bar */}
+      <div className="wrap footer-bottom-bar">
         <span>© 2026 StarReview AI. All rights reserved.</span>
-        <span>
-          <button onClick={() => navigate('Privacy policy')}>Privacy policy</button>
+        <div>
+          <button onClick={() => navigate('Privacy policy')}>Privacy Policy</button>
           <i>·</i>
-          <button onClick={() => navigate('Terms of service')}>Terms of service</button>
+          <button onClick={() => navigate('Terms of service')}>Terms of Service</button>
           <i>·</i>
-          <button onClick={() => navigate('Cookie policy')}>Cookie policy</button>
+          <button onClick={() => navigate('Cookie policy')}>Cookie Policy</button>
           <i>·</i>
           <button onClick={() => navigate('Sitemap')}>Sitemap</button>
-        </span>
+        </div>
       </div>
     </footer>
   );
