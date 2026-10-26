@@ -234,236 +234,542 @@ export default function App() {
 
   // Exact Pricing Section from User Screenshot (in StarReview Design Theme)
   const renderPricingSection = () => (
-    <section className="section wrap" id="pricing-plans">
-      <div className="section-heading">
-        <div className="eyebrow"><span className="pulse"></span> TRANSPARENT PRICING</div>
-        <h2>Simple plans. <em>Better conversations.</em></h2>
-        <p>Start with a 3-day free trial. Choose the plan that fits your business needs.</p>
+    <section className="section wrap" id="pricing-plans" style={{ paddingTop: 20 }}>
+      {/* 1. HERO */}
+      <div className="pricing-hero">
+        <div className="pricing-hero-badge">
+          <span></span> Simple &amp; Transparent Plans
+        </div>
+        <h1>Turn More Customers Into <span>Google Reviews</span></h1>
+        <p>Start free for 3 days, then select the plan that matches your business growth. Scale easily with automated AI drafts, smart QR standees, and centralized multi-business tools.</p>
+        <div className="pricing-trust-row">
+          <span><i className="fa-solid fa-check"></i> No credit card for 3-day trial</span>
+          <span><i className="fa-solid fa-check"></i> Single &amp; Multi-Business Options</span>
+          <span><i className="fa-solid fa-check"></i> Upgrade or chat anytime</span>
+        </div>
       </div>
 
-      {/* Free Trial 4-Point Box */}
-      <div className="sr-trial-box">
-        <div className="sr-trial-header">
-          <div>
-            <span className="sr-trial-badge">Free Trial Included</span>
-            <h3>Start Free 3-Day Trial — No Credit Card Required</h3>
+      {/* 2. 3-DAY FREE TRIAL HIGHLIGHT BOX */}
+      <div className="trial-highlight-card">
+        <div className="trial-header-flex">
+          <div className="trial-title-wrap">
+            <div className="trial-gift-icon">
+              <i className="fa-solid fa-gift"></i>
+            </div>
+            <div>
+              <div className="trial-badge"><i className="fa-solid fa-check"></i> No Credit Card Required</div>
+              <h3>3 Days Free Trial — Explore Everything Risk-Free</h3>
+            </div>
           </div>
-          <button className="btn btn-dark" onClick={() => navigate('Account')}>
-            Start free trial <span>↗</span>
+          <button className="pricing-cta cta-primary" style={{ padding: '0.65rem 1.4rem', width: 'auto' }} onClick={() => navigate('Account')}>
+            Start 3-Day Free Trial <i className="fa-solid fa-arrow-right" style={{ marginLeft: 6 }}></i>
           </button>
         </div>
-        <div className="sr-trial-grid">
-          <div className="sr-trial-item">
-            <strong><i className="fa-solid fa-wand-magic-sparkles" style={{ color: '#2f7046', marginRight: 4 }}></i> AI Review Engine</strong>
-            Smart drafts in 24 languages
+
+        <div className="trial-features-grid">
+          <div className="trial-feature-box">
+            <i className="fa-solid fa-wand-magic-sparkles"></i>
+            <div>
+              <strong>AI Review Generator</strong>
+              <span>3 human-like drafts in 24+ languages</span>
+            </div>
           </div>
-          <div className="sr-trial-item">
-            <strong><i className="fa-solid fa-qrcode" style={{ color: '#2f7046', marginRight: 4 }}></i> QR Code &amp; Flyer</strong>
-            Printable A6 flyer &amp; link
+          <div className="trial-feature-box">
+            <i className="fa-solid fa-qrcode"></i>
+            <div>
+              <strong>Smart QR Standee</strong>
+              <span>Printable A6 flyer &amp; direct link</span>
+            </div>
           </div>
-          <div className="sr-trial-item">
-            <strong><i className="fa-solid fa-sliders" style={{ color: '#2f7046', marginRight: 4 }}></i> Keywords &amp; Staff</strong>
-            Targeted SEO integration
+          <div className="trial-feature-box">
+            <i className="fa-solid fa-sliders"></i>
+            <div>
+              <strong>Keywords &amp; Staff</strong>
+              <span>Inject custom products &amp; services</span>
+            </div>
           </div>
-          <div className="sr-trial-item">
-            <strong><i className="fa-solid fa-chart-line" style={{ color: '#2f7046', marginRight: 4 }}></i> Click &amp; Copy Analytics</strong>
-            Real-time tracking portal
+          <div className="trial-feature-box">
+            <i className="fa-solid fa-chart-line"></i>
+            <div>
+              <strong>Click &amp; Copy Analytics</strong>
+              <span>Track scans, generations &amp; copies</span>
+            </div>
           </div>
         </div>
-        <div className="sr-trial-note">
-          <i className="fa-solid fa-circle-info" style={{ color: '#2f7046', marginRight: 4 }}></i> Free trial gives full access to collect reviews. Priority Support and Ad-Free Funnel are included on paid memberships.
+
+        <div className="trial-footer-note">
+          <div><i className="fa-solid fa-circle-info" style={{ color: '#16a34a', marginRight: 4 }}></i> The 3-day free trial gives you full access to test review collection. Priority Support, Ad-Free Funnel, and Review Drop Guarantee are activated upon upgrading to a paid plan.</div>
+          <div><i className="fa-solid fa-bolt" style={{ color: '#ca8a04', marginRight: 4 }}></i> Instant activation · Cancel anytime</div>
         </div>
       </div>
 
-      {/* Toggle Pill (ReviewFlow Working with StarReview Styling) */}
-      <div className="sr-pricing-toggle-wrap">
-        <div className="sr-pricing-pill">
+      {/* 3. PLAN TOGGLE TABS */}
+      <div className="pricing-toggle-wrap">
+        <div className="pricing-toggle-pill">
           <button
             type="button"
-            className={`sr-toggle-btn ${pricingTab === 'without-reply' ? 'active' : ''}`}
+            className={`pricing-tab-btn ${pricingTab === 'without-reply' ? 'active' : ''}`}
             onClick={() => setPricingTab('without-reply')}
           >
             <i className="fa-solid fa-layer-group"></i> Without Review Reply
-            <span className="sr-badge-pill">Standard Plans</span>
+            <span className="tab-badge-pill">Standard Plans</span>
           </button>
           <button
             type="button"
-            className={`sr-toggle-btn ${pricingTab === 'with-reply' ? 'active pro-mode' : ''}`}
+            className={`pricing-tab-btn ${pricingTab === 'with-reply' ? 'active pro-tab' : ''}`}
             onClick={() => setPricingTab('with-reply')}
           >
             <i className="fa-solid fa-robot"></i> With Review Reply
-            <span className="sr-badge-pill">Pro Plans</span>
+            <span className="tab-badge-pill">Pro Plans</span>
           </button>
         </div>
       </div>
 
-      {/* 1. Standard Plans (Without Review Reply) */}
-      {pricingTab === 'without-reply' && (
-        <div className="sr-pricing-grid">
-          {/* Monthly Plan */}
-          <article className="sr-card">
-            <h3 className="sr-plan-name">Monthly Plan</h3>
-            <p className="sr-plan-desc">Flexible monthly billing for single locations.</p>
-            <div className="sr-plan-price">
-              ₹199<small>/month</small>
-            </div>
-            <ul className="sr-feature-list">
-              <li className="sr-feature-item excluded">
-                <i className="fa-solid fa-circle-xmark"></i> Automatic AI Review Reply (Not included)
-              </li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> 1 Business Location</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> AI Magic QR Flyer</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> AI Review Generations</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> Advanced Analytics Dashboard</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> AI SEO Analyzer</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> 4 Competitor Analyses</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> Keyword Tracker (5 entries)</li>
-            </ul>
-            <button className="btn btn-light full" onClick={() => choosePlan('Starter', 'Monthly')}>
-              Select Plan <span>↗</span>
-            </button>
-          </article>
+      {/* 4. PRICING CARDS GRID */}
+      <div className="pricing-cards-section">
+        {pricingTab === 'without-reply' ? (
+          <div className="pricing-grid-modern">
+            {/* Standard Monthly Plan */}
+            <article className="pricing-card">
+              <div className="plan-topline">
+                <span className="plan-type-chip monthly">Standard Monthly</span>
+                <span className="plan-fit">Best for starting out</span>
+              </div>
+              <div className="plan-icon monthly"><i className="fa-solid fa-calendar-days"></i></div>
+              <h2>Monthly Plan</h2>
+              <div className="plan-label">Monthly billing · 1 business · QR funnel &amp; AI drafts</div>
+              <div className="pricing-price">
+                <span className="currency">₹</span>
+                <span className="amount">199</span>
+                <span className="period">/ month</span>
+              </div>
+              <div className="plan-value-note">
+                <strong>Standard platform capabilities</strong>
+                Deploy AI-assisted review drafting, customizable QR standees, and full growth analytics.
+              </div>
+              <ul className="pricing-features">
+                <li className="feature-row feature-excluded">
+                  <span className="icon-cross"><i className="fa-solid fa-xmark"></i></span>
+                  <span>Automatic AI Review Reply <strong>(Not included in Standard)</strong></span>
+                </li>
+                {[
+                  'Human-Like AI Written Reviews',
+                  'Custom Keywords, Services, Products & Staff',
+                  'Emoji Support & Multiple Review Styles',
+                  'Personalized AI Review Suggestions',
+                  'Smart & Customizable Google Review QR Code',
+                  'Printable QR Standee & Direct Review Link',
+                  'Review, Rating & Growth Analytics',
+                  'AI Google Business Profile Analyzer',
+                  'Customer Review Tracking',
+                  'No Review Drop / Loss Guarantee',
+                  '100% Ad-Free Funnel Experience',
+                  'Priority Support'
+                ].map(feat => (
+                  <li className="feature-row" key={feat}>
+                    <span className="icon-check"><i className="fa-solid fa-check"></i></span>
+                    <span>{feat}</span>
+                  </li>
+                ))}
+              </ul>
+              <button className="pricing-cta cta-outline" onClick={() => choosePlan('Starter', 'Monthly')}>
+                Choose Monthly Plan <i className="fa-solid fa-arrow-right"></i>
+              </button>
+            </article>
 
-          {/* Yearly Plan (MOST POPULAR) */}
-          <article className="sr-card popular">
-            <span className="sr-popular-ribbon">MOST POPULAR</span>
-            <h3 className="sr-plan-name">Yearly Plan</h3>
-            <p className="sr-plan-desc">Complete reputation automation for single locations. Save big!</p>
-            <div className="sr-plan-price">
-              ₹1999<small>/year</small>
-            </div>
-            <ul className="sr-feature-list">
-              <li className="sr-feature-item excluded">
-                <i className="fa-solid fa-circle-xmark"></i> Automatic AI Review Reply (Not included)
-              </li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> 1 Business Location</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> AI Magic QR Flyer</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> AI Review Generations</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> Advanced Analytics Dashboard</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> AI SEO Analyzer</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> 4 Competitor Analyses</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> Keyword Tracker (5 entries)</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> Priority Email Support</li>
-            </ul>
-            <button className="btn btn-dark full" onClick={() => choosePlan('Starter', 'Yearly')}>
-              Select Plan <span>↗</span>
-            </button>
-          </article>
+            {/* Standard Yearly Plan */}
+            <article className="pricing-card pricing-card-yearly">
+              <span className="recommended-ribbon"><i className="fa-solid fa-crown" style={{ marginRight: 4 }}></i> RECOMMENDED / BEST VALUE</span>
+              <div className="plan-topline">
+                <span className="plan-type-chip yearly">Best Value · Save 16%</span>
+                <span className="plan-fit">Best for established growth</span>
+              </div>
+              <div className="plan-icon yearly"><i className="fa-solid fa-crown"></i></div>
+              <h2>Yearly Plan</h2>
+              <div className="plan-label">1 year · 1 business · Maximum savings</div>
+              <div className="pricing-price">
+                <span className="currency">₹</span>
+                <span className="amount">1999</span>
+                <span className="period">/ year</span>
+              </div>
+              <div className="yearly-saving-box">
+                <div>
+                  <strong>Annual membership</strong>
+                  <span>Lower effective cost per month</span>
+                </div>
+                <i className="fa-solid fa-arrow-trend-up" style={{ fontSize: 16 }}></i>
+              </div>
+              <ul className="pricing-features">
+                <li className="feature-row feature-excluded">
+                  <span className="icon-cross"><i className="fa-solid fa-xmark"></i></span>
+                  <span>Automatic AI Review Reply <strong>(Not included in Standard)</strong></span>
+                </li>
+                {[
+                  'Human-Like AI Written Reviews',
+                  'Custom Keywords, Services, Products & Staff',
+                  'Emoji Support & Multiple Review Styles',
+                  'Personalized AI Review Suggestions',
+                  'Smart & Customizable Google Review QR Code',
+                  'Printable QR Standee & Direct Review Link',
+                  'Review, Rating & Growth Analytics',
+                  'AI Google Business Profile Analyzer',
+                  'Customer Review Tracking',
+                  'No Review Drop / Loss Guarantee',
+                  '100% Ad-Free Funnel Experience',
+                  'Priority Support'
+                ].map(feat => (
+                  <li className="feature-row" key={feat}>
+                    <span className="icon-check"><i className="fa-solid fa-check"></i></span>
+                    <span>{feat}</span>
+                  </li>
+                ))}
+              </ul>
+              <button className="pricing-cta cta-primary" onClick={() => choosePlan('Starter', 'Yearly')}>
+                Choose Yearly Plan <i className="fa-solid fa-arrow-right"></i>
+              </button>
+            </article>
 
-          {/* Multi-Business Plan */}
-          <article className="sr-card" style={{ borderColor: '#d8b4fe', background: 'radial-gradient(circle at 100% 0%, rgba(139,92,246,0.06), transparent 50%), #ffffff' }}>
-            <h3 className="sr-plan-name" style={{ color: '#7c3aed' }}>Multi-Business Plan</h3>
-            <p className="sr-plan-desc">Manage multiple business locations under one central portal.</p>
-            <div className="sr-plan-price" style={{ color: '#7c3aed' }}>
-              Custom<small>/tailored capacity</small>
-            </div>
-            <ul className="sr-feature-list">
-              <li className="sr-feature-item" style={{ color: '#4b584e' }}><i className="fa-solid fa-circle-check" style={{ color: '#7c3aed' }}></i> Centralized Multi-Business Hub</li>
-              <li className="sr-feature-item excluded"><i className="fa-solid fa-circle-xmark"></i> Automatic AI Review Reply (Not available on Agency Plan)</li>
-              <li className="sr-feature-item" style={{ color: '#4b584e' }}><i className="fa-solid fa-circle-check" style={{ color: '#7c3aed' }}></i> Configurable Location Capacity</li>
-              <li className="sr-feature-item" style={{ color: '#4b584e' }}><i className="fa-solid fa-circle-check" style={{ color: '#7c3aed' }}></i> Separate QR flyers per location</li>
-              <li className="sr-feature-item" style={{ color: '#4b584e' }}><i className="fa-solid fa-circle-check" style={{ color: '#7c3aed' }}></i> Separate AI review customizations</li>
-              <li className="sr-feature-item" style={{ color: '#4b584e' }}><i className="fa-solid fa-circle-check" style={{ color: '#7c3aed' }}></i> Cross-Business Analytics</li>
-              <li className="sr-feature-item" style={{ color: '#4b584e' }}><i className="fa-solid fa-circle-check" style={{ color: '#7c3aed' }}></i> Option to Connect Own AI Keys</li>
-              <li className="sr-feature-item" style={{ color: '#4b584e' }}><i className="fa-solid fa-circle-check" style={{ color: '#7c3aed' }}></i> Dedicated WhatsApp Support</li>
-            </ul>
-            <a
-              href={`https://wa.me/${cfg.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business / Agency Plan for StarReview AI. Please share pricing and business limit details.")}`}
-              target="_blank"
-              rel="noreferrer"
-              className="sr-whatsapp-btn"
-            >
-              <i className="fa-brands fa-whatsapp" style={{ fontSize: 16 }}></i> Chat on WhatsApp
-            </a>
-          </article>
+            {/* Multi-Business Plan */}
+            <article className="pricing-card pricing-card-agency">
+              <div className="plan-topline">
+                <span className="plan-type-chip agency">Multi-Business</span>
+                <span className="plan-fit">For agencies &amp; chains</span>
+              </div>
+              <div className="plan-icon agency"><i className="fa-solid fa-building"></i></div>
+              <h2>Multi-Business Plan</h2>
+              <div className="plan-label">Multiple locations · Centralized dashboard</div>
+              <div className="pricing-price">
+                <span className="amount" style={{ fontSize: '1.9rem' }}>Custom</span>
+                <span className="period">/ Tailored capacity</span>
+              </div>
+              <div className="agency-note-box">
+                <div>
+                  <strong>Centralized management</strong>
+                  <span>Scale across unlimited locations</span>
+                </div>
+                <i className="fa-solid fa-layer-group" style={{ fontSize: 16 }}></i>
+              </div>
+              <div className="agency-byo-api">
+                <i className="fa-solid fa-key" style={{ marginRight: 4 }}></i>
+                <strong>Bring Your Own AI API:</strong> Connect your own API key (Gemini, OpenAI, or Claude) for review generation (API keys not provided with Multi-Business plans).
+              </div>
+              <ul className="pricing-features">
+                {[
+                  'Multi-Business Centralized Dashboard',
+                  'Configurable Business Capacity Limit',
+                  'Separate AI Customization & Languages per Location',
+                  'Individual QR Flyers & Printable Downloads',
+                  'Private Negative Feedback Routing (1–3 Stars)',
+                  'Cross-Business Conversion & Activity Analytics',
+                  'Dedicated WhatsApp Support & Onboarding'
+                ].map(feat => (
+                  <li className="feature-row" key={feat}>
+                    <span className="icon-check"><i className="fa-solid fa-check"></i></span>
+                    <span>{feat}</span>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={`https://wa.me/${cfg.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business Plan for StarReview AI.")}`}
+                target="_blank"
+                rel="noreferrer"
+                className="pricing-cta cta-whatsapp"
+              >
+                <i className="fa-brands fa-whatsapp" style={{ fontSize: 16 }}></i> Chat With Us on WhatsApp
+              </a>
+            </article>
+          </div>
+        ) : (
+          <div className="pricing-grid-modern">
+            {/* Pro Monthly Plan */}
+            <article className="pricing-card" style={{ borderColor: '#86efac' }}>
+              <div className="plan-topline">
+                <span className="plan-type-chip yearly">Pro Monthly</span>
+                <span className="plan-fit">Autopilot Reputation</span>
+              </div>
+              <div className="plan-icon yearly"><i className="fa-solid fa-robot"></i></div>
+              <h2>Pro Monthly Plan</h2>
+              <div className="plan-label">Monthly billing · 1 business · 24/7 Autopilot Replies</div>
+              <div className="pricing-price">
+                <span className="currency">₹</span>
+                <span className="amount">299</span>
+                <span className="period">/ month</span>
+              </div>
+              <div className="plan-value-note" style={{ background: '#f0fdf4', borderColor: '#bbf7d0' }}>
+                <strong style={{ color: '#166534' }}>24/7 Autopilot Review Replies</strong>
+                Direct publishing to Google Maps in under 45s of review receipt.
+              </div>
+              <ul className="pricing-features">
+                <li className="feature-row feature-pro-highlight">
+                  <span className="icon-check"><i className="fa-solid fa-check"></i></span>
+                  <span><strong>Automatic AI Review Reply (24/7 Autopilot Included)</strong></span>
+                </li>
+                {[
+                  'Human-Like AI Written Reviews',
+                  'Custom Keywords, Services, Products & Staff',
+                  'Emoji Support & Multiple Review Styles',
+                  'Personalized AI Review Suggestions',
+                  'Smart & Customizable Google Review QR Code',
+                  'Printable QR Standee & Direct Review Link',
+                  'Review, Rating & Growth Analytics',
+                  'AI Google Business Profile Analyzer',
+                  'Customer Review Tracking',
+                  'No Review Drop / Loss Guarantee',
+                  '100% Ad-Free Funnel Experience',
+                  'Priority Support'
+                ].map(feat => (
+                  <li className="feature-row" key={feat}>
+                    <span className="icon-check"><i className="fa-solid fa-check"></i></span>
+                    <span>{feat}</span>
+                  </li>
+                ))}
+              </ul>
+              <button className="pricing-cta cta-primary" onClick={() => choosePlan('Pro', 'Monthly')}>
+                Choose Pro Monthly <i className="fa-solid fa-arrow-right"></i>
+              </button>
+            </article>
+
+            {/* Pro Yearly Plan */}
+            <article className="pricing-card pricing-card-yearly" style={{ borderColor: '#15803d' }}>
+              <span className="recommended-ribbon"><i className="fa-solid fa-crown" style={{ marginRight: 4 }}></i> RECOMMENDED / PRO VALUE</span>
+              <div className="plan-topline">
+                <span className="plan-type-chip yearly">Best Pro Value · Save 16%</span>
+                <span className="plan-fit">Maximum ROI on Autopilot</span>
+              </div>
+              <div className="plan-icon yearly"><i className="fa-solid fa-crown"></i></div>
+              <h2>Pro Yearly Plan</h2>
+              <div className="plan-label">1 year · 1 business · 24/7 Autopilot Replies</div>
+              <div className="pricing-price">
+                <span className="currency">₹</span>
+                <span className="amount">2999</span>
+                <span className="period">/ year</span>
+              </div>
+              <div className="yearly-saving-box">
+                <div>
+                  <strong>Maximum Savings &amp; 24/7 Autopilot</strong>
+                  <span>Complete hands-free Google review engine</span>
+                </div>
+                <i className="fa-solid fa-arrow-trend-up" style={{ fontSize: 16 }}></i>
+              </div>
+              <ul className="pricing-features">
+                <li className="feature-row feature-pro-highlight">
+                  <span className="icon-check"><i className="fa-solid fa-check"></i></span>
+                  <span><strong>Automatic AI Review Reply (24/7 Autopilot Included)</strong></span>
+                </li>
+                {[
+                  'Human-Like AI Written Reviews',
+                  'Custom Keywords, Services, Products & Staff',
+                  'Emoji Support & Multiple Review Styles',
+                  'Personalized AI Review Suggestions',
+                  'Smart & Customizable Google Review QR Code',
+                  'Printable QR Standee & Direct Review Link',
+                  'Review, Rating & Growth Analytics',
+                  'AI Google Business Profile Analyzer',
+                  'Customer Review Tracking',
+                  'No Review Drop / Loss Guarantee',
+                  '100% Ad-Free Funnel Experience',
+                  'Priority Support'
+                ].map(feat => (
+                  <li className="feature-row" key={feat}>
+                    <span className="icon-check"><i className="fa-solid fa-check"></i></span>
+                    <span>{feat}</span>
+                  </li>
+                ))}
+              </ul>
+              <button className="pricing-cta cta-primary" onClick={() => choosePlan('Pro', 'Yearly')}>
+                Choose Pro Yearly <i className="fa-solid fa-arrow-right"></i>
+              </button>
+            </article>
+
+            {/* Multi-Business Plan */}
+            <article className="pricing-card pricing-card-agency">
+              <div className="plan-topline">
+                <span className="plan-type-chip agency">Multi-Business</span>
+                <span className="plan-fit">For agencies &amp; chains</span>
+              </div>
+              <div className="plan-icon agency"><i className="fa-solid fa-building"></i></div>
+              <h2>Multi-Business Plan</h2>
+              <div className="plan-label">Multiple locations · Centralized dashboard</div>
+              <div className="pricing-price">
+                <span className="amount" style={{ fontSize: '1.9rem' }}>Custom</span>
+                <span className="period">/ Tailored capacity</span>
+              </div>
+              <div className="agency-note-box">
+                <div>
+                  <strong>Centralized management</strong>
+                  <span>Scale across unlimited locations</span>
+                </div>
+                <i className="fa-solid fa-layer-group" style={{ fontSize: 16 }}></i>
+              </div>
+              <div className="agency-byo-api">
+                <i className="fa-solid fa-key" style={{ marginRight: 4 }}></i>
+                <strong>Bring Your Own AI API:</strong> Connect your own API key (Gemini, OpenAI, or Claude) for review generation (API keys not provided with Multi-Business plans).
+              </div>
+              <ul className="pricing-features">
+                {[
+                  'Multi-Business Centralized Dashboard',
+                  'Configurable Business Capacity Limit',
+                  'Separate AI Customization & Languages per Location',
+                  'Individual QR Flyers & Printable Downloads',
+                  'Private Negative Feedback Routing (1–3 Stars)',
+                  'Cross-Business Conversion & Activity Analytics',
+                  'Dedicated WhatsApp Support & Onboarding'
+                ].map(feat => (
+                  <li className="feature-row" key={feat}>
+                    <span className="icon-check"><i className="fa-solid fa-check"></i></span>
+                    <span>{feat}</span>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={`https://wa.me/${cfg.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business Plan for StarReview AI.")}`}
+                target="_blank"
+                rel="noreferrer"
+                className="pricing-cta cta-whatsapp"
+              >
+                <i className="fa-brands fa-whatsapp" style={{ fontSize: 16 }}></i> Chat With Us on WhatsApp
+              </a>
+            </article>
+          </div>
+        )}
+      </div>
+
+      {/* 5. DETAILED COMPARISON TABLE ACROSS ALL PLANS */}
+      <div className="pricing-table-section">
+        <div className="comparison-heading">
+          <span className="comparison-kicker">Plan Breakdown</span>
+          <h2>Compare Features Across Plans</h2>
+          <p>Pick the right plan based on whether you need hands-free AI Review Replies and single vs multi-location scale. Test risk-free with our 3-day trial.</p>
         </div>
-      )}
 
-      {/* 2. Pro Plans (With Review Reply) */}
-      {pricingTab === 'with-reply' && (
-        <div className="sr-pricing-grid">
-          {/* Pro Monthly */}
-          <article className="sr-card" style={{ borderColor: '#81ae87' }}>
-            <h3 className="sr-plan-name" style={{ color: '#1d4934' }}>
-              <i className="fa-solid fa-robot"></i> Pro Monthly Plan
-            </h3>
-            <p className="sr-plan-desc">Hands-free AI Review Replies + review collection monthly.</p>
-            <div className="sr-plan-price">
-              ₹299<small>/month</small>
-            </div>
-            <ul className="sr-feature-list">
-              <li className="sr-feature-item included" style={{ color: '#1d4934', fontWeight: 700 }}>
-                <i className="fa-solid fa-circle-check"></i> Automatic AI Review Reply (Included)
-              </li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> 1 Business Location</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> AI Magic QR Flyer</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> AI Review Generations</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> Advanced Analytics Dashboard</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> AI SEO Analyzer</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> 4 Competitor Analyses</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> Keyword Tracker (5 entries)</li>
-            </ul>
-            <button className="btn btn-light full" onClick={() => choosePlan('Pro', 'Monthly')}>
-              Select Pro Monthly <span>↗</span>
-            </button>
-          </article>
-
-          {/* Pro Yearly (MOST POPULAR) */}
-          <article className="sr-card popular" style={{ borderColor: '#2f7046' }}>
-            <span className="sr-popular-ribbon">MOST POPULAR</span>
-            <h3 className="sr-plan-name" style={{ color: '#1d4934' }}>
-              <i className="fa-solid fa-crown" style={{ color: '#e9aa35' }}></i> Pro Yearly Plan
-            </h3>
-            <p className="sr-plan-desc">Best Value! 24/7 Google Review Autopilot for 1 whole year.</p>
-            <div className="sr-plan-price">
-              ₹2999<small>/year</small>
-            </div>
-            <ul className="sr-feature-list">
-              <li className="sr-feature-item included" style={{ color: '#1d4934', fontWeight: 700 }}>
-                <i className="fa-solid fa-circle-check"></i> Automatic AI Review Reply (Included)
-              </li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> 1 Business Location</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> AI Magic QR Flyer</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> AI Review Generations</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> Advanced Analytics Dashboard</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> AI SEO Analyzer</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> 4 Competitor Analyses</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> Keyword Tracker (5 entries)</li>
-              <li className="sr-feature-item included"><i className="fa-solid fa-circle-check"></i> Priority Email Support</li>
-            </ul>
-            <button className="btn btn-dark full" onClick={() => choosePlan('Pro', 'Yearly')}>
-              Select Pro Yearly <span>↗</span>
-            </button>
-          </article>
-
-          {/* Multi-Business Plan (same in Pro) */}
-          <article className="sr-card" style={{ borderColor: '#d8b4fe', background: 'radial-gradient(circle at 100% 0%, rgba(139,92,246,0.06), transparent 50%), #ffffff' }}>
-            <h3 className="sr-plan-name" style={{ color: '#7c3aed' }}>Multi-Business Plan</h3>
-            <p className="sr-plan-desc">Manage multiple business locations under one central portal.</p>
-            <div className="sr-plan-price" style={{ color: '#7c3aed' }}>
-              Custom<small>/tailored capacity</small>
-            </div>
-            <ul className="sr-feature-list">
-              <li className="sr-feature-item" style={{ color: '#4b584e' }}><i className="fa-solid fa-circle-check" style={{ color: '#7c3aed' }}></i> Centralized Multi-Business Hub</li>
-              <li className="sr-feature-item excluded"><i className="fa-solid fa-circle-xmark"></i> Automatic AI Review Reply (Not available on Agency Plan)</li>
-              <li className="sr-feature-item" style={{ color: '#4b584e' }}><i className="fa-solid fa-circle-check" style={{ color: '#7c3aed' }}></i> Configurable Location Capacity</li>
-              <li className="sr-feature-item" style={{ color: '#4b584e' }}><i className="fa-solid fa-circle-check" style={{ color: '#7c3aed' }}></i> Separate QR flyers per location</li>
-              <li className="sr-feature-item" style={{ color: '#4b584e' }}><i className="fa-solid fa-circle-check" style={{ color: '#7c3aed' }}></i> Separate AI review customizations</li>
-              <li className="sr-feature-item" style={{ color: '#4b584e' }}><i className="fa-solid fa-circle-check" style={{ color: '#7c3aed' }}></i> Cross-Business Analytics</li>
-              <li className="sr-feature-item" style={{ color: '#4b584e' }}><i className="fa-solid fa-circle-check" style={{ color: '#7c3aed' }}></i> Option to Connect Own AI Keys</li>
-              <li className="sr-feature-item" style={{ color: '#4b584e' }}><i className="fa-solid fa-circle-check" style={{ color: '#7c3aed' }}></i> Dedicated WhatsApp Support</li>
-            </ul>
-            <a
-              href={`https://wa.me/${cfg.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business / Agency Plan for StarReview AI. Please share pricing and business limit details.")}`}
-              target="_blank"
-              rel="noreferrer"
-              className="sr-whatsapp-btn"
-            >
-              <i className="fa-brands fa-whatsapp" style={{ fontSize: 16 }}></i> Chat on WhatsApp
-            </a>
-          </article>
+        <div className="comparison-table-wrapper">
+          <table className="comparison-table">
+            <thead>
+              <tr>
+                <th style={{ width: '26%' }}>Feature</th>
+                <th className="trial-col">
+                  <span style={{ display: 'block', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#166534', fontWeight: 800 }}>Risk-Free</span>
+                  3-Day Free Trial
+                </th>
+                <th>Standard Monthly</th>
+                <th className="yearly-col">Standard Yearly</th>
+                <th className="pro-col">Pro Monthly</th>
+                <th className="pro-col">Pro Yearly</th>
+                <th>Agency</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="feature-name">Business Locations</td>
+                <td className="tbl-text trial-col">1 Location</td>
+                <td className="tbl-text">1 Location</td>
+                <td className="tbl-text yearly-col">1 Location</td>
+                <td className="tbl-text pro-col">1 Location</td>
+                <td className="tbl-text pro-col">1 Location</td>
+                <td className="tbl-text"><strong>Multiple</strong></td>
+              </tr>
+              <tr>
+                <td className="feature-name" style={{ color: '#15803d' }}><strong>Automatic AI Review Reply</strong></td>
+                <td className="trial-col"><span className="tbl-cross"><i className="fa-solid fa-xmark"></i> No</span></td>
+                <td><span className="tbl-cross"><i className="fa-solid fa-xmark"></i> No</span></td>
+                <td className="yearly-col"><span className="tbl-cross"><i className="fa-solid fa-xmark"></i> No</span></td>
+                <td className="pro-col"><span className="tbl-check"><i className="fa-solid fa-check"></i> Yes (24/7)</span></td>
+                <td className="pro-col"><span className="tbl-check"><i className="fa-solid fa-check"></i> Yes (24/7)</span></td>
+                <td><span className="tbl-cross"><i className="fa-solid fa-xmark"></i> No</span></td>
+              </tr>
+              {[
+                ['Human-Like AI Written Reviews', true, true, true, true, true, true],
+                ['Custom Keywords, Services, Products & Staff', true, true, true, true, true, true],
+                ['Emoji Support & Multiple Review Styles', true, true, true, true, true, true],
+                ['Personalized AI Review Suggestions', true, true, true, true, true, true],
+                ['Smart & Customizable Google Review QR Code', true, true, true, true, true, true],
+                ['Printable QR Standee & Direct Review Link', true, true, true, true, true, true],
+                ['Review, Rating & Growth Analytics', true, true, true, true, true, true],
+                ['AI Google Business Profile Analyzer', true, true, true, true, true, true],
+                ['Customer Review Tracking', true, true, true, true, true, true],
+                ['No Review Drop / Loss Guarantee', false, true, true, true, true, true],
+                ['100% Ad-Free Funnel Experience', false, true, true, true, true, true],
+                ['Priority Support', false, true, true, true, true, true]
+              ].map(([feat, tr, sm, sy, pm, py, ag]) => (
+                <tr key={feat}>
+                  <td className="feature-name">{feat}</td>
+                  <td className="trial-col">
+                    {tr ? <span className="tbl-check"><i className="fa-solid fa-check"></i></span> : <span className="tbl-cross"><i className="fa-solid fa-xmark"></i></span>}
+                  </td>
+                  <td>
+                    {sm ? <span className="tbl-check"><i className="fa-solid fa-check"></i></span> : <span className="tbl-cross"><i className="fa-solid fa-xmark"></i></span>}
+                  </td>
+                  <td className="yearly-col">
+                    {sy ? <span className="tbl-check"><i className="fa-solid fa-check"></i></span> : <span className="tbl-cross"><i className="fa-solid fa-xmark"></i></span>}
+                  </td>
+                  <td className="pro-col">
+                    {pm ? <span className="tbl-check"><i className="fa-solid fa-check"></i></span> : <span className="tbl-cross"><i className="fa-solid fa-xmark"></i></span>}
+                  </td>
+                  <td className="pro-col">
+                    {py ? <span className="tbl-check"><i className="fa-solid fa-check"></i></span> : <span className="tbl-cross"><i className="fa-solid fa-xmark"></i></span>}
+                  </td>
+                  <td>
+                    {ag ? <span className="tbl-check"><i className="fa-solid fa-check"></i></span> : <span className="tbl-cross"><i className="fa-solid fa-xmark"></i></span>}
+                  </td>
+                </tr>
+              ))}
+              <tr>
+                <td className="feature-name">Pricing / Billing Cycle</td>
+                <td className="tbl-text trial-col"><strong style={{ color: '#16a34a' }}>Free (3 Days)</strong></td>
+                <td className="tbl-text">₹199/mo</td>
+                <td className="tbl-text yearly-col"><strong>₹1999/yr</strong></td>
+                <td className="tbl-text pro-col">₹299/mo</td>
+                <td className="tbl-text pro-col"><strong>₹2999/yr</strong></td>
+                <td className="tbl-text"><strong>WhatsApp</strong></td>
+              </tr>
+              <tr>
+                <td className="feature-name">Get Started</td>
+                <td className="trial-col">
+                  <button className="pricing-cta cta-primary" style={{ fontSize: '0.75rem', padding: '0.45rem 0.85rem', borderRadius: 8 }} onClick={() => navigate('Account')}>
+                    Start Free
+                  </button>
+                </td>
+                <td>
+                  <button className="pricing-cta cta-outline" style={{ fontSize: '0.75rem', padding: '0.45rem 0.85rem', borderRadius: 8 }} onClick={() => choosePlan('Starter', 'Monthly')}>
+                    Choose
+                  </button>
+                </td>
+                <td className="yearly-col">
+                  <button className="pricing-cta cta-primary" style={{ fontSize: '0.75rem', padding: '0.45rem 0.85rem', borderRadius: 8 }} onClick={() => choosePlan('Starter', 'Yearly')}>
+                    Choose
+                  </button>
+                </td>
+                <td className="pro-col">
+                  <button className="pricing-cta cta-outline" style={{ fontSize: '0.75rem', padding: '0.45rem 0.85rem', borderRadius: 8 }} onClick={() => choosePlan('Pro', 'Monthly')}>
+                    Choose
+                  </button>
+                </td>
+                <td className="pro-col">
+                  <button className="pricing-cta cta-primary" style={{ fontSize: '0.75rem', padding: '0.45rem 0.85rem', borderRadius: 8 }} onClick={() => choosePlan('Pro', 'Yearly')}>
+                    Choose
+                  </button>
+                </td>
+                <td>
+                  <a
+                    href={`https://wa.me/${cfg.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business Plan for StarReview AI.")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="pricing-cta cta-outline"
+                    style={{ fontSize: '0.75rem', padding: '0.45rem 0.85rem', borderRadius: 8 }}
+                  >
+                    Inquire
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      )}
+
+        <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.82rem', color: '#64748b' }}>
+          <i className="fa-solid fa-circle-info" style={{ color: '#16a34a', marginRight: '0.35rem' }}></i>
+          All accounts start with our instant 3-day free trial. Experience human-like AI review drafting and smart Google Review QR funnels before deciding to upgrade.
+        </div>
+      </div>
     </section>
   );
 
@@ -845,9 +1151,9 @@ export default function App() {
           PRICING PAGE
           ==================================================================== */}
       {page === 'Pricing' && (
-        <PageShell title="Simple plans. Better conversations." subtitle="Start with a 3-day free trial. Explore plans and test the checkout journey safely in demo mode.">
+        <main className="wrap vs-page-wrapper" style={{ paddingTop: 20 }}>
           {renderPricingSection()}
-        </PageShell>
+        </main>
       )}
 
       {/* ====================================================================
