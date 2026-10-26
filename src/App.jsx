@@ -118,6 +118,19 @@ export default function App() {
   // ReviewFlow AI Pricing Toggle: 'without-reply' (Standard) vs 'with-reply' (Pro)
   const [pricingTab, setPricingTab] = useState('without-reply');
 
+  // Agency Registration Form State
+  const [agencyForm, setAgencyForm] = useState({
+    name: '',
+    company: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [agencySubmitted, setAgencySubmitted] = useState(false);
+  const [showAgencyPass, setShowAgencyPass] = useState(false);
+  const [showAgencyConfPass, setShowAgencyConfPass] = useState(false);
+
   const notify = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(''), 3800);
@@ -230,7 +243,13 @@ export default function App() {
     navigate('Demo checkout');
   };
 
-  const navItems = ['Features', 'How it works', 'AI vs QR', 'Pricing'];
+  const navItems = [
+    { label: 'How It Works', page: 'How it works' },
+    { label: 'AI vs Normal QR', page: 'AI vs QR' },
+    { label: 'Pricing', page: 'Pricing' },
+    { label: 'Source Code', page: 'Source code' },
+    { label: 'Apply for Agency', page: 'Apply for agency' }
+  ];
 
   // Exact Pricing Section from User Screenshot (in StarReview Design Theme)
   const renderPricingSection = () => (
@@ -785,10 +804,15 @@ export default function App() {
           </button>
           <button className="menu-toggle" onClick={() => setMenu(!menu)} aria-label="Toggle menu">☰</button>
           <nav className={menu ? 'nav open' : 'nav'}>
-            {navItems.map(n => (
-              <button key={n} onClick={() => navigate(n)}>{n}</button>
+            {navItems.map(item => (
+              <button
+                key={item.page}
+                className={page === item.page ? 'active' : ''}
+                onClick={() => { navigate(item.page); setMenu(false); }}
+              >
+                {item.label}
+              </button>
             ))}
-            <button onClick={() => navigate('Dashboard')}>Dashboard</button>
           </nav>
           <div className="header-actions">
             <button className="text-btn" onClick={() => navigate('Account')}>{user ? 'My account' : 'Sign in'}</button>
@@ -1606,6 +1630,423 @@ export default function App() {
       )}
 
       {/* ====================================================================
+          SOURCE CODE & COMMERCIAL LICENSE PAGE (MATCHING REVIEWFLOW AI)
+          ==================================================================== */}
+      {page === 'Source code' && (
+        <main>
+          {/* Hero Section */}
+          <section className="wl-hero-section">
+            <div className="wl-container">
+              <div className="wl-badge">
+                <span></span> Commercial License • Full Source Code for ₹10,000 (One-Time)
+              </div>
+              <h1 className="wl-hero-title">
+                Launch Your Own <span className="gradient-text">AI Google Review SaaS</span> Business
+              </h1>
+              <p className="wl-hero-desc">
+                Own the complete, production-ready source code of StarReview AI for a single one-time payment of ₹10,000 with a full Commercial License. You have complete freedom to modify the code, build new features, rebrand everything, and launch unlimited client portals — <strong>you can do anything with the code except reselling it</strong>. Full server installation &amp; deployment included.
+              </p>
+
+              {/* Commercial License Pill */}
+              <div className="wl-hero-license-pill">
+                <span className="wl-hero-license-badge">
+                  <i className="fa-solid fa-file-contract"></i> Lifetime Commercial License Included
+                </span>
+                <span className="wl-hero-license-tag">₹10,000 One-Time • Zero Royalties</span>
+              </div>
+
+              {/* CTA Group */}
+              <div className="wl-cta-group">
+                <a
+                  href={`https://wa.me/${cfg.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I want to purchase the complete StarReview AI Source Code with Commercial License for ₹10,000. Please share payment and server setup details.")}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="wl-btn-primary"
+                >
+                  <i className="fa-solid fa-file-shield" style={{ fontSize: '1.1rem' }}></i>
+                  Get Full Source Code for ₹10,000
+                </a>
+                <button
+                  type="button"
+                  className="wl-btn-secondary"
+                  onClick={() => {
+                    const el = document.getElementById('license-terms');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  <i className="fa-solid fa-scale-balanced"></i>
+                  View License Terms
+                </button>
+              </div>
+
+              {/* 4 Quick Stat Cards */}
+              <div className="wl-stats-grid">
+                <div className="wl-stat-card">
+                  <div className="wl-stat-icon"><i className="fa-solid fa-code"></i></div>
+                  <div className="wl-stat-title">100% Unencrypted</div>
+                  <p className="wl-stat-desc">Pure, clean modern source code with zero encryption or license lockers.</p>
+                </div>
+                <div className="wl-stat-card">
+                  <div className="wl-stat-icon"><i className="fa-solid fa-server"></i></div>
+                  <div className="wl-stat-title">Full Setup Included</div>
+                  <p className="wl-stat-desc">Our developers deploy and configure everything on your server for free.</p>
+                </div>
+                <div className="wl-stat-card">
+                  <div className="wl-stat-icon"><i className="fa-solid fa-building-user"></i></div>
+                  <div className="wl-stat-title">Unlimited Portals</div>
+                  <p className="wl-stat-desc">Host unlimited businesses, agencies, and locations without restrictions.</p>
+                </div>
+                <div className="wl-stat-card">
+                  <div className="wl-stat-icon"><i className="fa-solid fa-scale-balanced"></i></div>
+                  <div className="wl-stat-title">Commercial Freedom</div>
+                  <p className="wl-stat-desc">Full commercial license included. You can do anything with the code except reselling it.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Turnkey Package Section */}
+          <section className="wl-light-section">
+            <div className="wl-container">
+              <div className="wl-section-header">
+                <span className="wl-section-tag">Complete Turnkey Package</span>
+                <h2 className="wl-section-title">Everything You Need to Run a Profitable SaaS</h2>
+                <p className="wl-section-desc">You get the entire web application, frontend marketing pages, multi-business portals, AI generation engine, and automated tooling.</p>
+              </div>
+
+              <div className="wl-features-grid">
+                <div className="wl-feature-card">
+                  <div className="wl-feature-icon"><i className="fa-solid fa-robot"></i></div>
+                  <h3 className="wl-feature-title">AI Review Engine</h3>
+                  <p className="wl-feature-desc">Integrated with Google Gemini Flash (free/ultra-low cost), OpenAI GPT-4o, and Claude. Generates human-style, authentic reviews based on customer feelings.</p>
+                  <ul className="wl-feature-list">
+                    <li><i className="fa-solid fa-check"></i> Multi-language review drafting</li>
+                    <li><i className="fa-solid fa-check"></i> Staff &amp; service keywords</li>
+                    <li><i className="fa-solid fa-check"></i> Natural short-form wording</li>
+                  </ul>
+                </div>
+
+                <div className="wl-feature-card">
+                  <div className="wl-feature-icon"><i className="fa-solid fa-qrcode"></i></div>
+                  <h3 className="wl-feature-title">Dynamic Standee &amp; Flyer Designer</h3>
+                  <p className="wl-feature-desc">Built-in visual flyer generator. Clients can download print-ready table tents and QR posters with custom instructions and color themes.</p>
+                  <ul className="wl-feature-list">
+                    <li><i className="fa-solid fa-check"></i> 4 modern visual color schemes</li>
+                    <li><i className="fa-solid fa-check"></i> Instant SVG / PNG flyer download</li>
+                    <li><i className="fa-solid fa-check"></i> Custom incentive text customization</li>
+                  </ul>
+                </div>
+
+                <div className="wl-feature-card">
+                  <div className="wl-feature-icon"><i className="fa-solid fa-filter"></i></div>
+                  <h3 className="wl-feature-title">Smart Review Funnel</h3>
+                  <p className="wl-feature-desc">Intelligent 5-star gatekeeper. 5-star ratings route straight to the Google Business Profile, while lower ratings are captured in a private inbox.</p>
+                  <ul className="wl-feature-list">
+                    <li><i className="fa-solid fa-check"></i> Private feedback collection</li>
+                    <li><i className="fa-solid fa-check"></i> Customer phone &amp; email capture</li>
+                    <li><i className="fa-solid fa-check"></i> Real-time interaction tracking</li>
+                  </ul>
+                </div>
+
+                <div className="wl-feature-card">
+                  <div className="wl-feature-icon"><i className="fa-solid fa-users-gear"></i></div>
+                  <h3 className="wl-feature-title">Multi-Business &amp; Agency Suite</h3>
+                  <p className="wl-feature-desc">Agency sub-portal allowing marketing agencies and franchises to manage multiple client locations under one single dashboard.</p>
+                  <ul className="wl-feature-list">
+                    <li><i className="fa-solid fa-check"></i> Multi-location switching</li>
+                    <li><i className="fa-solid fa-check"></i> Bring Your Own AI API key</li>
+                    <li><i className="fa-solid fa-check"></i> White label agency management</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* License Box */}
+              <div className="wl-license-box" id="license-terms">
+                <div className="wl-license-header">
+                  <div className="wl-license-header-icon">
+                    <i className="fa-solid fa-scale-balanced"></i>
+                  </div>
+                  <div className="wl-license-header-text">
+                    <h3>Commercial License Terms &amp; Permissions</h3>
+                    <p>Total operational and development freedom. You can do anything with the code except reselling it.</p>
+                  </div>
+                </div>
+
+                <div className="wl-license-columns">
+                  <div className="wl-license-col can-do">
+                    <div className="wl-license-col-title">
+                      <i className="fa-solid fa-circle-check"></i> What You CAN Do (Complete Freedom)
+                    </div>
+                    <ul className="wl-license-items">
+                      <li className="wl-license-item">
+                        <i className="fa-solid fa-check"></i>
+                        <span><strong>100% White Label &amp; Rebrand:</strong> Place your own brand name, domain, logo, color palette, and email notifications.</span>
+                      </li>
+                      <li className="wl-license-item">
+                        <i className="fa-solid fa-check"></i>
+                        <span><strong>Modify &amp; Customize Source Code:</strong> Edit backend, database schema, CSS, and frontend design however you like.</span>
+                      </li>
+                      <li className="wl-license-item">
+                        <i className="fa-solid fa-check"></i>
+                        <span><strong>Build Custom Features:</strong> Integrate proprietary payment gateways, custom AI models, or third-party APIs.</span>
+                      </li>
+                      <li className="wl-license-item">
+                        <i className="fa-solid fa-check"></i>
+                        <span><strong>Unlimited Paying Clients:</strong> Charge clients monthly, yearly, or one-time fees. You keep 100% of revenue.</span>
+                      </li>
+                      <li className="wl-license-item">
+                        <i className="fa-solid fa-check"></i>
+                        <span><strong>Zero Royalties Forever:</strong> No recurring license fees, revenue share, or hidden developer costs.</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="wl-license-col cannot-do">
+                    <div className="wl-license-col-title">
+                      <i className="fa-solid fa-circle-xmark"></i> What You CANNOT Do
+                    </div>
+                    <ul className="wl-license-items">
+                      <li className="wl-license-item">
+                        <i className="fa-solid fa-xmark"></i>
+                        <span><strong>Resell Raw Source Code:</strong> You cannot resell, distribute, or publish the raw codebase, scripts, or templates to others.</span>
+                      </li>
+                      <li className="wl-license-item">
+                        <i className="fa-solid fa-xmark"></i>
+                        <span><strong>Create Source Code Competitors:</strong> You cannot operate a digital asset store, marketplace, or repository selling this software codebase.</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom CTA Banner */}
+              <div style={{ marginTop: '3.5rem', textAlign: 'center', background: 'linear-gradient(135deg, #1d4934 0%, #2f6747 100%)', padding: '3rem 2rem', borderRadius: 24, color: '#fff' }}>
+                <h3 style={{ fontSize: '1.8rem', fontWeight: 900, marginBottom: '0.75rem', color: '#fff' }}>Ready to Launch Your Own AI Review SaaS?</h3>
+                <p style={{ maxWidth: 650, margin: '0 auto 1.75rem', color: '#d1e2d7', fontSize: '1rem', lineHeight: 1.6 }}>
+                  One-time payment of ₹10,000 includes full source code, commercial license, free deployment assistance, and lifetime ownership.
+                </p>
+                <a
+                  href={`https://wa.me/${cfg.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I'm ready to buy the StarReview AI Source Code for ₹10,000. Please assist me with the purchase.")}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-primary"
+                  style={{ background: '#22c55e', color: '#092113', fontWeight: 800, padding: '0.9rem 2rem', borderRadius: 12, display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}
+                >
+                  <i className="fa-brands fa-whatsapp" style={{ fontSize: '1.2rem' }}></i>
+                  Get Source Code on WhatsApp (₹10,000)
+                </a>
+              </div>
+            </div>
+          </section>
+        </main>
+      )}
+
+      {/* ====================================================================
+          APPLY FOR AGENCY / MULTI-BUSINESS PORTAL (MATCHING REVIEWFLOW AI)
+          ==================================================================== */}
+      {page === 'Apply for agency' && (
+        <main>
+          <div className="agency-page-wrapper">
+            <div className="agency-app-grid">
+              {/* LEFT: VALUE PROPOSITION */}
+              <div className="agency-info-col">
+                <div className="agency-info-badge">
+                  <i className="fa-solid fa-briefcase"></i> Multi-Business &amp; Agency Portal
+                </div>
+                <h1>Scale Google Reviews for <span>All Your Locations</span></h1>
+                <p className="lead-desc">
+                  Designed for marketing agencies, multi-location franchises, and brand managers seeking a centralized Google review acceleration system.
+                </p>
+
+                <div className="agency-perks">
+                  <div className="perk-item">
+                    <div className="perk-icon"><i className="fa-solid fa-layer-group"></i></div>
+                    <div className="perk-text">
+                      <h4>Centralized Multi-Location Console</h4>
+                      <p>Manage dozens of client or branch listings from a single intuitive agency dashboard.</p>
+                    </div>
+                  </div>
+                  <div className="perk-item">
+                    <div className="perk-icon"><i className="fa-solid fa-qrcode"></i></div>
+                    <div className="perk-text">
+                      <h4>Dedicated QR Flyers &amp; Standees</h4>
+                      <p>Generate isolated QR standees, tracking links, and custom AI prompt rules for each location.</p>
+                    </div>
+                  </div>
+                  <div className="perk-item">
+                    <div className="perk-icon"><i className="fa-solid fa-chart-pie"></i></div>
+                    <div className="perk-text">
+                      <h4>Cross-Location Analytics</h4>
+                      <p>Monitor scans, drafted reviews, conversion rates, and negative feedback across all accounts.</p>
+                    </div>
+                  </div>
+                  <div className="perk-item">
+                    <div className="perk-icon"><i className="fa-solid fa-key"></i></div>
+                    <div className="perk-text">
+                      <h4>Bring Your Own AI API (Gemini, OpenAI, or Claude)</h4>
+                      <p>For Multi-Business plans, review generation requires your own AI API key (choose any one: Google Gemini, OpenAI, or Claude). We do not provide API keys for Multi-Business plans or panels.</p>
+                    </div>
+                  </div>
+                  <div className="perk-item">
+                    <div className="perk-icon"><i className="fa-brands fa-whatsapp"></i></div>
+                    <div className="perk-text">
+                      <h4>VIP Dedicated Onboarding Support</h4>
+                      <p>Direct WhatsApp &amp; priority concierge setup for rapid assistance and capacity scaling.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT: REGISTRATION FORM */}
+              <div className="auth-card-agency">
+                <h2>Start Multi-Business Free Trial</h2>
+                <p className="subtitle">Create your account to instantly access the Multi-Business Panel with a 48-hour free trial.</p>
+
+                <div className="pending-notice">
+                  <strong><i className="fa-solid fa-bolt"></i> Instant Automated Approval:</strong> Accounts are approved immediately upon registration. Enjoy full access with a 48-hour free trial — no credit card required.
+                  <div style={{ marginTop: '0.4rem', borderTop: '1px dashed #bbf7d0', paddingTop: '0.4rem', fontSize: '0.78rem', color: '#166534' }}>
+                    <i className="fa-solid fa-circle-info"></i> <strong>API Key Notice:</strong> Multi-business review generation requires your own AI API key (Google Gemini, OpenAI, or Claude).
+                  </div>
+                </div>
+
+                {agencySubmitted ? (
+                  <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: 16, padding: '2rem 1.5rem', textAlign: 'center' }}>
+                    <div style={{ width: 60, height: 60, background: '#dcfce7', color: '#15803d', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', margin: '0 auto 1rem' }}>✓</div>
+                    <h3 style={{ color: '#0f172a', fontWeight: 800, marginBottom: '0.5rem' }}>Multi-Business Trial Activated!</h3>
+                    <p style={{ color: '#475569', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                      Welcome, <strong>{agencyForm.name}</strong>! Your 48-hour agency trial is now live. You can manage multiple client locations and bring your own AI API key.
+                    </p>
+                    <button
+                      className="btn btn-dark"
+                      style={{ width: '100%' }}
+                      onClick={() => {
+                        setUser({ name: agencyForm.name, email: agencyForm.email, plan: 'Multi-Business (48-Hr Trial)' });
+                        navigate('Dashboard');
+                      }}
+                    >
+                      Go to Agency Dashboard →
+                    </button>
+                  </div>
+                ) : (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (agencyForm.password !== agencyForm.confirmPassword) {
+                        alert('Passwords do not match. Please verify.');
+                        return;
+                      }
+                      setAgencySubmitted(true);
+                      setToast('48-Hour Multi-Business trial activated!');
+                    }}
+                  >
+                    <div className="agency-form-row">
+                      <div className="agency-form-group">
+                        <label>Your Name *</label>
+                        <input
+                          type="text"
+                          className="agency-form-control"
+                          placeholder="Jane Doe"
+                          required
+                          value={agencyForm.name}
+                          onChange={e => setAgencyForm({ ...agencyForm, name: e.target.value })}
+                        />
+                      </div>
+                      <div className="agency-form-group">
+                        <label>Agency / Business Name</label>
+                        <input
+                          type="text"
+                          className="agency-form-control"
+                          placeholder="Acme Media Group"
+                          value={agencyForm.company}
+                          onChange={e => setAgencyForm({ ...agencyForm, company: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="agency-form-row">
+                      <div className="agency-form-group">
+                        <label>Work Email *</label>
+                        <input
+                          type="email"
+                          className="agency-form-control"
+                          placeholder="jane@acmemedia.com"
+                          required
+                          value={agencyForm.email}
+                          onChange={e => setAgencyForm({ ...agencyForm, email: e.target.value })}
+                        />
+                      </div>
+                      <div className="agency-form-group">
+                        <label>WhatsApp / Phone *</label>
+                        <input
+                          type="tel"
+                          className="agency-form-control"
+                          placeholder="+91 97000 00000"
+                          required
+                          value={agencyForm.phone}
+                          onChange={e => setAgencyForm({ ...agencyForm, phone: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="agency-form-group">
+                      <label>Choose Password *</label>
+                      <div className="agency-pwd-wrap">
+                        <input
+                          type={showAgencyPass ? 'text' : 'password'}
+                          className="agency-form-control"
+                          placeholder="Min. 8 characters"
+                          required
+                          value={agencyForm.password}
+                          onChange={e => setAgencyForm({ ...agencyForm, password: e.target.value })}
+                        />
+                        <button
+                          type="button"
+                          className="agency-pwd-toggle"
+                          onClick={() => setShowAgencyPass(!showAgencyPass)}
+                          aria-label="Toggle password visibility"
+                        >
+                          <i className={showAgencyPass ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'}></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="agency-form-group">
+                      <label>Confirm Password *</label>
+                      <div className="agency-pwd-wrap">
+                        <input
+                          type={showAgencyConfPass ? 'text' : 'password'}
+                          className="agency-form-control"
+                          placeholder="Re-enter password"
+                          required
+                          value={agencyForm.confirmPassword}
+                          onChange={e => setAgencyForm({ ...agencyForm, confirmPassword: e.target.value })}
+                        />
+                        <button
+                          type="button"
+                          className="agency-pwd-toggle"
+                          onClick={() => setShowAgencyConfPass(!showAgencyConfPass)}
+                          aria-label="Toggle password visibility"
+                        >
+                          <i className={showAgencyConfPass ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'}></i>
+                        </button>
+                      </div>
+                      {agencyForm.confirmPassword && agencyForm.password !== agencyForm.confirmPassword && (
+                        <span style={{ fontSize: '0.75rem', color: '#dc2626', marginTop: '0.2rem' }}>Passwords do not match.</span>
+                      )}
+                    </div>
+
+                    <button type="submit" className="btn-submit-agency">
+                      Start 48-Hour Free Trial <i className="fa-solid fa-arrow-right"></i>
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
+          </div>
+        </main>
+      )}
+
+      {/* ====================================================================
           DEMO CHECKOUT
           ==================================================================== */}
       {page === 'Demo checkout' && (
@@ -1818,7 +2259,7 @@ export default function App() {
         </PageShell>
       )}
 
-      {['About us', 'Frequently asked questions', 'Source code', 'Multi-business plan', 'Apply for agency', 'Partner program', 'Business onboarding', 'Privacy policy', 'Terms of service', 'Cookie policy', 'Sitemap'].includes(page) && (
+      {['About us', 'Frequently asked questions', 'Multi-business plan', 'Partner program', 'Business onboarding', 'Privacy policy', 'Terms of service', 'Cookie policy', 'Sitemap'].includes(page) && (
         <PageShell
           title={({ 'About us': 'About StarReview AI', 'Frequently asked questions': 'Frequently asked questions', 'Source code': 'Source code and commercial licensing', 'Multi-business plan': 'Manage multiple business locations', 'Apply for agency': 'Agency partnerships', 'Partner program': 'Partner program', 'Business onboarding': 'Business onboarding', 'Privacy policy': 'Privacy policy', 'Terms of service': 'Terms of service', 'Cookie policy': 'Cookie policy', 'Sitemap': 'Website sitemap' })[page]}
           subtitle={({ 'About us': 'Tools to help businesses collect genuine feedback and build customer trust.', 'Frequently asked questions': 'Helpful answers about trials, plans, reviews, and payments.', 'Source code': 'Ask our team about source-code access and commercial licensing.', 'Multi-business plan': 'A scalable workflow for teams managing more than one location.', 'Apply for agency': 'Tell us about your agency and the businesses you support.', 'Partner program': 'Contact us to learn about partner eligibility and commission terms.', 'Business onboarding': 'Get help setting up your business profile and review funnel.', 'Privacy policy': 'We aim to collect only the information needed to provide the service.', 'Terms of service': 'Use the platform responsibly.', 'Cookie policy': 'Cookies and local storage may be used to support sign-in and core site functionality.', 'Sitemap': 'Browse the main sections of StarReview AI.' })[page]}
@@ -1892,10 +2333,10 @@ function Footer({ navigate }) {
     {
       title: 'Plans & Scale',
       items: [
-        ['★ Source Code & License', 'Pricing'],
+        ['★ Source Code & License', 'Source code'],
         ['Pricing & Free Trial', 'Pricing'],
         ['Multi-Business Plan', 'Pricing'],
-        ['Apply for Agency', 'Contact'],
+        ['Apply for Agency', 'Apply for agency'],
         ['Start 3-Day Free Trial', 'Account'],
         ['Payment QR Demo', 'Demo checkout']
       ]
