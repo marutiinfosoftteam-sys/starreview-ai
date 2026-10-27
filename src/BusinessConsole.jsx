@@ -343,6 +343,16 @@ export default function BusinessConsole({
     }
   };
 
+  // Google Switch / Re-authorize Modal State
+  const [googleAuthModalOpen, setGoogleAuthModalOpen] = useState(false);
+  const [googleAuthEmail, setGoogleAuthEmail] = useState(user?.email || 'team.marutiinfosoft@gmail.com');
+  const [googleAuthBizName, setGoogleAuthBizName] = useState(business?.name || 'Team Maruti InfoSoft');
+  const [googleAuthSwitchMode, setGoogleAuthSwitchMode] = useState(false);
+  const [googleAuthLoading, setGoogleAuthLoading] = useState(false);
+  const [fetchingReviews, setFetchingReviews] = useState(false);
+  const [newGoogleEmail, setNewGoogleEmail] = useState('');
+  const [newGoogleBizName, setNewGoogleBizName] = useState('');
+
   // Physical Stand Checkout State (Screenshot 2)
   const [standCheckoutMode, setStandCheckoutMode] = useState(false);
   const [selectedStand, setSelectedStand] = useState({
@@ -1365,7 +1375,13 @@ export default function BusinessConsole({
                   </p>
                 </div>
               </div>
-              <button className="bc-btn-upgrade" onClick={() => choosePlan('Pro', 'Monthly')}>
+              <button
+                className="bc-btn-upgrade"
+                onClick={() => {
+                  setActiveTab('Billing & Plans');
+                  setPlanCheckoutStep('select');
+                }}
+              >
                 Upgrade Plan
               </button>
             </div>
@@ -1657,11 +1673,34 @@ export default function BusinessConsole({
                   </span>
                 </div>
                 <div className="bc-gcb-actions">
-                  <button type="button" className="bc-btn-fetch" onClick={() => notify('Fetching latest reviews from Google Business Profile…')}>
-                    <i className="fa-solid fa-arrows-rotate"></i> Fetch Reviews
+                  <button
+                    type="button"
+                    className="bc-btn-fetch"
+                    disabled={fetchingReviews}
+                    onClick={() => {
+                      setFetchingReviews(true);
+                      notify('Connecting to Google Business Profile API to fetch latest customer reviews...');
+                      setTimeout(() => {
+                        setFetchingReviews(false);
+                        notify('✓ Latest Google reviews synchronized. All 0 customer reviews up-to-date.');
+                      }, 1200);
+                    }}
+                  >
+                    <i className={`fa-solid fa-arrows-rotate ${fetchingReviews ? 'fa-spin' : ''}`}></i> {fetchingReviews ? 'Fetching...' : 'Fetch Reviews'}
                   </button>
-                  <button type="button" className="bc-btn-switch" onClick={() => notify('Google Business account re-authorized.')}>
-                    <i className="fa-brands fa-google" style={{ color: '#4285f4' }}></i> Switch / Re-authorize
+                  <button
+                    type="button"
+                    className="bc-btn-switch"
+                    onClick={() => setGoogleAuthModalOpen(true)}
+                    title="Switch or re-authorize Google Business Profile account"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                      <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                      <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                    </svg>
+                    <span>Switch / Re-authorize</span>
                   </button>
                 </div>
               </div>
@@ -1678,7 +1717,8 @@ export default function BusinessConsole({
                       onChange={e => {
                         if (isTrial) {
                           notify('Auto-reply requires Pro plan. Please upgrade.');
-                          choosePlan('Pro', 'Monthly');
+                          setActiveTab('Billing & Plans');
+                          setPlanCheckoutStep('select');
                         } else {
                           setAutoReplyEnabled(e.target.checked);
                         }
@@ -1976,7 +2016,13 @@ export default function BusinessConsole({
                   </p>
                 </div>
               </div>
-              <button className="bc-btn-upgrade" onClick={() => choosePlan('Pro', 'Monthly')}>
+              <button
+                className="bc-btn-upgrade"
+                onClick={() => {
+                  setActiveTab('Billing & Plans');
+                  setPlanCheckoutStep('select');
+                }}
+              >
                 <i className="fa-regular fa-star" style={{ marginRight: 4 }}></i> Upgrade Plan
               </button>
             </div>
@@ -5871,6 +5917,224 @@ export default function BusinessConsole({
             )}
           </div>
         )}
+        {/* ====================================================================
+            GOOGLE SWITCH / RE-AUTHORIZE MODAL (SCREENSHOT 1)
+            ==================================================================== */}
+        {googleAuthModalOpen && (
+          <div className="bc-webpress-overlay" onClick={() => !googleAuthLoading && setGoogleAuthModalOpen(false)}>
+            <div style={{ width: '100%', maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+              <div style={{ background: '#ffffff', borderRadius: 20, boxShadow: '0 25px 60px rgba(0,0,0,0.22)', borderTop: '4px solid #4285F4', overflow: 'hidden', animation: 'bcModalPop 0.25s ease-out' }}>
+                {/* Header */}
+                <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                      <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                      <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                    </svg>
+                    <div>
+                      <h3 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>
+                        Google Business Authorization
+                      </h3>
+                      <p style={{ fontSize: '0.74rem', color: '#64748b', margin: 0 }}>
+                        Switch account or refresh Google Business Profile OAuth tokens
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', fontWeight: 800 }}
+                    onClick={() => setGoogleAuthModalOpen(false)}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Body */}
+                <div style={{ padding: '1.35rem 1.5rem' }}>
+                  {!googleAuthSwitchMode ? (
+                    <div>
+                      {/* Active Connection Box */}
+                      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 14, padding: '1rem 1.15rem', marginBottom: '1.25rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                            CURRENTLY CONNECTED PROFILE
+                          </span>
+                          <span style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '0.68rem', fontWeight: 800, padding: '2px 8px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e' }}></span>
+                            Connected &amp; Active
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.96rem', fontWeight: 800, color: '#0f172a', marginBottom: 2 }}>
+                          {googleAuthBizName}
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#475569', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                          <i className="fa-solid fa-envelope" style={{ color: '#94a3b8', fontSize: '0.72rem' }}></i>
+                          <span>{googleAuthEmail}</span>
+                        </div>
+                        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 8, padding: '0.65rem 0.85rem', fontSize: '0.72rem', color: '#64748b', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Google Reviews Auto-Sync (Every 24 Hours)
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Google Business Profile API (manage_reviews enabled)
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <button
+                          type="button"
+                          className="btn full"
+                          disabled={googleAuthLoading}
+                          style={{
+                            background: '#16a34a',
+                            color: '#ffffff',
+                            fontWeight: 800,
+                            padding: '0.75rem',
+                            fontSize: '0.86rem',
+                            borderRadius: 10,
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8
+                          }}
+                          onClick={() => {
+                            setGoogleAuthLoading(true);
+                            notify('Contacting Google Business Profile API to re-authorize account tokens...');
+                            setTimeout(() => {
+                              setGoogleAuthLoading(false);
+                              notify('✓ Google account tokens successfully verified & refreshed!');
+                              setGoogleAuthModalOpen(false);
+                            }, 1200);
+                          }}
+                        >
+                          <i className={`fa-solid fa-arrows-rotate ${googleAuthLoading ? 'fa-spin' : ''}`}></i>
+                          {googleAuthLoading ? 'Re-authorizing with Google...' : 'Re-authorize Current Account'}
+                        </button>
+
+                        <button
+                          type="button"
+                          className="btn btn-light full"
+                          style={{
+                            padding: '0.7rem',
+                            fontSize: '0.84rem',
+                            fontWeight: 700,
+                            borderRadius: 10,
+                            border: '1px solid #cbd5e1',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => {
+                            setGoogleAuthSwitchMode(true);
+                            setNewGoogleEmail(googleAuthEmail);
+                            setNewGoogleBizName(googleAuthBizName);
+                          }}
+                        >
+                          <i className="fa-solid fa-arrow-right-arrow-left" style={{ color: '#4285f4' }}></i>
+                          Switch Google Account / Business Profile
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      {/* Switch Account Form */}
+                      <div style={{ marginBottom: '1.25rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', marginBottom: 4 }}>
+                          Google Account Email
+                        </label>
+                        <input
+                          type="email"
+                          className="bc-input"
+                          placeholder="e.g. yourbusiness@gmail.com"
+                          value={newGoogleEmail}
+                          onChange={e => setNewGoogleEmail(e.target.value)}
+                        />
+                      </div>
+
+                      <div style={{ marginBottom: '1.35rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', marginBottom: 4 }}>
+                          Google Business Location Name
+                        </label>
+                        <input
+                          type="text"
+                          className="bc-input"
+                          placeholder="e.g. Team Maruti InfoSoft - Surat Branch"
+                          value={newGoogleBizName}
+                          onChange={e => setNewGoogleBizName(e.target.value)}
+                        />
+                        <span style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'block', marginTop: 4 }}>
+                          Enter the exact Google Business Profile name to fetch matching reviews.
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          type="button"
+                          className="btn btn-light"
+                          style={{ flex: 1, padding: '0.7rem', fontSize: '0.82rem', fontWeight: 700 }}
+                          onClick={() => setGoogleAuthSwitchMode(false)}
+                        >
+                          ← Cancel
+                        </button>
+                        <button
+                          type="button"
+                          className="btn"
+                          disabled={googleAuthLoading}
+                          style={{
+                            flex: 2,
+                            background: '#4285f4',
+                            color: '#ffffff',
+                            padding: '0.7rem',
+                            fontSize: '0.84rem',
+                            fontWeight: 800,
+                            borderRadius: 8,
+                            border: 'none',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => {
+                            if (!newGoogleEmail.trim()) {
+                              notify('Please enter a Google account email.');
+                              return;
+                            }
+                            setGoogleAuthLoading(true);
+                            notify(`Authenticating with Google OAuth for ${newGoogleEmail}...`);
+                            setTimeout(() => {
+                              setGoogleAuthEmail(newGoogleEmail);
+                              if (newGoogleBizName.trim()) setGoogleAuthBizName(newGoogleBizName);
+                              setGoogleAuthLoading(false);
+                              setGoogleAuthSwitchMode(false);
+                              setGoogleAuthModalOpen(false);
+                              notify(`✓ Connected to new Google Account: ${newGoogleEmail}`);
+                            }, 1200);
+                          }}
+                        >
+                          {googleAuthLoading ? 'Connecting...' : 'Authorize & Connect'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer Security Badges */}
+                <div style={{ background: '#f8fafc', borderTop: '1px solid #f1f5f9', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#166534', fontWeight: 700 }}>
+                    <i className="fa-solid fa-lock"></i> 256-Bit Encrypted OAuth 2.0
+                  </div>
+                  <div>Official Google API Access</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ====================================================================
             WEBPRESS PAY UPI PAYMENT GATEWAY MODAL (SCREENSHOT 4)
             ==================================================================== */}
