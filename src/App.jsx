@@ -123,6 +123,7 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [regMode, setRegMode] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [user, setUser] = useState(null);
   const [myBusiness, setMyBusiness] = useState(null);
   const [cfg, setCfg] = useState({ whatsappNumber: '919707842047', languages: ['English', 'Hindi', 'Hinglish', 'Gujarati'] });
@@ -2241,76 +2242,194 @@ export default function App() {
       )}
 
       {/* ====================================================================
-          ACCOUNT / LOGIN / REGISTER (WHEN LOGGED OUT)
+          ACCOUNT / LOGIN / REGISTER (REVIEWFLOW AI EXACT SHOWCASE & FORM)
           ==================================================================== */}
       {page === 'Account' && !user && (
-        <PageShell title="Sign In · StarReview AI" subtitle="Access your business reputation console, QR flyers, and private feedback.">
-          <div className="account-card" style={{ maxWidth: 460 }}>
-            <div className="brand-mark large-mark">✦</div>
-            <h3>{regMode ? 'Create Business Account' : 'Sign in to Console'}</h3>
-            <p>{regMode ? 'No credit card required. 3-day full access trial starts immediately.' : 'Welcome back! Sign in to manage your Google review funnel.'}</p>
-            
-            {/* 1-Click Demo Access button */}
-            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '14px 16px', marginBottom: '1.25rem', textAlign: 'left' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#166534', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <i className="fa-solid fa-sparkles"></i> Instant Preview
-                </span>
-                <span style={{ fontSize: '0.72rem', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: 999, fontWeight: 600 }}>Demo</span>
+        <div className="rf-auth-wrapper">
+          <div className="rf-ambient-bg"></div>
+          <div className="rf-auth-grid">
+            {/* ═══════ LEFT COLUMN: LANDING SHOWCASE ═══════ */}
+            <div className="rf-landing-showcase">
+              <button type="button" className="rf-auth-back-nav" onClick={() => navigate('Home')}>
+                <i className="fa-solid fa-arrow-left"></i> Back to Homepage
+              </button>
+
+              <div className="rf-brand-header-wrap">
+                <div className="rf-brand-logo-icon">
+                  <i className="fa-solid fa-star"></i>
+                </div>
+                <div className="rf-brand-titles">
+                  <span className="rf-brand-name">StarReview <span>AI</span></span>
+                  <span className="rf-brand-motto">Helping customers share better reviews</span>
+                </div>
               </div>
-              <p style={{ margin: '0 0 10px 0', fontSize: '0.8rem', color: '#14532d', lineHeight: 1.4 }}>
-                Explore the complete Business Console with sample data for <b>verde eco landing</b>.
+
+              <div className="rf-showcase-badge">
+                <span></span> AI Google Review Platform &bull; Business Portal
+              </div>
+
+              <h1 className="rf-showcase-title">
+                Grow Your Google Reviews &amp; <span>Rank #1 Locally</span>
+              </h1>
+
+              <p className="rf-showcase-desc">
+                Log in to your business dashboard to manage AI review funnels, generate custom QR standees, monitor new customer feedback, and build online reputation.
               </p>
+
+              {/* 4 Key Perks */}
+              <div className="rf-showcase-perks">
+                <div className="rf-perk-card">
+                  <div className="rf-perk-icon-wrap"><i className="fa-solid fa-wand-magic-sparkles"></i></div>
+                  <div className="rf-perk-text">
+                    <h4>1-Click AI Review Drafter</h4>
+                    <p>Customers write detailed 5-star Google reviews in seconds using smart AI assistance.</p>
+                  </div>
+                </div>
+                <div className="rf-perk-card">
+                  <div className="rf-perk-icon-wrap"><i className="fa-solid fa-qrcode"></i></div>
+                  <div className="rf-perk-text">
+                    <h4>Smart QR Standees &amp; Flyers</h4>
+                    <p>Place on checkout counters or tables to collect customer reviews on the spot.</p>
+                  </div>
+                </div>
+                <div className="rf-perk-card">
+                  <div className="rf-perk-icon-wrap"><i className="fa-solid fa-shield-halved"></i></div>
+                  <div className="rf-perk-text">
+                    <h4>Negative Review Firewall</h4>
+                    <p>Route unhappy feedback to private inbox before it ever reaches public Google Maps.</p>
+                  </div>
+                </div>
+                <div className="rf-perk-card">
+                  <div className="rf-perk-icon-wrap"><i className="fa-solid fa-chart-line"></i></div>
+                  <div className="rf-perk-text">
+                    <h4>Real-Time Growth Analytics</h4>
+                    <p>Track scans, review completions, customer sentiment, and local search ranking.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Trust Strip */}
+              <div className="rf-showcase-trust">
+                <span><i className="fa-solid fa-star star-icon"></i> 4.9/5 Trusted by Businesses</span>
+                <span><i className="fa-solid fa-bolt"></i> 3x More Reviews</span>
+                <span><i className="fa-solid fa-lock"></i> 256-Bit SSL Secured</span>
+              </div>
+            </div>
+
+            {/* ═══════ RIGHT COLUMN: AUTH CARD ═══════ */}
+            <div className="rf-auth-card">
+              <div className="rf-card-header">
+                <h2>{regMode ? 'Create Business Account' : 'Business Login'}</h2>
+                <p>{regMode ? 'Start your 3-day full access free trial — no credit card needed' : 'Enter your credentials to access your review dashboard'}</p>
+              </div>
+
+              {/* 1-Click Instant Console Preview */}
+              <div className="rf-instant-access-box">
+                <div className="rf-instant-access-text">
+                  <strong><i className="fa-solid fa-bolt" style={{ color: '#16a34a', marginRight: 5 }}></i> Instant Demo Access</strong>
+                  <small>Sample business: <b>verde eco landing</b></small>
+                </div>
+                <button
+                  type="button"
+                  className="rf-instant-access-btn"
+                  onClick={loginDemoConsole}
+                >
+                  Explore Console Demo ↗
+                </button>
+              </div>
+
+              <form onSubmit={submitAuth}>
+                <div className="rf-form-group">
+                  <label className="rf-form-label">Email or Username</label>
+                  <input
+                    className="rf-form-control"
+                    type="email"
+                    required
+                    placeholder="name@business.com or store"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+
+                <div className="rf-form-group">
+                  <label className="rf-form-label">Password</label>
+                  <div className="rf-password-wrap">
+                    <input
+                      className="rf-form-control"
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      minLength="6"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="rf-password-toggle"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      <i className={showPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'}></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="rf-form-extra-row">
+                  <label className="rf-remember-label">
+                    <input type="checkbox" defaultChecked style={{ accentColor: '#16a34a' }} />
+                    Remember me
+                  </label>
+                  <span
+                    className="rf-forgot-link"
+                    onClick={() => notify('Password reset link sent to registered email address.')}
+                  >
+                    Forgot Password?
+                  </span>
+                </div>
+
+                <button className="rf-btn-submit" type="submit">
+                  {regMode ? 'Start 3-Day Free Trial ' : 'Sign In to Dashboard '}
+                  <i className="fa-solid fa-arrow-right"></i>
+                </button>
+              </form>
+
+              {/* Divider */}
+              <div className="rf-auth-divider">
+                <span>or continue with</span>
+              </div>
+
+              {/* Google Sign In */}
               <button
                 type="button"
-                className="btn btn-dark full"
-                style={{ background: '#1d4934', color: '#fff', fontSize: '0.85rem', padding: '0.65rem' }}
+                className="rf-btn-google"
                 onClick={loginDemoConsole}
               >
-                Explore Live Console Demo ↗
+                <svg width="18" height="18" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Sign in with Google
               </button>
+
+              {/* Switch Link */}
+              <div className="rf-auth-card-footer">
+                {regMode ? (
+                  <>Already have an account? <button type="button" onClick={() => setRegMode(false)}>Sign In</button></>
+                ) : (
+                  <>Don't have an account? <button type="button" onClick={() => setRegMode(true)}>Start 3-Day Free Trial</button></>
+                )}
+              </div>
+
+              {/* Secure Strip */}
+              <div className="rf-auth-security-strip">
+                <span><i className="fa-solid fa-bolt" style={{ color: '#16a34a' }}></i> Instant Access</span>
+                <span>&bull;</span>
+                <span><i className="fa-solid fa-lock" style={{ color: '#16a34a' }}></i> 256-Bit SSL Encrypted</span>
+              </div>
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', margin: '1.2rem 0', color: '#94a3b8', fontSize: '0.8rem' }}>
-              <span style={{ flex: 1, height: 1, background: '#e2e8f0' }}></span>
-              <span style={{ padding: '0 10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Or continue with credentials</span>
-              <span style={{ flex: 1, height: 1, background: '#e2e8f0' }}></span>
-            </div>
-
-            <form onSubmit={submitAuth} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <label style={{ textAlign: 'left', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
-                Email address
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="e.g. store@business.com"
-                  style={{ width: '100%', marginTop: 6 }}
-                />
-              </label>
-              <label style={{ textAlign: 'left', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
-                Password
-                <input
-                  type="password"
-                  required
-                  minLength="6"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="At least 6 characters"
-                  style={{ width: '100%', marginTop: 6 }}
-                />
-              </label>
-              <button className="btn btn-dark full" style={{ marginTop: 6 }}>
-                {regMode ? 'Start 3-Day Free Trial' : 'Sign in to Dashboard'}
-              </button>
-            </form>
-
-            <button type="button" className="text-btn centered" style={{ marginTop: '1rem' }} onClick={() => setRegMode(!regMode)}>
-              {regMode ? 'Already have an account? Sign in' : "Don't have an account? Register free"}
-            </button>
           </div>
-        </PageShell>
+        </div>
       )}
 
       {/* ====================================================================
