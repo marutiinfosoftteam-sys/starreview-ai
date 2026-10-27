@@ -2550,20 +2550,32 @@
   color: #94a3b8;
 }
 
+.bc-input,
 .bc-input-modern {
   width: 100%;
-  padding: 0.7rem 0.95rem;
+  padding: 0.75rem 1rem;
   border-radius: 10px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #cbd5e1;
   font-size: 0.86rem;
   color: #0f172a;
   background: #ffffff;
   outline: none;
-  transition: border-color 0.15s;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: all 0.2s ease;
 }
 
+.bc-input:focus,
 .bc-input-modern:focus {
   border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+  background: #ffffff;
+}
+
+.bc-input::placeholder,
+.bc-input-modern::placeholder {
+  color: #94a3b8;
+  font-size: 0.84rem;
 }
 
 .bc-field-subtext {
@@ -3091,10 +3103,17 @@
 }
 
 .bc-how-it-works-box {
-  background: #f0fdf4;
-  border: 1.5px solid #bbf7d0;
+  background: #f0f9ff;
+  border: 1.5px solid #e0f2fe;
   border-radius: 16px;
   padding: 1.35rem 1.5rem;
+}
+
+.bc-how-it-works-box h4 {
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: #0284c7;
+  margin: 0 0 0.85rem 0;
 }
 
 .bc-how-it-works-box ol {
@@ -3104,9 +3123,9 @@
   flex-direction: column;
   gap: 0.5rem;
   font-size: 0.78rem;
-  font-weight: 700;
-  color: #166534;
-  line-height: 1.4;
+  font-weight: 600;
+  color: #0369a1;
+  line-height: 1.45;
 }
 
 /* Services Hero Card (Screenshot 2) */

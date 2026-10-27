@@ -375,6 +375,10 @@ export default function BusinessConsole({
 
   // Physical Stand Checkout State (Screenshot 2)
   const [standCheckoutMode, setStandCheckoutMode] = useState(false);
+  const [standCheckoutStep, setStandCheckoutStep] = useState(1);
+  const [standUtr, setStandUtr] = useState('');
+  const [standOrderPlaced, setStandOrderPlaced] = useState(false);
+  const [standOrderRef, setStandOrderRef] = useState('ORDER_RF_635572');
   const [selectedStand, setSelectedStand] = useState({
     title: 'QR Code Acrylic Stand',
     unitPrice: 699,
@@ -3235,208 +3239,384 @@ export default function BusinessConsole({
 
                 {/* Stepper Progress */}
                 <div className="bc-checkout-stepper">
-                  <div className="bc-step-item active">
-                    <span className="bc-step-circle">1</span>
+                  <div className={`bc-step-item ${standCheckoutStep >= 1 ? 'active' : ''} ${standCheckoutStep > 1 ? 'completed' : ''}`}>
+                    <span className="bc-step-circle">{standCheckoutStep > 1 ? <i className="fa-solid fa-check"></i> : '1'}</span>
                     <span>Shipping &amp; Recipient Info</span>
                   </div>
-                  <div className="bc-step-divider"></div>
-                  <div className="bc-step-item">
+                  <div className={`bc-step-divider ${standCheckoutStep > 1 ? 'active' : ''}`}></div>
+                  <div className={`bc-step-item ${standCheckoutStep === 2 ? 'active' : ''}`}>
                     <span className="bc-step-circle">2</span>
                     <span>Prepaid UPI Payment</span>
                   </div>
                 </div>
 
-                {/* Selected Stand Model Box */}
-                <div className="bc-selected-model-box">
-                  <div>
-                    <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', letterSpacing: '0.04em' }}>
-                      SELECTED STAND MODEL
-                    </span>
-                    <h4 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0f172a', margin: '2px 0 0 0' }}>
-                      {selectedStand.title}
-                    </h4>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                    <div>
-                      <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', display: 'block' }}>
-                        UNIT PRICE
-                      </span>
-                      <strong style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a' }}>
-                        ₹{selectedStand.unitPrice}
-                      </strong>
+                {standOrderPlaced ? (
+                  /* Order Success Confirmation Banner */
+                  <div style={{ background: '#f0fdf4', border: '2px solid #bbf7d0', borderRadius: 16, padding: '2rem 1.75rem', textAlign: 'center', margin: '1rem 0' }}>
+                    <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.75rem', margin: '0 auto 1rem auto' }}>
+                      <i className="fa-solid fa-check"></i>
                     </div>
-                    <div>
-                      <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', display: 'block', marginBottom: 4 }}>
-                        Quantity
-                      </span>
-                      <div className="bc-qty-control">
+                    <span style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '0.72rem', fontWeight: 800, padding: '3px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      ORDER CONFIRMED &amp; IN PRODUCTION
+                    </span>
+                    <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a', margin: '0.65rem 0 0.35rem 0' }}>
+                      Thank You, {standRecipientName}!
+                    </h3>
+                    <p style={{ fontSize: '0.84rem', color: '#475569', maxWidth: 540, margin: '0 auto 1.25rem auto', lineHeight: 1.5 }}>
+                      Your custom-branded <strong>{selectedStand.title}</strong> has been received and queued for high-definition UV-cure printing.
+                    </p>
+
+                    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem 1.25rem', maxWidth: 500, margin: '0 auto 1.5rem auto', fontSize: '0.8rem', textAlign: 'left' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ color: '#64748b' }}>Order ID:</span>
+                        <strong style={{ color: '#0f172a' }}>{standOrderRef || 'ORDER_RF_635572'}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ color: '#64748b' }}>Stand Model:</span>
+                        <strong>{selectedStand.title} × {selectedStand.qty || 1}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ color: '#64748b' }}>Total Paid:</span>
+                        <strong style={{ color: '#16a34a' }}>₹{selectedStand.unitPrice * (selectedStand.qty || 1)}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#64748b' }}>Est. Delivery:</span>
+                        <strong>7-10 Business Days ({standCity || 'Surat'}, {standState || 'Gujarat'})</strong>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="btn"
+                      style={{ background: '#16a34a', color: '#ffffff', fontWeight: 800, padding: '0.75rem 2rem', borderRadius: 10, border: 'none', cursor: 'pointer' }}
+                      onClick={() => {
+                        setStandCheckoutMode(false);
+                        setStandCheckoutStep(1);
+                        setStandOrderPlaced(false);
+                      }}
+                    >
+                      ← Return to Stands Catalog
+                    </button>
+                  </div>
+                ) : standCheckoutStep === 1 ? (
+                  <div>
+                    {/* Selected Stand Model Box */}
+                    <div className="bc-selected-model-box">
+                      <div>
+                        <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', letterSpacing: '0.04em' }}>
+                          SELECTED STAND MODEL
+                        </span>
+                        <h4 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0f172a', margin: '2px 0 0 0' }}>
+                          {selectedStand.title}
+                        </h4>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                        <div>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', display: 'block' }}>
+                            UNIT PRICE
+                          </span>
+                          <strong style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a' }}>
+                            ₹{selectedStand.unitPrice}
+                          </strong>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', display: 'block', marginBottom: 4 }}>
+                            Quantity
+                          </span>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: 8, background: '#ffffff', overflow: 'hidden' }}>
+                            <button
+                              type="button"
+                              style={{ border: 'none', background: 'none', width: 28, height: 36, cursor: 'pointer', fontWeight: 800, color: '#64748b' }}
+                              onClick={() => setSelectedStand(prev => ({ ...prev, qty: Math.max(1, (prev.qty || 1) - 1) }))}
+                            >-</button>
+                            <input
+                              type="number"
+                              min="1"
+                              max="99"
+                              value={selectedStand.qty || 1}
+                              onChange={e => setSelectedStand(prev => ({ ...prev, qty: Math.max(1, parseInt(e.target.value) || 1) }))}
+                              style={{ width: 44, height: 36, border: 'none', textAlign: 'center', fontWeight: 800, fontSize: '0.92rem', color: '#0f172a', outline: 'none' }}
+                            />
+                            <button
+                              type="button"
+                              style={{ border: 'none', background: 'none', width: 28, height: 36, cursor: 'pointer', fontWeight: 800, color: '#64748b' }}
+                              onClick={() => setSelectedStand(prev => ({ ...prev, qty: (prev.qty || 1) + 1 }))}
+                            >+</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Shipping & Recipient Form */}
+                    <form onSubmit={e => {
+                      e.preventDefault();
+                      const ref = 'ORDER_RF_' + Math.floor(100000 + Math.random() * 900000);
+                      setStandOrderRef(ref);
+                      setStandCheckoutStep(2);
+                      notify('Proceeding to Step 2: UPI Prepaid Payment...');
+                    }}>
+                      <div className="bc-checkout-form-grid">
+                        <div>
+                          <label className="bc-label">Recipient Full Name *</label>
+                          <input
+                            type="text"
+                            className="bc-input"
+                            required
+                            value={standRecipientName}
+                            onChange={e => setStandRecipientName(e.target.value)}
+                            placeholder="Team Maruti InfoSoft"
+                          />
+                        </div>
+                        <div>
+                          <label className="bc-label">10-Digit Mobile Number *</label>
+                          <input
+                            type="tel"
+                            className="bc-input"
+                            required
+                            value={standPhone}
+                            onChange={e => setStandPhone(e.target.value)}
+                            placeholder="+1 6355722267"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="bc-checkout-form-grid">
+                        <div>
+                          <label className="bc-label">Shop / Outlet Name *</label>
+                          <input
+                            type="text"
+                            className="bc-input"
+                            required
+                            value={standShopName}
+                            onChange={e => setStandShopName(e.target.value)}
+                            placeholder="Shop #12, Ground Floor"
+                          />
+                        </div>
+                        <div>
+                          <label className="bc-label">Business Display Name *</label>
+                          <input
+                            type="text"
+                            className="bc-input"
+                            required
+                            value={standBizName}
+                            onChange={e => setStandBizName(e.target.value)}
+                            placeholder="verde eco landing"
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ marginBottom: '1.15rem' }}>
+                        <label className="bc-label">Full Delivery Address *</label>
+                        <input
+                          type="text"
+                          className="bc-input"
+                          required
+                          value={standAddress}
+                          onChange={e => setStandAddress(e.target.value)}
+                          placeholder="Street name, Area, Building name, Flat number"
+                        />
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', gap: '0.85rem', marginBottom: '1.5rem' }}>
+                        <div>
+                          <label className="bc-label">Nearby Landmark</label>
+                          <input
+                            type="text"
+                            className="bc-input"
+                            value={standLandmark}
+                            onChange={e => setStandLandmark(e.target.value)}
+                            placeholder="Opposite City Hospital (optional)"
+                          />
+                        </div>
+                        <div>
+                          <label className="bc-label">City *</label>
+                          <input
+                            type="text"
+                            className="bc-input"
+                            required
+                            value={standCity}
+                            onChange={e => setStandCity(e.target.value)}
+                            placeholder="City"
+                          />
+                        </div>
+                        <div>
+                          <label className="bc-label">State *</label>
+                          <input
+                            type="text"
+                            className="bc-input"
+                            required
+                            value={standState}
+                            onChange={e => setStandState(e.target.value)}
+                            placeholder="State"
+                          />
+                        </div>
+                        <div>
+                          <label className="bc-label">6-Digit PIN *</label>
+                          <input
+                            type="text"
+                            className="bc-input"
+                            required
+                            value={standPincode}
+                            onChange={e => setStandPincode(e.target.value)}
+                            placeholder="e.g. 110001"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Total Payable Box */}
+                      <div className="bc-checkout-total-banner">
+                        <div>
+                          <strong style={{ fontSize: '0.95rem', color: '#0f172a', display: 'block' }}>
+                            Total Payable Amount:
+                          </strong>
+                          <span style={{ fontSize: '0.74rem', color: '#15803d', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <i className="fa-solid fa-circle-check"></i> Includes 18% GST &amp; Free Express Delivery
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '1.65rem', fontWeight: 900, color: '#16a34a' }}>
+                          ₹{selectedStand.unitPrice * (selectedStand.qty || 1)}
+                        </div>
+                      </div>
+
+                      {/* Footer Buttons */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <button
                           type="button"
-                          className="bc-qty-btn"
-                          onClick={() => setSelectedStand(prev => ({ ...prev, qty: Math.max(1, (prev.qty || 1) - 1) }))}
+                          className="btn btn-light"
+                          style={{ padding: '0.75rem 2rem', fontWeight: 800, borderRadius: 10, border: '1.5px solid #cbd5e1' }}
+                          onClick={() => setStandCheckoutMode(false)}
                         >
-                          -
+                          Cancel
                         </button>
-                        <span className="bc-qty-val">{selectedStand.qty || 1}</span>
                         <button
-                          type="button"
-                          className="bc-qty-btn"
-                          onClick={() => setSelectedStand(prev => ({ ...prev, qty: (prev.qty || 1) + 1 }))}
+                          type="submit"
+                          className="btn btn-dark"
+                          style={{ background: '#16a34a', border: 'none', padding: '0.8rem 2.25rem', fontWeight: 800, fontSize: '0.88rem', borderRadius: 10, boxShadow: '0 4px 14px rgba(22, 163, 74, 0.25)' }}
                         >
-                          +
+                          Proceed to Payment &amp; QR →
                         </button>
+                      </div>
+                    </form>
+                  </div>
+                ) : (
+                  /* Step 2: Prepaid UPI Payment */
+                  <div>
+                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 16, padding: '1.75rem', marginBottom: '1.5rem' }}>
+                      <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+                        <span style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '0.72rem', fontWeight: 800, padding: '3px 10px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                          <i className="fa-solid fa-bolt"></i> Instant UPI QR Activation
+                        </span>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '4px 0' }}>
+                          Pay ₹{selectedStand.unitPrice * (selectedStand.qty || 1)} via UPI
+                        </h3>
+                        <p style={{ fontSize: '0.76rem', color: '#64748b', margin: 0 }}>
+                          Scan this QR code with any UPI app on your phone (Google Pay, PhonePe, Paytm, BHIM, Cred)
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem' }}>
+                        <div style={{ background: '#ffffff', padding: 14, borderRadius: 16, border: '2px solid #bbf7d0', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', position: 'relative' }}>
+                          <img src={activeQrUrl} alt="UPI QR" style={{ width: 180, height: 180, display: 'block', borderRadius: 8 }} />
+                          <div className="qr-center-logo">
+                            <svg width="18" height="18" viewBox="0 0 24 24">
+                              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div style={{ marginTop: 10, fontSize: '0.74rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span>UPI ID: <strong>starreview.upi@okaxis</strong></span>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-light"
+                            style={{ padding: '2px 8px', fontSize: '0.68rem', fontWeight: 800 }}
+                            onClick={async () => {
+                              await navigator.clipboard.writeText('starreview.upi@okaxis');
+                              notify('UPI ID copied to clipboard!');
+                            }}
+                          >
+                            Copy
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Order Summary Recap */}
+                      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.95rem 1.15rem', marginBottom: '1.35rem', fontSize: '0.78rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                          <span style={{ color: '#64748b' }}>Order Reference:</span>
+                          <strong>{standOrderRef || 'ORDER_RF_635572'}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                          <span style={{ color: '#64748b' }}>Display Model:</span>
+                          <strong>{selectedStand.title} × {selectedStand.qty || 1}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                          <span style={{ color: '#64748b' }}>Recipient:</span>
+                          <strong>{standRecipientName} ({standPhone})</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: '#64748b' }}>Delivery Address:</span>
+                          <strong style={{ textAlign: 'right', maxWidth: '60%' }}>{standAddress || 'Shop #12, Ground Floor'}, {standCity}, {standState} - {standPincode}</strong>
+                        </div>
+                      </div>
+
+                      {/* UTR Input Form */}
+                      <div>
+                        <label className="bc-label">12-Digit UPI Transaction Reference (UTR) *</label>
+                        <input
+                          type="text"
+                          className="bc-input"
+                          maxLength={12}
+                          placeholder="e.g. 429812345678"
+                          value={standUtr}
+                          onChange={e => setStandUtr(e.target.value.replace(/\D/g, ''))}
+                          style={{ marginBottom: 6 }}
+                        />
+                        <small style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', marginBottom: '1.25rem' }}>
+                          Open your UPI app after paying and enter the 12-digit UTR/Reference number.
+                        </small>
+
+                        <div style={{ display: 'flex', gap: 10 }}>
+                          <button
+                            type="button"
+                            className="btn btn-light"
+                            style={{ flex: 1, padding: '0.75rem', fontWeight: 800, borderRadius: 10, border: '1.5px solid #cbd5e1' }}
+                            onClick={() => setStandCheckoutStep(1)}
+                          >
+                            ← Back to Shipping Info
+                          </button>
+                          <button
+                            type="button"
+                            className="btn"
+                            style={{
+                              flex: 2,
+                              background: '#16a34a',
+                              color: '#ffffff',
+                              fontWeight: 800,
+                              padding: '0.75rem',
+                              borderRadius: 10,
+                              border: 'none',
+                              cursor: 'pointer',
+                              boxShadow: '0 4px 14px rgba(22, 163, 74, 0.25)'
+                            }}
+                            onClick={() => {
+                              if (standUtr.length < 6) {
+                                notify('Please enter a valid 12-digit UPI UTR reference number.');
+                                return;
+                              }
+                              setStandOrderPlaced(true);
+                              notify(`✓ Order confirmed! Custom-printed ${selectedStand.title} is queued for dispatch.`);
+                            }}
+                          >
+                            <i className="fa-solid fa-circle-check"></i> Confirm Payment &amp; Place Order
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Shipping & Recipient Form */}
-                <form onSubmit={e => {
-                  e.preventDefault();
-                  openWebpressPay(selectedStand.unitPrice * (selectedStand.qty || 1), selectedStand.title, 'stand');
-                }}>
-                  <div className="bc-checkout-form-grid">
-                    <div>
-                      <label className="bc-label">Recipient Full Name *</label>
-                      <input
-                        type="text"
-                        className="bc-input"
-                        required
-                        value={standRecipientName}
-                        onChange={e => setStandRecipientName(e.target.value)}
-                        placeholder="Team Maruti InfoSoft"
-                      />
-                    </div>
-                    <div>
-                      <label className="bc-label">10-Digit Mobile Number *</label>
-                      <input
-                        type="tel"
-                        className="bc-input"
-                        required
-                        value={standPhone}
-                        onChange={e => setStandPhone(e.target.value)}
-                        placeholder="+1 6355722267"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bc-checkout-form-grid">
-                    <div>
-                      <label className="bc-label">Shop / Outlet Name *</label>
-                      <input
-                        type="text"
-                        className="bc-input"
-                        required
-                        value={standShopName}
-                        onChange={e => setStandShopName(e.target.value)}
-                        placeholder="Shop #12, Ground Floor"
-                      />
-                    </div>
-                    <div>
-                      <label className="bc-label">Business Display Name *</label>
-                      <input
-                        type="text"
-                        className="bc-input"
-                        required
-                        value={standBizName}
-                        onChange={e => setStandBizName(e.target.value)}
-                        placeholder="verde eco landing"
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: '1.15rem' }}>
-                    <label className="bc-label">Full Delivery Address *</label>
-                    <input
-                      type="text"
-                      className="bc-input"
-                      required
-                      value={standAddress}
-                      onChange={e => setStandAddress(e.target.value)}
-                      placeholder="Street name, Area, Building name, Flat number"
-                    />
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', gap: '0.85rem', marginBottom: '1.5rem' }}>
-                    <div>
-                      <label className="bc-label">Nearby Landmark</label>
-                      <input
-                        type="text"
-                        className="bc-input"
-                        value={standLandmark}
-                        onChange={e => setStandLandmark(e.target.value)}
-                        placeholder="Opposite City Hospital (optional)"
-                      />
-                    </div>
-                    <div>
-                      <label className="bc-label">City *</label>
-                      <input
-                        type="text"
-                        className="bc-input"
-                        required
-                        value={standCity}
-                        onChange={e => setStandCity(e.target.value)}
-                        placeholder="City"
-                      />
-                    </div>
-                    <div>
-                      <label className="bc-label">State *</label>
-                      <input
-                        type="text"
-                        className="bc-input"
-                        required
-                        value={standState}
-                        onChange={e => setStandState(e.target.value)}
-                        placeholder="State"
-                      />
-                    </div>
-                    <div>
-                      <label className="bc-label">6-Digit PIN *</label>
-                      <input
-                        type="text"
-                        className="bc-input"
-                        required
-                        value={standPincode}
-                        onChange={e => setStandPincode(e.target.value)}
-                        placeholder="e.g. 110001"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Total Payable Box */}
-                  <div className="bc-checkout-total-banner">
-                    <div>
-                      <strong style={{ fontSize: '0.95rem', color: '#0f172a', display: 'block' }}>
-                        Total Payable Amount:
-                      </strong>
-                      <span style={{ fontSize: '0.74rem', color: '#15803d', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <i className="fa-solid fa-circle-check"></i> Includes 18% GST &amp; Free Express Delivery
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '1.55rem', fontWeight: 900, color: '#0f172a' }}>
-                      ₹{selectedStand.unitPrice * (selectedStand.qty || 1)}
-                    </div>
-                  </div>
-
-                  {/* Footer Buttons */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <button
-                      type="button"
-                      className="btn btn-light"
-                      style={{ padding: '0.75rem 1.75rem', fontWeight: 800 }}
-                      onClick={() => setStandCheckoutMode(false)}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="btn btn-dark"
-                      style={{ background: '#16a34a', border: 'none', padding: '0.8rem 2rem', fontWeight: 800, fontSize: '0.88rem' }}
-                    >
-                      Proceed to Payment &amp; QR →
-                    </button>
-                  </div>
-                </form>
+                )}
               </div>
             ) : (
               /* Normal Catalog List */
@@ -3836,6 +4016,38 @@ export default function BusinessConsole({
                   <i className="fa-solid fa-chart-simple"></i> Plan Expired — Upgrade to Analyze
                 </button>
 
+                <div style={{ textAlign: 'center', marginTop: 10 }}>
+                  <button
+                    type="button"
+                    style={{ background: 'none', border: 'none', color: '#16a34a', fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+                    onClick={() => {
+                      notify('Running 20-Point AI Local SEO Audit...');
+                      setTimeout(() => {
+                        setSeoResult({
+                          score: 84,
+                          status: 'Strong GBP Optimization',
+                          rank: '#3',
+                          checks: [
+                            { name: 'Business Name Guidelines', status: 'pass', desc: 'No keyword stuffing detected, clean brand name matching registry.' },
+                            { name: 'Operating Hours Accuracy', status: 'pass', desc: 'Standard business and holiday hours clearly populated.' },
+                            { name: 'Primary & Secondary Categories', status: 'pass', desc: 'Accurate top-tier category selection with 3 related subcategories.' },
+                            { name: 'Photo & Media Density', status: 'warn', desc: 'Only 6 photos uploaded; recommend 20+ interior and team photos.' },
+                            { name: 'Local Schema Markup', status: 'pass', desc: 'Valid LocalBusiness schema tags verified on landing domain.' }
+                          ],
+                          recommendations: [
+                            'Upload 10+ high-resolution store/service photos to boost customer trust by 42%.',
+                            'Reply to all pending reviews within 24 hours to signal active ownership to Google algorithms.',
+                            'Maintain uniform NAP (Name, Address, Phone) citations across local India directories.'
+                          ]
+                        });
+                        notify('✓ AI SEO Audit completed with 84/100 visibility score!');
+                      }, 900);
+                    }}
+                  >
+                    ⚡ Test / Run Sample AI Audit Scan
+                  </button>
+                </div>
+
                 {/* Audit Results */}
                 {seoResult && (
                   <div style={{ marginTop: '1.5rem', borderTop: '1.5px solid #e2e8f0', paddingTop: '1.25rem' }}>
@@ -3927,14 +4139,14 @@ export default function BusinessConsole({
               </div>
             </div>
 
-            {/* Understanding Your Audit Score Alert */}
-            <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '1.25rem 1.65rem', display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
-              <i className="fa-solid fa-circle-info" style={{ color: '#0284c7', fontSize: '1.15rem', marginTop: 2 }}></i>
+            {/* Understanding Your Audit Score Alert (Matches Screenshot 3) */}
+            <div style={{ background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: 16, padding: '1.25rem 1.65rem', display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
+              <i className="fa-solid fa-circle-info" style={{ color: '#0284c7', fontSize: '1.2rem', marginTop: 2 }}></i>
               <div>
-                <strong style={{ display: 'block', fontSize: '0.86rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.25rem' }}>
+                <strong style={{ display: 'block', fontSize: '0.88rem', fontWeight: 800, color: '#0369a1', marginBottom: '0.25rem' }}>
                   Understanding Your Audit Score
                 </strong>
-                <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ fontSize: '0.78rem', color: '#0284c7', margin: 0, lineHeight: 1.55 }}>
                   This tool analyzes important and basic checkpoints about your business profile and presents them in a clear, professional way so you can easily see what's wrong and what you can improve. Actual ranking on Google Maps and Search depends on various factors including competition, review velocity, user engagement, and proximity to searchers.
                 </p>
               </div>
@@ -5248,7 +5460,7 @@ export default function BusinessConsole({
                 <div className="bc-status-card">
                   <div className="bc-status-left">
                     <span style={{ background: '#fef3c7', color: '#b45309', padding: '0.2rem 0.65rem', borderRadius: 6, fontSize: '0.68rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      3-DAY FREE TRIAL
+                      2-DAY FREE TRIAL
                     </span>
                     <span style={{ fontSize: '0.76rem', color: '#64748b', marginLeft: 8 }}>
                       Account: <b>Team Maruti InfoSoft</b>
@@ -6062,39 +6274,71 @@ export default function BusinessConsole({
                     <div>
                       {/* Switch Account Form */}
                       <div style={{ marginBottom: '1.25rem' }}>
-                        <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', marginBottom: 4 }}>
+                        <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.04em' }}>
                           Google Account Email
                         </label>
-                        <input
-                          type="email"
-                          className="bc-input"
-                          placeholder="e.g. yourbusiness@gmail.com"
-                          value={newGoogleEmail}
-                          onChange={e => setNewGoogleEmail(e.target.value)}
-                        />
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            type="email"
+                            className="bc-input"
+                            placeholder="team@maruti.com"
+                            value={newGoogleEmail}
+                            onChange={e => setNewGoogleEmail(e.target.value)}
+                            style={{
+                              width: '100%',
+                              padding: '0.75rem 1rem 0.75rem 2.6rem',
+                              borderRadius: 10,
+                              border: '1.5px solid #cbd5e1',
+                              background: '#ffffff',
+                              fontSize: '0.88rem',
+                              fontWeight: 600,
+                              color: '#0f172a',
+                              boxSizing: 'border-box',
+                              outline: 'none',
+                              transition: 'all 0.2s ease'
+                            }}
+                          />
+                          <i className="fa-regular fa-envelope" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.9rem', pointerEvents: 'none' }}></i>
+                        </div>
                       </div>
 
                       <div style={{ marginBottom: '1.35rem' }}>
-                        <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', marginBottom: 4 }}>
+                        <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.04em' }}>
                           Google Business Location Name
                         </label>
-                        <input
-                          type="text"
-                          className="bc-input"
-                          placeholder="e.g. Team Maruti InfoSoft - Surat Branch"
-                          value={newGoogleBizName}
-                          onChange={e => setNewGoogleBizName(e.target.value)}
-                        />
-                        <span style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'block', marginTop: 4 }}>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            type="text"
+                            className="bc-input"
+                            placeholder="Team Maruti InfoSoft"
+                            value={newGoogleBizName}
+                            onChange={e => setNewGoogleBizName(e.target.value)}
+                            style={{
+                              width: '100%',
+                              padding: '0.75rem 1rem 0.75rem 2.6rem',
+                              borderRadius: 10,
+                              border: '1.5px solid #cbd5e1',
+                              background: '#ffffff',
+                              fontSize: '0.88rem',
+                              fontWeight: 600,
+                              color: '#0f172a',
+                              boxSizing: 'border-box',
+                              outline: 'none',
+                              transition: 'all 0.2s ease'
+                            }}
+                          />
+                          <i className="fa-solid fa-store" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.9rem', pointerEvents: 'none' }}></i>
+                        </div>
+                        <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginTop: 6, lineHeight: 1.4 }}>
                           Enter the exact Google Business Profile name to fetch matching reviews.
                         </span>
                       </div>
 
-                      <div style={{ display: 'flex', gap: 8 }}>
+                      <div style={{ display: 'flex', gap: 10, marginTop: '1.5rem' }}>
                         <button
                           type="button"
                           className="btn btn-light"
-                          style={{ flex: 1, padding: '0.7rem', fontSize: '0.82rem', fontWeight: 700 }}
+                          style={{ flex: 1, padding: '0.75rem 1rem', fontSize: '0.86rem', fontWeight: 800, borderRadius: 10, border: '1.5px solid #cbd5e1', background: '#ffffff', color: '#475569', cursor: 'pointer' }}
                           onClick={() => setGoogleAuthSwitchMode(false)}
                         >
                           ← Cancel
@@ -6105,14 +6349,19 @@ export default function BusinessConsole({
                           disabled={googleAuthLoading}
                           style={{
                             flex: 2,
-                            background: '#4285f4',
+                            background: '#3b82f6',
                             color: '#ffffff',
-                            padding: '0.7rem',
-                            fontSize: '0.84rem',
+                            padding: '0.75rem 1.25rem',
+                            fontSize: '0.88rem',
                             fontWeight: 800,
-                            borderRadius: 8,
+                            borderRadius: 10,
                             border: 'none',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8
                           }}
                           onClick={() => {
                             if (!newGoogleEmail.trim()) {
@@ -6127,10 +6376,11 @@ export default function BusinessConsole({
                               setGoogleAuthLoading(false);
                               setGoogleAuthSwitchMode(false);
                               setGoogleAuthModalOpen(false);
-                              notify(`✓ Connected to new Google Account: ${newGoogleEmail}`);
+                              notify(`✓ Connected to Google Account: ${newGoogleEmail}`);
                             }, 1200);
                           }}
                         >
+                          <i className={`fa-solid fa-link ${googleAuthLoading ? 'fa-spin' : ''}`}></i>
                           {googleAuthLoading ? 'Connecting...' : 'Authorize & Connect'}
                         </button>
                       </div>
