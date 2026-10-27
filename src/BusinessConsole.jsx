@@ -49,6 +49,164 @@ export default function BusinessConsole({
   const [qrTheme, setQrTheme] = useState('Classic');
   const [qrDisplaySize, setQrDisplaySize] = useState('A6');
 
+  // Dynamic Theme Definitions for Instant Reactive Styling (Both Inline & Classes)
+  const themeStyles = {
+    'Classic': {
+      accent: '#16a34a',
+      bg: '#ffffff',
+      btnBg: '#16a34a',
+      btnColor: '#ffffff',
+      stars: '#eab308',
+      pillBg: '#f0fdf4',
+      pillBorder: '#bbf7d0',
+      pillText: '#15803d',
+      bannerGradient: 'linear-gradient(145deg, #ecfdf5 0%, #10b981 100%)',
+      badgeBg: '#f0fdf4',
+      badgeBorder: '#bbf7d0',
+      badgeColor: '#15803d'
+    },
+    'Minimalist': {
+      accent: '#0f172a',
+      bg: '#ffffff',
+      btnBg: '#0f172a',
+      btnColor: '#ffffff',
+      stars: '#475569',
+      pillBg: '#f8fafc',
+      pillBorder: '#cbd5e1',
+      pillText: '#334155',
+      bannerGradient: 'linear-gradient(145deg, #334155 0%, #0f172a 100%)',
+      badgeBg: '#0f172a',
+      badgeBorder: '#334155',
+      badgeColor: '#ffffff'
+    },
+    'Vibrant': {
+      accent: '#9333ea',
+      bg: '#fdfaff',
+      btnBg: 'linear-gradient(135deg, #6366f1 0%, #9333ea 100%)',
+      btnColor: '#ffffff',
+      stars: '#f59e0b',
+      pillBg: '#faf5ff',
+      pillBorder: '#e9d5ff',
+      pillText: '#7e22ce',
+      bannerGradient: 'linear-gradient(145deg, #6366f1 0%, #9333ea 50%, #7e22ce 100%)',
+      badgeBg: 'linear-gradient(135deg, #6366f1, #9333ea)',
+      badgeBorder: '#c084fc',
+      badgeColor: '#ffffff'
+    },
+    'Plain QR': {
+      accent: '#334155',
+      bg: '#ffffff',
+      btnBg: '#334155',
+      btnColor: '#ffffff',
+      stars: '#94a3b8',
+      pillBg: '#f1f5f9',
+      pillBorder: '#e2e8f0',
+      pillText: '#475569',
+      bannerGradient: '#f8fafc',
+      badgeBg: '#f1f5f9',
+      badgeBorder: '#e2e8f0',
+      badgeColor: '#475569'
+    }
+  };
+  const curTheme = themeStyles[qrTheme] || themeStyles['Classic'];
+
+  // Synchronize activeTab and sub-states with URL query params (?tab=..., ?route=...) and hash (#...)
+  useEffect(() => {
+    const parseUrlTab = () => {
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const tabParam = searchParams.get('tab');
+        const routeParam = searchParams.get('route');
+        const hash = window.location.hash.replace('#', '');
+        
+        const target = tabParam || routeParam || hash;
+        if (!target) return;
+        
+        const lower = target.toLowerCase();
+        if (lower.includes('qr') || lower.includes('magic')) {
+          setActiveTab('Magic Review QR');
+          if (searchParams.get('size') === 'banner' || lower.includes('banner')) setQrDisplaySize('Banner');
+          if (searchParams.get('theme')) setQrTheme(searchParams.get('theme'));
+        } else if (lower.includes('stand') || lower.includes('physical')) {
+          setActiveTab('Physical QR Stand');
+          if (searchParams.get('order') === 'true' || searchParams.get('checkout') === 'true') {
+            setStandCheckoutMode(true);
+          }
+        } else if (lower.includes('bill') || lower.includes('plan')) {
+          setActiveTab('Billing & Plans');
+          if (searchParams.get('upgrade') === 'true' || searchParams.get('checkout') === 'true') {
+            setPlanCheckoutStep('checkout');
+          }
+        } else if (lower.includes('feedback') || lower.includes('negative')) {
+          setActiveTab('Negative Reviews');
+        } else if (lower.includes('service')) {
+          setActiveTab('Add-On Services');
+        } else if (lower.includes('setting')) {
+          setActiveTab('Settings');
+        } else if (lower.includes('reply') || lower.includes('review')) {
+          setActiveTab('Review Reply');
+        } else if (lower.includes('seo')) {
+          setActiveTab('AI SEO Analyzer');
+        } else if (lower.includes('analytics')) {
+          setActiveTab('Analytics');
+        }
+      } catch (err) {
+        console.error('URL parse tab error', err);
+      }
+    };
+    parseUrlTab();
+    window.addEventListener('popstate', parseUrlTab);
+    return () => window.removeEventListener('popstate', parseUrlTab);
+  }, []);
+
+  // Update browser URL query params whenever tab, size or theme changes
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      let tabSlug = 'dashboard';
+      if (activeTab === 'Magic Review QR') tabSlug = 'qr';
+      else if (activeTab === 'Physical QR Stand') tabSlug = 'stand';
+      else if (activeTab === 'Billing & Plans') tabSlug = 'billing';
+      else if (activeTab === 'Negative Reviews') tabSlug = 'feedback';
+      else if (activeTab === 'Add-On Services') tabSlug = 'services';
+      else if (activeTab === 'Review Settings') tabSlug = 'settings';
+      else if (activeTab === 'Review Reply') tabSlug = 'reply';
+      else if (activeTab === 'AI SEO Analyzer') tabSlug = 'seo';
+      else if (activeTab === 'Analytics') tabSlug = 'analytics';
+      
+      url.searchParams.set('tab', tabSlug);
+      if (activeTab === 'Magic Review QR') {
+        url.searchParams.set('size', qrDisplaySize === 'Banner' ? 'banner' : 'a6');
+        url.searchParams.set('theme', qrTheme.toLowerCase().replace(/\s+/g, '-'));
+      } else {
+        url.searchParams.delete('size');
+        url.searchParams.delete('theme');
+      }
+      window.history.replaceState({}, '', url.toString());
+    } catch (_) {}
+  }, [activeTab, qrDisplaySize, qrTheme]);
+
+  const changeTab = (tabName) => {
+    setActiveTab(tabName);
+    setMobileOpen(false);
+    try {
+      const url = new URL(window.location.href);
+      let tabSlug = 'dashboard';
+      if (tabName === 'Magic Review QR') tabSlug = 'qr';
+      else if (tabName === 'Physical QR Stand') tabSlug = 'stand';
+      else if (tabName === 'Billing & Plans') tabSlug = 'billing';
+      else if (tabName === 'Negative Reviews') tabSlug = 'feedback';
+      else if (tabName === 'Add-On Services') tabSlug = 'services';
+      else if (tabName === 'Review Settings') tabSlug = 'settings';
+      else if (tabName === 'Review Reply') tabSlug = 'reply';
+      else if (tabName === 'AI SEO Analyzer') tabSlug = 'seo';
+      else if (tabName === 'Analytics') tabSlug = 'analytics';
+      
+      url.searchParams.set('tab', tabSlug);
+      window.history.pushState({}, '', url.toString());
+    } catch (_) {}
+  };
+
   // Review Settings Form States (Screenshots 1, 2, 3)
   const [profileSubTab, setProfileSubTab] = useState('Business Details');
   const [bizFormName, setBizFormName] = useState(business?.name || 'verde eco landing');
@@ -569,13 +727,134 @@ export default function BusinessConsole({
                     <span className="bc-live-dot"></span> Active &amp; Ready
                   </div>
                 </div>
-                <button className="bc-btn-manage-qr" onClick={() => setActiveTab('Magic Review QR')}>
+                <button className="bc-btn-manage-qr" onClick={() => { setActiveTab('Magic Review QR'); setQrDisplaySize('Banner'); }}>
                   <div>
                     Manage QR Tools
                     <span>Poster, QR code &amp; stand</span>
                   </div>
                   <i className="fa-solid fa-arrow-right"></i>
                 </button>
+              </div>
+            </div>
+
+            {/* QUICK FLOW SHORTCUTS (DIRECT 1-CLICK TEST TO SCREENSHOTS 1, 2, 3, 4) */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '12px',
+              margin: '1.25rem 0'
+            }}>
+              <div
+                onClick={() => {
+                  setActiveTab('Magic Review QR');
+                  setQrDisplaySize('Banner');
+                }}
+                style={{
+                  background: '#ffffff',
+                  border: '1.5px solid #bbf7d0',
+                  borderRadius: 14,
+                  padding: '1rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a', fontSize: '1.2rem', flexShrink: 0 }}>
+                  <i className="fa-solid fa-qrcode"></i>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>Magic Review QR</div>
+                  <div style={{ fontSize: '0.72rem', color: '#16a34a', fontWeight: 700 }}>Counter Banner & 4 Themes →</div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => {
+                  setSelectedStand({
+                    title: 'QR Code Acrylic Stand',
+                    unitPrice: 699,
+                    price: 699,
+                    qty: 1,
+                    tag: 'Most Popular'
+                  });
+                  setActiveTab('Physical QR Stand');
+                  setStandCheckoutMode(true);
+                }}
+                style={{
+                  background: '#ffffff',
+                  border: '1.5px solid #fed7aa',
+                  borderRadius: 14,
+                  padding: '1rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#ffedd5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ea580c', fontSize: '1.2rem', flexShrink: 0 }}>
+                  <i className="fa-solid fa-store"></i>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>Physical QR Stand</div>
+                  <div style={{ fontSize: '0.72rem', color: '#ea580c', fontWeight: 700 }}>Step 1 of 2 Checkout Form →</div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => {
+                  startPlanCheckout('Pro', 'Yearly', 1999);
+                }}
+                style={{
+                  background: '#ffffff',
+                  border: '1.5px solid #ddd6fe',
+                  borderRadius: 14,
+                  padding: '1rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7c3aed', fontSize: '1.2rem', flexShrink: 0 }}>
+                  <i className="fa-solid fa-credit-card"></i>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>Billing & Plans</div>
+                  <div style={{ fontSize: '0.72rem', color: '#7c3aed', fontWeight: 700 }}>Instant UPI Upgrade →</div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => {
+                  openWebpressPay(1999, 'Yearly Plan Upgrade', 'plan');
+                }}
+                style={{
+                  background: '#ffffff',
+                  border: '1.5px solid #99f6e4',
+                  borderRadius: 14,
+                  padding: '1rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#ccfbf1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0d9488', fontSize: '1.2rem', flexShrink: 0 }}>
+                  <i className="fa-solid fa-bolt"></i>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>WebPress Pay</div>
+                  <div style={{ fontSize: '0.72rem', color: '#0d9488', fontWeight: 700 }}>Instant UPI QR Modal →</div>
+                </div>
               </div>
             </div>
 
@@ -1984,22 +2263,31 @@ export default function BusinessConsole({
                     <span className="bc-sel-label">1. CHOOSE DESIGN THEME</span>
                     <div className="bc-pill-selector">
                       {[
-                        { id: 'Classic', label: '★ Classic', icon: '' },
+                        { id: 'Classic', label: '⭐ Classic', icon: '' },
                         { id: 'Minimalist', label: 'Minimalist', icon: 'fa-solid fa-pen-nib' },
                         { id: 'Vibrant', label: '⚡ Vibrant', icon: '' },
                         { id: 'Plain QR', label: 'Plain QR', icon: 'fa-solid fa-qrcode' }
-                      ].map(theme => (
-                        <button
-                          key={theme.id}
-                          type="button"
-                          className={`bc-pill-select-btn ${qrTheme === theme.id ? 'active' : ''}`}
-                          onClick={() => setQrTheme(theme.id)}
-                        >
-                          {theme.icon && <i className={theme.icon}></i>}
-                          {theme.label}
-                        </button>
-                      ))}
-                    </div>
+                      ].map(theme => {
+                        const isAct = qrTheme === theme.id;
+                        return (
+                          <button
+                            key={theme.id}
+                            type="button"
+                            data-theme={theme.id}
+                            className={'bc-pill-select-btn ' + (isAct ? 'active' : '')}
+                            style={isAct ? {
+                              background: theme.id === 'Classic' ? '#16a34a' : (theme.id === 'Minimalist' ? '#0f172a' : (theme.id === 'Vibrant' ? 'linear-gradient(135deg, #6366f1, #9333ea)' : '#334155')),
+                              color: '#ffffff',
+                              borderColor: 'transparent',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                            } : {}}
+                            onClick={() => setQrTheme(theme.id)}
+                          >
+                            {theme.icon && <i className={theme.icon} style={{ marginRight: 6 }}></i>}
+                            {theme.label}
+                          </button>
+                        );
+                      })}</div>
                   </div>
 
                   {/* Size Selector */}
@@ -2008,19 +2296,22 @@ export default function BusinessConsole({
                     <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr', gap: 8 }}>
                       <button
                         type="button"
-                        className={`bc-pill-select-btn ${qrDisplaySize === 'A6' ? 'active' : ''}`}
+                        data-size="A6"
+                        className={'bc-pill-select-btn ' + (qrDisplaySize === 'A6' ? 'active' : '')}
+                        style={qrDisplaySize === 'A6' ? { background: '#16a34a', color: '#ffffff', borderColor: '#16a34a' } : {}}
                         onClick={() => setQrDisplaySize('A6')}
                       >
-                        <i className="fa-regular fa-file"></i> Standee Flyer (A6 Vertical)
+                        <i className="fa-regular fa-file" style={{ marginRight: 6 }}></i> Standee Flyer (A6 Vertical)
                       </button>
                       <button
                         type="button"
-                        className={`bc-pill-select-btn ${qrDisplaySize === 'Banner' ? 'active' : ''}`}
+                        data-size="Banner"
+                        className={'bc-pill-select-btn ' + (qrDisplaySize === 'Banner' ? 'active' : '')}
+                        style={qrDisplaySize === 'Banner' ? { background: '#16a34a', color: '#ffffff', borderColor: '#16a34a' } : {}}
                         onClick={() => setQrDisplaySize('Banner')}
                       >
-                        <i className="fa-regular fa-window-maximize"></i> Counter Banner (Wide Horizontal)
-                      </button>
-                    </div>
+                        <i className="fa-regular fa-window-maximize" style={{ marginRight: 6 }}></i> Counter Banner (Wide Horizontal)
+                      </button></div>
                   </div>
 
                   {/* Preview Canvas Bar */}
@@ -2058,7 +2349,14 @@ export default function BusinessConsole({
                   <div className="bc-canvas-bg" style={{ minHeight: 380, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.5rem' }}>
                     {qrDisplaySize === 'Banner' ? (
                       /* The Exact Wide Counter Banner matching Screenshot 1 */
-                      <div className={`bc-counter-banner theme-${qrTheme.toLowerCase().replace(/\s+/g, '-')}`} id="printReadyBanner">
+                      <div
+                        className={'bc-counter-banner theme-' + qrTheme.toLowerCase().replace(/\s+/g, '-')}
+                        id="printReadyBanner"
+                        style={{
+                          borderColor: curTheme.accent,
+                          background: curTheme.bg
+                        }}
+                      >
                         {/* Left Side */}
                         <div className="bc-banner-left">
                           <div>
@@ -2072,7 +2370,7 @@ export default function BusinessConsole({
                               <strong style={{ fontSize: '1rem', color: '#0f172a', fontWeight: 900 }}>{bizName}</strong>
                             </div>
 
-                            <div style={{ color: '#eab308', fontSize: '1.05rem', letterSpacing: 2, marginBottom: 6 }}>★★★★★</div>
+                            <div style={{ color: curTheme.stars, fontSize: '1.05rem', letterSpacing: 2, marginBottom: 6 }}>⭐⭐⭐⭐⭐</div>
 
                             <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a', margin: '0 0 12px 0', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: 6 }}>
                               Review Us on <span style={{ display: 'inline-flex' }}>
@@ -2086,14 +2384,24 @@ export default function BusinessConsole({
                             </h3>
 
                             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
-                              <span className="bc-banner-pill"><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Real Reviews</span>
-                              <span className="bc-banner-pill"><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Quick &amp; Easy</span>
-                              <span className="bc-banner-pill"><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Secure</span>
+                              <span className="bc-banner-pill" style={{ background: curTheme.pillBg, borderColor: curTheme.pillBorder, color: curTheme.pillText }}>
+                                <i className="fa-solid fa-check" style={{ color: curTheme.accent }}></i> Real Reviews
+                              </span>
+                              <span className="bc-banner-pill" style={{ background: curTheme.pillBg, borderColor: curTheme.pillBorder, color: curTheme.pillText }}>
+                                <i className="fa-solid fa-check" style={{ color: curTheme.accent }}></i> Quick &amp; Easy
+                              </span>
+                              <span className="bc-banner-pill" style={{ background: curTheme.pillBg, borderColor: curTheme.pillBorder, color: curTheme.pillText }}>
+                                <i className="fa-solid fa-check" style={{ color: curTheme.accent }}></i> Secure
+                              </span>
                             </div>
                           </div>
 
                           <div>
-                            <button type="button" className="bc-banner-btn-scan">
+                            <button
+                              type="button"
+                              className="bc-banner-btn-scan"
+                              style={{ background: curTheme.btnBg, color: curTheme.btnColor }}
+                            >
                               <i className="fa-solid fa-mobile-screen"></i> SCAN WITH YOUR PHONE
                             </button>
                             <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: 10 }}>
@@ -2102,8 +2410,8 @@ export default function BusinessConsole({
                           </div>
                         </div>
 
-                        {/* Right Side with Emerald Gradient Wave */}
-                        <div className="bc-banner-right">
+                        {/* Right Side with Theme Wave Gradient */}
+                        <div className="bc-banner-right" style={{ background: curTheme.bannerGradient }}>
                           <div className="bc-banner-badge-top">
                             <i className="fa-solid fa-mobile-screen"></i> SCAN &amp; REVIEW WITH AI
                           </div>
@@ -2125,7 +2433,14 @@ export default function BusinessConsole({
                       </div>
                     ) : (
                       /* The Exact Review Flyer matching Screenshot 5 */
-                      <div className={`bc-a6-flyer theme-${qrTheme.toLowerCase().replace(/\s+/g, '-')}`} id="printReadyFlyer">
+                      <div
+                        className={'bc-a6-flyer theme-' + qrTheme.toLowerCase().replace(/\s+/g, '-')}
+                        id="printReadyFlyer"
+                        style={{
+                          borderColor: curTheme.accent,
+                          background: curTheme.bg
+                        }}
+                      >
                         {/* Google G logo */}
                         <div className="bc-flyer-google-logo">
                           <svg width="22" height="22" viewBox="0 0 24 24">
@@ -2137,33 +2452,71 @@ export default function BusinessConsole({
                         </div>
 
                         <div className="bc-flyer-biz-name">{bizName}</div>
-                        <div className="bc-flyer-stars">★★★★★</div>
+                        <div className="bc-flyer-stars" style={{ color: curTheme.stars }}>⭐⭐⭐⭐⭐</div>
                         <div className="bc-flyer-heading">
-                          Review Us on <span>Google</span>
+                          Review Us on <span style={{ color: qrTheme === 'Vibrant' ? '#9333ea' : undefined }}>Google</span>
                         </div>
 
                         {/* QR Box with floating pill badges */}
-                        <div className="bc-flyer-qr-wrap">
-                          <span className="bc-flyer-badge-left">Amazing! ⭐</span>
+                        <div
+                          className="bc-flyer-qr-wrap"
+                          style={{
+                            borderColor: curTheme.accent,
+                            background: curTheme.pillBg
+                          }}
+                        >
+                          {qrTheme !== 'Plain QR' && (
+                            <>
+                              <span
+                                className="bc-flyer-badge-left"
+                                style={{
+                                  background: curTheme.badgeBg,
+                                  color: curTheme.badgeColor,
+                                  borderColor: curTheme.badgeBorder
+                                }}
+                              >Amazing! 😍</span>
+                              <span
+                                className="bc-flyer-badge-right"
+                                style={{
+                                  background: curTheme.badgeBg,
+                                  color: curTheme.badgeColor,
+                                  borderColor: curTheme.badgeBorder
+                                }}
+                              >Best ever! 🤩</span>
+                            </>
+                          )}
                           <img
                             src={qrImageSrc}
                             alt="Review QR Code"
                             style={{ width: 150, height: 150, display: 'block', borderRadius: 8 }}
                           />
-                          <span className="bc-flyer-badge-right">Best ever! ⭐</span>
                         </div>
 
-                        <div className="bc-flyer-time-badge">
+                        <div
+                          className="bc-flyer-time-badge"
+                          style={{
+                            background: curTheme.pillBg,
+                            borderColor: curTheme.pillBorder,
+                            color: curTheme.pillText
+                          }}
+                        >
                           ⚡ Takes less than <strong>30 seconds</strong> !
                         </div>
 
                         <div className="bc-flyer-checklist">
-                          <span><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Real Reviews</span>
-                          <span><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Quick &amp; Easy</span>
-                          <span><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Secure</span>
+                          <span><i className="fa-solid fa-check" style={{ color: curTheme.accent }}></i> Real Reviews</span>
+                          <span><i className="fa-solid fa-check" style={{ color: curTheme.accent }}></i> Quick &amp; Easy</span>
+                          <span><i className="fa-solid fa-check" style={{ color: curTheme.accent }}></i> Secure</span>
                         </div>
 
-                        <button type="button" className="bc-flyer-btn-scan">
+                        <button
+                          type="button"
+                          className="bc-flyer-btn-scan"
+                          style={{
+                            background: curTheme.btnBg,
+                            color: curTheme.btnColor
+                          }}
+                        >
                           SCAN WITH YOUR PHONE <i className="fa-solid fa-arrow-right"></i>
                         </button>
 
@@ -2172,8 +2525,7 @@ export default function BusinessConsole({
                           AI-Powered Google Review Growth System
                         </div>
                       </div>
-                    )}
-                  </div>
+                    )}</div>
                 </div>
               </div>
             </div>

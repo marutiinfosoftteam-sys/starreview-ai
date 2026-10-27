@@ -83,7 +83,10 @@ export default function App() {
     '/privacy': 'Privacy policy',
     '/terms': 'Terms of service',
     '/cookies': 'Cookie policy',
-    '/sitemap': 'Sitemap'
+    '/sitemap': 'Sitemap',
+    '/index.php': 'Dashboard',
+    '/console': 'Dashboard',
+    '/admin': 'Dashboard'
   };
 
   const slugMap = Object.fromEntries(Object.entries(routeMap).map(([path, name]) => [name, path]));
@@ -103,6 +106,20 @@ export default function App() {
   const pageFromPath = () => {
     const p = window.location.pathname.replace(/\/$/, '') || '/';
     if (p.startsWith('/r/') || getReviewSlug()) return 'Review';
+    try {
+      const search = new URLSearchParams(window.location.search);
+      const route = search.get('route');
+      const tab = search.get('tab');
+      if (route && (route.startsWith('business') || route.includes('feedback') || route.includes('qr') || route.includes('service') || route.includes('billing') || route.includes('stand'))) {
+        return 'Dashboard';
+      }
+      if (tab) {
+        return 'Dashboard';
+      }
+    } catch {}
+    if (p === '/index.php' || p === '/index.html') {
+      return 'Dashboard';
+    }
     return routeMap[p] || 'Home';
   };
 
