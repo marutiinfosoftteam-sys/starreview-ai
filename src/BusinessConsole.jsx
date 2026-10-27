@@ -380,6 +380,7 @@ export default function BusinessConsole({
 
       {/* ── MAIN CONTENT AREA ── */}
       <main className="bc-main">
+        <div className="bc-container">
         {/* Mobile menu trigger */}
         <div style={{ display: 'none', marginBottom: '1rem' }} className="bc-mobile-bar">
           <button className="btn btn-light btn-sm" onClick={() => setMobileOpen(true)}>
@@ -2998,15 +2999,15 @@ export default function BusinessConsole({
         )}
 
         {/* ====================================================================
-            VIEW: AI SEO ANALYZER (SCREENSHOT 1)
+            VIEW: AI SEO ANALYZER (EXACT REVIEWFLOW AI SCREENSHOT 1)
             ==================================================================== */}
         {activeTab === 'AI SEO Analyzer' && (
           <div>
-            {/* Header */}
+            {/* Header Card */}
             <div className="bc-view-header">
               <div className="bc-vh-left">
                 <div className="bc-vh-icon">
-                  <i className="fa-solid fa-magnifying-glass-chart"></i>
+                  <i className="fa-solid fa-star"></i>
                 </div>
                 <div>
                   <h2>AI SEO Analyzer</h2>
@@ -3019,10 +3020,33 @@ export default function BusinessConsole({
             <div className="bc-seo-amber-banner">
               <div className="bc-seo-amber-left">
                 <i className="fa-solid fa-triangle-exclamation"></i>
-                <span>Premium feature — requires an active plan — {daysLeft} days left</span>
+                <div>
+                  <strong style={{ display: 'block', fontSize: '0.84rem', color: '#92400e' }}>
+                    Premium feature — requires an active plan — 0 days left
+                  </strong>
+                  <span style={{ fontSize: '0.74rem', color: '#b45309' }}>
+                    Upgrade to unlock full audit capabilities and PDF export.
+                  </span>
+                </div>
               </div>
-              <button className="bc-seo-upgrade-btn" onClick={() => setActiveTab('Billing & Plans')}>
-                Upgrade Plan
+              <button
+                className="bc-seo-upgrade-btn"
+                style={{
+                  background: '#16a34a',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: 999,
+                  padding: '0.45rem 1.15rem',
+                  fontWeight: 800,
+                  fontSize: '0.78rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  cursor: 'pointer'
+                }}
+                onClick={() => setActiveTab('Billing & Plans')}
+              >
+                <i className="fa-solid fa-dollar-sign"></i> Upgrade Plan
               </button>
             </div>
 
@@ -3033,7 +3057,7 @@ export default function BusinessConsole({
                 <span className="bc-seo-scan-tag">INSTANT LOCAL AUDIT</span>
                 <h3 className="bc-seo-scan-title">AI Search Visibility Scan</h3>
                 <p className="bc-seo-scan-sub">
-                  Run an instant check to see how your Google Business Profile ranks for your primary keyword in your city.
+                  Enter your primary target keyword and local area below. Our AI will perform a real-time audit of 20+ search checkpoints to verify your GBP health and discover SEO opportunities.
                 </p>
 
                 <div className="bc-form-group">
@@ -3041,10 +3065,11 @@ export default function BusinessConsole({
                   <input
                     type="text"
                     className="bc-input"
-                    placeholder="e.g. best restaurant in bandra, dentist in surat, solar rooftop installation"
+                    placeholder="e.g. Best Pizza NYC, Coffee Shop Boston"
                     value={seoKeyword}
                     onChange={(e) => setSeoKeyword(e.target.value)}
                   />
+                  <span className="bc-form-helper">What keyword do you want to rank for?</span>
                 </div>
 
                 <div className="bc-form-group">
@@ -3052,15 +3077,16 @@ export default function BusinessConsole({
                   <input
                     type="text"
                     className="bc-input"
-                    placeholder="e.g. Surat, Mumbai, Ahmedabad"
+                    placeholder="e.g. Brooklyn, Manhattan, Austin"
                     value={seoCity}
                     onChange={(e) => setSeoCity(e.target.value)}
                   />
+                  <span className="bc-form-helper">Which specific city or neighborhood should we analyze?</span>
                 </div>
 
                 <button
                   className="btn btn-dark full"
-                  style={{ marginTop: '0.75rem', padding: '0.85rem', fontWeight: 800, fontSize: '0.9rem' }}
+                  style={{ marginTop: '0.9rem', padding: '0.85rem', fontWeight: 800, fontSize: '0.9rem' }}
                   onClick={handleRunSeoAudit}
                   disabled={seoLoading}
                 >
@@ -3134,22 +3160,22 @@ export default function BusinessConsole({
                   <div className="bc-wwc-item">
                     <i className="fa-solid fa-circle-check"></i>
                     <div>
-                      <strong>GBP Quality & Info</strong>
-                      <p>Category accuracy, business description keywords, hours, phone, attributes.</p>
+                      <strong>GBP Quality & Information</strong>
+                      <p>Checks business name guidelines compliance, operating hours, categories, and photos library density.</p>
                     </div>
                   </div>
                   <div className="bc-wwc-item">
                     <i className="fa-solid fa-circle-check"></i>
                     <div>
                       <strong>Search Visibility & Listing Health</strong>
-                      <p>Primary and secondary keywords, local pack appearance potential.</p>
+                      <p>Audits local directory indexation, Google Maps prominence, and missing business setup identifiers.</p>
                     </div>
                   </div>
                   <div className="bc-wwc-item">
                     <i className="fa-solid fa-circle-check"></i>
                     <div>
                       <strong>Reviews, Trust & Schema</strong>
-                      <p>Rating average, review count vs top 3 competitors, local trust signals.</p>
+                      <p>Checks rating score benchmarks, review volume, owner response rates, and LocalBusiness schema markup.</p>
                     </div>
                   </div>
                 </div>
@@ -3159,23 +3185,23 @@ export default function BusinessConsole({
                     HOW IT WORKS
                   </h4>
                   <ol>
-                    <li>Enter your target keyword and target city or area.</li>
-                    <li>Our AI checks GBP completeness, review velocity and ranking signals.</li>
-                    <li>Get an actionable audit score and step-by-step fixes to rank higher.</li>
+                    <li>Specify target keyword and city location.</li>
+                    <li>AI fetches real-time maps metadata and compares schema records.</li>
+                    <li>Generates a comprehensive SEO audit report and dynamic action checklist.</li>
                   </ol>
                 </div>
               </div>
             </div>
 
             {/* Understanding Your Audit Score Alert */}
-            <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '1.15rem 1.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
-              <i className="fa-solid fa-circle-info" style={{ color: '#0284c7', fontSize: '1.1rem', marginTop: 2 }}></i>
+            <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '1.25rem 1.65rem', display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
+              <i className="fa-solid fa-circle-info" style={{ color: '#0284c7', fontSize: '1.15rem', marginTop: 2 }}></i>
               <div>
-                <strong style={{ display: 'block', fontSize: '0.84rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.2rem' }}>
+                <strong style={{ display: 'block', fontSize: '0.86rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.25rem' }}>
                   Understanding Your Audit Score
                 </strong>
-                <p style={{ fontSize: '0.76rem', color: '#64748b', margin: 0, lineHeight: 1.45 }}>
-                  This audit simulates key ranking factors for Google's Local 3-Pack: Relevance (keywords & category), Prominence (reviews, rating, age), and Proximity (NAP consistency, service areas). A score of 70+ indicates strong local visibility potential.
+                <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0, lineHeight: 1.5 }}>
+                  This tool analyzes important and basic checkpoints about your business profile and presents them in a clear, professional way so you can easily see what's wrong and what you can improve. Actual ranking on Google Maps and Search depends on various factors including competition, review velocity, user engagement, and proximity to searchers.
                 </p>
               </div>
             </div>
@@ -3183,7 +3209,7 @@ export default function BusinessConsole({
         )}
 
         {/* ====================================================================
-            VIEW: ADD-ON SERVICES (SCREENSHOTS 2, 3, 4, 5)
+            VIEW: ADD-ON SERVICES (EXACT REVIEWFLOW AI ALL 6 SERVICES)
             ==================================================================== */}
         {activeTab === 'Add-On Services' && (
           <div>
@@ -3307,7 +3333,6 @@ export default function BusinessConsole({
               </div>
 
               <div className="bc-scf-body">
-                {/* Result box */}
                 <div className="bc-scf-result-box">
                   <div className="bc-scf-result-icon">
                     <i className="fa-solid fa-trophy"></i>
@@ -3323,7 +3348,6 @@ export default function BusinessConsole({
                   <span><strong>Ideal for:</strong> Businesses that already have a GBP listing but want to improve their local ranking, attract more calls, and stand out from nearby competitors.</span>
                 </div>
 
-                {/* Compare: Problems vs Benefits */}
                 <div className="bc-scf-compare-grid">
                   <div className="bc-scf-box problems">
                     <div className="bc-scf-box-title">
@@ -3350,7 +3374,6 @@ export default function BusinessConsole({
                   </div>
                 </div>
 
-                {/* Deliverables Grid */}
                 <div className="bc-scf-deliverables-header">
                   <h4>What's Included in This Service</h4>
                   <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>6 Core Deliverables</span>
@@ -3364,35 +3387,15 @@ export default function BusinessConsole({
                   <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Review Response Framework</div>
                 </div>
 
-                {/* Process Strip */}
-                <div className="bc-scf-process-grid">
-                  <div className="bc-scf-process-step">
-                    <div className="bc-scf-step-num">Step 01</div>
-                    <div className="bc-scf-step-title">Access & Audit</div>
-                    <p className="bc-scf-step-desc">We review your current listing and identify quick wins and gaps.</p>
-                  </div>
-                  <div className="bc-scf-process-step">
-                    <div className="bc-scf-step-num">Step 02</div>
-                    <div className="bc-scf-step-title">Profile Overhaul</div>
-                    <p className="bc-scf-step-desc">We rewrite descriptions, calibrate categories and optimize geotagged photos.</p>
-                  </div>
-                  <div className="bc-scf-process-step">
-                    <div className="bc-scf-step-num">Step 03</div>
-                    <div className="bc-scf-step-title">Review & Delivery</div>
-                    <p className="bc-scf-step-desc">We walk you through all changes and provide ongoing growth advice.</p>
-                  </div>
-                </div>
-
-                {/* Discuss Strip */}
                 <div className="bc-scf-discuss-strip" onClick={() => openServiceInquiry('GMB Profile Optimization')}>
                   <div className="bc-scf-discuss-left">
-                    <strong>Interested in GMB Profile Optimization?</strong>
-                    <small>Get in touch with our team to discuss your profile and get custom pricing.</small>
+                    <strong>Discuss This Service</strong>
+                    <small>Tell us your goal and requirements</small>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                     <button
                       className="btn btn-sm"
-                      style={{ background: '#22c55e', color: '#fff', border: 'none', fontWeight: 800 }}
+                      style={{ background: '#22c55e', color: '#fff', border: 'none', fontWeight: 800, padding: '0.45rem 0.85rem' }}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleServiceWhatsApp('GMB Profile Optimization');
@@ -3429,7 +3432,6 @@ export default function BusinessConsole({
               </div>
 
               <div className="bc-scf-body">
-                {/* Result box */}
                 <div className="bc-scf-result-box">
                   <div className="bc-scf-result-icon" style={{ background: '#f3e8ff', color: '#7c3aed' }}>
                     <i className="fa-solid fa-certificate"></i>
@@ -3445,7 +3447,6 @@ export default function BusinessConsole({
                   <span><strong>Ideal for:</strong> New businesses, newly opened branches, or established businesses that have never claimed or verified their Google listing.</span>
                 </div>
 
-                {/* Compare: Problems vs Benefits */}
                 <div className="bc-scf-compare-grid">
                   <div className="bc-scf-box problems">
                     <div className="bc-scf-box-title">
@@ -3472,7 +3473,6 @@ export default function BusinessConsole({
                   </div>
                 </div>
 
-                {/* Deliverables Grid */}
                 <div className="bc-scf-deliverables-header">
                   <h4>What's Included in This Service</h4>
                   <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>6 Core Deliverables</span>
@@ -3486,35 +3486,15 @@ export default function BusinessConsole({
                   <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Verification Troubleshooting</div>
                 </div>
 
-                {/* Process Strip */}
-                <div className="bc-scf-process-grid">
-                  <div className="bc-scf-process-step">
-                    <div className="bc-scf-step-num">Step 01</div>
-                    <div className="bc-scf-step-title">Information Gathering</div>
-                    <p className="bc-scf-step-desc">We collect your business paperwork, signage photos and location details.</p>
-                  </div>
-                  <div className="bc-scf-process-step">
-                    <div className="bc-scf-step-num">Step 02</div>
-                    <div className="bc-scf-step-title">Listing Submission</div>
-                    <p className="bc-scf-step-desc">We configure your profile according to Google's strict guidelines.</p>
-                  </div>
-                  <div className="bc-scf-process-step">
-                    <div className="bc-scf-step-num">Step 03</div>
-                    <div className="bc-scf-step-title">Verification & Handover</div>
-                    <p className="bc-scf-step-desc">We follow through until the verified checkmark is confirmed live on Maps.</p>
-                  </div>
-                </div>
-
-                {/* Discuss Strip */}
                 <div className="bc-scf-discuss-strip" onClick={() => openServiceInquiry('GMB Setup & Verification')}>
                   <div className="bc-scf-discuss-left">
-                    <strong>Need to set up or verify your Google listing?</strong>
-                    <small>Let our specialists handle the entire verification process from start to finish.</small>
+                    <strong>Discuss This Service</strong>
+                    <small>Tell us your goal and requirements</small>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                     <button
                       className="btn btn-sm"
-                      style={{ background: '#22c55e', color: '#fff', border: 'none', fontWeight: 800 }}
+                      style={{ background: '#22c55e', color: '#fff', border: 'none', fontWeight: 800, padding: '0.45rem 0.85rem' }}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleServiceWhatsApp('GMB Setup & Verification');
@@ -3551,7 +3531,6 @@ export default function BusinessConsole({
               </div>
 
               <div className="bc-scf-body">
-                {/* Result box */}
                 <div className="bc-scf-result-box">
                   <div className="bc-scf-result-icon" style={{ background: '#ffedd5', color: '#ea580c' }}>
                     <i className="fa-solid fa-chart-line"></i>
@@ -3567,7 +3546,6 @@ export default function BusinessConsole({
                   <span><strong>Ideal for:</strong> Businesses in competitive markets wanting sustained top 3 rankings on Google Maps and organic local search results.</span>
                 </div>
 
-                {/* Compare: Problems vs Benefits */}
                 <div className="bc-scf-compare-grid">
                   <div className="bc-scf-box problems">
                     <div className="bc-scf-box-title">
@@ -3594,7 +3572,6 @@ export default function BusinessConsole({
                   </div>
                 </div>
 
-                {/* Deliverables Grid */}
                 <div className="bc-scf-deliverables-header">
                   <h4>What's Included in This Service</h4>
                   <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>6 Core Deliverables</span>
@@ -3608,35 +3585,15 @@ export default function BusinessConsole({
                   <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Monthly Ranking & Visibility Reports</div>
                 </div>
 
-                {/* Process Strip */}
-                <div className="bc-scf-process-grid">
-                  <div className="bc-scf-process-step">
-                    <div className="bc-scf-step-num">Step 01</div>
-                    <div className="bc-scf-step-title">Comprehensive Local Audit</div>
-                    <p className="bc-scf-step-desc">We reverse-engineer your top 3 competitors and benchmark your target keywords.</p>
-                  </div>
-                  <div className="bc-scf-process-step">
-                    <div className="bc-scf-step-num">Step 02</div>
-                    <div className="bc-scf-step-title">On-Page & Off-Page Optimization</div>
-                    <p className="bc-scf-step-desc">We execute citations, directory placements and profile authority signals.</p>
-                  </div>
-                  <div className="bc-scf-process-step">
-                    <div className="bc-scf-step-num">Step 03</div>
-                    <div className="bc-scf-step-title">Ongoing Monitoring & Reporting</div>
-                    <p className="bc-scf-step-desc">Monthly progress reports, call metric insights, and sustained ranking gains.</p>
-                  </div>
-                </div>
-
-                {/* Discuss Strip */}
                 <div className="bc-scf-discuss-strip" onClick={() => openServiceInquiry('Local SEO Services')}>
                   <div className="bc-scf-discuss-left">
-                    <strong>Ready to dominate local search in your market?</strong>
-                    <small>Talk to our local SEO team today for a custom growth plan tailored to your city.</small>
+                    <strong>Discuss This Service</strong>
+                    <small>Tell us your goal and requirements</small>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                     <button
                       className="btn btn-sm"
-                      style={{ background: '#22c55e', color: '#fff', border: 'none', fontWeight: 800 }}
+                      style={{ background: '#22c55e', color: '#fff', border: 'none', fontWeight: 800, padding: '0.45rem 0.85rem' }}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleServiceWhatsApp('Local SEO Services');
@@ -3649,6 +3606,393 @@ export default function BusinessConsole({
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* SERVICE 04: Google Maps Ranking (Teal / Emerald Green - Screenshot 2) */}
+            <div className="bc-service-card-full">
+              <div className="bc-scf-header teal">
+                <div className="bc-scf-left">
+                  <div className="bc-scf-icon">
+                    <i className="fa-solid fa-location-dot"></i>
+                  </div>
+                  <div>
+                    <span className="bc-scf-badge">SERVICE 04</span>
+                    <h3>Google Maps Ranking</h3>
+                    <p>Focus specifically on improving your presence across Google Maps and local pack search results.</p>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ background: 'rgba(255,255,255,0.2)', padding: '0.35rem 0.85rem', borderRadius: 99, fontSize: '0.74rem', fontWeight: 800 }}>
+                    Targeted Pack Growth
+                  </span>
+                </div>
+              </div>
+
+              <div className="bc-scf-body">
+                <div className="bc-scf-result-box">
+                  <div className="bc-scf-result-icon" style={{ background: '#ccfbf1', color: '#0d9488' }}>
+                    <i className="fa-solid fa-chart-line-up"></i>
+                  </div>
+                  <div className="bc-scf-result-text">
+                    <strong>Main Business Result:</strong>
+                    <p>A more focused Maps optimization strategy built around local relevance, competitive gaps, search visibility, and customer engagement signals.</p>
+                  </div>
+                </div>
+
+                <div className="bc-scf-ideal-pill">
+                  <i className="fa-solid fa-circle-check" style={{ color: '#0d9488' }}></i>
+                  <span><strong>Ideal for:</strong> Location-based businesses that depend on nearby customers, calls, visits, directions, and Google Maps discovery.</span>
+                </div>
+
+                <div className="bc-scf-compare-grid">
+                  <div className="bc-scf-box problems">
+                    <div className="bc-scf-box-title">
+                      <i className="fa-solid fa-triangle-exclamation"></i> Problems This Solves:
+                    </div>
+                    <ul className="bc-scf-list">
+                      <li>Your business is difficult to find on Google Maps</li>
+                      <li>Competitors dominate local pack results</li>
+                      <li>Your visibility drops outside your immediate location</li>
+                      <li>You are not tracking how rankings change across nearby areas</li>
+                    </ul>
+                  </div>
+
+                  <div className="bc-scf-box benefits">
+                    <div className="bc-scf-box-title">
+                      <i className="fa-solid fa-circle-check"></i> Business Benefits:
+                    </div>
+                    <ul className="bc-scf-list">
+                      <li>Understand where your Maps visibility is weak</li>
+                      <li>Identify local competitor gaps and opportunities</li>
+                      <li>Improve profile engagement and local relevance</li>
+                      <li>Build a clearer strategy around high-value service areas</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="bc-scf-deliverables-header">
+                  <h4>What's Included in This Service</h4>
+                  <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>6 Deliverables</span>
+                </div>
+                <div className="bc-scf-deliverables-grid">
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Geo-grid rank tracking</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Proximity-based optimization</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Competitor gap analysis</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Review velocity improvement</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Local pack CTR optimization</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Maps engagement enhancement</div>
+                </div>
+
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '0.75rem 1rem', fontSize: '0.76rem', color: '#475569', marginBottom: '1.25rem' }}>
+                  <i className="fa-solid fa-circle-info" style={{ color: '#0d9488', marginRight: 6 }}></i>
+                  Not sure if this is the right fit? Send us your current situation on WhatsApp and we'll help you understand whether this service matches your business need.
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.25rem', fontSize: '0.76rem', fontWeight: 700, color: '#334155' }}>
+                  <span><i className="fa-solid fa-circle-check" style={{ color: '#16a34a', marginRight: 5 }}></i> Clear Scope</span>
+                  <span><i className="fa-solid fa-circle-check" style={{ color: '#16a34a', marginRight: 5 }}></i> Direct Discussion</span>
+                  <span><i className="fa-solid fa-arrow-right" style={{ color: '#16a34a', marginRight: 5 }}></i> Simple Process</span>
+                </div>
+
+                <div className="bc-scf-discuss-strip" onClick={() => openServiceInquiry('Google Maps Ranking')}>
+                  <div className="bc-scf-discuss-left">
+                    <strong>Discuss This Service</strong>
+                    <small>Tell us your goal and requirements</small>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <button
+                      className="btn btn-sm"
+                      style={{ background: '#22c55e', color: '#fff', border: 'none', fontWeight: 800, padding: '0.45rem 0.85rem' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleServiceWhatsApp('Google Maps Ranking');
+                      }}
+                    >
+                      <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }}></i> WhatsApp
+                    </button>
+                    <div className="bc-scf-discuss-btn">
+                      <i className="fa-solid fa-arrow-right"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SERVICE 05: Google Posts Management (Indigo / Purple - Screenshot 3) */}
+            <div className="bc-service-card-full">
+              <div className="bc-scf-header indigo">
+                <div className="bc-scf-left">
+                  <div className="bc-scf-icon">
+                    <i className="fa-solid fa-calendar-days"></i>
+                  </div>
+                  <div>
+                    <span className="bc-scf-badge">SERVICE 05</span>
+                    <h3>Google Posts Management</h3>
+                    <p>Keep your Google Business Profile active with regular posts, offers, announcements, and updates.</p>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ background: 'rgba(255,255,255,0.2)', padding: '0.35rem 0.85rem', borderRadius: 99, fontSize: '0.74rem', fontWeight: 800 }}>
+                    Ongoing Activity
+                  </span>
+                </div>
+              </div>
+
+              <div className="bc-scf-body">
+                <div className="bc-scf-result-box">
+                  <div className="bc-scf-result-icon" style={{ background: '#e0e7ff', color: '#4338ca' }}>
+                    <i className="fa-solid fa-bullhorn"></i>
+                  </div>
+                  <div className="bc-scf-result-text">
+                    <strong>Main Business Result:</strong>
+                    <p>A more active and current profile that regularly communicates offers, events, services, announcements, and useful business updates to potential customers.</p>
+                  </div>
+                </div>
+
+                <div className="bc-scf-ideal-pill">
+                  <i className="fa-solid fa-circle-check" style={{ color: '#4338ca' }}></i>
+                  <span><strong>Ideal for:</strong> Busy business owners who want an active Google profile but do not have time to create and publish consistent updates.</span>
+                </div>
+
+                <div className="bc-scf-compare-grid">
+                  <div className="bc-scf-box problems">
+                    <div className="bc-scf-box-title">
+                      <i className="fa-solid fa-triangle-exclamation"></i> Problems This Solves:
+                    </div>
+                    <ul className="bc-scf-list">
+                      <li>Your Google profile looks inactive or outdated</li>
+                      <li>You rarely publish offers, updates, or announcements</li>
+                      <li>You do not have time to create regular business posts</li>
+                      <li>Your CTAs and post content are not planned consistently</li>
+                    </ul>
+                  </div>
+
+                  <div className="bc-scf-box benefits">
+                    <div className="bc-scf-box-title">
+                      <i className="fa-solid fa-circle-check"></i> Business Benefits:
+                    </div>
+                    <ul className="bc-scf-list">
+                      <li>Keep your profile fresh and active</li>
+                      <li>Promote offers, events, and important updates</li>
+                      <li>Give customers more reasons to engage with your business</li>
+                      <li>Maintain a more professional ongoing presence</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="bc-scf-deliverables-header">
+                  <h4>What's Included in This Service</h4>
+                  <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>6 Deliverables</span>
+                </div>
+                <div className="bc-scf-deliverables-grid">
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Weekly promotional posts</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Event & announcement publishing</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Custom graphics creation</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> CTA button optimization</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Performance tracking</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Seasonal campaigns</div>
+                </div>
+
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '0.75rem 1rem', fontSize: '0.76rem', color: '#475569', marginBottom: '1.25rem' }}>
+                  <i className="fa-solid fa-circle-info" style={{ color: '#4338ca', marginRight: 6 }}></i>
+                  Not sure if this is the right fit? Send us your current situation on WhatsApp and we'll help you understand whether this service matches your business need.
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.25rem', fontSize: '0.76rem', fontWeight: 700, color: '#334155' }}>
+                  <span><i className="fa-solid fa-circle-check" style={{ color: '#16a34a', marginRight: 5 }}></i> Clear Scope</span>
+                  <span><i className="fa-solid fa-circle-check" style={{ color: '#16a34a', marginRight: 5 }}></i> Direct Discussion</span>
+                  <span><i className="fa-solid fa-arrow-right" style={{ color: '#16a34a', marginRight: 5 }}></i> Simple Process</span>
+                </div>
+
+                <div className="bc-scf-discuss-strip" onClick={() => openServiceInquiry('Google Posts Management')}>
+                  <div className="bc-scf-discuss-left">
+                    <strong>Discuss This Service</strong>
+                    <small>Tell us your goal and requirements</small>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <button
+                      className="btn btn-sm"
+                      style={{ background: '#22c55e', color: '#fff', border: 'none', fontWeight: 800, padding: '0.45rem 0.85rem' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleServiceWhatsApp('Google Posts Management');
+                      }}
+                    >
+                      <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }}></i> WhatsApp
+                    </button>
+                    <div className="bc-scf-discuss-btn">
+                      <i className="fa-solid fa-arrow-right"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SERVICE 06: Website Design & Redesign (Crimson / Pink - Screenshot 4) */}
+            <div className="bc-service-card-full">
+              <div className="bc-scf-header crimson">
+                <div className="bc-scf-left">
+                  <div className="bc-scf-icon">
+                    <i className="fa-solid fa-laptop"></i>
+                  </div>
+                  <div>
+                    <span className="bc-scf-badge">SERVICE 06</span>
+                    <h3>Website Design & Redesign</h3>
+                    <p>Create a professional business website designed to turn visitors into enquiries and customers.</p>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ background: 'rgba(255,255,255,0.2)', padding: '0.35rem 0.85rem', borderRadius: 99, fontSize: '0.74rem', fontWeight: 800 }}>
+                    Design & Dev
+                  </span>
+                </div>
+              </div>
+
+              <div className="bc-scf-body">
+                <div className="bc-scf-result-box">
+                  <div className="bc-scf-result-icon" style={{ background: '#ffe4e6', color: '#be123c' }}>
+                    <i className="fa-solid fa-code"></i>
+                  </div>
+                  <div className="bc-scf-result-text">
+                    <strong>Main Business Result:</strong>
+                    <p>A cleaner, faster, mobile-friendly website that presents your services professionally and gives visitors clear paths to contact, enquire, book, or take action.</p>
+                  </div>
+                </div>
+
+                <div className="bc-scf-ideal-pill">
+                  <i className="fa-solid fa-circle-check" style={{ color: '#be123c' }}></i>
+                  <span><strong>Ideal for:</strong> Businesses with no website, an outdated website, poor mobile usability, slow loading, or a site that does not clearly convert visitors.</span>
+                </div>
+
+                <div className="bc-scf-compare-grid">
+                  <div className="bc-scf-box problems">
+                    <div className="bc-scf-box-title">
+                      <i className="fa-solid fa-triangle-exclamation"></i> Problems This Solves:
+                    </div>
+                    <ul className="bc-scf-list">
+                      <li>Your current website looks outdated or unprofessional</li>
+                      <li>Visitors do not understand your services quickly</li>
+                      <li>The site is slow or difficult to use on mobile</li>
+                      <li>There are weak or confusing calls to action</li>
+                    </ul>
+                  </div>
+
+                  <div className="bc-scf-box benefits">
+                    <div className="bc-scf-box-title">
+                      <i className="fa-solid fa-circle-check"></i> Business Benefits:
+                    </div>
+                    <ul className="bc-scf-list">
+                      <li>Build stronger trust with potential customers</li>
+                      <li>Present your services more clearly</li>
+                      <li>Improve mobile usability and conversion flow</li>
+                      <li>Create a better foundation for local SEO and campaigns</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="bc-scf-deliverables-header">
+                  <h4>What's Included in This Service</h4>
+                  <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>6 Deliverables</span>
+                </div>
+                <div className="bc-scf-deliverables-grid">
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Mobile-responsive design</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Local SEO optimized structure</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Fast-loading performance</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Online booking & forms</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Service & pricing pages</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Ongoing maintenance</div>
+                </div>
+
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '0.75rem 1rem', fontSize: '0.76rem', color: '#475569', marginBottom: '1.25rem' }}>
+                  <i className="fa-solid fa-circle-info" style={{ color: '#be123c', marginRight: 6 }}></i>
+                  Not sure if this is the right fit? Send us your current situation on WhatsApp and we'll help you understand whether this service matches your business need.
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.25rem', fontSize: '0.76rem', fontWeight: 700, color: '#334155' }}>
+                  <span><i className="fa-solid fa-circle-check" style={{ color: '#16a34a', marginRight: 5 }}></i> Clear Scope</span>
+                  <span><i className="fa-solid fa-circle-check" style={{ color: '#16a34a', marginRight: 5 }}></i> Direct Discussion</span>
+                  <span><i className="fa-solid fa-arrow-right" style={{ color: '#16a34a', marginRight: 5 }}></i> Simple Process</span>
+                </div>
+
+                <div className="bc-scf-discuss-strip" onClick={() => openServiceInquiry('Website Design & Redesign')}>
+                  <div className="bc-scf-discuss-left">
+                    <strong>Discuss This Service</strong>
+                    <small>Tell us your goal and requirements</small>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <button
+                      className="btn btn-sm"
+                      style={{ background: '#22c55e', color: '#fff', border: 'none', fontWeight: 800, padding: '0.45rem 0.85rem' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleServiceWhatsApp('Website Design & Redesign');
+                      }}
+                    >
+                      <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }}></i> WhatsApp
+                    </button>
+                    <div className="bc-scf-discuss-btn">
+                      <i className="fa-solid fa-arrow-right"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Need More Than One Service Banner (Screenshot 5) */}
+            <div className="bc-services-combo-banner">
+              <i className="fa-solid fa-comment-dots" style={{ color: '#059669', fontSize: '1rem' }}></i>
+              <span>Need more than one service? Discuss your business goals with us and choose the right combination.</span>
+            </div>
+
+            {/* HOW IT WORKS: Simple Process, No Confusion (Screenshot 5) */}
+            <div className="bc-services-hiw-card">
+              <div className="bc-services-hiw-header">
+                <span className="bc-services-hiw-tag">HOW IT WORKS</span>
+                <h3>Simple Process, No Confusion</h3>
+                <p>Start with a quick discussion, choose the service that fits your goal, and then move forward with the work.</p>
+              </div>
+
+              <div className="bc-services-hiw-grid">
+                <div className="bc-hiw-step-card">
+                  <span className="bc-hiw-step-badge">01</span>
+                  <h4>Choose a Service</h4>
+                  <p>Review the options above and select the service that best matches your current requirement.</p>
+                </div>
+                <div className="bc-hiw-step-card">
+                  <span className="bc-hiw-step-badge">02</span>
+                  <h4>Discuss Your Business</h4>
+                  <p>Contact us on WhatsApp and share the basic details, goals, or problems you want to solve.</p>
+                </div>
+                <div className="bc-hiw-step-card">
+                  <span className="bc-hiw-step-badge">03</span>
+                  <h4>Start the Work</h4>
+                  <p>Once the scope is clear, we can move forward with the selected service for your business.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* NEED HELP CHOOSING? Green CTA Card (Screenshot 5) */}
+            <div className="bc-services-cta-banner">
+              <div className="bc-services-cta-left">
+                <span>NEED HELP CHOOSING?</span>
+                <h3>Not Sure Which Service Is Right for Your Business?</h3>
+                <p>Tell us what you want to improve and we will help you understand which available service best matches your goal.</p>
+              </div>
+
+              <div className="bc-services-cta-buttons">
+                <button
+                  className="bc-btn-whatsapp-cta"
+                  onClick={() => handleServiceWhatsApp('Growth Consultation / Service Selection')}
+                >
+                  <i className="fa-brands fa-whatsapp"></i> Ask on WhatsApp
+                </button>
+                <button
+                  className="bc-btn-dashboard-cta"
+                  onClick={() => setActiveTab('Dashboard')}
+                >
+                  Back to Dashboard
+                </button>
               </div>
             </div>
 
@@ -3675,6 +4019,9 @@ export default function BusinessConsole({
                         <option value="GMB Profile Optimization">GMB Profile Optimization (One-Time)</option>
                         <option value="GMB Setup & Verification">GMB Setup & Verification (One-Time)</option>
                         <option value="Local SEO Services">Local SEO Services (Monthly Growth)</option>
+                        <option value="Google Maps Ranking">Google Maps Ranking (Focused Maps Pack)</option>
+                        <option value="Google Posts Management">Google Posts Management (Weekly Updates)</option>
+                        <option value="Website Design & Redesign">Website Design & Redesign (Lead-Gen)</option>
                         <option value="Custom Growth Consultation">Custom Growth Consultation</option>
                       </select>
                     </div>
@@ -3861,6 +4208,17 @@ export default function BusinessConsole({
         >
           <i className="fa-brands fa-whatsapp"></i>
         </a>
+        {/* Floating WhatsApp Widget */}
+        <a
+          href="https://wa.me/919707842047?text=Hello%20StarReview%20AI%20Support"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bc-floating-whatsapp"
+          title="Chat on WhatsApp"
+        >
+          <i className="fa-brands fa-whatsapp"></i>
+        </a>
+      </div>
       </main>
     </div>
   );
