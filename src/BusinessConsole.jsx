@@ -138,6 +138,13 @@ export default function BusinessConsole({
         const tabParam = searchParams.get('tab');
         const routeParam = searchParams.get('route');
         const hash = window.location.hash.replace('#', '');
+
+        if (searchParams.get('modal') === 'google' || searchParams.get('google') === 'true' || searchParams.get('action') === 'google-auth') {
+          setGoogleAuthModalOpen(true);
+          if (searchParams.get('switch') === 'true') {
+            setGoogleAuthSwitchMode(true);
+          }
+        }
         
         const target = tabParam || routeParam || hash;
         if (!target) return;
@@ -147,10 +154,18 @@ export default function BusinessConsole({
           setActiveTab('Magic Review QR');
           if (searchParams.get('size') === 'banner' || lower.includes('banner')) setQrDisplaySize('Banner');
           if (searchParams.get('theme')) setQrTheme(searchParams.get('theme'));
-        } else if (lower.includes('stand') || lower.includes('physical')) {
+        } else if (lower.includes('stand') || lower.includes('physical') || lower.includes('order')) {
           setActiveTab('Physical QR Stand');
-          if (searchParams.get('order') === 'true' || searchParams.get('checkout') === 'true') {
+          if (searchParams.get('order') === 'true' || searchParams.get('checkout') === 'true' || lower.includes('order')) {
+            setSelectedStand({
+              title: 'QR Code Acrylic Stand',
+              unitPrice: 699,
+              price: 699,
+              qty: 1,
+              tag: 'Most Popular'
+            });
             setStandCheckoutMode(true);
+            setStandCheckoutStep(1);
           }
         } else if (lower.includes('bill') || lower.includes('plan')) {
           setActiveTab('Billing & Plans');
@@ -751,13 +766,41 @@ export default function BusinessConsole({
                 </div>
               </div>
 
-              <div className="bc-biz-right">
+              <div className="bc-biz-right" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <div className="bc-funnel-status-box">
                   <div className="bc-funnel-label">Review Funnel</div>
                   <div className="bc-funnel-val">
                     <span className="bc-live-dot"></span> Active &amp; Ready
                   </div>
                 </div>
+                <button
+                  type="button"
+                  style={{
+                    background: '#ffffff',
+                    border: '1.5px solid #cbd5e1',
+                    borderRadius: 12,
+                    padding: '0.65rem 0.95rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    fontWeight: 700,
+                    fontSize: '0.82rem',
+                    color: '#334155',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onClick={() => setGoogleAuthModalOpen(true)}
+                  title="Switch or re-authorize Google Business Profile"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  </svg>
+                  <span>Google Account</span>
+                </button>
                 <button className="bc-btn-manage-qr" onClick={() => { setActiveTab('Magic Review QR'); setQrDisplaySize('Banner'); }}>
                   <div>
                     Manage QR Tools
@@ -768,10 +811,10 @@ export default function BusinessConsole({
               </div>
             </div>
 
-            {/* QUICK FLOW SHORTCUTS (DIRECT 1-CLICK TEST TO SCREENSHOTS 1, 2, 3, 4) */}
+            {/* QUICK FLOW SHORTCUTS (DIRECT 1-CLICK TEST TO SCREENSHOTS 1, 2, 3, 4, 5) */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
               gap: '12px',
               margin: '1.25rem 0'
             }}>
@@ -798,7 +841,7 @@ export default function BusinessConsole({
                 </div>
                 <div>
                   <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>Magic Review QR</div>
-                  <div style={{ fontSize: '0.72rem', color: '#16a34a', fontWeight: 700 }}>Counter Banner & 4 Themes →</div>
+                  <div style={{ fontSize: '0.72rem', color: '#16a34a', fontWeight: 700 }}>Banner &amp; 4 Themes →</div>
                 </div>
               </div>
 
@@ -813,6 +856,7 @@ export default function BusinessConsole({
                   });
                   setActiveTab('Physical QR Stand');
                   setStandCheckoutMode(true);
+                  setStandCheckoutStep(1);
                 }}
                 style={{
                   background: '#ffffff',
@@ -832,13 +876,40 @@ export default function BusinessConsole({
                 </div>
                 <div>
                   <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>Physical QR Stand</div>
-                  <div style={{ fontSize: '0.72rem', color: '#ea580c', fontWeight: 700 }}>Step 1 of 2 Checkout Form →</div>
+                  <div style={{ fontSize: '0.72rem', color: '#ea580c', fontWeight: 700 }}>Step 1 &amp; 2 Order Form →</div>
                 </div>
               </div>
 
               <div
                 onClick={() => {
-                  startPlanCheckout('Starter', 'Yearly', 999);
+                  setActiveTab('AI SEO Analyzer');
+                }}
+                style={{
+                  background: '#ffffff',
+                  border: '1.5px solid #bae6fd',
+                  borderRadius: 14,
+                  padding: '1rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7', fontSize: '1.2rem', flexShrink: 0 }}>
+                  <i className="fa-solid fa-magnifying-glass-chart"></i>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>AI SEO Analyzer</div>
+                  <div style={{ fontSize: '0.72rem', color: '#0284c7', fontWeight: 700 }}>Visibility Scan &amp; Upgrade →</div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => {
+                  setActiveTab('Billing & Plans');
+                  setPlanCheckoutStep('select');
                 }}
                 style={{
                   background: '#ffffff',
@@ -857,18 +928,19 @@ export default function BusinessConsole({
                   <i className="fa-solid fa-credit-card"></i>
                 </div>
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>Billing & Plans</div>
-                  <div style={{ fontSize: '0.72rem', color: '#7c3aed', fontWeight: 700 }}>Instant UPI Upgrade →</div>
+                  <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>Billing &amp; Plans</div>
+                  <div style={{ fontSize: '0.72rem', color: '#7c3aed', fontWeight: 700 }}>Monthly / Yearly / 3 plans →</div>
                 </div>
               </div>
 
               <div
                 onClick={() => {
-                  openWebpressPay(1999, 'Yearly Plan Upgrade', 'plan');
+                  setGoogleAuthModalOpen(true);
+                  setGoogleAuthSwitchMode(true);
                 }}
                 style={{
                   background: '#ffffff',
-                  border: '1.5px solid #99f6e4',
+                  border: '1.5px solid #cbd5e1',
                   borderRadius: 14,
                   padding: '1rem',
                   cursor: 'pointer',
@@ -879,12 +951,17 @@ export default function BusinessConsole({
                   transition: 'all 0.15s ease'
                 }}
               >
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#ccfbf1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0d9488', fontSize: '1.2rem', flexShrink: 0 }}>
-                  <i className="fa-solid fa-bolt"></i>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0, border: '1px solid #e2e8f0' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  </svg>
                 </div>
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>WebPress Pay</div>
-                  <div style={{ fontSize: '0.72rem', color: '#0d9488', fontWeight: 700 }}>Instant UPI QR Modal →</div>
+                  <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>Google Account</div>
+                  <div style={{ fontSize: '0.72rem', color: '#4285F4', fontWeight: 700 }}>Switch / Re-authorize →</div>
                 </div>
               </div>
             </div>
