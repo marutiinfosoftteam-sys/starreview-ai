@@ -16,6 +16,18 @@ export default function BusinessConsole({
   const [activeTab, setActiveTab] = useState(initialTab);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Derived business and subscription info (declared early to prevent TDZ ReferenceErrors)
+  const bizName = business?.name || 'verde eco landing';
+  const bizCategory = business?.category || 'Other';
+  const bizCity = business?.city || 'sarthana';
+  const directReviewUrl = (typeof window !== 'undefined' ? window.location.origin : 'https://starreview-ai-alpha.vercel.app') + (business?.slug ? ('/r/' + business.slug) : '/r/demo');
+  const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=4&data=${encodeURIComponent(directReviewUrl)}`;
+  const bizInitial = (bizName.trim()[0] || 'V').toUpperCase();
+  const sub = user?.subscription;
+  const isTrial = sub?.plan === 'Trial' || !sub;
+  const daysLeft = sub?.expiresAt ? Math.max(0, Math.ceil((new Date(sub.expiresAt) - new Date()) / 86400000)) : 0;
+  const planName = sub?.plan || 'Free Trial';
   const [analyticsData, setAnalyticsData] = useState(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
   const [recentEvents, setRecentEvents] = useState([]);
@@ -194,17 +206,7 @@ export default function BusinessConsole({
     fetchDashboardData();
   }, [user?.id, business?.id]);
 
-  // Derived business info
-  const bizName = business?.name || 'verde eco landing';
-  const bizCategory = business?.category || 'Other';
-  const bizCity = business?.city || 'sarthana';
-  const directReviewUrl = (typeof window !== 'undefined' ? window.location.origin : 'https://starreview-ai-alpha.vercel.app') + (business?.slug ? ('/r/' + business.slug) : '/r/demo');
-  const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=4&data=${encodeURIComponent(directReviewUrl)}`;
-  const bizInitial = (bizName.trim()[0] || 'V').toUpperCase();
-  const sub = user?.subscription;
-  const isTrial = sub?.plan === 'Trial' || !sub;
-  const daysLeft = sub?.expiresAt ? Math.max(0, Math.ceil((new Date(sub.expiresAt) - new Date()) / 86400000)) : 0;
-  const planName = sub?.plan || 'Free Trial';
+  // (Derived info hoisted to component top)
 
   // Metrics
   const totals = analyticsData?.totals || {
