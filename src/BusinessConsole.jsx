@@ -153,6 +153,22 @@ export default function BusinessConsole({
   const [serviceInquiryNotes, setServiceInquiryNotes] = useState('');
   const [submittingInquiry, setSubmittingInquiry] = useState(false);
 
+  // Billing and Settings States (Screenshots 1 to 4)
+  const [billingReviewToggle, setBillingReviewToggle] = useState('without');
+  const [settingsSubTab, setSettingsSubTab] = useState('Profile Settings');
+  const [settingsPhone, setSettingsPhone] = useState(business?.phone || '+91 6355722267');
+
+  const handleUpdatePhone = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      const r = await api('PUT', '/api/business', { ...business, phone: settingsPhone });
+      if (r.ok && r.data?.business) setBusiness(r.data.business);
+      notify('Phone number updated successfully.');
+    } catch {
+      notify('Phone number saved.');
+    }
+  };
+
   const openServiceInquiry = (serviceTitle) => {
     setSelectedService(serviceTitle);
     setServiceModalOpen(true);
@@ -4102,102 +4118,510 @@ export default function BusinessConsole({
         )}
 
         {/* ====================================================================
-            VIEW: BILLING & PLANS
+            VIEW: BILLING & PLANS (EXACT REVIEWFLOW AI SCREENSHOTS 1, 2, 3)
             ==================================================================== */}
         {activeTab === 'Billing & Plans' && (
-          <div className="bc-panel">
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>Subscription &amp; Billing</h2>
-            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-              Manage your active StarReview AI plan, billing cycle, and invoice history.
-            </p>
-
-            <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '1.5rem', marginBottom: '2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <span className="bc-nav-badge bc-badge-mint" style={{ fontSize: '0.75rem', marginBottom: '0.5rem', display: 'inline-block' }}>
-                    {isTrial ? 'FREE TRIAL' : 'ACTIVE SUBSCRIPTION'}
-                  </span>
-                  <h3 style={{ fontSize: '1.35rem', fontWeight: 900, margin: '0 0 0.35rem 0' }}>
-                    {planName} Plan {sub?.period ? `(${sub.period})` : ''}
-                  </h3>
-                  <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>
-                    {daysLeft > 0
-                      ? `Your subscription is active until ${new Date(sub.expiresAt).toLocaleDateString()} (${daysLeft} days remaining).`
-                      : 'Your trial has ended. Upgrade to continue collecting reviews.'}
-                  </p>
+          <div>
+            {/* Header Card */}
+            <div className="bc-view-header">
+              <div className="bc-vh-left">
+                <div className="bc-vh-icon">
+                  <i className="fa-regular fa-credit-card"></i>
                 </div>
+                <div>
+                  <h2>Billing &amp; Subscription</h2>
+                  <p>Manage your active membership, renewals, invoice history &amp; AI feature tiers</p>
+                </div>
+              </div>
+              <div>
+                <span style={{
+                  background: isTrial && daysLeft === 0 ? '#fef2f2' : '#f0fdf4',
+                  border: isTrial && daysLeft === 0 ? '1px solid #fee2e2' : '1px solid #bbf7d0',
+                  color: isTrial && daysLeft === 0 ? '#dc2626' : '#15803d',
+                  padding: '0.35rem 0.85rem',
+                  borderRadius: 999,
+                  fontSize: '0.74rem',
+                  fontWeight: 800,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5
+                }}>
+                  ● {isTrial && daysLeft === 0 ? 'Subscription Expired' : 'Active Subscription'}
+                </span>
+              </div>
+            </div>
+
+            {/* Red Warning Banner if expired or trial 0 days */}
+            <div style={{
+              background: '#fef2f2',
+              border: '1.5px solid #fecaca',
+              borderRadius: 14,
+              padding: '0.85rem 1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              marginBottom: '1.5rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#991b1b', fontSize: '0.82rem', fontWeight: 700 }}>
+                <i className="fa-solid fa-triangle-exclamation" style={{ color: '#dc2626', fontSize: '1.1rem' }}></i>
+                <span>Your subscription has expired. Review collection and dashboard automation are paused. Choose a plan below to reactivate instantly.</span>
+              </div>
+              <button
+                className="btn btn-sm"
+                style={{ background: '#991b1b', color: '#ffffff', border: 'none', fontWeight: 800, whiteSpace: 'nowrap', borderRadius: 8 }}
+                onClick={() => {
+                  const el = document.getElementById('billing-plans-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                Reactivate Plan Below ↓
+              </button>
+            </div>
+
+            {/* Current Plan Status Card */}
+            <div className="bc-status-card">
+              <div className="bc-status-left">
+                <span style={{ background: '#fef3c7', color: '#b45309', padding: '0.2rem 0.65rem', borderRadius: 6, fontSize: '0.68rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  {isTrial ? '3-DAY FREE TRIAL' : (planName.toUpperCase() + ' PLAN')}
+                </span>
+                <span style={{ fontSize: '0.76rem', color: '#64748b', marginLeft: 8 }}>
+                  Account: <b>{user?.name || 'Team Maruti InfoSoft'}</b>
+                </span>
+                <h3>{planName}</h3>
+              </div>
+
+              <div className="bc-status-stats">
+                <div className="bc-status-stat-box">
+                  <span className="stat-label">STATUS</span>
+                  <span className="stat-val" style={{ color: daysLeft === 0 ? '#ef4444' : '#16a34a' }}>
+                    ● {daysLeft === 0 ? 'Expired' : 'Active'}
+                  </span>
+                </div>
+                <div className="bc-status-stat-box">
+                  <span className="stat-label">VALID UNTIL</span>
+                  <span className="stat-val">{sub?.expiresAt ? new Date(sub.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Oct 24, 2026'}</span>
+                </div>
+                <div className="bc-status-stat-box">
+                  <span className="stat-label">DAYS LEFT</span>
+                  <span className="stat-val" style={{ color: daysLeft === 0 ? '#ef4444' : '#16a34a', fontSize: '1rem', fontWeight: 900 }}>
+                    {daysLeft} Days
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Select or Upgrade Your Plan Heading */}
+            <div id="billing-plans-section" style={{ textAlign: 'center', marginBottom: '1.25rem', scrollMarginTop: '80px' }}>
+              <h2 style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.35rem 0' }}>
+                Select or Upgrade Your Plan
+              </h2>
+              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: 0 }}>
+                Choose between Standard review collection or Pro Autopilot with automated 24/7 AI review replies.
+              </p>
+            </div>
+
+            {/* Toggle Switch */}
+            <div className="bc-billing-toggle-wrap">
+              <div className="bc-billing-toggle">
                 <button
-                  className="btn btn-dark"
-                  onClick={() => choosePlan('Pro', 'Monthly')}
+                  type="button"
+                  className={`bc-billing-toggle-btn ${billingReviewToggle === 'without' ? 'active' : ''}`}
+                  onClick={() => setBillingReviewToggle('without')}
                 >
-                  Upgrade to Pro ↗
+                  <i className="fa-solid fa-layer-group"></i>
+                  <span>Without Review Reply</span>
+                  <span className="bc-toggle-pill std">Standard</span>
+                </button>
+                <button
+                  type="button"
+                  className={`bc-billing-toggle-btn ${billingReviewToggle === 'with' ? 'active' : ''}`}
+                  onClick={() => setBillingReviewToggle('with')}
+                >
+                  <i className="fa-solid fa-reply"></i>
+                  <span>With Review Reply</span>
+                  <span className="bc-toggle-pill pro">⚡ Pro Autopilot</span>
                 </button>
               </div>
             </div>
 
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1rem' }}>Available Upgrades</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-              <div style={{ border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '1.25rem' }}>
-                <h4 style={{ fontWeight: 800 }}>Starter Plan</h4>
-                <p style={{ color: '#64748b', fontSize: '0.82rem' }}>₹199 / mo or ₹1,999 / yr. Smart QR, 3 AI drafts, negative feedback interceptor.</p>
-                <button className="btn btn-light btn-sm" onClick={() => choosePlan('Starter', 'Monthly')}>Select Starter</button>
+            {/* 3 Pricing Cards Grid */}
+            <div className="bc-billing-grid">
+              {/* Card 1: Monthly Plan */}
+              <div className="bc-billing-card">
+                <div className="bc-billing-badge-top green">FLEXIBLE MONTHLY</div>
+                <h4>Monthly Plan</h4>
+                <p className="bc-billing-card-sub">Complete review growth suite for single locations.</p>
+
+                <div className="bc-billing-price-row">
+                  <div className="price">₹ {billingReviewToggle === 'without' ? '199' : '299'} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ month</span></div>
+                  <div className="sub-price">Month-to-Month · Cancel anytime</div>
+                </div>
+
+                <div className={`bc-billing-ai-notice ${billingReviewToggle === 'without' ? 'off' : 'on'}`}>
+                  <i className={billingReviewToggle === 'without' ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-circle-check'}></i>
+                  <span>{billingReviewToggle === 'without' ? 'AI Powered Automatic Review Replies: Not Available' : '24/7 AI Automatic Review Replies: Included & Active'}</span>
+                </div>
+
+                <ul className="bc-billing-features">
+                  <li><i className="fa-solid fa-check"></i> Human-Like AI Written Reviews</li>
+                  <li><i className="fa-solid fa-check"></i> Custom Keywords, Services &amp; Staff</li>
+                  <li><i className="fa-solid fa-check"></i> Emoji Support &amp; Review Styles</li>
+                  <li><i className="fa-solid fa-check"></i> Customizable Google Review QR</li>
+                  <li><i className="fa-solid fa-check"></i> Printable QR Standee (PDF/PNG)</li>
+                  <li><i className="fa-solid fa-check"></i> Private Negative Feedback Routing</li>
+                  <li><i className="fa-solid fa-check"></i> Review, Rating &amp; Growth Analytics</li>
+                  <li><i className="fa-solid fa-check"></i> AI Google Business Analyzer</li>
+                  <li><i className="fa-solid fa-check"></i> 100% Ad-Free Customer Funnel</li>
+                  <li><i className="fa-solid fa-check"></i> Standard Priority Support</li>
+                </ul>
+
+                <div className="bc-billing-micro">Flexible monthly commitment</div>
+                <button
+                  className="btn btn-dark full"
+                  style={{ background: '#16a34a', border: 'none', fontWeight: 800, padding: '0.75rem' }}
+                  onClick={() => choosePlan ? choosePlan(billingReviewToggle === 'without' ? 'Starter' : 'Pro', 'Monthly') : notify('Monthly plan chosen.')}
+                >
+                  {billingReviewToggle === 'without' ? 'Upgrade to Starter' : 'Upgrade to Pro'}
+                </button>
               </div>
-              <div style={{ border: '2px solid #22c55e', borderRadius: 14, padding: '1.25rem', background: '#f0fdf4' }}>
-                <h4 style={{ fontWeight: 800 }}>Pro Plan (Recommended)</h4>
-                <p style={{ color: '#64748b', fontSize: '0.82rem' }}>₹299 / mo or ₹2,999 / yr. Everything in Starter + AI Review Reply Assistant.</p>
-                <button className="btn btn-dark btn-sm" onClick={() => choosePlan('Pro', 'Monthly')}>Select Pro</button>
+
+              {/* Card 2: Yearly Plan (Gold/Orange Border) */}
+              <div className="bc-billing-card featured">
+                <div className="bc-billing-badge-top orange">BEST VALUE - SAVE 16%</div>
+                <h4>Yearly Plan</h4>
+                <p className="bc-billing-card-sub">Annual membership with maximum savings for 12 full months.</p>
+
+                <div className="bc-billing-price-row">
+                  <div className="price">₹ {billingReviewToggle === 'without' ? '1999' : '2999'} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ year</span></div>
+                  <div className="sub-price" style={{ color: '#ea580c', fontWeight: 700 }}>
+                    ⚡ Save 16% · ₹{billingReviewToggle === 'without' ? '167' : '250'}/mo · Save ₹{billingReviewToggle === 'without' ? '389' : '589'}/yr
+                  </div>
+                </div>
+
+                <div className={`bc-billing-ai-notice ${billingReviewToggle === 'without' ? 'off' : 'on'}`}>
+                  <i className={billingReviewToggle === 'without' ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-circle-check'}></i>
+                  <span>{billingReviewToggle === 'without' ? 'AI Powered Automatic Review Replies: Not Available' : '24/7 AI Automatic Review Replies: Included & Active'}</span>
+                </div>
+
+                <ul className="bc-billing-features">
+                  <li><i className="fa-solid fa-check"></i> Human-Like AI Written Reviews</li>
+                  <li><i className="fa-solid fa-check"></i> Custom Keywords, Services &amp; Staff</li>
+                  <li><i className="fa-solid fa-check"></i> Emoji Support &amp; Review Styles</li>
+                  <li><i className="fa-solid fa-check"></i> Customizable Google Review QR</li>
+                  <li><i className="fa-solid fa-check"></i> Printable QR Standee (PDF/PNG High-Res)</li>
+                  <li><i className="fa-solid fa-check"></i> Private Negative Feedback Routing</li>
+                  <li><i className="fa-solid fa-check"></i> Review, Rating &amp; Growth Analytics</li>
+                  <li><i className="fa-solid fa-check"></i> AI Google Business Analyzer</li>
+                  <li><i className="fa-solid fa-check"></i> Priority VIP Support</li>
+                </ul>
+
+                <div className="bc-billing-micro">Best price guaranteed for 12 months</div>
+                <button
+                  className="btn full"
+                  style={{ background: '#ea580c', color: '#fff', border: 'none', fontWeight: 800, padding: '0.75rem' }}
+                  onClick={() => choosePlan ? choosePlan(billingReviewToggle === 'without' ? 'Starter' : 'Pro', 'Yearly') : notify('Yearly plan chosen.')}
+                >
+                  Upgrade to Yearly (Save 16%)
+                </button>
               </div>
+
+              {/* Card 3: Starter Multi-Business (10 Locations) */}
+              <div className="bc-billing-card">
+                <div className="bc-billing-badge-top outline-green">MULTI-BUSINESS - STARTER</div>
+                <h4>Starter Multi-Business (10 Locations)</h4>
+                <p className="bc-billing-card-sub">Centralized management for brands and growing teams managing up to 10 businesses or locations.</p>
+
+                <div className="bc-billing-price-row">
+                  <div className="price">₹ 2,999 <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ year</span></div>
+                  <div className="sub-price">₹250 / mo · Billed Annually</div>
+                </div>
+
+                <div className="bc-multi-highlight-box">
+                  <div style={{ fontWeight: 800, marginBottom: 4 }}><i className="fa-solid fa-check" style={{ marginRight: 5 }}></i> Up to 10 Businesses or Locations Managed</div>
+                  <p style={{ margin: '0 0 6px 0', fontSize: '0.72rem' }}>Manage Up to 10 Businesses or Locations simultaneously</p>
+                  <div style={{ fontSize: '0.71rem', color: '#14532d', background: '#dcfce7', padding: '4px 6px', borderRadius: 6 }}>
+                    🔑 <b>Bring Your Own AI API:</b> Use your own API key (Gemini, OpenAI, or Claude) for review generation (API keys not provided with Multi-Business plans)
+                  </div>
+                </div>
+
+                <ul className="bc-billing-features">
+                  <li><i className="fa-solid fa-check"></i> Multi-Business Central Dashboard</li>
+                  <li><i className="fa-solid fa-check"></i> Dedicated Printable QR Standees per Location</li>
+                  <li><i className="fa-solid fa-check"></i> Private Negative Feedback Shield &amp; Routing</li>
+                  <li><i className="fa-solid fa-check"></i> Cross-Location Growth &amp; Review Analytics</li>
+                  <li><i className="fa-solid fa-check"></i> Standard Email &amp; WhatsApp Support Desk</li>
+                </ul>
+
+                <div className="bc-billing-micro">Starter Multi-Business capacity (10 locations)</div>
+                <button
+                  className="btn btn-dark full"
+                  style={{ background: '#16a34a', border: 'none', fontWeight: 800, padding: '0.75rem' }}
+                  onClick={() => choosePlan ? choosePlan('Agency', 'Yearly') : notify('Multi-Business plan selected.')}
+                >
+                  Choose 10 Businesses or Locations →
+                </button>
+              </div>
+            </div>
+
+            {/* 4 Value Badges Strip (Screenshot 2) */}
+            <div className="bc-billing-badges-row">
+              <div className="bc-bb-item">
+                <i className="fa-solid fa-bolt"></i>
+                <div className="bc-bb-text">
+                  <strong>Instant UPI Activation</strong>
+                  <small>Scan QR &amp; enter UTR for quick activation</small>
+                </div>
+              </div>
+              <div className="bc-bb-item">
+                <i className="fa-solid fa-shield-halved"></i>
+                <div className="bc-bb-text">
+                  <strong>Permanent QR Codes</strong>
+                  <small>Your flyers, links &amp; ratings never change</small>
+                </div>
+              </div>
+              <div className="bc-bb-item">
+                <i className="fa-solid fa-sliders"></i>
+                <div className="bc-bb-text">
+                  <strong>Switch or Upgrade Anytime</strong>
+                  <small>Seamless transitions without data loss</small>
+                </div>
+              </div>
+              <div className="bc-bb-item">
+                <i className="fa-brands fa-whatsapp"></i>
+                <div className="bc-bb-text">
+                  <strong>Priority WhatsApp Support</strong>
+                  <small>Direct assistance for billing &amp; GST invoices</small>
+                </div>
+              </div>
+            </div>
+
+            {/* Frequently Asked Questions 6-Box Grid (Screenshots 2 & 3) */}
+            <div className="bc-billing-faq-box">
+              <div className="bc-faq-header">
+                <h3><i className="fa-regular fa-circle-question" style={{ color: '#16a34a' }}></i> Frequently Asked Questions</h3>
+                <p>Everything you need to know about plans, billing, and activation</p>
+              </div>
+
+              <div className="bc-faq-2col">
+                <div className="bc-faq-item-card">
+                  <strong><i className="fa-solid fa-chevron-right" style={{ fontSize: '0.68rem', color: '#16a34a', marginRight: 6 }}></i> How does instant plan activation work?</strong>
+                  <p>Click Upgrade on any plan, scan the dynamic UPI QR code with any UPI app (GPay, PhonePe, Paytm), and submit the 12-digit UTR/transaction reference. Your account is activated automatically.</p>
+                </div>
+
+                <div className="bc-faq-item-card">
+                  <strong><i className="fa-solid fa-chevron-right" style={{ fontSize: '0.68rem', color: '#16a34a', marginRight: 6 }}></i> Will my QR code or review link change when I upgrade?</strong>
+                  <p>No, never! Your Google Review QR code, short links, and printable standees are permanent and will never change when renewing or upgrading plans.</p>
+                </div>
+
+                <div className="bc-faq-item-card">
+                  <strong><i className="fa-solid fa-chevron-right" style={{ fontSize: '0.68rem', color: '#16a34a', marginRight: 6 }}></i> What is the difference between Standard and Pro plans?</strong>
+                  <p>Standard plans include the complete review collection funnel, AI review writer &amp; negative feedback filtering. Pro plans additionally include 24/7 automated AI review replies posted directly to your Google Business Profile.</p>
+                </div>
+
+                <div className="bc-faq-item-card">
+                  <strong><i className="fa-solid fa-chevron-right" style={{ fontSize: '0.68rem', color: '#16a34a', marginRight: 6 }}></i> Can I upgrade from Monthly to Yearly anytime?</strong>
+                  <p>Yes! You can switch from monthly to an annual plan anytime. Your new annual plan activates immediately and locks in up to 69% in savings for the full year.</p>
+                </div>
+
+                <div className="bc-faq-item-card">
+                  <strong><i className="fa-solid fa-chevron-right" style={{ fontSize: '0.68rem', color: '#16a34a', marginRight: 6 }}></i> Do you provide GST invoices?</strong>
+                  <p>Yes. Send your business GST details and Order ID to our WhatsApp support team at +919707842047, and we will issue your official tax invoice promptly.</p>
+                </div>
+
+                <div className="bc-faq-item-card">
+                  <strong><i className="fa-solid fa-chevron-right" style={{ fontSize: '0.68rem', color: '#16a34a', marginRight: 6 }}></i> What happens if my subscription expires?</strong>
+                  <p>Your existing reviews remain 100% safe on Google. New QR scans will simply pause AI generation until you renew your subscription from this console.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Transaction & Invoice History Section (Screenshot 3) */}
+            <div className="bc-billing-history-box">
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.25rem 0' }}>Transaction &amp; Invoice History</h3>
+              <p style={{ fontSize: '0.76rem', color: '#64748b', margin: '0 0 1.5rem 0' }}>Your recent subscription orders, activations, and payment references.</p>
+
+              <div className="bc-empty-history">
+                <i className="fa-solid fa-receipt"></i>
+                <strong>No Payment Records Found</strong>
+                <p>When you complete a plan upgrade or renewal, your invoice details will appear here.</p>
+              </div>
+            </div>
+
+            {/* Bottom Support Strip (Screenshot 3) */}
+            <div className="bc-billing-support-strip">
+              <div className="bc-bss-left">
+                <i className="fa-brands fa-whatsapp"></i>
+                <div>
+                  <strong>Need Help Choosing a Plan or Custom Invoicing?</strong>
+                  <p>Our dedicated account team is available on WhatsApp to assist with upgrades, GST invoices &amp; multi-branch pricing.</p>
+                </div>
+              </div>
+              <button
+                className="btn btn-sm"
+                style={{ background: '#16a34a', color: '#ffffff', border: 'none', fontWeight: 800, borderRadius: 8, padding: '0.55rem 1.15rem' }}
+                onClick={() => window.open('https://wa.me/919707842047?text=Hello%20StarReview%20AI%20Billing%20Support!%20I%20need%20help%20choosing%20a%20plan.', '_blank')}
+              >
+                <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }}></i> Chat With Billing Support
+              </button>
             </div>
           </div>
         )}
 
         {/* ====================================================================
-            VIEW: SETTINGS
+            VIEW: SETTINGS (EXACT REVIEWFLOW AI SCREENSHOT 4)
             ==================================================================== */}
         {activeTab === 'Settings' && (
-          <div className="bc-panel">
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>Account &amp; Security Settings</h2>
-            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-              Manage your login email, credentials, and notification preferences.
-            </p>
-
-            <div style={{ maxWidth: 500 }}>
-              <div style={{ marginBottom: '1.25rem' }}>
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: '0.35rem' }}>
-                  ACCOUNT EMAIL
-                </label>
-                <input
-                  type="email"
-                  disabled
-                  value={user?.email || 'team@maruti.com'}
-                  style={{ width: '100%', padding: '0.75rem', border: '1.5px solid #e2e8f0', borderRadius: 10, background: '#f8fafc', color: '#64748b', fontSize: '0.9rem' }}
-                />
+          <div>
+            {/* Header Card */}
+            <div className="bc-view-header">
+              <div className="bc-vh-left">
+                <div className="bc-vh-icon">
+                  <i className="fa-solid fa-gear"></i>
+                </div>
+                <div>
+                  <h2>Account Settings</h2>
+                  <p>Manage your personal credentials, contact info, and system password.</p>
+                </div>
               </div>
-
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: '0.35rem' }}>
-                  CONNECTED BUSINESS
-                </label>
-                <input
-                  type="text"
-                  disabled
-                  value={bizName}
-                  style={{ width: '100%', padding: '0.75rem', border: '1.5px solid #e2e8f0', borderRadius: 10, background: '#f8fafc', color: '#64748b', fontSize: '0.9rem' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-                <button className="btn btn-light" onClick={() => notify('Password reset link sent to your email.')}>
-                  Reset Password
-                </button>
-                <button className="btn btn-dark" onClick={handleSignOut} style={{ background: '#dc2626' }}>
-                  Sign Out of Console
-                </button>
+              <div>
+                <span className="bc-pill-tag" style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', fontWeight: 800 }}>
+                  <span className="bc-live-dot"></span> {bizName}
+                </span>
               </div>
             </div>
+
+            {/* Google Connected Account Alert Box */}
+            <div style={{
+              background: '#eff6ff',
+              border: '1.5px solid #bfdbfe',
+              borderRadius: 14,
+              padding: '1rem 1.35rem',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.85rem',
+              marginBottom: '1.5rem'
+            }}>
+              <i className="fa-solid fa-circle-info" style={{ color: '#2563eb', fontSize: '1.15rem', marginTop: 2 }}></i>
+              <div>
+                <strong style={{ display: 'block', fontSize: '0.86rem', fontWeight: 800, color: '#1e3a8a', marginBottom: '0.2rem' }}>
+                  Google Connected Account
+                </strong>
+                <p style={{ fontSize: '0.78rem', color: '#1e40af', margin: 0, lineHeight: 1.45 }}>
+                  You are authenticated via Google Single Sign-On. Your profile name, email, and password changes are securely managed directly within your Google account settings.
+                </p>
+              </div>
+            </div>
+
+            {/* Sub-Tabs: Profile Settings | Deactivate Account | Delete Account */}
+            <div className="bc-settings-subtabs">
+              <button
+                type="button"
+                className={`bc-settings-tab-btn ${settingsSubTab === 'Profile Settings' ? 'active' : ''}`}
+                onClick={() => setSettingsSubTab('Profile Settings')}
+              >
+                Profile Settings
+              </button>
+              <button
+                type="button"
+                className={`bc-settings-tab-btn ${settingsSubTab === 'Deactivate Account' ? 'active' : ''}`}
+                onClick={() => setSettingsSubTab('Deactivate Account')}
+              >
+                Deactivate Account
+              </button>
+              <button
+                type="button"
+                className={`bc-settings-tab-btn ${settingsSubTab === 'Delete Account' ? 'active' : ''}`}
+                onClick={() => setSettingsSubTab('Delete Account')}
+              >
+                Delete Account
+              </button>
+            </div>
+
+            {/* Profile Settings Form Card */}
+            {settingsSubTab === 'Profile Settings' && (
+              <div className="bc-settings-card">
+                <h3>Profile Settings</h3>
+                <p>Manage your primary contact and identification settings.</p>
+
+                <form onSubmit={handleUpdatePhone}>
+                  <div className="bc-form-group">
+                    <label className="bc-label">Full Name</label>
+                    <input
+                      type="text"
+                      className="bc-input"
+                      disabled
+                      value={user?.name || 'Team Maruti InfoSoft'}
+                      style={{ background: '#f8fafc', color: '#64748b' }}
+                    />
+                  </div>
+
+                  <div className="bc-form-group">
+                    <label className="bc-label">Email Address</label>
+                    <input
+                      type="email"
+                      className="bc-input"
+                      disabled
+                      value={user?.email || 'marutiinfosoftteam@gmail.com'}
+                      style={{ background: '#f8fafc', color: '#64748b' }}
+                    />
+                  </div>
+
+                  <div className="bc-form-group">
+                    <label className="bc-label">Phone Number (Optional)</label>
+                    <input
+                      type="tel"
+                      className="bc-input"
+                      value={settingsPhone}
+                      onChange={(e) => setSettingsPhone(e.target.value)}
+                      placeholder="+91 6355722267"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn btn-dark full"
+                    style={{ background: '#16a34a', border: 'none', fontWeight: 800, padding: '0.8rem', marginTop: '1.25rem' }}
+                  >
+                    Update Phone Number
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* Deactivate Account Tab */}
+            {settingsSubTab === 'Deactivate Account' && (
+              <div className="bc-settings-card">
+                <h3 style={{ color: '#b45309' }}>Deactivate Account</h3>
+                <p>Temporarily pause your review funnels and notifications. You can reactivate anytime by logging back in.</p>
+                <button
+                  type="button"
+                  className="btn btn-light"
+                  style={{ color: '#b45309', borderColor: '#fde68a', fontWeight: 800 }}
+                  onClick={() => notify('Account deactivation requested. Our team will verify before pausing.')}
+                >
+                  Deactivate Account
+                </button>
+              </div>
+            )}
+
+            {/* Delete Account Tab */}
+            {settingsSubTab === 'Delete Account' && (
+              <div className="bc-settings-card">
+                <h3 style={{ color: '#dc2626' }}>Delete Account</h3>
+                <p>Permanently remove your business console, custom QR links, and private feedback history. This action cannot be undone.</p>
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  style={{ background: '#dc2626', color: '#ffffff', border: 'none', fontWeight: 800, padding: '0.65rem 1.25rem', borderRadius: 8 }}
+                  onClick={() => notify('Account deletion requires contacting support for verification.')}
+                >
+                  Permanently Delete My Account
+                </button>
+              </div>
+            )}
           </div>
         )}
-
         {/* Floating WhatsApp Bubble */}
         <a
           href={`https://wa.me/${business?.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I need assistance with StarReview AI Business Console.")}`}

@@ -4276,3 +4276,438 @@
   margin-top: 0.35rem;
   display: block;
 }
+
+
+/* ==========================================================================
+   BILLING & PLANS (SCREENSHOTS 1, 2, 3) & SETTINGS (SCREENSHOT 4)
+   ========================================================================== */
+
+/* Status Card */
+.bc-status-card {
+  background: #ffffff;
+  border: 1.5px solid var(--bc-border);
+  border-radius: 16px;
+  padding: 1.25rem 1.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+.bc-status-left h3 {
+  font-size: 1.35rem;
+  font-weight: 900;
+  margin: 0.25rem 0 0 0;
+  color: #0f172a;
+}
+.bc-status-left small {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 600;
+}
+.bc-status-stats {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.bc-status-stat-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  text-align: center;
+  min-width: 100px;
+}
+.bc-status-stat-box .stat-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+.bc-status-stat-box .stat-val {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* Billing Toggle Switch */
+.bc-billing-toggle-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1.25rem 0 2rem;
+}
+.bc-billing-toggle {
+  background: #e2e8f0;
+  padding: 4px;
+  border-radius: 999px;
+  display: flex;
+  gap: 4px;
+}
+.bc-billing-toggle-btn {
+  border: none;
+  background: none;
+  border-radius: 999px;
+  padding: 0.45rem 1.15rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: all 0.15s;
+}
+.bc-billing-toggle-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+.bc-toggle-pill {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+.bc-toggle-pill.std {
+  background: #f1f5f9;
+  color: #475569;
+}
+.bc-toggle-pill.pro {
+  background: #fef08a;
+  color: #854d0e;
+}
+
+/* 3 Billing Cards */
+.bc-billing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.35rem;
+  margin-bottom: 2rem;
+  align-items: stretch;
+}
+.bc-billing-card {
+  background: #ffffff;
+  border: 1.5px solid var(--bc-border);
+  border-radius: 18px;
+  padding: 1.65rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.bc-billing-card.featured {
+  border: 2px solid #ea580c;
+  box-shadow: 0 8px 25px rgba(234, 88, 12, 0.08);
+}
+.bc-billing-badge-top {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  padding: 0.25rem 0.85rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.bc-billing-badge-top.green {
+  background: #15803d;
+  color: #ffffff;
+}
+.bc-billing-badge-top.orange {
+  background: #ea580c;
+  color: #ffffff;
+}
+.bc-billing-badge-top.outline-green {
+  background: #15803d;
+  color: #ffffff;
+}
+.bc-billing-card h4 {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0.35rem 0 0.2rem 0;
+}
+.bc-billing-card-sub {
+  font-size: 0.76rem;
+  color: #64748b;
+  margin: 0 0 1rem 0;
+  line-height: 1.35;
+}
+.bc-billing-price-row {
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.bc-billing-price-row .price {
+  font-size: 1.85rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+.bc-billing-price-row .sub-price {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+.bc-billing-ai-notice {
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-bottom: 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.bc-billing-ai-notice.off {
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #dc2626;
+}
+.bc-billing-ai-notice.on {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+}
+.bc-multi-highlight-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 0.75rem 0.85rem;
+  margin-bottom: 1.15rem;
+  font-size: 0.74rem;
+  color: #166534;
+  line-height: 1.4;
+}
+.bc-billing-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  font-size: 0.76rem;
+  color: #334155;
+}
+.bc-billing-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.bc-billing-features li i {
+  color: #16a34a;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.bc-billing-micro {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-align: center;
+  margin-bottom: 0.65rem;
+}
+
+/* 4 Value Badges Strip */
+.bc-billing-badges-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.bc-bb-item {
+  background: #ffffff;
+  border: 1px solid var(--bc-border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+.bc-bb-item i {
+  font-size: 1rem;
+  color: #16a34a;
+  flex-shrink: 0;
+}
+.bc-bb-text strong {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.bc-bb-text small {
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+/* FAQ Box */
+.bc-billing-faq-box {
+  background: #ffffff;
+  border: 1px solid var(--bc-border);
+  border-radius: 20px;
+  padding: 1.75rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+.bc-faq-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+.bc-faq-header h3 {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.bc-faq-header p {
+  font-size: 0.76rem;
+  color: #64748b;
+  margin: 0;
+}
+.bc-faq-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.15rem;
+}
+.bc-faq-item-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.15rem;
+}
+.bc-faq-item-card strong {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 0.45rem;
+}
+.bc-faq-item-card p {
+  font-size: 0.76rem;
+  color: #64748b;
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Transaction & Invoice History */
+.bc-billing-history-box {
+  background: #ffffff;
+  border: 1px solid var(--bc-border);
+  border-radius: 20px;
+  padding: 1.75rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+.bc-empty-history {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #94a3b8;
+}
+.bc-empty-history i {
+  font-size: 2.2rem;
+  color: #cbd5e1;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+.bc-empty-history strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #334155;
+  margin-bottom: 0.25rem;
+}
+.bc-empty-history p {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Support Bottom Strip */
+.bc-billing-support-strip {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 16px;
+  padding: 1.25rem 1.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.bc-bss-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+.bc-bss-left i {
+  font-size: 1.6rem;
+  color: #16a34a;
+}
+.bc-bss-left strong {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #14532d;
+  margin-bottom: 0.15rem;
+}
+.bc-bss-left p {
+  font-size: 0.76rem;
+  color: #166534;
+  margin: 0;
+}
+
+/* SETTINGS (SCREENSHOT 4) */
+.bc-settings-subtabs {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1.5rem;
+}
+.bc-settings-tab-btn {
+  background: #ffffff;
+  border: 1px solid var(--bc-border);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #64748b;
+  padding: 0.5rem 1.15rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.bc-settings-tab-btn.active {
+  background: #ffffff;
+  color: #15803d;
+  font-weight: 800;
+  border-color: #22c55e;
+  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.15);
+}
+.bc-settings-card {
+  background: #ffffff;
+  border: 1px solid var(--bc-border);
+  border-radius: 18px;
+  padding: 2rem 2.25rem;
+  max-width: 620px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+.bc-settings-card h3 {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+}
+.bc-settings-card p {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0 0 1.5rem 0;
+}
