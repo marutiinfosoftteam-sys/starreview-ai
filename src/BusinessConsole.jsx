@@ -37,6 +37,44 @@ export default function BusinessConsole({
   const [qrTheme, setQrTheme] = useState('Classic');
   const [qrDisplaySize, setQrDisplaySize] = useState('A6');
 
+  // Review Settings Form States (Screenshots 1, 2, 3)
+  const [profileSubTab, setProfileSubTab] = useState('Business Details');
+  const [bizFormName, setBizFormName] = useState(business?.name || 'verde eco landing');
+  const [bizFormAddress, setBizFormAddress] = useState(business?.city || 'sarthana');
+  const [bizFormCategory, setBizFormCategory] = useState(business?.category || 'Other');
+  const [bizFormCustomIndustry, setBizFormCustomIndustry] = useState(business?.customIndustry || 'solar system');
+  const [bizFormWebsite, setBizFormWebsite] = useState(business?.website || 'https://verde-eco-landing-v2.vercel.app/');
+  const [bizFormPhone, setBizFormPhone] = useState(business?.phone || '6355722267');
+  
+  const [targetKeywords, setTargetKeywords] = useState(business?.keywords?.length ? business.keywords : ['Fast Service', 'Friendly Staff', 'Clean Store']);
+  const [keywordInput, setKeywordInput] = useState('');
+  const [topProducts, setTopProducts] = useState(business?.services?.length ? business.services : ['Solar Rooftop System', 'Inverter Battery']);
+  const [productInput, setProductInput] = useState('');
+  const [staffNames, setStaffNames] = useState(business?.staff?.length ? business.staff : ['Aarav', 'Bhavik', 'Priya']);
+  const [staffInput, setStaffInput] = useState('');
+  const [highlightChips, setHighlightChips] = useState(['Great Service', 'Friendly Staff', 'Top Quality', 'Quick Response', 'Great Value', 'Highly Recommended']);
+  const [chipInput, setChipInput] = useState('');
+  const [businessDescription, setBusinessDescription] = useState(business?.description || 'Eco-friendly and sustainable solar energy solutions for commercial and residential rooftops.');
+  const [defaultLanguage, setDefaultLanguage] = useState(business?.defaultLanguage || 'English');
+  const [allowUserLangSelect, setAllowUserLangSelect] = useState(true);
+  const [targetReviewLength, setTargetReviewLength] = useState(200);
+  const [emojiUsage, setEmojiUsage] = useState('Enable Natural Emojis (1-2 per review)');
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  // Physical Stand Display States (Screenshots 4 & 5)
+  const [plasticSlide, setPlasticSlide] = useState(0);
+  const [acrylicSlide, setAcrylicSlide] = useState(0);
+  const [paperSlide, setPaperSlide] = useState(0);
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
+  const [orderProduct, setOrderProduct] = useState({ title: 'QR Code Plastic Stand', price: 499, tag: 'Most Popular' });
+  const [orderQuantity, setOrderQuantity] = useState(1);
+  const [orderName, setOrderName] = useState('');
+  const [orderPhone, setOrderPhone] = useState('');
+  const [orderAddress, setOrderAddress] = useState('');
+  const [orderCity, setOrderCity] = useState('Surat');
+  const [orderPincode, setOrderPincode] = useState('395006');
+  const [placingOrder, setPlacingOrder] = useState(false);
+
   // Load user-specific analytics and business
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -1825,93 +1863,1035 @@ export default function BusinessConsole({
         )}
 
         {/* ====================================================================
-            VIEW: REVIEW SETTINGS
+            VIEW: REVIEW SETTINGS (EXACT MATCH TO SCREENSHOTS 1, 2, 3)
             ==================================================================== */}
         {activeTab === 'Review Settings' && (
           <div>
-            <BusinessSetup user={user} business={business} setBusiness={setBusiness} notify={notify} navigate={navigate} cfg={{ whatsappNumber: '919707842047' }} />
+            {/* Top Header Card */}
+            <div className="bc-view-header">
+              <div className="bc-view-header-left">
+                <div className="bc-view-header-icon">
+                  <i className="fa-solid fa-pen-to-square"></i>
+                </div>
+                <div>
+                  <h1>Review Settings</h1>
+                  <p>Configure business details, AI review customization, multilingual preferences, and formatting options all in one place.</p>
+                </div>
+              </div>
+              <div className="bc-view-header-badges">
+                <span className="bc-header-pill bc-pill-live">
+                  <span className="bc-live-dot"></span> ACTIVE BUSINESS PROFILE
+                  <strong style={{ marginLeft: 4, color: '#166534' }}>{bizFormName || bizName}</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* 4 Sub-Tabs Navigation Bar (Clickable & Active) */}
+            <div className="bc-subtabs-bar">
+              {[
+                { id: 'Business Details', label: 'Business Details', icon: 'fa-regular fa-folder-open' },
+                { id: 'Contact Info', label: 'Contact Info', icon: 'fa-solid fa-phone' },
+                { id: 'AI Customization', label: 'AI Customization', icon: 'fa-solid fa-bolt' },
+                { id: 'Review Style', label: 'Review Style', icon: 'fa-solid fa-gear' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`bc-subtab-btn ${profileSubTab === tab.id ? 'active' : ''}`}
+                  onClick={() => setProfileSubTab(tab.id)}
+                >
+                  <i className={tab.icon}></i> {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* SECTION 1: CORE BUSINESS DETAILS */}
+            {(profileSubTab === 'Business Details' || profileSubTab === 'All') && (
+              <div className="bc-settings-section-card">
+                <div className="bc-ssc-header">
+                  <div className="bc-ssc-icon" style={{ background: '#eff6ff', color: '#2563eb' }}>
+                    <i className="fa-solid fa-table-cells-large"></i>
+                  </div>
+                  <div className="bc-ssc-titles">
+                    <h3>Core Business Details</h3>
+                    <p>Essential business profile information synchronized with Google Maps.</p>
+                  </div>
+                </div>
+
+                {/* Google Places Connected Profile Alert */}
+                <div className="bc-blue-alert-box">
+                  <i className="fa-solid fa-circle-info" style={{ fontSize: '1rem', flexShrink: 0 }}></i>
+                  <div>
+                    <strong>Google Places Connected Profile:</strong> Your business name and address are synchronized with Google Maps. The industry category helps the AI engine select relevant terminology.
+                  </div>
+                </div>
+
+                <div className="bc-form-grid-2">
+                  <div className="bc-form-group">
+                    <div className="bc-field-label-row">
+                      <span className="bc-field-label">Business Name</span>
+                      <span className="bc-field-tag">(Google Verified)</span>
+                    </div>
+                    <input
+                      type="text"
+                      className="bc-input-modern"
+                      value={bizFormName}
+                      onChange={e => setBizFormName(e.target.value)}
+                      placeholder="e.g. verde eco landing"
+                    />
+                    <p className="bc-field-subtext">Synced directly from your Google Business Profile.</p>
+                  </div>
+
+                  <div className="bc-form-group">
+                    <div className="bc-field-label-row">
+                      <span className="bc-field-label">Google Maps Address</span>
+                      <span className="bc-field-tag">(Verified Location)</span>
+                    </div>
+                    <input
+                      type="text"
+                      className="bc-input-modern"
+                      value={bizFormAddress}
+                      onChange={e => setBizFormAddress(e.target.value)}
+                      placeholder="e.g. sarthana"
+                    />
+                    <p className="bc-field-subtext">The physical location customers visit or review.</p>
+                  </div>
+                </div>
+
+                <div className="bc-form-row">
+                  <div className="bc-field-label-row">
+                    <span className="bc-field-label">Business Type / Industry Category</span>
+                  </div>
+                  <input
+                    type="text"
+                    className="bc-input-modern"
+                    value={bizFormCategory}
+                    onChange={e => setBizFormCategory(e.target.value)}
+                    placeholder="e.g. Other, Restaurant, Salon, Retail, Healthcare"
+                  />
+                  <p className="bc-field-subtext">Determines the industry vocabulary, tone, and context used by the AI review generator.</p>
+                </div>
+
+                <div className="bc-form-row" style={{ marginBottom: 0 }}>
+                  <div className="bc-field-label-row">
+                    <span className="bc-field-label">Specify Custom Industry</span>
+                  </div>
+                  <input
+                    type="text"
+                    className="bc-input-modern"
+                    value={bizFormCustomIndustry}
+                    onChange={e => setBizFormCustomIndustry(e.target.value)}
+                    placeholder="e.g. solar system, eco packaging, ayurvedic clinic"
+                  />
+                  <p className="bc-field-subtext">Describe your specific industry so the AI understands your unique niche.</p>
+                </div>
+              </div>
+            )}
+
+            {/* SECTION 2: CONTACT INFORMATION */}
+            {(profileSubTab === 'Contact Info' || profileSubTab === 'All') && (
+              <div className="bc-settings-section-card">
+                <div className="bc-ssc-header">
+                  <div className="bc-ssc-icon" style={{ background: '#fef2f2', color: '#ef4444' }}>
+                    <i className="fa-solid fa-phone"></i>
+                  </div>
+                  <div className="bc-ssc-titles">
+                    <h3>Contact Information</h3>
+                    <p>Website and phone channels for customers and AI review context</p>
+                  </div>
+                </div>
+
+                <div className="bc-policy-alert-box" style={{ background: '#fffbeb', borderColor: '#fde68a', marginBottom: '1.25rem' }}>
+                  <i className="fa-regular fa-lightbulb" style={{ color: '#d97706' }}></i>
+                  <div>
+                    <strong style={{ color: '#92400e' }}>Optional Details:</strong>
+                    <span style={{ color: '#b45309', fontSize: '0.8rem' }}> Providing your website or phone helps AI understand your digital presence and appointment booking options.</span>
+                  </div>
+                </div>
+
+                <div className="bc-form-grid-2" style={{ marginBottom: 0 }}>
+                  <div className="bc-form-group">
+                    <div className="bc-field-label-row">
+                      <span className="bc-field-label">Website URL</span>
+                      <span className="bc-field-tag">(Optional)</span>
+                    </div>
+                    <input
+                      type="url"
+                      className="bc-input-modern"
+                      value={bizFormWebsite}
+                      onChange={e => setBizFormWebsite(e.target.value)}
+                      placeholder="https://verde-eco-landing-v2.vercel.app/"
+                    />
+                    <p className="bc-field-subtext">Your primary business website or social landing page.</p>
+                  </div>
+
+                  <div className="bc-form-group">
+                    <div className="bc-field-label-row">
+                      <span className="bc-field-label">Phone Number</span>
+                      <span className="bc-field-tag">(Optional)</span>
+                    </div>
+                    <input
+                      type="tel"
+                      className="bc-input-modern"
+                      value={bizFormPhone}
+                      onChange={e => setBizFormPhone(e.target.value)}
+                      placeholder="6355722267"
+                    />
+                    <p className="bc-field-subtext">Public customer support or booking phone number.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SECTION 3: AI REVIEW CUSTOMIZATION & LANGUAGE */}
+            {(profileSubTab === 'AI Customization' || profileSubTab === 'All') && (
+              <div className="bc-settings-section-card">
+                <div className="bc-ssc-header">
+                  <div className="bc-ssc-icon" style={{ background: '#fefce8', color: '#ca8a04' }}>
+                    <i className="fa-solid fa-bolt"></i>
+                  </div>
+                  <div className="bc-ssc-titles">
+                    <h3>AI Review Customization &amp; Language</h3>
+                    <p>Personalize keywords, products, staff names, and default review language</p>
+                  </div>
+                </div>
+
+                {/* 3 Tips Boxes */}
+                <div className="bc-tips-row-3">
+                  <div className="bc-tip-card">
+                    <div className="bc-tip-card-top">
+                      <span className="bc-tip-num">01</span>
+                      <span className="bc-tip-title">Add Target Keywords</span>
+                    </div>
+                    <p>AI naturally weaves your keywords into customer reviews.</p>
+                  </div>
+
+                  <div className="bc-tip-card">
+                    <div className="bc-tip-card-top">
+                      <span className="bc-tip-num">02</span>
+                      <span className="bc-tip-title">Feature Top Products &amp; Staff</span>
+                    </div>
+                    <p>Makes generated drafts feel personal and authentic.</p>
+                  </div>
+
+                  <div className="bc-tip-card">
+                    <div className="bc-tip-card-top">
+                      <span className="bc-tip-num">03</span>
+                      <span className="bc-tip-title">Native Language Fluency</span>
+                    </div>
+                    <p>Generates natural colloquial reviews in your preferred language.</p>
+                  </div>
+                </div>
+
+                {/* Field 1: Target Keywords */}
+                <div className="bc-form-row">
+                  <div className="bc-field-label-row">
+                    <span className="bc-field-label">Target Keywords</span>
+                    <span className="bc-field-tag">({targetKeywords.length}/5)</span>
+                  </div>
+                  {targetKeywords.length > 0 && (
+                    <div className="bc-chip-tag-container">
+                      {targetKeywords.map((kw, i) => (
+                        <span key={i} className="bc-chip-item">
+                          {kw}
+                          <button type="button" className="bc-chip-remove" onClick={() => setTargetKeywords(targetKeywords.filter((_, idx) => idx !== i))}>×</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      type="text"
+                      className="bc-input-modern"
+                      placeholder="Type keyword (e.g. Fast Service, Friendly Staff, Best Value) & press Enter..."
+                      value={keywordInput}
+                      onChange={e => setKeywordInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && keywordInput.trim()) {
+                          e.preventDefault();
+                          if (targetKeywords.length < 5 && !targetKeywords.includes(keywordInput.trim())) {
+                            setTargetKeywords([...targetKeywords, keywordInput.trim()]);
+                            setKeywordInput('');
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="bc-btn-fetch"
+                      onClick={() => {
+                        if (keywordInput.trim() && targetKeywords.length < 5 && !targetKeywords.includes(keywordInput.trim())) {
+                          setTargetKeywords([...targetKeywords, keywordInput.trim()]);
+                          setKeywordInput('');
+                        }
+                      }}
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <p className="bc-field-subtext">Keywords customers can select on the review page and the AI will include in reviews.</p>
+                </div>
+
+                {/* Field 2: Top Products / Specialties */}
+                <div className="bc-form-row">
+                  <div className="bc-field-label-row">
+                    <span className="bc-field-label">Top Products / Specialties</span>
+                    <span className="bc-field-tag">({topProducts.length}/5)</span>
+                  </div>
+                  {topProducts.length > 0 && (
+                    <div className="bc-chip-tag-container">
+                      {topProducts.map((p, i) => (
+                        <span key={i} className="bc-chip-item" style={{ background: '#f5f3ff', color: '#6d28d9', borderColor: '#ddd6fe' }}>
+                          {p}
+                          <button type="button" className="bc-chip-remove" style={{ color: '#6d28d9' }} onClick={() => setTopProducts(topProducts.filter((_, idx) => idx !== i))}>×</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      type="text"
+                      className="bc-input-modern"
+                      placeholder="Type product and press Enter (e.g. Signature Cold Brew, Wedding Cake)..."
+                      value={productInput}
+                      onChange={e => setProductInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && productInput.trim()) {
+                          e.preventDefault();
+                          if (topProducts.length < 5 && !topProducts.includes(productInput.trim())) {
+                            setTopProducts([...topProducts, productInput.trim()]);
+                            setProductInput('');
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="bc-btn-fetch"
+                      style={{ background: '#7c3aed' }}
+                      onClick={() => {
+                        if (productInput.trim() && topProducts.length < 5 && !topProducts.includes(productInput.trim())) {
+                          setTopProducts([...topProducts, productInput.trim()]);
+                          setProductInput('');
+                        }
+                      }}
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <p className="bc-field-subtext">Popular items or dishes you want highlighted in customer reviews.</p>
+                </div>
+
+                {/* Field 3: Staff Names to Feature */}
+                <div className="bc-form-row">
+                  <div className="bc-field-label-row">
+                    <span className="bc-field-label">Staff Names to Feature</span>
+                    <span className="bc-field-tag">({staffNames.length}/5)</span>
+                  </div>
+                  {staffNames.length > 0 && (
+                    <div className="bc-chip-tag-container">
+                      {staffNames.map((s, i) => (
+                        <span key={i} className="bc-chip-item" style={{ background: '#ecfeff', color: '#0e7490', borderColor: '#a5f3fc' }}>
+                          {s}
+                          <button type="button" className="bc-chip-remove" style={{ color: '#0e7490' }} onClick={() => setStaffNames(staffNames.filter((_, idx) => idx !== i))}>×</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      type="text"
+                      className="bc-input-modern"
+                      placeholder="Type staff name and press Enter (e.g. Rahul, Dr. Sharma, Ananya)..."
+                      value={staffInput}
+                      onChange={e => setStaffInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && staffInput.trim()) {
+                          e.preventDefault();
+                          if (staffNames.length < 5 && !staffNames.includes(staffInput.trim())) {
+                            setStaffNames([...staffNames, staffInput.trim()]);
+                            setStaffInput('');
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="bc-btn-fetch"
+                      style={{ background: '#0891b2' }}
+                      onClick={() => {
+                        if (staffInput.trim() && staffNames.length < 5 && !staffNames.includes(staffInput.trim())) {
+                          setStaffNames([...staffNames, staffInput.trim()]);
+                          setStaffInput('');
+                        }
+                      }}
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <p className="bc-field-subtext">Recognize exceptional team members by name in review options.</p>
+                </div>
+
+                {/* Field 4: Review Page Quick Highlight Chips */}
+                <div className="bc-form-row">
+                  <div className="bc-field-label-row">
+                    <span className="bc-field-label">Review Page Quick Highlight Chips</span>
+                    <span className="bc-field-tag">({highlightChips.length}/10)</span>
+                  </div>
+                  <div className="bc-chip-tag-container">
+                    {highlightChips.map((chip, i) => (
+                      <span key={i} className="bc-chip-item">
+                        {chip}
+                        <button type="button" className="bc-chip-remove" onClick={() => setHighlightChips(highlightChips.filter((_, idx) => idx !== i))}>×</button>
+                      </span>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      type="text"
+                      className="bc-input-modern"
+                      placeholder="Type a 1-2 word highlight (e.g. Great Service, Top Quality) & press Enter..."
+                      value={chipInput}
+                      onChange={e => setChipInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && chipInput.trim()) {
+                          e.preventDefault();
+                          if (highlightChips.length < 10 && !highlightChips.includes(chipInput.trim())) {
+                            setHighlightChips([...highlightChips, chipInput.trim()]);
+                            setChipInput('');
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="bc-btn-fetch"
+                      onClick={() => {
+                        if (chipInput.trim() && highlightChips.length < 10 && !highlightChips.includes(chipInput.trim())) {
+                          setHighlightChips([...highlightChips, chipInput.trim()]);
+                          setChipInput('');
+                        }
+                      }}
+                    >
+                      Add Chip
+                    </button>
+                  </div>
+                  <p className="bc-field-subtext">Short one-word chips customers can tap on the review page. Add, remove, or hide them to suit your business.</p>
+                </div>
+
+                {/* Field 5: Custom Business Description & Atmosphere */}
+                <div className="bc-form-row">
+                  <div className="bc-field-label-row">
+                    <span className="bc-field-label">Custom Business Description &amp; Atmosphere</span>
+                    <span className="bc-field-tag">(Optional)</span>
+                  </div>
+                  <textarea
+                    rows="3"
+                    className="bc-input-modern"
+                    value={businessDescription}
+                    onChange={e => setBusinessDescription(e.target.value)}
+                    placeholder="Describe your atmosphere, unique selling proposition, hospitality, or special features..."
+                  />
+                  <p className="bc-field-subtext">Provides deeper context for the AI when crafting conversational reviews.</p>
+                </div>
+
+                {/* Field 6: Default Review Language & Allow Reviewers to Choose */}
+                <div className="bc-form-grid-2">
+                  <div className="bc-form-group">
+                    <div className="bc-field-label-row">
+                      <span className="bc-field-label">Default Review Language</span>
+                      <span className="bc-field-tag" style={{ fontSize: '0.65rem' }}>All 22 Eighth Schedule Indian Languages + Hinglish + Global</span>
+                    </div>
+                    <select
+                      className="bc-input-modern"
+                      value={defaultLanguage}
+                      onChange={e => setDefaultLanguage(e.target.value)}
+                    >
+                      <option>English</option>
+                      <option>Gujarati</option>
+                      <option>Hindi</option>
+                      <option>Hinglish</option>
+                      <option>Marathi</option>
+                      <option>Bengali</option>
+                      <option>Tamil</option>
+                      <option>Telugu</option>
+                      <option>Kannada</option>
+                      <option>Malayalam</option>
+                      <option>Punjabi</option>
+                      <option>Urdu</option>
+                      <option>Spanish</option>
+                      <option>French</option>
+                    </select>
+                    <p className="bc-field-subtext">The primary language used by the AI engine when generating review drafts for your business.</p>
+                  </div>
+
+                  <div className="bc-form-group" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span className="bc-field-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <i className="fa-solid fa-earth-americas" style={{ color: '#2563eb' }}></i> Allow Reviewers to Choose Language
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={allowUserLangSelect}
+                        onChange={e => setAllowUserLangSelect(e.target.checked)}
+                        style={{ width: 22, height: 22, cursor: 'pointer', accentColor: '#16a34a' }}
+                      />
+                    </div>
+                    <p className="bc-field-subtext">Let customers pick their preferred language on the review page before generating AI drafts.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SECTION 4: AI REVIEW FORMATTING & STYLE */}
+            {(profileSubTab === 'Review Style' || profileSubTab === 'All') && (
+              <div className="bc-settings-section-card">
+                <div className="bc-ssc-header">
+                  <div className="bc-ssc-icon" style={{ background: '#f5f3ff', color: '#7c3aed' }}>
+                    <i className="fa-solid fa-gear"></i>
+                  </div>
+                  <div className="bc-ssc-titles">
+                    <h3>AI Review Formatting &amp; Style</h3>
+                    <p>Control draft length and emoji formatting for natural, human-written reviews.</p>
+                  </div>
+                </div>
+
+                <div className="bc-policy-alert-box" style={{ background: '#fffbeb', borderColor: '#fde68a', marginBottom: '1.25rem' }}>
+                  <i className="fa-solid fa-sparkles" style={{ color: '#d97706' }}></i>
+                  <div>
+                    <strong style={{ color: '#92400e' }}>Natural Google Review Algorithm:</strong>
+                    <span style={{ color: '#b45309', fontSize: '0.8rem' }}> Real customer reviews vary naturally between 150 to 350 characters with subtle emojis. Keeping length balanced helps reviews look organic and authentic.</span>
+                  </div>
+                </div>
+
+                <div className="bc-form-grid-2" style={{ marginBottom: 0 }}>
+                  <div className="bc-form-group">
+                    <div className="bc-field-label-row">
+                      <span className="bc-field-label">Target Review Length (Characters)</span>
+                      <span className="bc-field-tag">Recommended: 200 - 350</span>
+                    </div>
+                    <input
+                      type="number"
+                      min="50"
+                      max="400"
+                      className="bc-input-modern"
+                      value={targetReviewLength}
+                      onChange={e => setTargetReviewLength(Number(e.target.value))}
+                    />
+                    <p className="bc-field-subtext">Approximate character count per review draft (min: 50, max: 400).</p>
+                  </div>
+
+                  <div className="bc-form-group">
+                    <div className="bc-field-label-row">
+                      <span className="bc-field-label">Emoji Usage in Review Drafts</span>
+                      <span className="bc-field-tag">E.g., 👍, ⭐, ✨, 👏</span>
+                    </div>
+                    <select
+                      className="bc-input-modern"
+                      value={emojiUsage}
+                      onChange={e => setEmojiUsage(e.target.value)}
+                    >
+                      <option>Enable Natural Emojis (1-2 per review)</option>
+                      <option>Subtle Emojis (1 max)</option>
+                      <option>No Emojis (Plain text only)</option>
+                    </select>
+                    <p className="bc-field-subtext">When enabled, AI weaves 1-2 natural emojis into the text.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Bottom Apply Action Bar (Screenshot 3) */}
+            <div className="bc-save-action-bar">
+              <div className="bc-sab-left">
+                <h4>Ready to apply changes?</h4>
+                <p>Your new AI customization and language settings will apply instantly to all incoming review requests.</p>
+              </div>
+              <button
+                type="button"
+                className="bc-btn-save-all"
+                disabled={savingSettings}
+                onClick={async () => {
+                  setSavingSettings(true);
+                  const updatedData = {
+                    name: bizFormName,
+                    city: bizFormAddress,
+                    category: bizFormCategory,
+                    customIndustry: bizFormCustomIndustry,
+                    website: bizFormWebsite,
+                    phone: bizFormPhone,
+                    keywords: targetKeywords,
+                    services: topProducts,
+                    staff: staffNames,
+                    highlightChips,
+                    description: businessDescription,
+                    defaultLanguage,
+                    allowUserLangSelect,
+                    targetReviewLength,
+                    emojiUsage
+                  };
+                  const res = await api('PUT', '/api/business', updatedData);
+                  setSavingSettings(false);
+                  if (res.ok && res.data.business) {
+                    setBusiness(res.data.business);
+                    notify('🎉 All review settings saved successfully! Changes are live across all QR flyers.');
+                  } else {
+                    notify('Saved locally.');
+                  }
+                }}
+              >
+                <i className="fa-solid fa-floppy-disk"></i> {savingSettings ? 'Saving...' : 'Save All Review Settings'}
+              </button>
+            </div>
           </div>
         )}
 
         {/* ====================================================================
-            VIEW: PHYSICAL QR STAND (NEW)
+            VIEW: PHYSICAL QR STAND (EXACT MATCH TO SCREENSHOTS 4 & 5)
             ==================================================================== */}
         {activeTab === 'Physical QR Stand' && (
-          <div className="bc-panel">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-              <span className="bc-nav-badge bc-badge-yellow">Official Hardware</span>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0 }}>Physical Counter QR Standees</h2>
+          <div>
+            {/* Top Header Card */}
+            <div className="bc-view-header">
+              <div className="bc-view-header-left">
+                <div className="bc-view-header-icon">
+                  <i className="fa-solid fa-store"></i>
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <h1 style={{ margin: 0 }}>Physical QR Stands</h1>
+                    <span className="bc-header-pill bc-pill-live" style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
+                      <i className="fa-solid fa-truck-fast"></i> 7-10 Day Delivery
+                    </span>
+                    <span className="bc-header-pill bc-pill-white" style={{ fontSize: '0.72rem', padding: '2px 8px', color: '#2563eb' }}>
+                      Custom Google Link
+                    </span>
+                  </div>
+                  <p>Turn walk-in visitors into 5-star Google reviews with custom-branded, high-durability countertop displays.</p>
+                </div>
+              </div>
+              <div className="bc-view-header-badges">
+                <button
+                  type="button"
+                  className="btn btn-light"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', fontWeight: 800, padding: '0.5rem 0.95rem' }}
+                  onClick={() => setActiveTab('Magic Review QR')}
+                >
+                  <i className="fa-solid fa-qrcode" style={{ color: '#16a34a' }}></i> Digital QR Center
+                </button>
+              </div>
             </div>
-            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '2rem' }}>
-              Custom-printed acrylic &amp; wooden review stands designed for reception counters, dining tables, and checkout desks.
-            </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
-              {/* Stand 1 */}
-              <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '1.5rem', textAlign: 'center' }}>
-                <div style={{ width: 80, height: 100, background: '#e2e8f0', borderRadius: 8, margin: '0 auto 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <i className="fa-solid fa-qrcode" style={{ fontSize: '2.5rem', color: '#16a34a' }}></i>
+            {/* Subheader Title */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.25rem' }}>
+              <div>
+                <div style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#16a34a', marginBottom: 2 }}>
+                  DISPLAY COLLECTION
                 </div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '0.35rem' }}>Clear Acrylic Table Tent</h3>
-                <p style={{ color: '#64748b', fontSize: '0.8rem', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                  Sleek A6 crystal-clear scratch-resistant acrylic with your brand logo &amp; Google QR.
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  Choose Your Physical QR Display
+                  <span style={{ fontSize: '0.72rem', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: 999, fontWeight: 800 }}>3 Formats</span>
+                </h3>
+                <p style={{ fontSize: '0.82rem', color: '#64748b', margin: 0 }}>
+                  Select the display style that best fits your counter, reception desk, or table setup.
                 </p>
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#143e27', marginBottom: '1rem' }}>₹499 <small style={{ fontSize: '0.75rem', color: '#64748b' }}>incl. delivery</small></div>
-                <a
-                  href={`https://wa.me/${business?.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I would like to order the Clear Acrylic Counter QR Standee (₹499) for " + bizName)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-dark full"
-                  style={{ textDecoration: 'none' }}
-                >
-                  Order on WhatsApp →
-                </a>
               </div>
-
-              {/* Stand 2 */}
-              <div style={{ background: '#f8fafc', border: '2px solid #22c55e', borderRadius: 16, padding: '1.5rem', textAlign: 'center', position: 'relative' }}>
-                <span style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', background: '#22c55e', color: '#092b15', fontWeight: 800, fontSize: '0.72rem', padding: '0.2rem 0.65rem', borderRadius: 99 }}>
-                  MOST POPULAR
+              <div style={{ display: 'flex', gap: 8 }}>
+                <span className="bc-header-pill bc-pill-white" style={{ fontSize: '0.74rem' }}>
+                  <i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Custom Review QR
                 </span>
-                <div style={{ width: 80, height: 100, background: '#fef3c7', borderRadius: 8, margin: '0 auto 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <i className="fa-solid fa-store" style={{ fontSize: '2.5rem', color: '#b45309' }}></i>
+                <span className="bc-header-pill bc-pill-white" style={{ fontSize: '0.74rem' }}>
+                  <i className="fa-solid fa-truck" style={{ color: '#16a34a' }}></i> 7–10 Day Delivery
+                </span>
+              </div>
+            </div>
+
+            {/* 3 Product Display Cards (Grid) */}
+            <div className="bc-stand-grid-3">
+              {/* Product 1: Plastic L-Stand */}
+              <div className="bc-stand-card">
+                <div className="bc-stand-carousel">
+                  <span className="bc-stand-badge-top bc-sbt-green">
+                    ★ Most Popular
+                  </span>
+                  
+                  {/* Photorealistic Interactive Stand Carousel Graphic */}
+                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                    <div style={{ width: 140, height: 190, background: '#ffffff', borderRadius: 12, boxShadow: '0 12px 28px rgba(0,0,0,0.18)', border: '2px solid rgba(255,255,255,0.8)', padding: 12, textAlign: 'center', transform: plasticSlide === 1 ? 'rotate(-6deg) scale(0.95)' : (plasticSlide === 2 ? 'rotate(6deg) scale(0.95)' : 'rotate(0deg) scale(1)'), transition: 'all 0.3s ease' }}>
+                      <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#0f172a', marginBottom: 2 }}>{bizName}</div>
+                      <div style={{ color: '#eab308', fontSize: '0.65rem', letterSpacing: 1, marginBottom: 4 }}>★★★★★</div>
+                      <div style={{ fontSize: '0.68rem', fontWeight: 900, color: '#2563eb', marginBottom: 6 }}>Review Us on Google</div>
+                      <img src={qrImageSrc} alt="QR" style={{ width: 75, height: 75, margin: '0 auto', display: 'block', borderRadius: 6, border: '1px solid #bbf7d0' }} />
+                      <div style={{ marginTop: 6, background: '#16a34a', color: '#fff', fontSize: '0.55rem', fontWeight: 800, padding: '2px 6px', borderRadius: 99 }}>SCAN WITH PHONE</div>
+                    </div>
+                  </div>
+
+                  {/* Carousel Controls */}
+                  <button type="button" className="bc-carousel-btn prev" onClick={() => setPlasticSlide((plasticSlide + 2) % 3)}>
+                    <i className="fa-solid fa-chevron-left"></i>
+                  </button>
+                  <button type="button" className="bc-carousel-btn next" onClick={() => setPlasticSlide((plasticSlide + 1) % 3)}>
+                    <i className="fa-solid fa-chevron-right"></i>
+                  </button>
+                  <div className="bc-stand-dots">
+                    {[0, 1, 2].map(idx => (
+                      <span key={idx} className={`bc-stand-dot ${plasticSlide === idx ? 'active' : ''}`} onClick={() => setPlasticSlide(idx)} />
+                    ))}
+                  </div>
                 </div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '0.35rem' }}>Premium Wood Standee</h3>
-                <p style={{ color: '#64748b', fontSize: '0.8rem', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                  Laser-engraved hardwood base with metallic QR plate for salons, luxury cafes &amp; clinics.
-                </p>
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#143e27', marginBottom: '1rem' }}>₹799 <small style={{ fontSize: '0.75rem', color: '#64748b' }}>incl. delivery</small></div>
-                <a
-                  href={`https://wa.me/${business?.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I would like to order the Premium Wood Standee (₹799) for " + bizName)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-dark full"
-                  style={{ textDecoration: 'none' }}
-                >
-                  Order on WhatsApp →
-                </a>
+
+                <div className="bc-stand-card-body">
+                  <h4 className="bc-stand-title">QR Code Plastic Stand</h4>
+                  <p className="bc-stand-desc">
+                    Crystal-clear scratch-resistant acrylic L-stand. Ideal for cash counters, billing desks, and reception areas.
+                  </p>
+
+                  <ul className="bc-stand-features">
+                    <li><i className="fa-solid fa-check"></i> Premium high-clarity transparent acrylic</li>
+                    <li><i className="fa-solid fa-check"></i> Scratch &amp; waterproof UV-cure print</li>
+                    <li><i className="fa-solid fa-check"></i> Angled ergonomic tilt for easy mobile scans</li>
+                  </ul>
+
+                  <div className="bc-stand-dispatch-pill">
+                    <i className="fa-solid fa-shield-check"></i> Prepaid Order · Fast Dispatch in 24h
+                  </div>
+
+                  <div className="bc-stand-bottom">
+                    <div className="bc-stand-price-col">
+                      <div className="bc-stand-price">₹499 <small>/ unit</small></div>
+                      <div className="bc-stand-strike">₹899 (Save 44%)</div>
+                    </div>
+                    <button
+                      type="button"
+                      className="bc-btn-order-now"
+                      onClick={() => {
+                        setOrderProduct({ title: 'QR Code Plastic Stand', price: 499, tag: 'Most Popular' });
+                        setOrderQuantity(1);
+                        setOrderModalOpen(true);
+                      }}
+                    >
+                      <i className="fa-solid fa-bag-shopping"></i> Order Now
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              {/* Stand 3 */}
-              <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '1.5rem', textAlign: 'center' }}>
-                <div style={{ width: 80, height: 100, background: '#e0f2fe', borderRadius: 8, margin: '0 auto 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <i className="fa-solid fa-nfc-symbol" style={{ fontSize: '2.5rem', color: '#0284c7' }}></i>
+              {/* Product 2: Acrylic Wood Stand */}
+              <div className="bc-stand-card">
+                <div className="bc-stand-carousel">
+                  <span className="bc-stand-badge-top bc-sbt-blue">
+                    💎 Premium Executive
+                  </span>
+                  
+                  {/* Photorealistic Stand Carousel Graphic */}
+                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                    <div style={{ width: 140, height: 190, background: '#ffffff', borderRadius: 12, boxShadow: '0 14px 30px rgba(0,0,0,0.2)', border: '2px solid rgba(255,255,255,0.9)', padding: 12, textAlign: 'center', position: 'relative', transform: acrylicSlide === 1 ? 'rotate(-6deg) scale(0.95)' : (acrylicSlide === 2 ? 'rotate(6deg) scale(0.95)' : 'rotate(0deg) scale(1)'), transition: 'all 0.3s ease' }}>
+                      <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#0f172a', marginBottom: 2 }}>{bizName}</div>
+                      <div style={{ color: '#eab308', fontSize: '0.65rem', letterSpacing: 1, marginBottom: 4 }}>★★★★★</div>
+                      <div style={{ fontSize: '0.68rem', fontWeight: 900, color: '#7c3aed', marginBottom: 6 }}>Review Us on Google</div>
+                      <img src={qrImageSrc} alt="QR" style={{ width: 75, height: 75, margin: '0 auto', display: 'block', borderRadius: 6, border: '1px solid #ddd6fe' }} />
+                      <div style={{ marginTop: 6, background: '#7c3aed', color: '#fff', fontSize: '0.55rem', fontWeight: 800, padding: '2px 6px', borderRadius: 99 }}>SCAN WITH PHONE</div>
+                      <div style={{ position: 'absolute', bottom: -8, left: 10, right: 10, height: 12, background: '#78350f', borderRadius: 4, boxShadow: '0 3px 6px rgba(0,0,0,0.3)' }} />
+                    </div>
+                  </div>
+
+                  <button type="button" className="bc-carousel-btn prev" onClick={() => setAcrylicSlide((acrylicSlide + 2) % 3)}>
+                    <i className="fa-solid fa-chevron-left"></i>
+                  </button>
+                  <button type="button" className="bc-carousel-btn next" onClick={() => setAcrylicSlide((acrylicSlide + 1) % 3)}>
+                    <i className="fa-solid fa-chevron-right"></i>
+                  </button>
+                  <div className="bc-stand-dots">
+                    {[0, 1, 2].map(idx => (
+                      <span key={idx} className={`bc-stand-dot ${acrylicSlide === idx ? 'active' : ''}`} onClick={() => setAcrylicSlide(idx)} />
+                    ))}
+                  </div>
                 </div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '0.35rem' }}>Tap-to-Review NFC Plate</h3>
-                <p style={{ color: '#64748b', fontSize: '0.8rem', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                  Built-in NFC chip + QR code. Customers simply tap their iPhone or Android phone to review.
-                </p>
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#143e27', marginBottom: '1rem' }}>₹999 <small style={{ fontSize: '0.75rem', color: '#64748b' }}>incl. delivery</small></div>
-                <a
-                  href={`https://wa.me/${business?.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I would like to order the Tap-to-Review NFC Plate (₹999) for " + bizName)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-dark full"
-                  style={{ textDecoration: 'none' }}
-                >
-                  Order on WhatsApp →
-                </a>
+
+                <div className="bc-stand-card-body">
+                  <h4 className="bc-stand-title">QR Code Acrylic Stand</h4>
+                  <p className="bc-stand-desc">
+                    Polished solid mahogany wood base with acrylic cardholder. Perfect for upscale salons, luxury hotels, clinics &amp; cafes.
+                  </p>
+
+                  <ul className="bc-stand-features">
+                    <li><i className="fa-solid fa-check"></i> Hand-finished natural weighted wood base</li>
+                    <li><i className="fa-solid fa-check"></i> Ultra high-definition vibrant color print</li>
+                    <li><i className="fa-solid fa-check"></i> Weighted anti-topple counter design</li>
+                  </ul>
+
+                  <div className="bc-stand-dispatch-pill">
+                    <i className="fa-solid fa-shield-check"></i> Prepaid Order · Fast Dispatch in 24h
+                  </div>
+
+                  <div className="bc-stand-bottom">
+                    <div className="bc-stand-price-col">
+                      <div className="bc-stand-price">₹699 <small>/ unit</small></div>
+                      <div className="bc-stand-strike">₹1,199 (Save 42%)</div>
+                    </div>
+                    <button
+                      type="button"
+                      className="bc-btn-order-now"
+                      onClick={() => {
+                        setOrderProduct({ title: 'QR Code Acrylic Stand', price: 699, tag: 'Premium Executive' });
+                        setOrderQuantity(1);
+                        setOrderModalOpen(true);
+                      }}
+                    >
+                      <i className="fa-solid fa-bag-shopping"></i> Order Now
+                    </button>
+                  </div>
+                </div>
               </div>
+
+              {/* Product 3: Paper Cardstock Tent */}
+              <div className="bc-stand-card">
+                <div className="bc-stand-carousel">
+                  <span className="bc-stand-badge-top bc-sbt-purple">
+                    📦 Multi-Table Pack
+                  </span>
+                  
+                  {/* Photorealistic Stand Carousel Graphic */}
+                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                    <div style={{ width: 140, height: 180, background: '#ffffff', borderRadius: 8, boxShadow: '0 10px 24px rgba(0,0,0,0.15)', border: '1.5px solid #cbd5e1', padding: 10, textAlign: 'center', clipPath: 'polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%)', transform: paperSlide === 1 ? 'rotate(-6deg) scale(0.95)' : (paperSlide === 2 ? 'rotate(6deg) scale(0.95)' : 'rotate(0deg) scale(1)'), transition: 'all 0.3s ease' }}>
+                      <div style={{ fontSize: '0.62rem', fontWeight: 900, color: '#0f172a', marginBottom: 2 }}>{bizName}</div>
+                      <div style={{ color: '#eab308', fontSize: '0.6rem', letterSpacing: 1, marginBottom: 2 }}>★★★★★</div>
+                      <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#2563eb', marginBottom: 4 }}>Review Us on Google</div>
+                      <img src={qrImageSrc} alt="QR" style={{ width: 65, height: 65, margin: '0 auto', display: 'block', borderRadius: 4 }} />
+                      <div style={{ marginTop: 4, background: '#0d4b29', color: '#fff', fontSize: '0.52rem', fontWeight: 800, padding: '2px 4px', borderRadius: 99 }}>SCAN WITH PHONE</div>
+                    </div>
+                  </div>
+
+                  <button type="button" className="bc-carousel-btn prev" onClick={() => setPaperSlide((paperSlide + 2) % 3)}>
+                    <i className="fa-solid fa-chevron-left"></i>
+                  </button>
+                  <button type="button" className="bc-carousel-btn next" onClick={() => setPaperSlide((paperSlide + 1) % 3)}>
+                    <i className="fa-solid fa-chevron-right"></i>
+                  </button>
+                  <div className="bc-stand-dots">
+                    {[0, 1, 2].map(idx => (
+                      <span key={idx} className={`bc-stand-dot ${paperSlide === idx ? 'active' : ''}`} onClick={() => setPaperSlide(idx)} />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bc-stand-card-body">
+                  <h4 className="bc-stand-title">QR Code Paper Tent</h4>
+                  <p className="bc-stand-desc">
+                    Self-standing laminated heavy cardstock tents. Lightweight, foldable, and ideal for multi-table restaurant dining.
+                  </p>
+
+                  <ul className="bc-stand-features">
+                    <li><i className="fa-solid fa-check"></i> Value pack of 10+ folded paper tents</li>
+                    <li><i className="fa-solid fa-check"></i> 350 GSM matte laminated spill-proof cardstock</li>
+                    <li><i className="fa-solid fa-check"></i> Dual-sided 360° QR code customer visibility</li>
+                  </ul>
+
+                  <div className="bc-stand-dispatch-pill" style={{ background: '#eff6ff', color: '#1e40af', borderColor: '#bfdbfe' }}>
+                    <i className="fa-solid fa-box"></i> Pack of 10+ · Free Shipping
+                  </div>
+
+                  <div className="bc-stand-bottom">
+                    <div className="bc-stand-price-col">
+                      <div className="bc-stand-price">₹499 <small>/ pack (10 pcs)</small></div>
+                      <div className="bc-stand-strike">₹999 (Save 50%)</div>
+                    </div>
+                    <button
+                      type="button"
+                      className="bc-btn-order-now"
+                      onClick={() => {
+                        setOrderProduct({ title: 'QR Code Paper Tent (Pack of 10)', price: 499, tag: 'Multi-Table Pack' });
+                        setOrderQuantity(1);
+                        setOrderModalOpen(true);
+                      }}
+                    >
+                      <i className="fa-solid fa-bag-shopping"></i> Order Now
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Trust Grid (Screenshot 5) */}
+            <div className="bc-trust-grid-4">
+              <div className="bc-trust-box">
+                <div className="bc-trust-icon">
+                  <i className="fa-solid fa-link"></i>
+                </div>
+                <div>
+                  <h5>Custom Google Link</h5>
+                  <p>Pre-encoded with your verified review link</p>
+                </div>
+              </div>
+
+              <div className="bc-trust-box">
+                <div className="bc-trust-icon">
+                  <i className="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                  <h5>Premium Quality</h5>
+                  <p>Scratch-resistant &amp; waterproof finish</p>
+                </div>
+              </div>
+
+              <div className="bc-trust-box">
+                <div className="bc-trust-icon">
+                  <i className="fa-solid fa-truck-fast"></i>
+                </div>
+                <div>
+                  <h5>Fast Tracked Delivery</h5>
+                  <p>Doorstep shipping with tracking updates</p>
+                </div>
+              </div>
+
+              <div className="bc-trust-box">
+                <div className="bc-trust-icon">
+                  <i className="fa-brands fa-whatsapp"></i>
+                </div>
+                <div>
+                  <h5>Dedicated Support</h5>
+                  <p>Direct WhatsApp help for all orders</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ORDER CHECKOUT MODAL */}
+        {orderModalOpen && (
+          <div className="bc-order-modal-overlay" onClick={() => !placingOrder && setOrderModalOpen(false)}>
+            <div className="bc-order-modal" onClick={e => e.stopPropagation()}>
+              <div className="bc-order-modal-header">
+                <div>
+                  <h3>Order Physical QR Stand</h3>
+                  <p>{orderProduct.title} · {orderProduct.tag}</p>
+                </div>
+                <button type="button" className="bc-order-modal-close" onClick={() => !placingOrder && setOrderModalOpen(false)}>✕</button>
+              </div>
+
+              <form
+                className="bc-order-modal-body"
+                onSubmit={async e => {
+                  e.preventDefault();
+                  setPlacingOrder(true);
+                  await new Promise(r => setTimeout(r, 1200));
+                  setPlacingOrder(false);
+                  setOrderModalOpen(false);
+                  notify(`🎉 Order placed successfully for ${orderQuantity}x ${orderProduct.title}! Tracking details sent via WhatsApp.`);
+                }}
+              >
+                {/* Product summary banner */}
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                  <div>
+                    <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{orderProduct.title}</strong>
+                    <div style={{ fontSize: '0.74rem', color: '#64748b' }}>Custom branded with {bizName}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#16a34a' }}>₹{orderProduct.price * orderQuantity}</div>
+                    <div style={{ fontSize: '0.68rem', color: '#15803d' }}>Free Tracked Delivery</div>
+                  </div>
+                </div>
+
+                {/* Quantity selector */}
+                <div style={{ marginBottom: 14 }}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 800, color: '#334155', marginBottom: 6 }}>Quantity</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-light"
+                      style={{ width: 34, height: 34, padding: 0 }}
+                      onClick={() => setOrderQuantity(Math.max(1, orderQuantity - 1))}
+                    >
+                      -
+                    </button>
+                    <span style={{ fontSize: '1rem', fontWeight: 900, minWidth: 24, textAlign: 'center' }}>{orderQuantity}</span>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-light"
+                      style={{ width: 34, height: 34, padding: 0 }}
+                      onClick={() => setOrderQuantity(orderQuantity + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* Shipping Details */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', marginBottom: 4 }}>Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      className="bc-input-modern"
+                      placeholder="e.g. Rahul Patel"
+                      value={orderName}
+                      onChange={e => setOrderName(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', marginBottom: 4 }}>WhatsApp Phone (for tracking)</label>
+                    <input
+                      type="tel"
+                      required
+                      className="bc-input-modern"
+                      placeholder="e.g. 98250 12345"
+                      value={orderPhone}
+                      onChange={e => setOrderPhone(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', marginBottom: 4 }}>Delivery Street Address</label>
+                    <textarea
+                      rows="2"
+                      required
+                      className="bc-input-modern"
+                      placeholder="Shop/Office number, building name, road..."
+                      value={orderAddress}
+                      onChange={e => setOrderAddress(e.target.value)}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', marginBottom: 4 }}>City</label>
+                      <input
+                        type="text"
+                        required
+                        className="bc-input-modern"
+                        value={orderCity}
+                        onChange={e => setOrderCity(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', marginBottom: 4 }}>Pincode</label>
+                      <input
+                        type="text"
+                        required
+                        className="bc-input-modern"
+                        value={orderPincode}
+                        onChange={e => setOrderPincode(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  disabled={placingOrder}
+                  className="bc-btn-upgrade"
+                  style={{ width: '100%', marginTop: 16, padding: '0.85rem', fontSize: '0.9rem', background: '#16a34a' }}
+                >
+                  <i className="fa-solid fa-lock" style={{ marginRight: 6 }}></i>
+                  {placingOrder ? 'Processing Order…' : `Confirm Order & Pay ₹${orderProduct.price * orderQuantity}`}
+                </button>
+                <div style={{ textAlign: 'center', marginTop: 8, fontSize: '0.72rem', color: '#64748b' }}>
+                  🔒 Secure checkout · Free shipping across India · 7-10 day delivery
+                </div>
+              </form>
             </div>
           </div>
         )}

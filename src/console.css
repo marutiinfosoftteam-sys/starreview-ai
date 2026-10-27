@@ -2327,3 +2327,617 @@
     transform: scale(1.1);
   }
 }
+
+
+/* ==========================================================================
+   EXACT REVIEW SETTINGS & PHYSICAL STAND STYLES (MATCHING SCREENSHOTS 1 TO 5)
+   ========================================================================== */
+
+/* Sub-tabs navigation bar */
+.bc-subtabs-bar {
+  display: flex;
+  align-items: center;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 1.5rem;
+  gap: 4px;
+}
+
+.bc-subtab-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  padding: 0.65rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.bc-subtab-btn:hover {
+  color: #0f172a;
+}
+
+.bc-subtab-btn.active {
+  background: #ffffff;
+  color: #16a34a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Core Settings Card */
+.bc-settings-section-card {
+  background: #ffffff;
+  border: 1px solid var(--bc-border);
+  border-radius: 18px;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+
+.bc-ssc-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.bc-ssc-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.bc-ssc-titles h3 {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0 0 0.15rem 0;
+}
+
+.bc-ssc-titles p {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Blue info alert */
+.bc-blue-alert-box {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-size: 0.78rem;
+  color: #1e40af;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  line-height: 1.45;
+}
+
+/* Form fields in Review Settings */
+.bc-form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.15rem;
+}
+
+.bc-form-row {
+  margin-bottom: 1.15rem;
+}
+
+.bc-field-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.45rem;
+}
+
+.bc-field-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #334155;
+}
+
+.bc-field-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.bc-input-modern {
+  width: 100%;
+  padding: 0.7rem 0.95rem;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  font-size: 0.86rem;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.bc-input-modern:focus {
+  border-color: #16a34a;
+}
+
+.bc-field-subtext {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin: 0.35rem 0 0 0;
+}
+
+/* 3 Tips cards row */
+.bc-tips-row-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.bc-tip-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+}
+
+.bc-tip-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.25rem;
+}
+
+.bc-tip-num {
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: #16a34a;
+  background: #dcfce7;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.bc-tip-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.bc-tip-card p {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Tag / Chip container */
+.bc-chip-tag-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.bc-chip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1.5px solid #bbf7d0;
+  padding: 0.35rem 0.75rem;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.bc-chip-remove {
+  background: none;
+  border: none;
+  color: #15803d;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.bc-chip-remove:hover {
+  color: #dc2626;
+}
+
+/* Bottom Apply Action Bar */
+.bc-save-action-bar {
+  background: #ffffff;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 18px;
+  padding: 1.25rem 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  margin-top: 2rem;
+}
+
+.bc-sab-left h4 {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0 0 0.2rem 0;
+}
+
+.bc-sab-left p {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.bc-btn-save-all {
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 0.85rem 1.65rem;
+  font-size: 0.92rem;
+  font-weight: 900;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.25);
+  transition: all 0.2s;
+}
+
+.bc-btn-save-all:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   PHYSICAL STAND DISPLAY CARDS & CAROUSEL (SCREENSHOTS 4 & 5)
+   ========================================================================== */
+.bc-stand-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.35rem;
+  margin-bottom: 2rem;
+}
+
+.bc-stand-card {
+  background: #ffffff;
+  border: 1.5px solid var(--bc-border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s;
+}
+
+.bc-stand-card:hover {
+  transform: translateY(-3px);
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+/* Carousel inside card */
+.bc-stand-carousel {
+  position: relative;
+  height: 250px;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+
+.bc-stand-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bc-stand-badge-top {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  border-radius: 99px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.bc-sbt-green { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.bc-sbt-blue { background: #1e293b; color: #ffffff; }
+.bc-sbt-purple { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+
+.bc-carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.6);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  z-index: 2;
+  transition: background 0.15s;
+}
+
+.bc-carousel-btn:hover {
+  background: rgba(15, 23, 42, 0.85);
+}
+
+.bc-carousel-btn.prev { left: 8px; }
+.bc-carousel-btn.next { right: 8px; }
+
+.bc-stand-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+  z-index: 2;
+}
+
+.bc-stand-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.bc-stand-dot.active {
+  background: #ffffff;
+  width: 14px;
+  border-radius: 99px;
+}
+
+.bc-stand-card-body {
+  padding: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.bc-stand-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0 0 0.35rem 0;
+}
+
+.bc-stand-desc {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.45;
+  margin: 0 0 1rem 0;
+}
+
+.bc-stand-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  flex: 1;
+}
+
+.bc-stand-features li {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.bc-stand-features li i {
+  color: #16a34a;
+  font-size: 0.75rem;
+}
+
+.bc-stand-dispatch-pill {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 1.15rem;
+}
+
+.bc-stand-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1.5px solid #f1f5f9;
+  padding-top: 1rem;
+  margin-top: auto;
+}
+
+.bc-stand-price-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.bc-stand-price {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.bc-stand-price small {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.bc-stand-strike {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+  margin-top: 2px;
+}
+
+.bc-btn-order-now {
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.84rem;
+  font-weight: 900;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: all 0.15s;
+}
+
+.bc-btn-order-now:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+}
+
+/* 4 Trust Box Strip */
+.bc-trust-grid-4 {
+  background: #ffffff;
+  border: 1px solid var(--bc-border);
+  border-radius: 18px;
+  padding: 1.25rem 1.75rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+.bc-trust-box {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.bc-trust-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.bc-trust-box h5 {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.15rem 0;
+}
+
+.bc-trust-box p {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Order Checkout Modal */
+.bc-order-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.bc-order-modal {
+  background: #ffffff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: bcModalIn 0.2s ease-out;
+}
+
+@keyframes bcModalIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.bc-order-modal-header {
+  background: #143e27;
+  color: #ffffff;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bc-order-modal-header h3 {
+  font-size: 1.15rem;
+  font-weight: 900;
+  margin: 0 0 0.2rem 0;
+}
+
+.bc-order-modal-header p {
+  font-size: 0.76rem;
+  color: #86efac;
+  margin: 0;
+}
+
+.bc-order-modal-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.bc-order-modal-body {
+  padding: 1.5rem;
+  max-height: 80vh;
+  overflow-y: auto;
+}
