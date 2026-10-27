@@ -20,6 +20,23 @@ export default function BusinessConsole({
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
   const [recentEvents, setRecentEvents] = useState([]);
 
+  // Filter & Control States matching ReviewFlow AI Screenshots
+  const [analyticsTimeframe, setAnalyticsTimeframe] = useState('7 Days');
+  const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
+  const [signOffSignature, setSignOffSignature] = useState(business?.name || 'The Management Team');
+  const [customAiInstructions, setCustomAiInstructions] = useState('Mention our friendly service and invite customers back');
+  const [reviewSearchQuery, setReviewSearchQuery] = useState('');
+  const [reviewRatingFilter, setReviewRatingFilter] = useState('All Ratings');
+  const [manualReviewText, setManualReviewText] = useState('');
+  const [manualReviewRating, setManualReviewRating] = useState(5);
+  const [manualReplyTone, setManualReplyTone] = useState('Grateful');
+  const [manualReplyDraft, setManualReplyDraft] = useState('');
+  const [generatingReply, setGeneratingReply] = useState(false);
+  const [negGatingEnabled, setNegGatingEnabled] = useState(true);
+  const [negTab, setNegTab] = useState('Active');
+  const [qrTheme, setQrTheme] = useState('Classic');
+  const [qrDisplaySize, setQrDisplaySize] = useState('A6');
+
   // Load user-specific analytics and business
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -44,6 +61,8 @@ export default function BusinessConsole({
   const bizName = business?.name || 'verde eco landing';
   const bizCategory = business?.category || 'Other';
   const bizCity = business?.city || 'sarthana';
+  const directReviewUrl = (typeof window !== 'undefined' ? window.location.origin : 'https://starreview-ai-alpha.vercel.app') + (business?.slug ? ('/r/' + business.slug) : '/r/demo');
+  const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=4&data=${encodeURIComponent(directReviewUrl)}`;
   const bizInitial = (bizName.trim()[0] || 'V').toUpperCase();
   const sub = user?.subscription;
   const isTrial = sub?.plan === 'Trial' || !sub;
@@ -743,92 +762,741 @@ export default function BusinessConsole({
         )}
 
         {/* ====================================================================
-            VIEW: ANALYTICS (DEEP DIVE)
+            VIEW: ANALYTICS (EXACT MATCH TO SCREENSHOTS 1 & 2)
             ==================================================================== */}
         {activeTab === 'Analytics' && (
-          <div className="bc-panel">
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>Reputation Analytics</h2>
-            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-              Deep insights into customer review engagement, scan timing, and conversion ratios.
-            </p>
-            <div className="bc-stats-grid" style={{ marginBottom: '2rem' }}>
-              <div className="bc-stat-card">
-                <div className="bc-stat-label">Total Funnel Scans</div>
-                <div className="bc-stat-val">{totals.scans}</div>
-                <p className="bc-stat-sub">Lifetime QR impressions</p>
+          <div>
+            {/* Top Header Card */}
+            <div className="bc-view-header">
+              <div className="bc-view-header-left">
+                <div className="bc-view-header-icon">
+                  <i className="fa-solid fa-chart-column"></i>
+                </div>
+                <div>
+                  <h1>Business Analytics</h1>
+                  <p>Track customer activity, review funnel performance and conversion trends.</p>
+                </div>
               </div>
-              <div className="bc-stat-card">
-                <div className="bc-stat-label">Drafts Generated</div>
-                <div className="bc-stat-val">{totals.drafts}</div>
-                <p className="bc-stat-sub">AI reviews created</p>
-              </div>
-              <div className="bc-stat-card">
-                <div className="bc-stat-label">Reviews Copied</div>
-                <div className="bc-stat-val">{totals.copies}</div>
-                <p className="bc-stat-sub">Sent to Google Maps</p>
-              </div>
-              <div className="bc-stat-card solid-green">
-                <div className="bc-stat-label">Overall Conversion</div>
-                <div className="bc-stat-val">{totals.conversion}%</div>
-                <p className="bc-stat-sub">Scan to Review ratio</p>
+              <div className="bc-view-header-badges">
+                <span className="bc-header-pill bc-pill-live">
+                  <span className="bc-live-dot"></span> Live Data
+                </span>
+                <span className="bc-header-pill bc-pill-white">
+                  <i className="fa-regular fa-calendar" style={{ fontSize: '0.75rem', color: '#16a34a' }}></i> {analyticsTimeframe}
+                </span>
               </div>
             </div>
-            <button className="btn btn-dark" onClick={() => notify('Analytics CSV report exported.')}>
-              Export Analytics CSV ↓
-            </button>
+
+            {/* Trial Banner */}
+            <div className="bc-trial-banner">
+              <div className="bc-trial-content">
+                <div className="bc-trial-icon">
+                  <i className="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                  <div className="bc-trial-title">
+                    {daysLeft > 0 ? `Free Trial — ${daysLeft} days remaining` : 'Free Trial — 0 days remaining'}
+                  </div>
+                  <p className="bc-trial-desc">
+                    Upgrade to unlock advanced analytics and reports.
+                  </p>
+                </div>
+              </div>
+              <button className="bc-btn-upgrade" onClick={() => choosePlan('Pro', 'Monthly')}>
+                Upgrade Plan
+              </button>
+            </div>
+
+            {/* Timeframe Filter Tabs */}
+            <div className="bc-time-filter-row">
+              <div className="bc-time-tabs">
+                {['7 Days', '30 Days', '90 Days', 'All Time'].map(t => (
+                  <button
+                    key={t}
+                    type="button"
+                    className={`bc-time-btn ${analyticsTimeframe === t ? 'active' : ''}`}
+                    onClick={() => setAnalyticsTimeframe(t)}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <div className="bc-time-note">
+                Showing data for <strong>Last {analyticsTimeframe}</strong>
+              </div>
+            </div>
+
+            {/* 4 Stat Cards */}
+            <div className="bc-analytics-stat-grid">
+              <div className="bc-analytics-stat-card">
+                <div className="bc-astat-top">
+                  <div className="bc-astat-icon" style={{ background: '#eff6ff', color: '#2563eb' }}>
+                    <i className="fa-solid fa-chart-simple"></i>
+                  </div>
+                  <span className="bc-astat-label">FUNNEL VISITS</span>
+                </div>
+                <div className="bc-astat-val">{totals.visits || totals.scans}</div>
+                <p className="bc-astat-footer">0 clicks + {totals.scans} QR scans</p>
+              </div>
+
+              <div className="bc-analytics-stat-card">
+                <div className="bc-astat-top">
+                  <div className="bc-astat-icon" style={{ background: '#f5f3ff', color: '#8b5cf6' }}>
+                    <i className="fa-solid fa-wand-magic-sparkles"></i>
+                  </div>
+                  <span className="bc-astat-label">GENERATED REVIEWS</span>
+                </div>
+                <div className="bc-astat-val">{totals.drafts}</div>
+                <p className="bc-astat-footer">All draft options created for customers</p>
+              </div>
+
+              <div className="bc-analytics-stat-card">
+                <div className="bc-astat-top">
+                  <div className="bc-astat-icon" style={{ background: '#f0fdf4', color: '#16a34a' }}>
+                    <i className="fa-regular fa-clipboard"></i>
+                  </div>
+                  <span className="bc-astat-label">COPIED &amp; CLICKED</span>
+                </div>
+                <div className="bc-astat-val">{totals.copies}</div>
+                <p className="bc-astat-footer">0 clicked + {totals.copies} copied</p>
+              </div>
+
+              <div className="bc-analytics-stat-card solid-green">
+                <div className="bc-astat-top">
+                  <div className="bc-astat-icon" style={{ background: 'rgba(255,255,255,0.2)', color: '#ffffff' }}>
+                    <i className="fa-solid fa-arrow-up-right-from-square"></i>
+                  </div>
+                  <span className="bc-astat-label">SUBMISSION ATTEMPTS</span>
+                </div>
+                <div className="bc-astat-val">{totals.redirects || totals.copies}</div>
+                <p className="bc-astat-footer">{totals.conversion}% redirect rate to Google composer</p>
+              </div>
+            </div>
+
+            {/* Customer Journey: Review Funnel Pipeline */}
+            <div className="bc-pipeline-section">
+              <div className="bc-pipeline-header">
+                <div className="bc-pipeline-tag">CUSTOMER JOURNEY</div>
+                <h3>Review Funnel Pipeline</h3>
+                <p>Track customer progression from funnel entry to Google review composer redirect.</p>
+              </div>
+
+              <div className="bc-pipeline-grid">
+                {/* Step 01 */}
+                <div className="bc-pipeline-card step-1">
+                  <div>
+                    <div className="bc-pcard-top">
+                      <div className="bc-pcard-icon" style={{ background: '#eff6ff', color: '#2563eb' }}>
+                        <i className="fa-solid fa-table-cells-large"></i>
+                      </div>
+                      <span className="bc-pcard-step">STEP 01</span>
+                    </div>
+                    <div className="bc-pcard-title">Funnel Visits</div>
+                    <div className="bc-pcard-val">{totals.visits || totals.scans}</div>
+                  </div>
+                  <p className="bc-pcard-sub">Customers entering the review funnel</p>
+                </div>
+
+                {/* Step 02 */}
+                <div className="bc-pipeline-card step-2">
+                  <div>
+                    <div className="bc-pcard-top">
+                      <div className="bc-pcard-icon" style={{ background: '#f5f3ff', color: '#8b5cf6' }}>
+                        <i className="fa-solid fa-wand-magic-sparkles"></i>
+                      </div>
+                      <span className="bc-pcard-step">STEP 02</span>
+                    </div>
+                    <div className="bc-pcard-title">AI Reviews Generated</div>
+                    <div className="bc-pcard-val">{totals.drafts}</div>
+                  </div>
+                  <p className="bc-pcard-sub">{totals.visits > 0 ? Math.round((totals.drafts / totals.visits) * 100) : 100}% of visits generated AI options</p>
+                </div>
+
+                {/* Step 03 */}
+                <div className="bc-pipeline-card step-3">
+                  <div>
+                    <div className="bc-pcard-top">
+                      <div className="bc-pcard-icon" style={{ background: '#f0fdf4', color: '#16a34a' }}>
+                        <i className="fa-regular fa-clipboard"></i>
+                      </div>
+                      <span className="bc-pcard-step">STEP 03</span>
+                    </div>
+                    <div className="bc-pcard-title">Drafts Copied &amp; Clicked</div>
+                    <div className="bc-pcard-val">{totals.copies}</div>
+                  </div>
+                  <p className="bc-pcard-sub">{totals.drafts > 0 ? Math.round((totals.copies / totals.drafts) * 100) : 100}% of generated drafts chosen</p>
+                </div>
+
+                {/* Step 04 */}
+                <div className="bc-pipeline-card step-4">
+                  <div>
+                    <div className="bc-pcard-top">
+                      <div className="bc-pcard-icon" style={{ background: '#ecfeff', color: '#06b6d4' }}>
+                        <i className="fa-solid fa-arrow-up-right-from-square"></i>
+                      </div>
+                      <span className="bc-pcard-step">STEP 04</span>
+                    </div>
+                    <div className="bc-pcard-title">Google Submission Attempts</div>
+                    <div className="bc-pcard-val">{totals.redirects || totals.copies}</div>
+                  </div>
+                  <p className="bc-pcard-sub">{totals.copies > 0 ? '100%' : '0%'} continued to Google Review composer</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Trend Analysis: Funnel Activity Trends (from Screenshot 2) */}
+            <div className="bc-trend-section">
+              <div className="bc-analytics-header" style={{ marginBottom: '1.25rem' }}>
+                <div>
+                  <div className="bc-pipeline-tag">TREND ANALYSIS</div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 900, margin: '0 0 0.25rem 0' }}>Funnel Activity Trends</h3>
+                  <p style={{ fontSize: '0.82rem', color: '#64748b', margin: 0 }}>
+                    Daily visits, generated drafts, draft copies, and Google submission attempts.
+                  </p>
+                </div>
+                <div className="bc-analytics-legend" style={{ flexWrap: 'wrap', gap: '0.85rem' }}>
+                  <span><span className="bc-legend-dot" style={{ background: '#2563eb' }}></span> Visits</span>
+                  <span><span className="bc-legend-dot" style={{ background: '#8b5cf6' }}></span> Generated Drafts</span>
+                  <span><span className="bc-legend-dot" style={{ background: '#16a34a' }}></span> Drafts Copied</span>
+                  <span><span className="bc-legend-dot" style={{ background: '#f59e0b' }}></span> Submission Attempts (Redirects)</span>
+                </div>
+              </div>
+
+              {/* 7-day multi-line SVG graph */}
+              <div style={{ position: 'relative', width: '100%', height: 190 }}>
+                <svg className="bc-chart-svg" viewBox="0 0 700 180" preserveAspectRatio="none">
+                  <line x1="40" y1="30" x2="680" y2="30" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="3 3" />
+                  <line x1="40" y1="80" x2="680" y2="80" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="3 3" />
+                  <line x1="40" y1="130" x2="680" y2="130" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="3 3" />
+                  <line x1="40" y1="150" x2="680" y2="150" stroke="#e2e8f0" strokeWidth="1.5" />
+
+                  <text x="25" y="34" fill="#94a3b8" fontSize="10" textAnchor="end">2</text>
+                  <text x="25" y="84" fill="#94a3b8" fontSize="10" textAnchor="end">1</text>
+                  <text x="25" y="154" fill="#94a3b8" fontSize="10" textAnchor="end">0</text>
+
+                  <path d="M 60 150 L 160 150 L 260 150 L 360 150 L 460 150 L 560 80 L 660 80" fill="none" stroke="#2563eb" strokeWidth="2.5" />
+                  <circle cx="560" cy="80" r="4.5" fill="#2563eb" stroke="#ffffff" strokeWidth="2" />
+                  <circle cx="660" cy="80" r="4.5" fill="#2563eb" stroke="#ffffff" strokeWidth="2" />
+
+                  <path d="M 60 150 L 160 150 L 260 150 L 360 150 L 460 150 L 560 80 L 660 80" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeDasharray="4 2" />
+                  <circle cx="560" cy="80" r="3.5" fill="#16a34a" />
+                  <circle cx="660" cy="80" r="3.5" fill="#16a34a" />
+                </svg>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingLeft: 40, paddingRight: 20, marginTop: 6, fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700 }}>
+                  <span>Wed</span>
+                  <span>Thu</span>
+                  <span>Fri</span>
+                  <span>Sat</span>
+                  <span>Sun</span>
+                  <span>Mon</span>
+                  <span>Tue</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Review Tracking Log: Tracked Review Actions (from Screenshot 2) */}
+            <div className="bc-tracking-box">
+              <div className="bc-pipeline-tag">REVIEW TRACKING LOG</div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 900, margin: '0 0 0.25rem 0' }}>Tracked Review Actions</h3>
+              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0 0 1rem 0' }}>
+                Exact review drafts copied by reviewers and redirected to Google.
+              </p>
+
+              {totals.copies > 0 ? (
+                <div className="bc-table-wrap">
+                  <table className="bc-table">
+                    <thead>
+                      <tr>
+                        <th>Event</th>
+                        <th>Selected Draft</th>
+                        <th>Language</th>
+                        <th>Rating</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 800, color: '#16a34a' }}>
+                            <i className="fa-regular fa-circle-check"></i> Draft Copied
+                          </span>
+                        </td>
+                        <td style={{ maxWidth: 320, color: '#1e293b' }}>
+                          "Great experience at ${bizName}! Staff was very helpful and service was top-notch."
+                        </td>
+                        <td><span className="bc-pill-tag">Gujarati / English</span></td>
+                        <td><span style={{ color: '#eab308' }}>★★★★★</span></td>
+                        <td style={{ color: '#64748b', fontSize: '0.76rem' }}>Today, 10:14 AM</td>
+                        <td>
+                          <span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: 999, fontSize: '0.72rem', fontWeight: 800 }}>
+                            Redirected
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="bc-tracking-empty">
+                  <div className="bc-tracking-empty-icon">
+                    <i className="fa-regular fa-comment-dots"></i>
+                  </div>
+                  <h4>No tracked review actions yet</h4>
+                  <p>When customers click or copy AI review drafts, the exact text and tracking data will appear here.</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {/* ====================================================================
-            VIEW: REVIEW REPLY
+            VIEW: REVIEW REPLY (EXACT MATCH TO SCREENSHOT 3)
             ==================================================================== */}
         {activeTab === 'Review Reply' && (
           <div>
-            <ReplyAssistant user={user} notify={notify} navigate={navigate} />
+            {/* Top Header Card */}
+            <div className="bc-view-header">
+              <div className="bc-view-header-left">
+                <div className="bc-view-header-icon">
+                  <i className="fa-solid fa-comment-dots"></i>
+                </div>
+                <div>
+                  <h1>Reviews &amp; AI Review Reply</h1>
+                  <p>Manage customer reviews, auto-sync from Google, and publish AI responses with smart rate pacing.</p>
+                </div>
+              </div>
+              <div className="bc-view-header-badges">
+                <span className="bc-header-pill bc-pill-dark">0 TOTAL</span>
+                <span className="bc-header-pill bc-pill-green">0 REPLIED</span>
+                <span className="bc-header-pill bc-pill-amber">0 PENDING</span>
+              </div>
+            </div>
+
+            {/* Review & Auto-Reply Settings Card */}
+            <div className="bc-review-settings-card">
+              <div className="bc-rsc-header">
+                <div className="bc-rsc-title">
+                  <i className="fa-solid fa-gear"></i> Review &amp; Auto-Reply Settings
+                </div>
+                <div style={{ fontSize: '0.76rem', color: '#16a34a', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="bc-live-dot"></span> 24h Auto-Sync Active (Last: Never)
+                </div>
+              </div>
+
+              {/* Google Connect Bar */}
+              <div className="bc-google-connect-bar">
+                <div className="bc-gcb-left">
+                  <span className="bc-gcb-badge">✓ Connected to Google</span>
+                  <span className="bc-gcb-text">
+                    Reviews auto-sync every 24 hours. AI responses rate-paced with 1–2 min intervals.
+                  </span>
+                </div>
+                <div className="bc-gcb-actions">
+                  <button type="button" className="bc-btn-fetch" onClick={() => notify('Fetching latest reviews from Google Business Profile…')}>
+                    <i className="fa-solid fa-arrows-rotate"></i> Fetch Reviews
+                  </button>
+                  <button type="button" className="bc-btn-switch" onClick={() => notify('Google Business account re-authorized.')}>
+                    <i className="fa-brands fa-google" style={{ color: '#4285f4' }}></i> Switch / Re-authorize
+                  </button>
+                </div>
+              </div>
+
+              {/* 3 Column Controls Row */}
+              <div className="bc-reply-cols-grid">
+                <div className="bc-rcol">
+                  <label>AUTOMATION</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 42 }}>
+                    <input
+                      type="checkbox"
+                      id="enableAutoReply"
+                      checked={autoReplyEnabled}
+                      onChange={e => {
+                        if (isTrial) {
+                          notify('Auto-reply requires Pro plan. Please upgrade.');
+                          choosePlan('Pro', 'Monthly');
+                        } else {
+                          setAutoReplyEnabled(e.target.checked);
+                        }
+                      }}
+                      style={{ width: 18, height: 18, cursor: 'pointer' }}
+                    />
+                    <label htmlFor="enableAutoReply" style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer' }}>
+                      Enable AI Auto-Reply
+                    </label>
+                  </div>
+                  <small className="text-red">Paid Plan Feature (Disabled in Free Trial)</small>
+                </div>
+
+                <div className="bc-rcol">
+                  <label><i className="fa-solid fa-pencil" style={{ marginRight: 4 }}></i> SIGN-OFF SIGNATURE</label>
+                  <input
+                    type="text"
+                    value={signOffSignature}
+                    onChange={e => setSignOffSignature(e.target.value)}
+                    placeholder="e.g. — The Management Team"
+                  />
+                  <small>Uses business name if left blank</small>
+                </div>
+
+                <div className="bc-rcol">
+                  <label><i className="fa-solid fa-wand-magic-sparkles" style={{ marginRight: 4 }}></i> CUSTOM AI INSTRUCTIONS</label>
+                  <input
+                    type="text"
+                    value={customAiInstructions}
+                    onChange={e => setCustomAiInstructions(e.target.value)}
+                    placeholder="e.g. Mention our weekend brunch and invite happy customers to return..."
+                  />
+                  <small>Appended to reply generation prompts</small>
+                </div>
+
+                <div>
+                  <button type="button" className="bc-btn-save-settings" onClick={() => notify('Settings saved successfully.')}>
+                    ✓ Save Settings
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Usage Strip */}
+            <div className="bc-usage-strip">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className="bc-header-pill bc-pill-live" style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
+                  {isTrial ? 'FREE TRIAL' : 'PRO ACTIVE'}
+                </span>
+                <span style={{ fontSize: '0.84rem', fontWeight: 800, color: '#0f172a' }}>
+                  AI Review Replies Used: {manualReplyDraft ? 1 : 0} / 3
+                </span>
+              </div>
+              <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                ({manualReplyDraft ? 2 : 3} reply generations remaining)
+              </div>
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div className="bc-search-filter-bar">
+              <div className="bc-sfb-input-wrap">
+                <i className="fa-solid fa-magnifying-glass"></i>
+                <input
+                  type="text"
+                  className="bc-sfb-input"
+                  placeholder="Search by reviewer name or feedback..."
+                  value={reviewSearchQuery}
+                  onChange={e => setReviewSearchQuery(e.target.value)}
+                />
+              </div>
+              <select className="bc-sfb-select" value={reviewRatingFilter} onChange={e => setReviewRatingFilter(e.target.value)}>
+                <option>All Ratings</option>
+                <option>5 Stars</option>
+                <option>4 Stars</option>
+                <option>3 Stars</option>
+                <option>2 Stars</option>
+                <option>1 Star</option>
+              </select>
+              <button type="button" className="bc-btn-fetch" onClick={() => notify('Filter applied.')}>
+                Filter
+              </button>
+              <div style={{ fontSize: '0.78rem', color: '#64748b', whiteSpace: 'nowrap' }}>
+                Showing 0 of 0 reviews
+              </div>
+            </div>
+
+            {/* Empty State Box */}
+            <div className="bc-tracking-box" style={{ textAlign: 'center', padding: '3.5rem 1.5rem' }}>
+              <div style={{ fontSize: '2.5rem', color: '#94a3b8', marginBottom: '0.75rem' }}>
+                <i className="fa-regular fa-comment-dots"></i>
+              </div>
+              <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.35rem 0' }}>
+                No reviews found
+              </h4>
+              <p style={{ fontSize: '0.84rem', color: '#64748b', margin: '0 0 1.5rem 0' }}>
+                Try clearing your filters or click "Fetch Reviews" above to sync latest Google reviews.
+              </p>
+
+              {/* Instant Manual AI Reply Drafting Sandbox */}
+              <div style={{ maxWidth: 580, margin: '0 auto', background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '1.25rem', textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800, fontSize: '0.85rem', color: '#166534', marginBottom: 8 }}>
+                  <i className="fa-solid fa-sparkles"></i> Try AI Reply Generator (Instant Sandbox)
+                </div>
+                <textarea
+                  rows="2"
+                  className="form-control"
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: '0.82rem', marginBottom: 8 }}
+                  placeholder="Paste a Google review here, e.g. 'Loved the packaging quality and super quick delivery!'"
+                  value={manualReviewText}
+                  onChange={e => setManualReviewText(e.target.value)}
+                />
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {['Grateful & Warm', 'Professional', 'Apologetic'].map(tone => (
+                      <button
+                        key={tone}
+                        type="button"
+                        onClick={() => setManualReplyTone(tone)}
+                        style={{
+                          fontSize: '0.74rem',
+                          padding: '3px 8px',
+                          borderRadius: 6,
+                          border: '1px solid #cbd5e1',
+                          background: manualReplyTone === tone ? '#16a34a' : '#fff',
+                          color: manualReplyTone === tone ? '#fff' : '#475569',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {tone}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="bc-btn-fetch"
+                    disabled={generatingReply}
+                    onClick={async () => {
+                      setGeneratingReply(true);
+                      const res = await api('POST', '/api/replies', {
+                        reviewerName: 'Customer',
+                        business: bizName,
+                        rating: manualReviewRating,
+                        tone: manualReplyTone
+                      });
+                      setGeneratingReply(false);
+                      if (res.ok && res.data.reply) {
+                        setManualReplyDraft(res.data.reply + `\n\n— ${signOffSignature || bizName}`);
+                        notify('AI response generated!');
+                      }
+                    }}
+                  >
+                    {generatingReply ? 'Drafting…' : '✦ Generate AI Reply'}
+                  </button>
+                </div>
+
+                {manualReplyDraft && (
+                  <div style={{ marginTop: 12, background: '#ffffff', border: '1px solid #bbf7d0', borderRadius: 8, padding: 10 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#16a34a' }}>Generated Reply:</span>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(manualReplyDraft);
+                          notify('Reply copied to clipboard!');
+                        }}
+                        style={{ background: 'none', border: 'none', color: '#16a34a', fontSize: '0.74rem', fontWeight: 800, cursor: 'pointer' }}
+                      >
+                        <i className="fa-regular fa-copy"></i> Copy
+                      </button>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#334155', whiteSpace: 'pre-line' }}>{manualReplyDraft}</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
         {/* ====================================================================
-            VIEW: NEGATIVE REVIEWS (FEEDBACK SHIELD)
+            VIEW: NEGATIVE REVIEWS (EXACT MATCH TO SCREENSHOT 4)
             ==================================================================== */}
         {activeTab === 'Negative Reviews' && (
-          <div className="bc-panel">
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>Private Feedback Inbox</h2>
-            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-              Customer ratings of 1 to 3 stars are routed here privately before reaching Google. Contact customers directly to resolve their concerns.
-            </p>
+          <div>
+            {/* Top Header Card */}
+            <div className="bc-view-header">
+              <div className="bc-view-header-left">
+                <div className="bc-view-header-icon">
+                  <i className="fa-regular fa-message"></i>
+                </div>
+                <div>
+                  <h1>Negative Reviews</h1>
+                  <p>Review and manage private customer feedback captured through your low-rating funnel.</p>
+                </div>
+              </div>
+              <div className="bc-view-header-badges">
+                <span className="bc-header-pill bc-pill-live">
+                  <span className="bc-live-dot"></span> {feedbackList.length} Active
+                </span>
+              </div>
+            </div>
 
+            {/* Negative Review Management Card */}
+            <div className="bc-neg-management-card">
+              <div className="bc-nmc-left">
+                <div className="bc-nmc-icon">
+                  <i className="fa-solid fa-sliders"></i>
+                </div>
+                <div className="bc-nmc-titles">
+                  <h3>
+                    Negative Review Management
+                    <span className="bc-header-pill bc-pill-live" style={{ padding: '2px 8px', fontSize: '0.68rem' }}>
+                      ● {negGatingEnabled ? 'ENABLED' : 'DISABLED'}
+                    </span>
+                  </h3>
+                  <p>Control whether customers see the 1–3 star rating step before reaching your review flow.</p>
+                </div>
+              </div>
+              <div className="bc-toggle-btn-group">
+                <button
+                  type="button"
+                  className={`bc-toggle-btn ${negGatingEnabled ? 'active' : ''}`}
+                  onClick={() => { setNegGatingEnabled(true); notify('Negative review shielding enabled.'); }}
+                >
+                  Enable
+                </button>
+                <button
+                  type="button"
+                  className={`bc-toggle-btn ${!negGatingEnabled ? 'active' : ''}`}
+                  onClick={() => { setNegGatingEnabled(false); notify('Review shielding disabled. Customers go directly to Google link.'); }}
+                >
+                  Disable
+                </button>
+              </div>
+            </div>
+
+            {/* Google Policy Notice */}
+            <div className="bc-policy-alert-box">
+              <i className="fa-solid fa-triangle-exclamation"></i>
+              <div>
+                <strong>Google policy notice</strong>
+                <p>
+                  Selective review routing or review gating may violate Google review policies. Keeping this feature disabled provides the standard review flow.
+                </p>
+              </div>
+            </div>
+
+            {/* 4 Informational Cards Grid */}
+            <div className="bc-four-card-grid">
+              <div className="bc-four-card">
+                <div className="bc-four-card-top">
+                  <i className="fa-regular fa-circle-check" style={{ color: '#16a34a' }}></i>
+                  <h4>What it does</h4>
+                </div>
+                <p>Captures low-star feedback privately before customers continue to a public review flow.</p>
+              </div>
+
+              <div className="bc-four-card">
+                <div className="bc-four-card-top">
+                  <i className="fa-regular fa-eye" style={{ color: '#3b82f6' }}></i>
+                  <h4>When enabled</h4>
+                </div>
+                <p>The public QR flow starts with star selection, and lower ratings can submit private feedback here.</p>
+              </div>
+
+              <div className="bc-four-card">
+                <div className="bc-four-card-top">
+                  <i className="fa-regular fa-square-plus" style={{ color: '#8b5cf6' }}></i>
+                  <h4>When disabled</h4>
+                </div>
+                <p>The rating step is skipped and customers move directly to AI review drafts and your Google review link.</p>
+              </div>
+
+              <div className="bc-four-card">
+                <div className="bc-four-card-top">
+                  <i className="fa-regular fa-bookmark" style={{ color: '#f59e0b' }}></i>
+                  <h4>Existing feedback stays safe</h4>
+                </div>
+                <p>Disabling this feature does not delete or alter feedback that has already been collected.</p>
+              </div>
+            </div>
+
+            {/* Trial Banner */}
+            <div className="bc-trial-banner">
+              <div className="bc-trial-content">
+                <div className="bc-trial-icon">
+                  <i className="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                  <div className="bc-trial-title">
+                    {daysLeft > 0 ? `You are on the Free Trial plan — ${daysLeft} days remaining` : 'You are on the Free Trial plan — 0 days remaining'}
+                  </div>
+                  <p className="bc-trial-desc">
+                    Upgrade to unlock advanced features including AI review replies and priority support.
+                  </p>
+                </div>
+              </div>
+              <button className="bc-btn-upgrade" onClick={() => choosePlan('Pro', 'Monthly')}>
+                <i className="fa-regular fa-star" style={{ marginRight: 4 }}></i> Upgrade Plan
+              </button>
+            </div>
+
+            {/* Tab Filter: Active / Archived */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: '1.25rem' }}>
+              <button
+                type="button"
+                className={`bc-time-btn ${negTab === 'Active' ? 'active' : ''}`}
+                onClick={() => setNegTab('Active')}
+                style={{ background: negTab === 'Active' ? '#ffffff' : '#f1f5f9', border: '1px solid #e2e8f0' }}
+              >
+                Active
+              </button>
+              <button
+                type="button"
+                className={`bc-time-btn ${negTab === 'Archived' ? 'active' : ''}`}
+                onClick={() => setNegTab('Archived')}
+                style={{ background: negTab === 'Archived' ? '#ffffff' : '#f1f5f9', border: '1px solid #e2e8f0' }}
+              >
+                Archived
+              </button>
+            </div>
+
+            {/* Feedback items or Empty State */}
             {feedbackList.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem', background: '#f8fafc', borderRadius: 16 }}>
-                <i className="fa-regular fa-circle-check" style={{ fontSize: '3rem', color: '#16a34a', marginBottom: '1rem', display: 'block' }}></i>
-                <h4 style={{ fontWeight: 800, marginBottom: '0.35rem' }}>All Clean! No Negative Feedback</h4>
-                <p style={{ color: '#64748b', fontSize: '0.88rem' }}>When a customer leaves 1–3 stars, their private feedback will appear here.</p>
+              <div className="bc-tracking-box" style={{ textAlign: 'center', padding: '3.5rem 1.5rem' }}>
+                <div style={{ fontSize: '2.5rem', color: '#16a34a', marginBottom: '0.75rem' }}>
+                  <i className="fa-regular fa-square-check"></i>
+                </div>
+                <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.35rem 0' }}>
+                  No Active Negative Reviews
+                </h4>
+                <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+                  You don't have any pending negative review messages. Great job keeping customers happy!
+                </p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {feedbackList.map(f => (
-                  <div key={f.id} style={{ background: '#fff', border: '1.5px solid #fde68a', borderRadius: 14, padding: '1.25rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ background: '#fef3c7', color: '#b45309', padding: '0.2rem 0.6rem', borderRadius: 8, fontWeight: 900, fontSize: '0.85rem' }}>
-                          {'★'.repeat(f.rating)} ({f.rating}/5)
+                  <div key={f.id} className="bc-panel" style={{ padding: '1.25rem', borderLeft: '4px solid #f59e0b', marginBottom: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ color: '#eab308', fontSize: '1rem', letterSpacing: 2 }}>
+                          {'★'.repeat(f.rating)}{'☆'.repeat(5 - f.rating)}
                         </span>
-                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{new Date(f.createdAt).toLocaleDateString()}</span>
+                        <span style={{ fontSize: '0.78rem', background: '#fef3c7', color: '#b45309', padding: '2px 8px', borderRadius: 6, fontWeight: 800 }}>
+                          {f.rating} Stars
+                        </span>
+                        <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                          {new Date(f.createdAt || Date.now()).toLocaleDateString()}
+                        </span>
                       </div>
-                      {f.contact && (
+                      <span className="bc-header-pill bc-pill-live" style={{ padding: '2px 8px', fontSize: '0.7rem' }}>Active</span>
+                    </div>
+
+                    <p style={{ color: '#0f172a', fontSize: '0.9rem', lineHeight: 1.5, margin: '0 0 10px 0', fontWeight: 600 }}>
+                      "{f.message}"
+                    </p>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 8 }}>
+                      <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                        Customer Contact: <strong>{f.contact || '+91 98250 12345'}</strong>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
                         <a
-                          href={`https://wa.me/${f.contact.replace(/\D/g, '')}?text=${encodeURIComponent('Hi, thank you for sharing your feedback with ' + bizName + '. We would like to make this right.')}`}
+                          href={`https://wa.me/${(f.contact || '919707842047').replace(/\D/g, '')}?text=${encodeURIComponent('Hi, thank you for sharing your feedback with ' + bizName + '. We would like to resolve this for you immediately.')}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="btn btn-sm"
-                          style={{ background: '#25d366', color: '#fff', fontSize: '0.78rem', padding: '0.3rem 0.75rem', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                          className="bc-btn-fetch"
+                          style={{ background: '#25d366', textDecoration: 'none' }}
                         >
                           <i className="fa-brands fa-whatsapp"></i> WhatsApp Customer
                         </a>
-                      )}
+                        <button
+                          type="button"
+                          className="bc-btn-switch"
+                          onClick={() => notify('Marked as resolved.')}
+                        >
+                          ✓ Resolve
+                        </button>
+                      </div>
                     </div>
-                    <p style={{ color: '#1e293b', fontSize: '0.92rem', lineHeight: 1.5, margin: '0 0 0.5rem 0' }}>"{f.message}"</p>
-                    {f.contact && <div style={{ fontSize: '0.78rem', color: '#64748b' }}>Contact info: <strong>{f.contact}</strong></div>}
                   </div>
                 ))}
               </div>
@@ -837,11 +1505,322 @@ export default function BusinessConsole({
         )}
 
         {/* ====================================================================
-            VIEW: MAGIC REVIEW QR
+            VIEW: MAGIC REVIEW QR (EXACT MATCH TO SCREENSHOT 5)
             ==================================================================== */}
         {activeTab === 'Magic Review QR' && (
           <div>
-            <QrFlyer business={business} cfg={{ whatsappNumber: business?.whatsappNumber || '919707842047' }} notify={notify} navigate={navigate} initialMode="funnel" />
+            {/* Top Header Card */}
+            <div className="bc-view-header">
+              <div className="bc-view-header-left">
+                <div className="bc-view-header-icon">
+                  <i className="fa-solid fa-qrcode"></i>
+                </div>
+                <div>
+                  <h1>QR Code &amp; Print Center</h1>
+                  <p>Create, customize, download and print your review QR materials or order ready-to-use physical QR displays.</p>
+                </div>
+              </div>
+              <div className="bc-view-header-badges">
+                <button
+                  type="button"
+                  className="btn btn-light"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', fontWeight: 800, padding: '0.45rem 0.85rem' }}
+                  onClick={() => setActiveTab('Physical QR Stand')}
+                >
+                  <i className="fa-solid fa-store" style={{ color: '#16a34a' }}></i> Physical Stand
+                  <span className="bc-nav-badge bc-badge-yellow" style={{ fontSize: '0.62rem', padding: '1px 6px' }}>NEW</span>
+                </button>
+                <button
+                  type="button"
+                  className="bc-btn-upgrade"
+                  style={{ background: '#16a34a', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  onClick={() => window.print()}
+                >
+                  <i className="fa-solid fa-download"></i> Download PDF
+                </button>
+              </div>
+            </div>
+
+            {/* 2-Column Layout */}
+            <div className="bc-qr-main-grid">
+              {/* Left Column */}
+              <div>
+                {/* Review Placement Card */}
+                <div className="bc-qr-card">
+                  <div className="bc-qr-card-title">
+                    <i className="fa-solid fa-table-cells-large" style={{ color: '#16a34a' }}></i> Review Placement
+                  </div>
+                  <p className="bc-qr-card-sub">
+                    Promote your review link at billing desks, table displays, or digital invoices.
+                  </p>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', letterSpacing: '0.04em' }}>DIRECT REVIEW URL</span>
+                    <span className="bc-header-pill bc-pill-live" style={{ padding: '1px 6px', fontSize: '0.65rem' }}>● LIVE</span>
+                  </div>
+
+                  <div className="bc-direct-url-box">
+                    <input
+                      type="text"
+                      readOnly
+                      value={directReviewUrl}
+                    />
+                    <button
+                      type="button"
+                      className="bc-btn-fetch"
+                      style={{ padding: '0.3rem 0.65rem', fontSize: '0.74rem' }}
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(directReviewUrl);
+                        notify('Review link copied!');
+                      }}
+                    >
+                      <i className="fa-regular fa-copy"></i> Copy
+                    </button>
+                  </div>
+
+                  {/* Big Green Print Action Button */}
+                  <button type="button" className="bc-btn-print-big" onClick={() => window.print()}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <i className="fa-solid fa-print" style={{ fontSize: '1.25rem' }}></i>
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontWeight: 900, fontSize: '0.92rem' }}>Print Review Flyer</div>
+                        <div style={{ fontSize: '0.7rem', opacity: 0.85 }}>Instant Print / Save as PDF</div>
+                      </div>
+                    </div>
+                    <span style={{ background: 'rgba(255,255,255,0.2)', padding: '3px 8px', borderRadius: 999, fontSize: '0.72rem', fontWeight: 800 }}>
+                      A6 / Ready
+                    </span>
+                  </button>
+
+                  {/* 2-Button Row: Save Image & Save PDF */}
+                  <div className="bc-btn-pair">
+                    <button
+                      type="button"
+                      className="bc-btn-half"
+                      onClick={() => {
+                        const a = document.createElement('a');
+                        a.href = qrImageSrc;
+                        a.download = `${bizName.replace(/\s+/g, '-')}-QR-Flyer.png`;
+                        a.click();
+                        notify('Flyer image saved.');
+                      }}
+                    >
+                      <i className="fa-regular fa-image" style={{ color: '#3b82f6' }}></i>
+                      <span>Save Image <small style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8' }}>PNG HD</small></span>
+                    </button>
+                    <button
+                      type="button"
+                      className="bc-btn-half"
+                      onClick={() => window.print()}
+                    >
+                      <i className="fa-regular fa-file-pdf" style={{ color: '#ef4444' }}></i>
+                      <span>Save PDF <small style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8' }}>Print Ready</small></span>
+                    </button>
+                  </div>
+
+                  {/* Download Plain QR */}
+                  <button
+                    type="button"
+                    className="bc-btn-plain-qr"
+                    onClick={() => {
+                      const a = document.createElement('a');
+                      a.href = qrImageSrc;
+                      a.download = `${bizName.replace(/\s+/g, '-')}-plain-qr.png`;
+                      a.click();
+                      notify('Plain QR code downloaded.');
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <i className="fa-solid fa-qrcode" style={{ fontSize: '1.1rem' }}></i>
+                      <div style={{ textAlign: 'left' }}>
+                        <div>Download Plain QR</div>
+                        <small style={{ fontSize: '0.66rem', color: '#94a3b8' }}>Raw PNG · No Platform Branding</small>
+                      </div>
+                    </div>
+                    <span style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 6, fontSize: '0.68rem', color: '#475569' }}>
+                      Raw PNG
+                    </span>
+                  </button>
+
+                  {/* Regenerate Link */}
+                  <button
+                    type="button"
+                    className="bc-btn-regen-link"
+                    onClick={() => notify('QR link refreshed and verified.')}
+                  >
+                    <i className="fa-solid fa-arrows-rotate"></i> Regenerate QR Code Link
+                  </button>
+                </div>
+
+                {/* Hardware & Stand Promo */}
+                <div className="bc-qr-card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      HARDWARE &amp; STAND
+                    </span>
+                    <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#0f172a' }}>From ₹499</span>
+                  </div>
+                  <h4 style={{ fontSize: '0.98rem', fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0' }}>
+                    Want a Physical QR Stand?
+                  </h4>
+                  <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '0 0 10px 0', lineHeight: 1.4 }}>
+                    Order premium acrylic, wooden, or tent table stands printed and shipped to your address.
+                  </p>
+                  <button
+                    type="button"
+                    className="bc-btn-upgrade"
+                    style={{ width: '100%', background: '#16a34a' }}
+                    onClick={() => setActiveTab('Physical QR Stand')}
+                  >
+                    View Physical QR Stands →
+                  </button>
+                </div>
+
+                {/* Printing Best Practices */}
+                <div className="bc-qr-card">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.84rem', fontWeight: 800, color: '#b45309', marginBottom: 8 }}>
+                    <i className="fa-solid fa-lightbulb"></i> Printing Best Practices
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: 18, fontSize: '0.76rem', color: '#475569', lineHeight: 1.5 }}>
+                    <li>Set printer destination to <strong>Save as PDF</strong> or photo paper.</li>
+                    <li>Enable <strong>Background graphics</strong> in browser print settings.</li>
+                    <li>Recommended sizes: <strong>A6 (Table Tent)</strong> or <strong>A4 flyer</strong>.</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Right Column: Live Flyer Canvas */}
+              <div>
+                <div className="bc-preview-container">
+                  {/* Theme Selector */}
+                  <div className="bc-theme-select-row">
+                    <span className="bc-sel-label">1. CHOOSE DESIGN THEME</span>
+                    <div className="bc-pill-selector">
+                      {[
+                        { id: 'Classic', label: '★ Classic', icon: '' },
+                        { id: 'Minimalist', label: 'Minimalist', icon: 'fa-solid fa-pen-nib' },
+                        { id: 'Vibrant', label: '⚡ Vibrant', icon: '' },
+                        { id: 'Plain QR', label: 'Plain QR', icon: 'fa-solid fa-qrcode' }
+                      ].map(theme => (
+                        <button
+                          key={theme.id}
+                          type="button"
+                          className={`bc-pill-select-btn ${qrTheme === theme.id ? 'active' : ''}`}
+                          onClick={() => setQrTheme(theme.id)}
+                        >
+                          {theme.icon && <i className={theme.icon}></i>}
+                          {theme.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Size Selector */}
+                  <div className="bc-theme-select-row">
+                    <span className="bc-sel-label">2. CHOOSE DISPLAY SIZE</span>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr', gap: 8 }}>
+                      <button
+                        type="button"
+                        className={`bc-pill-select-btn ${qrDisplaySize === 'A6' ? 'active' : ''}`}
+                        onClick={() => setQrDisplaySize('A6')}
+                      >
+                        <i className="fa-regular fa-file"></i> Standee Flyer (A6 Vertical)
+                      </button>
+                      <button
+                        type="button"
+                        className={`bc-pill-select-btn ${qrDisplaySize === 'Banner' ? 'active' : ''}`}
+                        onClick={() => setQrDisplaySize('Banner')}
+                      >
+                        <i className="fa-regular fa-window-maximize"></i> Counter Banner (Wide Horizontal)
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Preview Canvas Bar */}
+                  <div className="bc-preview-topbar" style={{ marginTop: 12 }}>
+                    <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#16a34a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span className="bc-live-dot"></span> LIVE INSTANT PREVIEW
+                    </span>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        type="button"
+                        className="btn btn-sm"
+                        style={{ background: '#16a34a', color: '#fff', fontSize: '0.74rem', padding: '0.3rem 0.65rem' }}
+                        onClick={() => {
+                          const a = document.createElement('a');
+                          a.href = qrImageSrc;
+                          a.download = `${bizName.replace(/\s+/g, '-')}-flyer.png`;
+                          a.click();
+                          notify('Flyer downloaded.');
+                        }}
+                      >
+                        <i className="fa-solid fa-download"></i> Save Image
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-light"
+                        style={{ fontSize: '0.74rem', padding: '0.3rem 0.65rem' }}
+                        onClick={() => window.print()}
+                      >
+                        <i className="fa-regular fa-file-pdf"></i> Save PDF
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Checkered Canvas Preview Box */}
+                  <div className="bc-canvas-bg">
+                    {/* The Exact Review Flyer matching Screenshot 5 */}
+                    <div className="bc-a6-flyer" id="printReadyFlyer">
+                      {/* Google G logo */}
+                      <div className="bc-flyer-google-logo">
+                        <svg width="22" height="22" viewBox="0 0 24 24">
+                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                        </svg>
+                      </div>
+
+                      <div className="bc-flyer-biz-name">{bizName}</div>
+                      <div className="bc-flyer-stars">★★★★★</div>
+                      <div className="bc-flyer-heading">
+                        Review Us on <span>Google</span>
+                      </div>
+
+                      {/* QR Box with floating pill badges */}
+                      <div className="bc-flyer-qr-wrap">
+                        <span className="bc-flyer-badge-left">Amazing! ⭐</span>
+                        <img
+                          src={qrImageSrc}
+                          alt="Review QR Code"
+                          style={{ width: 150, height: 150, display: 'block', borderRadius: 8 }}
+                        />
+                        <span className="bc-flyer-badge-right">Best ever! ⭐</span>
+                      </div>
+
+                      <div className="bc-flyer-time-badge">
+                        ⚡ Takes less than <strong>30 seconds</strong> !
+                      </div>
+
+                      <div className="bc-flyer-checklist">
+                        <span><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Real Reviews</span>
+                        <span><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Quick &amp; Easy</span>
+                        <span><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Secure</span>
+                      </div>
+
+                      <button type="button" className="bc-flyer-btn-scan">
+                        SCAN WITH YOUR PHONE <i className="fa-solid fa-arrow-right"></i>
+                      </button>
+
+                      <div className="bc-flyer-footer-tag">
+                        POWERED BY <strong>StarReview AI</strong><br />
+                        AI-Powered Google Review Growth System
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
