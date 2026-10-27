@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api, getToken, setToken } from './api.js';
 import { ReviewFunnel, BusinessSetup, ReplyAssistant, SeoAnalyzer, Dashboard, QrFlyer } from './tools.jsx';
+import BusinessConsole from './BusinessConsole.jsx';
 
 const features = [
   ['✦', 'AI review assistant', 'Help customers express their genuine experience with three editable draft suggestions in 24 languages.'],
@@ -258,15 +259,31 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
+  const isConsoleView = (page === 'Dashboard' || (page === 'Account' && !!user));
+
   const submitAuth = async (e) => {
     e.preventDefault();
     const r = await api('POST', regMode ? '/api/auth/register' : '/api/auth/login', { email, password });
-    if (!r.ok) return notify(r.data.error);
+    if (!r.ok) return notify(r.data.error || 'Authentication failed');
     setToken(r.data.token);
     setUser(r.data.user);
     setPassword('');
     notify(regMode ? 'Account created. Your 3-day free trial has started!' : 'Signed in successfully.');
-    navigate(regMode ? 'My business' : 'Dashboard');
+    const bRes = await api('GET', '/api/business');
+    if (bRes.ok) setMyBusiness(bRes.data.business);
+    navigate('Dashboard');
+  };
+
+  const loginDemoConsole = async () => {
+    const r = await api('POST', '/api/auth/login', { email: 'team@maruti.com', password: 'password123' });
+    if (r.ok) {
+      setToken(r.data.token);
+      setUser(r.data.user);
+      const bRes = await api('GET', '/api/business');
+      if (bRes.ok) setMyBusiness(bRes.data.business);
+      notify('Welcome to Business Console (Demo Mode)');
+      navigate('Dashboard');
+    }
   };
 
   const generate = async () => {
@@ -867,7 +884,7 @@ export default function App() {
 
   return (
     <>
-      {page !== 'Review' && (
+      {page !== 'Review' && !isConsoleView && (
         <header className="header">
           <button className="brand" onClick={() => navigate('Home')}>
             <span className="brand-mark">✦</span>
@@ -886,8 +903,8 @@ export default function App() {
             ))}
           </nav>
           <div className="header-actions">
-            <button className="text-btn" onClick={() => navigate('Account')}>{user ? 'My account' : 'Sign in'}</button>
-            <button className="btn btn-dark btn-sm" onClick={() => navigate('Account')}>Start free <span>↗</span></button>
+            <button className="text-btn" onClick={() => navigate(user ? 'Dashboard' : 'Account')}>{user ? 'Business Console' : 'Sign in'}</button>
+            <button className="btn btn-dark btn-sm" onClick={() => navigate(user ? 'Dashboard' : 'Account')}>{user ? 'Open Console ↗' : 'Start free ↗'}</button>
           </div>
         </header>
       )}
@@ -2209,31 +2226,90 @@ export default function App() {
       )}
 
       {/* ====================================================================
-          ACCOUNT / LOGIN / REGISTER
+          BUSINESS CONSOLE ADMIN PANEL (REVIEWFLOW AI STYLE)
           ==================================================================== */}
-      {page === 'Account' && (
-        <PageShell title="Welcome to StarReview AI" subtitle={user ? 'You are signed in.' : 'Create an account to start your 3-day free trial, or sign in.'}>
-          {user ? (
-            <div className="account-card">
-              <div className="brand-mark large-mark">✦</div>
-              <h3>{user.email}</h3>
-              <p>{user.subscription && user.access ? (user.subscription.plan === 'Trial' ? `Free trial active until ${new Date(user.subscription.expiresAt).toLocaleDateString()}` : `${user.subscription.plan} plan (${user.subscription.period}) active until ${new Date(user.subscription.expiresAt).toLocaleDateString()}`) : 'Your plan has expired. Choose a plan to reactivate your review page.'}</p>
-              <button className="btn btn-dark full" onClick={() => navigate(user.access && user.subscription?.plan !== 'Trial' ? 'Dashboard' : 'Pricing')}>{user.access && user.subscription?.plan !== 'Trial' ? 'Open dashboard' : 'Choose a plan'} ↗</button>
-              <button type="button" className="text-btn centered" onClick={() => navigate('Dashboard')}>Go to dashboard</button>
-              <button type="button" className="text-btn centered" onClick={logout}>Sign out</button>
+      {isConsoleView && (
+        <BusinessConsole
+          user={user || { id: 'demo-user-1', email: 'team@maruti.com', subscription: { plan: 'Trial', status: 'active', expiresAt: new Date(Date.now() + 2 * 86400000).toISOString(), isTrial: true } }}
+          setUser={setUser}
+          business={myBusiness}
+          setBusiness={setMyBusiness}
+          navigate={navigate}
+          notify={notify}
+          choosePlan={choosePlan}
+        />
+      )}
+
+      {/* ====================================================================
+          ACCOUNT / LOGIN / REGISTER (WHEN LOGGED OUT)
+          ==================================================================== */}
+      {page === 'Account' && !user && (
+        <PageShell title="Sign In · StarReview AI" subtitle="Access your business reputation console, QR flyers, and private feedback.">
+          <div className="account-card" style={{ maxWidth: 460 }}>
+            <div className="brand-mark large-mark">✦</div>
+            <h3>{regMode ? 'Create Business Account' : 'Sign in to Console'}</h3>
+            <p>{regMode ? 'No credit card required. 3-day full access trial starts immediately.' : 'Welcome back! Sign in to manage your Google review funnel.'}</p>
+            
+            {/* 1-Click Demo Access button */}
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '14px 16px', marginBottom: '1.25rem', textAlign: 'left' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#166534', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <i className="fa-solid fa-sparkles"></i> Instant Preview
+                </span>
+                <span style={{ fontSize: '0.72rem', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: 999, fontWeight: 600 }}>Demo</span>
+              </div>
+              <p style={{ margin: '0 0 10px 0', fontSize: '0.8rem', color: '#14532d', lineHeight: 1.4 }}>
+                Explore the complete Business Console with sample data for <b>verde eco landing</b>.
+              </p>
+              <button
+                type="button"
+                className="btn btn-dark full"
+                style={{ background: '#1d4934', color: '#fff', fontSize: '0.85rem', padding: '0.65rem' }}
+                onClick={loginDemoConsole}
+              >
+                Explore Live Console Demo ↗
+              </button>
             </div>
-          ) : (
-            <form className="account-card" onSubmit={submitAuth}>
-              <div className="brand-mark large-mark">✦</div>
-              <h3>{regMode ? 'Create your account' : 'Sign in'}</h3>
-              <p>{regMode ? 'No credit card needed. Your 3-day free trial starts now.' : 'Welcome back.'}</p>
-              <label>Email address<input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@business.com" /></label>
-              <label>Password<input type="password" required minLength="8" value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 8 characters" /></label>
-              <button className="btn btn-dark full">{regMode ? 'Start free trial' : 'Sign in'}</button>
-              <button type="button" className="text-btn centered" onClick={() => setRegMode(!regMode)}>{regMode ? 'Already have an account? Sign in' : 'New here? Start your free trial'}</button>
-              <button type="button" className="text-btn centered" onClick={() => navigate('Dashboard')}>Explore the sample dashboard ↗</button>
+
+            <div style={{ display: 'flex', alignItems: 'center', margin: '1.2rem 0', color: '#94a3b8', fontSize: '0.8rem' }}>
+              <span style={{ flex: 1, height: 1, background: '#e2e8f0' }}></span>
+              <span style={{ padding: '0 10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Or continue with credentials</span>
+              <span style={{ flex: 1, height: 1, background: '#e2e8f0' }}></span>
+            </div>
+
+            <form onSubmit={submitAuth} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <label style={{ textAlign: 'left', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+                Email address
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="e.g. store@business.com"
+                  style={{ width: '100%', marginTop: 6 }}
+                />
+              </label>
+              <label style={{ textAlign: 'left', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+                Password
+                <input
+                  type="password"
+                  required
+                  minLength="6"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="At least 6 characters"
+                  style={{ width: '100%', marginTop: 6 }}
+                />
+              </label>
+              <button className="btn btn-dark full" style={{ marginTop: 6 }}>
+                {regMode ? 'Start 3-Day Free Trial' : 'Sign in to Dashboard'}
+              </button>
             </form>
-          )}
+
+            <button type="button" className="text-btn centered" style={{ marginTop: '1rem' }} onClick={() => setRegMode(!regMode)}>
+              {regMode ? 'Already have an account? Sign in' : "Don't have an account? Register free"}
+            </button>
+          </div>
         </PageShell>
       )}
 
@@ -2285,11 +2361,7 @@ export default function App() {
         </PageShell>
       )}
 
-      {page === 'Dashboard' && (
-        <PageShell title="Your reputation hub" subtitle={user ? 'Live numbers from your review page.' : 'A sample dashboard. Sign in to see your own live numbers.'}>
-          <Dashboard user={user} business={myBusiness} navigate={navigate} />
-        </PageShell>
-      )}
+
 
       {page === 'My business' && (
         <PageShell title="Your business profile" subtitle="These details power your customer review page, drafts and flyer.">
@@ -2667,7 +2739,7 @@ export default function App() {
         </div>
       )}
 
-      {page !== 'Review' && <Footer navigate={navigate} />}
+      {page !== 'Review' && !isConsoleView && <Footer navigate={navigate} />}
     </>
   );
 }
