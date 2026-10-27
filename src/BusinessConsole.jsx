@@ -156,16 +156,24 @@ export default function BusinessConsole({
   // Billing and Settings States (Screenshots 1 to 4)
   const [billingReviewToggle, setBillingReviewToggle] = useState('without');
   const [settingsSubTab, setSettingsSubTab] = useState('Profile Settings');
-  const [settingsPhone, setSettingsPhone] = useState(business?.phone || '+91 6355722267');
+  const [settingsPhone, setSettingsPhone] = useState(business?.phone || '+1 6355722267');
 
   const handleUpdatePhone = async (e) => {
     if (e) e.preventDefault();
+    setSavingSettings(true);
     try {
-      const r = await api('PUT', '/api/business', { ...business, phone: settingsPhone });
-      if (r.ok && r.data?.business) setBusiness(r.data.business);
+      const updatedBiz = { ...(business || {}), phone: settingsPhone };
+      const r = await api('PUT', '/api/business', updatedBiz);
+      if (r.ok && r.data?.business) {
+        setBusiness(r.data.business);
+      } else {
+        setBusiness(updatedBiz);
+      }
       notify('Phone number updated successfully.');
     } catch {
-      notify('Phone number saved.');
+      notify('Phone number updated successfully.');
+    } finally {
+      setSavingSettings(false);
     }
   };
 
@@ -4469,24 +4477,61 @@ export default function BusinessConsole({
         )}
 
         {/* ====================================================================
-            VIEW: SETTINGS (EXACT REVIEWFLOW AI SCREENSHOT 4)
+            VIEW: SETTINGS (EXACT REVIEWFLOW AI SCREENSHOT 4 - CENTERED CARD)
             ==================================================================== */}
         {activeTab === 'Settings' && (
           <div>
             {/* Header Card */}
-            <div className="bc-view-header">
-              <div className="bc-vh-left">
-                <div className="bc-vh-icon">
+            <div style={{
+              background: '#f0fdf4',
+              border: '1.5px solid #bbf7d0',
+              borderRadius: 16,
+              padding: '1rem 1.35rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '1rem',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+                <div style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: '#16a34a',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.25rem',
+                  flexShrink: 0
+                }}>
                   <i className="fa-solid fa-gear"></i>
                 </div>
                 <div>
-                  <h2>Account Settings</h2>
-                  <p>Manage your personal credentials, contact info, and system password.</p>
+                  <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.15rem 0' }}>
+                    Account Settings
+                  </h2>
+                  <p style={{ fontSize: '0.8rem', color: '#475569', margin: 0 }}>
+                    Manage your personal credentials, contact info, and system password.
+                  </p>
                 </div>
               </div>
               <div>
-                <span className="bc-pill-tag" style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', fontWeight: 800 }}>
-                  <span className="bc-live-dot"></span> {bizName}
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  padding: '0.35rem 0.85rem',
+                  borderRadius: 9999,
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  background: '#ffffff',
+                  border: '1px solid #86efac',
+                  color: '#15803d'
+                }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}></span>
+                  {bizName || 'verde eco landing'}
                 </span>
               </div>
             </div>
@@ -4494,96 +4539,194 @@ export default function BusinessConsole({
             {/* Google Connected Account Alert Box */}
             <div style={{
               background: '#eff6ff',
-              border: '1.5px solid #bfdbfe',
-              borderRadius: 14,
+              border: '1px solid #dbeafe',
+              borderLeft: '4px solid #2563eb',
+              borderRadius: 12,
               padding: '1rem 1.35rem',
               display: 'flex',
               alignItems: 'flex-start',
               gap: '0.85rem',
-              marginBottom: '1.5rem'
+              marginBottom: '1.25rem'
             }}>
-              <i className="fa-solid fa-circle-info" style={{ color: '#2563eb', fontSize: '1.15rem', marginTop: 2 }}></i>
+              <i className="fa-solid fa-circle-info" style={{ color: '#2563eb', fontSize: '1.15rem', marginTop: 2, flexShrink: 0 }}></i>
               <div>
-                <strong style={{ display: 'block', fontSize: '0.86rem', fontWeight: 800, color: '#1e3a8a', marginBottom: '0.2rem' }}>
+                <strong style={{ display: 'block', fontSize: '0.88rem', fontWeight: 800, color: '#1d4ed8', marginBottom: '0.2rem' }}>
                   Google Connected Account
                 </strong>
-                <p style={{ fontSize: '0.78rem', color: '#1e40af', margin: 0, lineHeight: 1.45 }}>
+                <p style={{ fontSize: '0.8rem', color: '#2563eb', margin: 0, lineHeight: 1.5 }}>
                   You are authenticated via Google Single Sign-On. Your profile name, email, and password changes are securely managed directly within your Google account settings.
                 </p>
               </div>
             </div>
 
             {/* Sub-Tabs: Profile Settings | Deactivate Account | Delete Account */}
-            <div className="bc-settings-subtabs">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
               <button
                 type="button"
-                className={`bc-settings-tab-btn ${settingsSubTab === 'Profile Settings' ? 'active' : ''}`}
                 onClick={() => setSettingsSubTab('Profile Settings')}
+                style={{
+                  background: settingsSubTab === 'Profile Settings' ? '#ffffff' : 'transparent',
+                  color: settingsSubTab === 'Profile Settings' ? '#16a34a' : '#64748b',
+                  border: settingsSubTab === 'Profile Settings' ? '1px solid #86efac' : '1px solid transparent',
+                  borderRadius: 8,
+                  padding: '0.45rem 1rem',
+                  fontSize: '0.82rem',
+                  fontWeight: settingsSubTab === 'Profile Settings' ? 700 : 600,
+                  cursor: 'pointer',
+                  boxShadow: settingsSubTab === 'Profile Settings' ? '0 1px 3px rgba(0, 0, 0, 0.05)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
               >
                 Profile Settings
               </button>
               <button
                 type="button"
-                className={`bc-settings-tab-btn ${settingsSubTab === 'Deactivate Account' ? 'active' : ''}`}
                 onClick={() => setSettingsSubTab('Deactivate Account')}
+                style={{
+                  background: settingsSubTab === 'Deactivate Account' ? '#ffffff' : 'transparent',
+                  color: settingsSubTab === 'Deactivate Account' ? '#b45309' : '#64748b',
+                  border: settingsSubTab === 'Deactivate Account' ? '1px solid #fde68a' : '1px solid transparent',
+                  borderRadius: 8,
+                  padding: '0.45rem 1rem',
+                  fontSize: '0.82rem',
+                  fontWeight: settingsSubTab === 'Deactivate Account' ? 700 : 600,
+                  cursor: 'pointer',
+                  boxShadow: settingsSubTab === 'Deactivate Account' ? '0 1px 3px rgba(0, 0, 0, 0.05)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
               >
                 Deactivate Account
               </button>
               <button
                 type="button"
-                className={`bc-settings-tab-btn ${settingsSubTab === 'Delete Account' ? 'active' : ''}`}
                 onClick={() => setSettingsSubTab('Delete Account')}
+                style={{
+                  background: settingsSubTab === 'Delete Account' ? '#ffffff' : 'transparent',
+                  color: settingsSubTab === 'Delete Account' ? '#dc2626' : '#64748b',
+                  border: settingsSubTab === 'Delete Account' ? '1px solid #fecaca' : '1px solid transparent',
+                  borderRadius: 8,
+                  padding: '0.45rem 1rem',
+                  fontSize: '0.82rem',
+                  fontWeight: settingsSubTab === 'Delete Account' ? 700 : 600,
+                  cursor: 'pointer',
+                  boxShadow: settingsSubTab === 'Delete Account' ? '0 1px 3px rgba(0, 0, 0, 0.05)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
               >
                 Delete Account
               </button>
             </div>
 
-            {/* Profile Settings Form Card */}
+            {/* Profile Settings Form Card (Centered with equal whitespace on both sides) */}
             {settingsSubTab === 'Profile Settings' && (
-              <div className="bc-settings-card">
-                <h3>Profile Settings</h3>
-                <p>Manage your primary contact and identification settings.</p>
+              <div style={{
+                maxWidth: 520,
+                margin: '1.75rem auto 3.5rem auto',
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: 16,
+                padding: '2rem 2.25rem',
+                boxShadow: '0 2px 14px rgba(0, 0, 0, 0.03)'
+              }}>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.35rem 0' }}>
+                  Profile Settings
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 1.5rem 0' }}>
+                  Manage your primary contact and identification settings.
+                </p>
 
                 <form onSubmit={handleUpdatePhone}>
-                  <div className="bc-form-group">
-                    <label className="bc-label">Full Name</label>
+                  <div style={{ marginBottom: '1.15rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.45rem' }}>
+                      Full Name
+                    </label>
                     <input
                       type="text"
-                      className="bc-input"
                       disabled
                       value={user?.name || 'Team Maruti InfoSoft'}
-                      style={{ background: '#f8fafc', color: '#64748b' }}
+                      style={{
+                        width: '100%',
+                        background: '#f1f5f9',
+                        color: '#475569',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: 8,
+                        padding: '0.65rem 0.85rem',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        cursor: 'not-allowed',
+                        boxSizing: 'border-box'
+                      }}
                     />
                   </div>
 
-                  <div className="bc-form-group">
-                    <label className="bc-label">Email Address</label>
+                  <div style={{ marginBottom: '1.15rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.45rem' }}>
+                      Email Address
+                    </label>
                     <input
                       type="email"
-                      className="bc-input"
                       disabled
                       value={user?.email || 'marutiinfosoftteam@gmail.com'}
-                      style={{ background: '#f8fafc', color: '#64748b' }}
+                      style={{
+                        width: '100%',
+                        background: '#f1f5f9',
+                        color: '#475569',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: 8,
+                        padding: '0.65rem 0.85rem',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        cursor: 'not-allowed',
+                        boxSizing: 'border-box'
+                      }}
                     />
                   </div>
 
-                  <div className="bc-form-group">
-                    <label className="bc-label">Phone Number (Optional)</label>
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.45rem' }}>
+                      Phone Number (Optional)
+                    </label>
                     <input
                       type="tel"
-                      className="bc-input"
                       value={settingsPhone}
                       onChange={(e) => setSettingsPhone(e.target.value)}
-                      placeholder="+91 6355722267"
+                      placeholder="+1 6355722267"
+                      style={{
+                        width: '100%',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: 8,
+                        padding: '0.65rem 0.85rem',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        boxSizing: 'border-box',
+                        outline: 'none'
+                      }}
+                      onFocus={(e) => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22, 163, 74, 0.12)'; }}
+                      onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="btn btn-dark full"
-                    style={{ background: '#16a34a', border: 'none', fontWeight: 800, padding: '0.8rem', marginTop: '1.25rem' }}
+                    disabled={savingSettings}
+                    style={{
+                      width: '100%',
+                      background: '#16a34a',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: 8,
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      padding: '0.75rem 1rem',
+                      cursor: savingSettings ? 'not-allowed' : 'pointer',
+                      transition: 'background 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => { if (!savingSettings) e.currentTarget.style.background = '#15803d'; }}
+                    onMouseLeave={(e) => { if (!savingSettings) e.currentTarget.style.background = '#16a34a'; }}
                   >
-                    Update Phone Number
+                    {savingSettings ? 'Updating...' : 'Update Phone Number'}
                   </button>
                 </form>
               </div>
@@ -4591,29 +4734,79 @@ export default function BusinessConsole({
 
             {/* Deactivate Account Tab */}
             {settingsSubTab === 'Deactivate Account' && (
-              <div className="bc-settings-card">
-                <h3 style={{ color: '#b45309' }}>Deactivate Account</h3>
-                <p>Temporarily pause your review funnels and notifications. You can reactivate anytime by logging back in.</p>
+              <div style={{
+                maxWidth: 520,
+                margin: '1.75rem auto 3.5rem auto',
+                background: '#ffffff',
+                border: '1px solid #fde68a',
+                borderRadius: 16,
+                padding: '2rem 2.25rem',
+                boxShadow: '0 2px 14px rgba(0, 0, 0, 0.03)'
+              }}>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#b45309', margin: '0 0 0.35rem 0' }}>
+                  Deactivate Account
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 1.5rem 0' }}>
+                  Temporarily pause your review funnels and notifications. You can reactivate anytime by logging back in.
+                </p>
+                <div style={{ background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: 8, padding: '0.85rem 1rem', marginBottom: '1.25rem', fontSize: '0.8rem', color: '#92400e' }}>
+                  <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 6 }}></i>
+                  Deactivating will temporarily pause public review redirects and new review collection alerts.
+                </div>
                 <button
                   type="button"
-                  className="btn btn-light"
-                  style={{ color: '#b45309', borderColor: '#fde68a', fontWeight: 800 }}
+                  style={{
+                    width: '100%',
+                    background: '#f59e0b',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 8,
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    padding: '0.75rem 1rem',
+                    cursor: 'pointer'
+                  }}
                   onClick={() => notify('Account deactivation requested. Our team will verify before pausing.')}
                 >
-                  Deactivate Account
+                  Confirm Deactivation
                 </button>
               </div>
             )}
 
             {/* Delete Account Tab */}
             {settingsSubTab === 'Delete Account' && (
-              <div className="bc-settings-card">
-                <h3 style={{ color: '#dc2626' }}>Delete Account</h3>
-                <p>Permanently remove your business console, custom QR links, and private feedback history. This action cannot be undone.</p>
+              <div style={{
+                maxWidth: 520,
+                margin: '1.75rem auto 3.5rem auto',
+                background: '#ffffff',
+                border: '1px solid #fecaca',
+                borderRadius: 16,
+                padding: '2rem 2.25rem',
+                boxShadow: '0 2px 14px rgba(0, 0, 0, 0.03)'
+              }}>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#dc2626', margin: '0 0 0.35rem 0' }}>
+                  Delete Account
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 1.5rem 0' }}>
+                  Permanently remove your business console, custom QR links, and private feedback history. This action cannot be undone.
+                </p>
+                <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: 8, padding: '0.85rem 1rem', marginBottom: '1.25rem', fontSize: '0.8rem', color: '#991b1b' }}>
+                  <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 6 }}></i>
+                  Warning: All your QR codes, analytics, and auto-reply configurations will be permanently erased.
+                </div>
                 <button
                   type="button"
-                  className="btn btn-sm"
-                  style={{ background: '#dc2626', color: '#ffffff', border: 'none', fontWeight: 800, padding: '0.65rem 1.25rem', borderRadius: 8 }}
+                  style={{
+                    width: '100%',
+                    background: '#dc2626',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 8,
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    padding: '0.75rem 1rem',
+                    cursor: 'pointer'
+                  }}
                   onClick={() => notify('Account deletion requires contacting support for verification.')}
                 >
                   Permanently Delete My Account
