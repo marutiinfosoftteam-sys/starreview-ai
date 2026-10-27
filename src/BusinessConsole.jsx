@@ -446,7 +446,7 @@ export default function BusinessConsole({
     setCouponCode('');
     setReferralCode('');
     setReferralVerified(false);
-    const p = price || (period === 'Yearly' ? 1999 : (period === 'Monthly' ? 299 : 2999));
+    const p = price || (period === 'Yearly' ? 999 : (period === 'Monthly' ? 99 : 2999));
     setCheckoutPlanData({
       name: planTier === 'Agency' ? 'Starter Multi-Business (10 Locations)' : `${period === 'Yearly' ? 'Yearly' : 'Monthly'} Plan`,
       tier: planTier,
@@ -615,7 +615,7 @@ export default function BusinessConsole({
                 {daysLeft > 0 ? `Free Trial — ${daysLeft} days` : 'Plan Expired'}
               </div>
               <p>{daysLeft > 0 ? 'Features fully unlocked' : 'Features locked.'}</p>
-              <button className="bc-sidebar-alert-btn" onClick={() => startPlanCheckout('Pro', 'Yearly', 1999)}>
+              <button className="bc-sidebar-alert-btn" onClick={() => startPlanCheckout('Starter', 'Yearly', 999)}>
                 Upgrade Plan
               </button>
             </div>
@@ -807,7 +807,7 @@ export default function BusinessConsole({
 
               <div
                 onClick={() => {
-                  startPlanCheckout('Pro', 'Yearly', 1999);
+                  startPlanCheckout('Starter', 'Yearly', 999);
                 }}
                 style={{
                   background: '#ffffff',
@@ -874,7 +874,7 @@ export default function BusinessConsole({
                     </p>
                   </div>
                 </div>
-                <button className="bc-btn-upgrade" onClick={() => startPlanCheckout('Pro', 'Yearly', 1999)}>
+                <button className="bc-btn-upgrade" onClick={() => startPlanCheckout('Starter', 'Yearly', 999)}>
                   Upgrade Plan
                 </button>
               </div>
@@ -893,7 +893,7 @@ export default function BusinessConsole({
                     </p>
                   </div>
                 </div>
-                <button className="bc-btn-upgrade" style={{ background: '#166534' }} onClick={() => startPlanCheckout('Pro', 'Yearly', 1999)}>
+                <button className="bc-btn-upgrade" style={{ background: '#166534' }} onClick={() => startPlanCheckout('Starter', 'Yearly', 999)}>
                   Manage Plan
                 </button>
               </div>
@@ -3755,22 +3755,38 @@ export default function BusinessConsole({
                 </div>
 
                 <button
-                  className="btn btn-dark full"
-                  style={{ marginTop: '0.9rem', padding: '0.85rem', fontWeight: 800, fontSize: '0.9rem' }}
-                  onClick={handleRunSeoAudit}
-                  disabled={seoLoading}
+                  type="button"
+                  className="btn full"
+                  style={{
+                    marginTop: '0.9rem',
+                    padding: '0.85rem',
+                    fontWeight: 800,
+                    fontSize: '0.88rem',
+                    background: '#94a3b8',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 10,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                  }}
+                  onClick={() => startPlanCheckout('Pro', 'Yearly', 999)}
                 >
-                  {seoLoading ? (
-                    <>
-                      <i className="fa-solid fa-circle-notch fa-spin" style={{ marginRight: 8 }}></i>
-                      Scanning Google Maps & Ranking Factors...
-                    </>
-                  ) : (
-                    <>
-                      Run Real-Time AI SEO Audit <i className="fa-solid fa-arrow-right" style={{ marginLeft: 6 }}></i>
-                    </>
-                  )}
+                  <i className="fa-solid fa-chart-simple"></i> Plan Expired — Upgrade to Analyze
                 </button>
+
+                <div style={{ textAlign: 'center', marginTop: 10 }}>
+                  <button
+                    type="button"
+                    style={{ background: 'none', border: 'none', color: '#16a34a', fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+                    onClick={handleRunSeoAudit}
+                  >
+                    {seoLoading ? 'Scanning 20+ GBP Checkpoints...' : (seoResult ? '✓ Real-Time Scan Completed (Click to Re-scan)' : '⚡ Preview 20-Point AI SEO Audit Demo →')}
+                  </button>
+                </div>
 
                 {/* Audit Results */}
                 {seoResult && (
@@ -5142,7 +5158,7 @@ export default function BusinessConsole({
                   </div>
                 </div>
 
-                {/* Red Warning Banner if expired or trial 0 days */}
+                {/* Red Warning Banner if expired or trial 0 days (Screenshot 1) */}
                 <div style={{
                   background: '#fef2f2',
                   border: '1.5px solid #fecaca',
@@ -5152,7 +5168,7 @@ export default function BusinessConsole({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: '1rem',
-                  marginBottom: '1.5rem'
+                  marginBottom: '1rem'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#991b1b', fontSize: '0.82rem', fontWeight: 700 }}>
                     <i className="fa-solid fa-triangle-exclamation" style={{ color: '#dc2626', fontSize: '1.1rem' }}></i>
@@ -5160,7 +5176,7 @@ export default function BusinessConsole({
                   </div>
                   <button
                     className="btn btn-sm"
-                    style={{ background: '#991b1b', color: '#ffffff', border: 'none', fontWeight: 800, whiteSpace: 'nowrap', borderRadius: 8 }}
+                    style={{ background: '#991b1b', color: '#ffffff', border: 'none', fontWeight: 800, whiteSpace: 'nowrap', borderRadius: 8, padding: '0.45rem 1rem' }}
                     onClick={() => {
                       const el = document.getElementById('billing-plans-section');
                       if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -5168,6 +5184,53 @@ export default function BusinessConsole({
                   >
                     Reactivate Plan Below ↓
                   </button>
+                </div>
+
+                {/* Yellow Payment Verification In Progress Banner (Screenshot 1) */}
+                <div style={{
+                  background: '#fefce8',
+                  border: '1.5px solid #fef08a',
+                  borderRadius: 14,
+                  padding: '0.85rem 1.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '1rem',
+                  marginBottom: '1.5rem',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#fef08a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#b45309', fontSize: '1rem', flexShrink: 0 }}>
+                      <i className="fa-regular fa-clock"></i>
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#854d0e' }}>
+                        Payment Verification In Progress
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: '#a16207' }}>
+                        You requested an upgrade to <strong>Individual</strong>. We are verifying your transaction UTR reference.
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      className="btn btn-light btn-sm"
+                      style={{ fontSize: '0.74rem', fontWeight: 800, padding: '0.4rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: 6, background: '#ffffff', borderColor: '#fef08a', color: '#854d0e' }}
+                      onClick={() => openWebpressPay(999, 'Yearly Plan Verification', 'plan')}
+                    >
+                      <i className="fa-regular fa-file-lines"></i> View Payment Details
+                    </button>
+                    <a
+                      href="https://wa.me/919707842047?text=Hi!%20I%20need%20assistance%20verifying%20my%20payment%20UTR%20reference."
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn btn-sm"
+                      style={{ background: '#ffffff', color: '#16a34a', border: '1px solid #bbf7d0', fontSize: '0.74rem', fontWeight: 800, padding: '0.4rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                    >
+                      <i className="fa-brands fa-whatsapp"></i> WhatsApp Support
+                    </a>
+                  </div>
                 </div>
 
                 {/* Current Plan Status Card */}
@@ -5245,7 +5308,7 @@ export default function BusinessConsole({
                     <p className="bc-billing-card-sub">Complete review growth suite for single locations.</p>
 
                     <div className="bc-billing-price-row">
-                      <div className="price">₹ {billingReviewToggle === 'without' ? '199' : '299'} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ month</span></div>
+                      <div className="price">₹ {billingReviewToggle === 'without' ? '99' : '299'} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ month</span></div>
                       <div className="sub-price">Month-to-Month · Cancel anytime</div>
                     </div>
 
@@ -5271,7 +5334,7 @@ export default function BusinessConsole({
                     <button
                       className="btn btn-dark full"
                       style={{ background: '#16a34a', border: 'none', fontWeight: 800, padding: '0.75rem' }}
-                      onClick={() => startPlanCheckout(billingReviewToggle === 'without' ? 'Starter' : 'Pro', 'Monthly', billingReviewToggle === 'without' ? 199 : 299)}
+                      onClick={() => startPlanCheckout(billingReviewToggle === 'without' ? 'Starter' : 'Pro', 'Monthly', billingReviewToggle === 'without' ? 99 : 299)}
                     >
                       {billingReviewToggle === 'without' ? 'Upgrade to Starter' : 'Upgrade to Pro'}
                     </button>
@@ -5311,7 +5374,7 @@ export default function BusinessConsole({
                     <button
                       className="btn full"
                       style={{ background: '#ea580c', color: '#fff', border: 'none', fontWeight: 800, padding: '0.75rem' }}
-                      onClick={() => startPlanCheckout(billingReviewToggle === 'without' ? 'Starter' : 'Pro', 'Yearly', billingReviewToggle === 'without' ? 1999 : 2999)}
+                      onClick={() => startPlanCheckout(billingReviewToggle === 'without' ? 'Starter' : 'Pro', 'Yearly', billingReviewToggle === 'without' ? 999 : 2999)}
                     >
                       Upgrade to Yearly (Save 16%)
                     </button>
@@ -5356,63 +5419,143 @@ export default function BusinessConsole({
                 </div>
 
                 {/* 4 Value Badges Strip (Screenshot 2) */}
-                <div className="bc-billing-badges-row">
-                  <div className="bc-bb-item">
-                    <i className="fa-solid fa-bolt"></i>
+                <div className="bc-billing-badges-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', margin: '2rem 0' }}>
+                  <div className="bc-bb-item" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>
+                      <i className="fa-solid fa-bolt"></i>
+                    </div>
                     <div className="bc-bb-text">
-                      <strong>Instant UPI Activation</strong>
-                      <small>Scan QR &amp; enter UTR for quick activation</small>
+                      <strong style={{ display: 'block', fontSize: '0.84rem', color: '#0f172a' }}>Instant UPI Activation</strong>
+                      <small style={{ fontSize: '0.72rem', color: '#64748b' }}>Scan QR &amp; enter UTR for quick activation</small>
                     </div>
                   </div>
-                  <div className="bc-bb-item">
-                    <i className="fa-solid fa-shield-halved"></i>
+                  <div className="bc-bb-item" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>
+                      <i className="fa-solid fa-shield-halved"></i>
+                    </div>
                     <div className="bc-bb-text">
-                      <strong>Permanent QR Codes</strong>
-                      <small>Your flyers, links &amp; ratings never change</small>
+                      <strong style={{ display: 'block', fontSize: '0.84rem', color: '#0f172a' }}>Permanent QR Codes</strong>
+                      <small style={{ fontSize: '0.72rem', color: '#64748b' }}>Your flyers, links &amp; ratings never change</small>
                     </div>
                   </div>
-                  <div className="bc-bb-item">
-                    <i className="fa-solid fa-headset"></i>
+                  <div className="bc-bb-item" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: '#fffbeb', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>
+                      <i className="fa-solid fa-chart-line"></i>
+                    </div>
                     <div className="bc-bb-text">
-                      <strong>Priority WhatsApp Support</strong>
-                      <small>Direct access to our growth specialists</small>
+                      <strong style={{ display: 'block', fontSize: '0.84rem', color: '#0f172a' }}>Switch or Upgrade Anytime</strong>
+                      <small style={{ fontSize: '0.72rem', color: '#64748b' }}>Seamless transitions without data loss</small>
                     </div>
                   </div>
-                  <div className="bc-bb-item">
-                    <i className="fa-solid fa-rotate-left"></i>
+                  <div className="bc-bb-item" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>
+                      <i className="fa-brands fa-whatsapp"></i>
+                    </div>
                     <div className="bc-bb-text">
-                      <strong>Cancel Anytime</strong>
-                      <small>No lock-in or cancellation fees</small>
+                      <strong style={{ display: 'block', fontSize: '0.84rem', color: '#0f172a' }}>Priority WhatsApp Support</strong>
+                      <small style={{ fontSize: '0.72rem', color: '#64748b' }}>Direct assistance for billing &amp; GST invoices</small>
                     </div>
                   </div>
                 </div>
 
                 {/* FAQ Accordion (Screenshot 2) */}
-                <div className="bc-faq-section">
-                  <h3>Frequently Asked Questions</h3>
-                  <div className="bc-faq-list">
+                <div className="bc-faq-section" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 20, padding: '2rem 2.25rem', marginBottom: '2rem', boxShadow: '0 4px 16px rgba(0,0,0,0.02)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <i className="fa-regular fa-circle-question" style={{ color: '#16a34a', fontSize: '1.25rem' }}></i>
+                      <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>Frequently Asked Questions</h3>
+                    </div>
+                    <span style={{ fontSize: '0.74rem', color: '#64748b' }}>Everything you need to know about plans, billing, and activation</span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1rem' }}>
                     {[
-                      { q: 'How does the instant UPI activation work?', a: 'Once you scan the QR code and complete your UPI payment, your transaction is automatically verified through our bank gateway within 60 seconds. Your features and review replies activate immediately.' },
-                      { q: 'Will my QR code stop working if my plan expires?', a: 'No, your printed QR codes and Google review direct links always remain permanent and functional. However, AI review suggestions, automated replies, and analytics dashboards are temporarily paused until renewed.' },
-                      { q: 'Can I switch between monthly and yearly billing anytime?', a: 'Yes! You can upgrade to the yearly plan at any point to save 16%. Any remaining unused days on your monthly plan are automatically credited towards your annual membership.' },
-                      { q: 'How do automated AI review replies work?', a: 'Our system connects with your Google Business Profile to monitor new customer reviews 24/7. When a review is posted, our AI crafts an empathetic, personalized response matching your brand tone and publishes it automatically.' }
+                      {
+                        q: 'How does instant plan activation work?',
+                        a: 'Click Upgrade on any plan, scan the dynamic UPI QR code with any UPI app (GPay, PhonePe, Paytm), and submit the 12-digit UTR/transaction reference. Your account is activated automatically.'
+                      },
+                      {
+                        q: 'Will my QR code or review link change when I upgrade?',
+                        a: 'No, never! Your Google Review QR code, short links, and printable standees are permanent and will never change when renewing or upgrading plans.'
+                      },
+                      {
+                        q: 'What is the difference between Standard and Pro plans?',
+                        a: 'Standard plans include the complete review collection funnel, AI review writer & negative feedback filtering. Pro plans additionally include 24/7 automated AI review replies posted directly to your Google Business Profile.'
+                      },
+                      {
+                        q: 'Can I upgrade from Monthly to Yearly anytime?',
+                        a: 'Yes! You can switch from monthly to an annual plan anytime. Your new annual plan activates immediately and locks in up to 69% in savings for the full year.'
+                      },
+                      {
+                        q: 'Do you provide GST invoices?',
+                        a: 'Yes. Send your business GST details and Order ID to our WhatsApp support team at +919707842047, and we will issue your official tax invoice promptly.'
+                      },
+                      {
+                        q: 'What happens if my subscription expires?',
+                        a: 'Your existing reviews remain 100% safe on Google. New QR scans will simply pause AI generation until you renew your subscription from this console.'
+                      }
                     ].map((faq, idx) => (
-                      <div key={idx} className="bc-faq-item">
-                        <button
-                          type="button"
-                          className="bc-faq-question"
-                          onClick={() => setBillingFaqOpen(billingFaqOpen === idx ? null : idx)}
-                        >
+                      <div
+                        key={idx}
+                        style={{
+                          background: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: 12,
+                          padding: '1.15rem 1.25rem',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontWeight: 800, fontSize: '0.84rem', color: '#0f172a', marginBottom: 8, lineHeight: 1.4 }}>
+                          <i className="fa-solid fa-chevron-right" style={{ color: '#16a34a', fontSize: '0.72rem', marginTop: 4 }}></i>
                           <span>{faq.q}</span>
-                          <i className={`fa-solid ${billingFaqOpen === idx ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
-                        </button>
-                        {billingFaqOpen === idx && (
-                          <div className="bc-faq-answer">
-                            <p>{faq.a}</p>
-                          </div>
-                        )}
+                        </div>
+                        <p style={{ margin: 0, paddingLeft: 16, fontSize: '0.78rem', color: '#64748b', lineHeight: 1.55 }}>
+                          {faq.a}
+                        </p>
                       </div>
                     ))}
+                  </div>
+                </div>
+
+                {/* Transaction & Invoice History Table (Screenshot 3) */}
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 20, padding: '2rem 2.25rem', marginBottom: '2rem', boxShadow: '0 4px 16px rgba(0,0,0,0.02)' }}>
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0' }}>Transaction &amp; Invoice History</h3>
+                    <p style={{ fontSize: '0.76rem', color: '#64748b', margin: 0 }}>Your recent subscription orders, activations, and payment references.</p>
+                  </div>
+
+                  <div className="bc-table-wrap">
+                    <table className="bc-table">
+                      <thead>
+                        <tr>
+                          <th>ORDER ID</th>
+                          <th>AMOUNT</th>
+                          <th>STATUS</th>
+                          <th>UTR / REFERENCE</th>
+                          <th>DATE &amp; TIME</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { id: '#ORDER_RF_652_1793086957_707', amount: '₹1,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 • 07:09' },
+                          { id: '#ORDER_RF_632_1793086915_873', amount: '₹1,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 • 07:08' },
+                          { id: '#ORDER_RF_632_1793086902_717', amount: '₹1,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 • 07:08' }
+                        ].map((tx, idx) => (
+                          <tr key={idx}>
+                            <td style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.76rem', color: '#0f172a' }}>{tx.id}</td>
+                            <td style={{ fontWeight: 800, color: '#0f172a' }}>{tx.amount}</td>
+                            <td>
+                              <span style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: 999, fontSize: '0.68rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b' }}></span>
+                                {tx.status}
+                              </span>
+                            </td>
+                            <td style={{ color: '#94a3b8', fontSize: '0.76rem' }}>{tx.utr}</td>
+                            <td style={{ color: '#64748b', fontSize: '0.76rem' }}>{tx.date}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
 
