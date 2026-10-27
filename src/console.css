@@ -2338,28 +2338,85 @@
   color: #0f172a;
 }
 
-/* Print Optimization for Instant Flyer Print */
+/* Center Google G logo on QR Code */
+.qr-center-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  background: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* Print Optimization for Instant Flyer Print (Centers directly in middle of sheet, matching Screenshot 2) */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
 @media print {
-  .bc-sidebar, .bc-view-header, .bc-qr-card, .bc-theme-select-row, .bc-preview-topbar, .bc-whatsapp-bubble, .header, footer, nav, .bc-btn-upgrade, .bc-btn-manage-qr {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    width: 100% !important;
+    height: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .bc-sidebar, .bc-view-header, .bc-qr-card, .bc-theme-select-row, .bc-preview-topbar, .bc-whatsapp-bubble, .header, footer, nav, .bc-btn-upgrade, .bc-btn-manage-qr, .bc-toast, .bc-modal-backdrop, .bc-pill-selector {
     display: none !important;
   }
-  body, .bc-layout, .bc-main {
-    background: #ffffff !important;
-    padding: 0 !important;
+  .bc-layout, .bc-main, .bc-container {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
     margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+  .bc-qr-main-grid {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   .bc-preview-container, .bc-canvas-bg {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
     background: transparent !important;
     border: none !important;
-    padding: 0 !important;
     box-shadow: none !important;
+    padding: 0 !important;
+    margin: auto !important;
+    width: 100% !important;
+    min-height: 100vh !important;
   }
   .bc-a6-flyer {
-    box-shadow: none !important;
-    border: 1px solid #cbd5e1 !important;
-    margin: 1.5cm auto !important;
-    page-break-inside: avoid;
-    transform: scale(1.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+    margin: auto !important;
+    page-break-inside: avoid !important;
+    transform: scale(1.18) !important;
+    transform-origin: center center !important;
+  }
+  .bc-counter-banner {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+    margin: auto !important;
+    page-break-inside: avoid !important;
+    transform: scale(1.15) !important;
+    transform-origin: center center !important;
   }
 }
 
