@@ -134,8 +134,28 @@ export default function BusinessConsole({
           }
         } else if (lower.includes('bill') || lower.includes('plan')) {
           setActiveTab('Billing & Plans');
-          if (searchParams.get('upgrade') === 'true' || searchParams.get('checkout') === 'true') {
+          if (searchParams.get('upgrade') === 'true' || searchParams.get('checkout') === 'true' || lower.includes('payment') || searchParams.get('plan')) {
             setPlanCheckoutStep('checkout');
+            const pParam = searchParams.get('plan') || '';
+            const isMonthly = pParam.toLowerCase().includes('monthly');
+            const isAgency = pParam.toLowerCase().includes('agency') || pParam.toLowerCase().includes('multi');
+            const isStarter = pParam.toLowerCase().includes('starter');
+            const tier = isAgency ? 'Agency' : (isStarter ? 'Starter' : 'Pro');
+            const period = isMonthly ? 'Monthly' : 'Yearly';
+            const price = tier === 'Agency' ? 2999 : (period === 'Yearly' ? (tier === 'Starter' ? 999 : 2999) : (tier === 'Starter' ? 99 : 299));
+            let displayName = `${tier} ${period} Plan`;
+            if (tier === 'Agency') displayName = 'Starter Multi-Business (10 Locations)';
+            else if (tier === 'Starter' && period === 'Yearly') displayName = 'Starter Yearly Plan';
+            else if (tier === 'Pro' && period === 'Yearly') displayName = 'Pro Yearly Plan';
+            setCheckoutPlanData({
+              name: displayName,
+              tier: tier,
+              period: period,
+              price: price,
+              originalPrice: price,
+              businessLimit: tier === 'Agency' ? 'Up to 10 Business Profiles' : '1 Single Business Profile',
+              featuresCount: 13
+            });
           }
         } else if (lower.includes('feedback') || lower.includes('negative')) {
           setActiveTab('Negative Reviews');
@@ -245,30 +265,11 @@ export default function BusinessConsole({
   const [orderPincode, setOrderPincode] = useState('395006');
   const [placingOrder, setPlacingOrder] = useState(false);
 
-  // SEO Analyzer States (Screenshot 1)
+  // SEO Analyzer States (Screenshot 3)
   const [seoKeyword, setSeoKeyword] = useState('solar rooftop installation');
   const [seoCity, setSeoCity] = useState(business?.city || 'Surat');
   const [seoLoading, setSeoLoading] = useState(false);
-  const [seoResult, setSeoResult] = useState({
-    score: 82,
-    rank: '#2',
-    status: 'Good Visibility',
-    checks: [
-      { name: 'GBP Profile Completeness', status: 'pass', desc: '100% complete (Name, categories, address, hours, description present)' },
-      { name: 'NAP Consistency', status: 'pass', desc: 'Consistent across Google Maps, website footer & directories' },
-      { name: 'Primary Keyword Density', status: 'pass', desc: 'Target keyword "solar rooftop installation" optimized in description & services' },
-      { name: 'Category & Sub-Categories', status: 'pass', desc: 'Solar Energy Equipment Supplier + 3 related categories assigned' },
-      { name: 'Review Velocity & Sentiment', status: 'pass', desc: '4.9★ rating with regular new positive customer reviews' },
-      { name: 'Customer Response Rate', status: 'pass', desc: '100% response rate with keyword-enriched replies' },
-      { name: 'Photo & Media Freshness', status: 'warn', desc: 'Add 3+ new geotagged photos this week to increase local engagement' },
-      { name: 'Local Citations & Backlinks', status: 'pass', desc: 'Indexed on IndiaMART, JustDial and Google Local Pack' }
-    ],
-    recommendations: [
-      'Maintain weekly review velocity using your Magic Review QR stand to safeguard #2 rank.',
-      'Add 3 geo-tagged rooftop installation photos with EXIF coordinates to your GMB profile.',
-      'Include secondary area keywords (e.g., "Varachha", "Adajan", "Katargam") in profile updates.'
-    ]
-  });
+  const [seoResult, setSeoResult] = useState(null);
 
   const handleRunSeoAudit = () => {
     if (!seoKeyword.trim()) {
@@ -354,16 +355,16 @@ export default function BusinessConsole({
   const [standState, setStandState] = useState('Gujarat');
   const [standPincode, setStandPincode] = useState('395006');
 
-  // Plan Checkout State (Screenshot 3)
+  // Plan Checkout State (Screenshot 1)
   const [planCheckoutStep, setPlanCheckoutStep] = useState('select'); // 'select' | 'checkout'
   const [checkoutPlanData, setCheckoutPlanData] = useState({
-    name: 'Yearly Plan',
+    name: 'Pro Yearly Plan',
     tier: 'Pro',
     period: 'Yearly',
-    price: 1999,
-    originalPrice: 1999,
+    price: 2999,
+    originalPrice: 2999,
     businessLimit: '1 Single Business Profile',
-    featuresCount: 12
+    featuresCount: 13
   });
   const [couponCode, setCouponCode] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
@@ -446,15 +447,23 @@ export default function BusinessConsole({
     setCouponCode('');
     setReferralCode('');
     setReferralVerified(false);
-    const p = price || (period === 'Yearly' ? 999 : (period === 'Monthly' ? 99 : 2999));
+    const p = price || (period === 'Yearly' ? (planTier === 'Starter' ? 999 : 2999) : (planTier === 'Starter' ? 99 : 299));
+    let displayName = `${planTier} ${period} Plan`;
+    if (planTier === 'Agency') {
+      displayName = 'Starter Multi-Business (10 Locations)';
+    } else if (planTier === 'Starter' && period === 'Yearly') {
+      displayName = 'Starter Yearly Plan';
+    } else if (planTier === 'Pro' && period === 'Yearly') {
+      displayName = 'Pro Yearly Plan';
+    }
     setCheckoutPlanData({
-      name: planTier === 'Agency' ? 'Starter Multi-Business (10 Locations)' : `${period === 'Yearly' ? 'Yearly' : 'Monthly'} Plan`,
+      name: displayName,
       tier: planTier,
       period: period,
       price: p,
       originalPrice: p,
       businessLimit: planTier === 'Agency' ? 'Up to 10 Business Profiles' : '1 Single Business Profile',
-      featuresCount: 12
+      featuresCount: 13
     });
   };
 
@@ -577,34 +586,6 @@ export default function BusinessConsole({
             <i className={`fa-solid ${collapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
           </button>
         </div>
-
-        {!collapsed && (
-          <div style={{ padding: '0 1rem 0.5rem 1rem' }}>
-            <button
-              type="button"
-              onClick={() => navigate('Home')}
-              style={{
-                width: '100%',
-                padding: '6px 10px',
-                fontSize: '0.75rem',
-                borderRadius: '8px',
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                color: '#cbd5e1',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                fontWeight: 500,
-                transition: 'all 0.2s ease'
-              }}
-              title="Return to StarReview AI public website"
-            >
-              <i className="fa-solid fa-arrow-left" style={{ fontSize: '0.7rem' }}></i> Back to Website
-            </button>
-          </div>
-        )}
 
         {/* Plan Status Card in Sidebar */}
         {!collapsed && (
@@ -3675,12 +3656,12 @@ export default function BusinessConsole({
           <div>
             {/* Header Card */}
             <div className="bc-view-header">
-              <div className="bc-vh-left">
-                <div className="bc-vh-icon">
+              <div className="bc-view-header-left">
+                <div className="bc-view-header-icon">
                   <i className="fa-solid fa-star"></i>
                 </div>
                 <div>
-                  <h2>AI SEO Analyzer</h2>
+                  <h1 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.25rem 0' }}>AI SEO Analyzer</h1>
                   <p>Local GMB audit · NAP consistency · Rankings health check</p>
                 </div>
               </div>
@@ -3714,9 +3695,9 @@ export default function BusinessConsole({
                   gap: 6,
                   cursor: 'pointer'
                 }}
-                onClick={() => setActiveTab('Billing & Plans')}
+                onClick={() => startPlanCheckout('Pro', 'Yearly', 2999)}
               >
-                <i className="fa-solid fa-dollar-sign"></i> Upgrade Plan
+                <i className="fa-solid fa-bolt"></i> Upgrade Plan
               </button>
             </div>
 
@@ -3773,20 +3754,10 @@ export default function BusinessConsole({
                     gap: 8,
                     boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
                   }}
-                  onClick={() => startPlanCheckout('Pro', 'Yearly', 999)}
+                  onClick={() => startPlanCheckout('Pro', 'Yearly', 2999)}
                 >
                   <i className="fa-solid fa-chart-simple"></i> Plan Expired — Upgrade to Analyze
                 </button>
-
-                <div style={{ textAlign: 'center', marginTop: 10 }}>
-                  <button
-                    type="button"
-                    style={{ background: 'none', border: 'none', color: '#16a34a', fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
-                    onClick={handleRunSeoAudit}
-                  >
-                    {seoLoading ? 'Scanning 20+ GBP Checkpoints...' : (seoResult ? '✓ Real-Time Scan Completed (Click to Re-scan)' : '⚡ Preview 20-Point AI SEO Audit Demo →')}
-                  </button>
-                </div>
 
                 {/* Audit Results */}
                 {seoResult && (
@@ -4793,59 +4764,21 @@ export default function BusinessConsole({
         {activeTab === 'Billing & Plans' && (
           <div>
             {planCheckoutStep === 'checkout' ? (
-              /* EXACT REVIEWFLOW AI PAGE 2: INSTANT UPI PLAN CHECKOUT (SCREENSHOT 3) */
+              /* EXACT REVIEWFLOW AI: INSTANT UPI PLAN CHECKOUT (SCREENSHOT 1) */
               <div>
-                {/* Top Stepper Indicator */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-                  <button
-                    type="button"
-                    style={{
-                      background: '#ffffff',
-                      border: '1px solid #bbf7d0',
-                      color: '#15803d',
-                      fontSize: '0.82rem',
-                      fontWeight: 700,
-                      padding: '0.45rem 1rem',
-                      borderRadius: 999,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => setPlanCheckoutStep('select')}
-                  >
-                    <i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Page 1: Select Plan
-                  </button>
-                  <span style={{ color: '#94a34a', fontSize: '0.9rem' }}>→</span>
-                  <div style={{
-                    background: '#16a34a',
-                    color: '#ffffff',
-                    fontSize: '0.82rem',
-                    fontWeight: 800,
-                    padding: '0.45rem 1.15rem',
-                    borderRadius: 999,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6
-                  }}>
-                    <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>2</span>
-                    Page 2: Instant Payment
-                  </div>
-                </div>
-
                 {/* Top Header Card */}
                 <div style={{
                   background: '#f0fdf4',
                   border: '1.5px solid #bbf7d0',
                   borderRadius: 16,
-                  padding: '1rem 1.35rem',
+                  padding: '1.1rem 1.45rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   marginBottom: '1.5rem',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.95rem' }}>
                     <div style={{
                       width: 44,
                       height: 44,
@@ -4861,7 +4794,7 @@ export default function BusinessConsole({
                       <i className="fa-regular fa-credit-card"></i>
                     </div>
                     <div>
-                      <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.15rem 0' }}>
+                      <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.15rem 0' }}>
                         Instant UPI Plan Checkout
                       </h2>
                       <p style={{ fontSize: '0.8rem', color: '#475569', margin: 0 }}>
@@ -4873,7 +4806,7 @@ export default function BusinessConsole({
                     <span style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', fontSize: '0.74rem', fontWeight: 700, padding: '0.3rem 0.75rem', borderRadius: 999 }}>
                       Page 2 of 2
                     </span>
-                    <span style={{ background: '#dcfce7', border: '1px solid #86efac', color: '#15803d', fontSize: '0.74rem', fontWeight: 800, padding: '0.3rem 0.85rem', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ background: '#ecfdf5', border: '1px solid #bbf7d0', color: '#15803d', fontSize: '0.74rem', fontWeight: 800, padding: '0.3rem 0.85rem', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}></span>
                       256-Bit Encrypted Gateway
                     </span>
@@ -4896,7 +4829,7 @@ export default function BusinessConsole({
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: '1px solid #f1f5f9', marginBottom: '1.25rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ background: '#16a34a', color: '#ffffff', fontSize: '0.72rem', fontWeight: 800, padding: '0.25rem 0.75rem', borderRadius: 999 }}>
+                        <span style={{ background: '#16a34a', color: '#ffffff', fontSize: '0.74rem', fontWeight: 800, padding: '0.28rem 0.8rem', borderRadius: 999 }}>
                           {checkoutPlanData.name}
                         </span>
                         <div>
@@ -4923,12 +4856,12 @@ export default function BusinessConsole({
                         </h4>
                       </div>
                       <span style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', fontSize: '0.72rem', fontWeight: 800, padding: '0.2rem 0.65rem', borderRadius: 999 }}>
-                        12 Features
+                        13 Features
                       </span>
                     </div>
 
                     {/* Features Grid (2 Columns) */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem 0.85rem', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem 0.75rem', marginBottom: '1.5rem' }}>
                       {[
                         'Human-Like AI Written Reviews',
                         'Custom Keywords, Services, Products & Names',
@@ -4939,6 +4872,7 @@ export default function BusinessConsole({
                         'Review, Rating & Growth Analytics',
                         'AI Google Business Profile Analyzer',
                         'Customer Review Tracking',
+                        'Private Negative Feedback Routing',
                         'No Review Drop/Loss',
                         '100% Ad-Free',
                         'Priority Support'
@@ -5131,12 +5065,12 @@ export default function BusinessConsole({
               <>
                 {/* Header Card */}
                 <div className="bc-view-header">
-                  <div className="bc-vh-left">
-                    <div className="bc-vh-icon">
+                  <div className="bc-view-header-left">
+                    <div className="bc-view-header-icon">
                       <i className="fa-regular fa-credit-card"></i>
                     </div>
                     <div>
-                      <h2>Billing &amp; Subscription</h2>
+                      <h1 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.25rem 0' }}>Billing &amp; Subscription</h1>
                       <p>Manage your active membership, renewals, invoice history &amp; AI feature tiers</p>
                     </div>
                   </div>
