@@ -177,6 +177,129 @@ export default function BusinessConsole({
     }
   };
 
+  // Physical Stand Checkout State (Screenshot 2)
+  const [standCheckoutMode, setStandCheckoutMode] = useState(false);
+  const [selectedStand, setSelectedStand] = useState({
+    title: 'QR Code Acrylic Stand',
+    unitPrice: 699,
+    price: 699,
+    qty: 1,
+    tag: 'Premium Executive'
+  });
+  const [standRecipientName, setStandRecipientName] = useState(user?.name || 'Team Maruti InfoSoft');
+  const [standPhone, setStandPhone] = useState(business?.phone || '+1 6355722267');
+  const [standShopName, setStandShopName] = useState('Shop #12, Ground Floor');
+  const [standBizName, setStandBizName] = useState(business?.name || 'verde eco landing');
+  const [standAddress, setStandAddress] = useState('');
+  const [standLandmark, setStandLandmark] = useState('');
+  const [standCity, setStandCity] = useState(business?.city || 'Surat');
+  const [standState, setStandState] = useState('Gujarat');
+  const [standPincode, setStandPincode] = useState('395006');
+
+  // Plan Checkout State (Screenshot 3)
+  const [planCheckoutStep, setPlanCheckoutStep] = useState('select'); // 'select' | 'checkout'
+  const [checkoutPlanData, setCheckoutPlanData] = useState({
+    name: 'Yearly Plan',
+    tier: 'Pro',
+    period: 'Yearly',
+    price: 1999,
+    originalPrice: 1999,
+    businessLimit: '1 Single Business Profile',
+    featuresCount: 12
+  });
+  const [couponCode, setCouponCode] = useState('');
+  const [couponApplied, setCouponApplied] = useState(false);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [referralCode, setReferralCode] = useState('');
+  const [referralVerified, setReferralVerified] = useState(false);
+
+  // WebPress Pay Modal State (Screenshot 4)
+  const [webpressModalOpen, setWebpressModalOpen] = useState(false);
+  const [webpressData, setWebpressData] = useState({
+    amount: 1999,
+    orderRef: 'ORDER_RF_68492',
+    payee: 'Laba Das | Webpress Hub',
+    title: 'Yearly Plan',
+    type: 'plan'
+  });
+  const [webpressTab, setWebpressTab] = useState('qr');
+  const [webpressCountdown, setWebpressCountdown] = useState(299);
+  const [webpressDetailsOpen, setWebpressDetailsOpen] = useState(false);
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
+  const [paymentDone, setPaymentDone] = useState(false);
+
+  useEffect(() => {
+    if (!webpressModalOpen || paymentDone) return;
+    const t = setInterval(() => {
+      setWebpressCountdown(prev => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [webpressModalOpen, paymentDone]);
+
+  const openWebpressPay = (amount, title, type = 'plan') => {
+    const randomRef = 'ORDER_RF_' + Math.floor(100000 + Math.random() * 900000);
+    setWebpressData({
+      amount: Number(amount) || 1999,
+      orderRef: randomRef,
+      payee: 'Laba Das | Webpress Hub',
+      title,
+      type
+    });
+    setWebpressCountdown(299);
+    setWebpressModalOpen(true);
+    setPaymentDone(false);
+  };
+
+  const confirmWebpressPayment = async () => {
+    setVerifyingPayment(true);
+    await new Promise(r => setTimeout(r, 1300));
+    setVerifyingPayment(false);
+    setPaymentDone(true);
+
+    if (webpressData.type === 'plan') {
+      const updatedSub = {
+        tier: checkoutPlanData.tier || 'Pro',
+        status: 'active',
+        expiresAt: new Date(Date.now() + (checkoutPlanData.period === 'Yearly' ? 365 : 30) * 86400000).toISOString(),
+        planName: checkoutPlanData.name
+      };
+      setBusiness(prev => ({ ...(prev || {}), subscription: updatedSub }));
+      notify(`🎉 Payment of ₹${webpressData.amount} verified! ${checkoutPlanData.name} activated successfully.`);
+      setTimeout(() => {
+        setWebpressModalOpen(false);
+        setPlanCheckoutStep('select');
+        setPaymentDone(false);
+      }, 1200);
+    } else {
+      notify(`🎉 Payment of ₹${webpressData.amount} verified! Order placed for ${selectedStand.title}. Tracking sent via SMS/WhatsApp.`);
+      setTimeout(() => {
+        setWebpressModalOpen(false);
+        setStandCheckoutMode(false);
+        setPaymentDone(false);
+      }, 1200);
+    }
+  };
+
+  const startPlanCheckout = (planTier, period, price) => {
+    setActiveTab('Billing & Plans');
+    setPlanCheckoutStep('checkout');
+    setCouponApplied(false);
+    setCouponDiscount(0);
+    setCouponCode('');
+    setReferralCode('');
+    setReferralVerified(false);
+    const p = price || (period === 'Yearly' ? 1999 : (period === 'Monthly' ? 299 : 2999));
+    setCheckoutPlanData({
+      name: planTier === 'Agency' ? 'Starter Multi-Business (10 Locations)' : `${period === 'Yearly' ? 'Yearly' : 'Monthly'} Plan`,
+      tier: planTier,
+      period: period,
+      price: p,
+      originalPrice: p,
+      businessLimit: planTier === 'Agency' ? 'Up to 10 Business Profiles' : '1 Single Business Profile',
+      featuresCount: 12
+    });
+  };
+
   const openServiceInquiry = (serviceTitle) => {
     setSelectedService(serviceTitle);
     setServiceModalOpen(true);
@@ -334,7 +457,7 @@ export default function BusinessConsole({
                 {daysLeft > 0 ? `Free Trial — ${daysLeft} days` : 'Plan Expired'}
               </div>
               <p>{daysLeft > 0 ? 'Features fully unlocked' : 'Features locked.'}</p>
-              <button className="bc-sidebar-alert-btn" onClick={() => choosePlan('Pro', 'Monthly')}>
+              <button className="bc-sidebar-alert-btn" onClick={() => startPlanCheckout('Pro', 'Yearly', 1999)}>
                 Upgrade Plan
               </button>
             </div>
@@ -472,7 +595,7 @@ export default function BusinessConsole({
                     </p>
                   </div>
                 </div>
-                <button className="bc-btn-upgrade" onClick={() => choosePlan('Pro', 'Monthly')}>
+                <button className="bc-btn-upgrade" onClick={() => startPlanCheckout('Pro', 'Yearly', 1999)}>
                   Upgrade Plan
                 </button>
               </div>
@@ -491,7 +614,7 @@ export default function BusinessConsole({
                     </p>
                   </div>
                 </div>
-                <button className="bc-btn-upgrade" style={{ background: '#166534' }} onClick={() => choosePlan('Pro', 'Yearly')}>
+                <button className="bc-btn-upgrade" style={{ background: '#166534' }} onClick={() => startPlanCheckout('Pro', 'Yearly', 1999)}>
                   Manage Plan
                 </button>
               </div>
@@ -1932,55 +2055,124 @@ export default function BusinessConsole({
                   </div>
 
                   {/* Checkered Canvas Preview Box */}
-                  <div className="bc-canvas-bg">
-                    {/* The Exact Review Flyer matching Screenshot 5 */}
-                    <div className="bc-a6-flyer" id="printReadyFlyer">
-                      {/* Google G logo */}
-                      <div className="bc-flyer-google-logo">
-                        <svg width="22" height="22" viewBox="0 0 24 24">
-                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                        </svg>
-                      </div>
+                  <div className="bc-canvas-bg" style={{ minHeight: 380, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.5rem' }}>
+                    {qrDisplaySize === 'Banner' ? (
+                      /* The Exact Wide Counter Banner matching Screenshot 1 */
+                      <div className={`bc-counter-banner theme-${qrTheme.toLowerCase().replace(/\s+/g, '-')}`} id="printReadyBanner">
+                        {/* Left Side */}
+                        <div className="bc-banner-left">
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+                              <svg width="22" height="22" viewBox="0 0 24 24">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                              </svg>
+                              <strong style={{ fontSize: '1rem', color: '#0f172a', fontWeight: 900 }}>{bizName}</strong>
+                            </div>
 
-                      <div className="bc-flyer-biz-name">{bizName}</div>
-                      <div className="bc-flyer-stars">★★★★★</div>
-                      <div className="bc-flyer-heading">
-                        Review Us on <span>Google</span>
-                      </div>
+                            <div style={{ color: '#eab308', fontSize: '1.05rem', letterSpacing: 2, marginBottom: 6 }}>★★★★★</div>
 
-                      {/* QR Box with floating pill badges */}
-                      <div className="bc-flyer-qr-wrap">
-                        <span className="bc-flyer-badge-left">Amazing! ⭐</span>
-                        <img
-                          src={qrImageSrc}
-                          alt="Review QR Code"
-                          style={{ width: 150, height: 150, display: 'block', borderRadius: 8 }}
-                        />
-                        <span className="bc-flyer-badge-right">Best ever! ⭐</span>
-                      </div>
+                            <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a', margin: '0 0 12px 0', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                              Review Us on <span style={{ display: 'inline-flex' }}>
+                                <span style={{ color: '#4285F4' }}>G</span>
+                                <span style={{ color: '#EA4335' }}>o</span>
+                                <span style={{ color: '#FBBC05' }}>o</span>
+                                <span style={{ color: '#4285F4' }}>g</span>
+                                <span style={{ color: '#34A853' }}>l</span>
+                                <span style={{ color: '#EA4335' }}>e</span>
+                              </span>
+                            </h3>
 
-                      <div className="bc-flyer-time-badge">
-                        ⚡ Takes less than <strong>30 seconds</strong> !
-                      </div>
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+                              <span className="bc-banner-pill"><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Real Reviews</span>
+                              <span className="bc-banner-pill"><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Quick &amp; Easy</span>
+                              <span className="bc-banner-pill"><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Secure</span>
+                            </div>
+                          </div>
 
-                      <div className="bc-flyer-checklist">
-                        <span><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Real Reviews</span>
-                        <span><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Quick &amp; Easy</span>
-                        <span><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Secure</span>
-                      </div>
+                          <div>
+                            <button type="button" className="bc-banner-btn-scan">
+                              <i className="fa-solid fa-mobile-screen"></i> SCAN WITH YOUR PHONE
+                            </button>
+                            <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: 10 }}>
+                              Powered by <strong>ReviewFlow AI</strong>
+                            </div>
+                          </div>
+                        </div>
 
-                      <button type="button" className="bc-flyer-btn-scan">
-                        SCAN WITH YOUR PHONE <i className="fa-solid fa-arrow-right"></i>
-                      </button>
-
-                      <div className="bc-flyer-footer-tag">
-                        POWERED BY <strong>StarReview AI</strong><br />
-                        AI-Powered Google Review Growth System
+                        {/* Right Side with Emerald Gradient Wave */}
+                        <div className="bc-banner-right">
+                          <div className="bc-banner-badge-top">
+                            <i className="fa-solid fa-mobile-screen"></i> SCAN &amp; REVIEW WITH AI
+                          </div>
+                          <div className="bc-banner-qr-box">
+                            <img src={qrImageSrc} alt="QR Code" style={{ width: 140, height: 140, display: 'block', borderRadius: 8 }} />
+                            <div className="qr-center-logo">
+                              <svg width="18" height="18" viewBox="0 0 24 24">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                              </svg>
+                            </div>
+                          </div>
+                          <div className="bc-banner-badge-bottom">
+                            ⚡ Takes less than <strong>30 seconds</strong>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      /* The Exact Review Flyer matching Screenshot 5 */
+                      <div className={`bc-a6-flyer theme-${qrTheme.toLowerCase().replace(/\s+/g, '-')}`} id="printReadyFlyer">
+                        {/* Google G logo */}
+                        <div className="bc-flyer-google-logo">
+                          <svg width="22" height="22" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                          </svg>
+                        </div>
+
+                        <div className="bc-flyer-biz-name">{bizName}</div>
+                        <div className="bc-flyer-stars">★★★★★</div>
+                        <div className="bc-flyer-heading">
+                          Review Us on <span>Google</span>
+                        </div>
+
+                        {/* QR Box with floating pill badges */}
+                        <div className="bc-flyer-qr-wrap">
+                          <span className="bc-flyer-badge-left">Amazing! ⭐</span>
+                          <img
+                            src={qrImageSrc}
+                            alt="Review QR Code"
+                            style={{ width: 150, height: 150, display: 'block', borderRadius: 8 }}
+                          />
+                          <span className="bc-flyer-badge-right">Best ever! ⭐</span>
+                        </div>
+
+                        <div className="bc-flyer-time-badge">
+                          ⚡ Takes less than <strong>30 seconds</strong> !
+                        </div>
+
+                        <div className="bc-flyer-checklist">
+                          <span><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Real Reviews</span>
+                          <span><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Quick &amp; Easy</span>
+                          <span><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Secure</span>
+                        </div>
+
+                        <button type="button" className="bc-flyer-btn-scan">
+                          SCAN WITH YOUR PHONE <i className="fa-solid fa-arrow-right"></i>
+                        </button>
+
+                        <div className="bc-flyer-footer-tag">
+                          POWERED BY <strong>ReviewFlow AI</strong><br />
+                          AI-Powered Google Review Growth System
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2608,423 +2800,525 @@ export default function BusinessConsole({
               </div>
             </div>
 
-            {/* Subheader Title */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.25rem' }}>
-              <div>
-                <div style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#16a34a', marginBottom: 2 }}>
-                  DISPLAY COLLECTION
-                </div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  Choose Your Physical QR Display
-                  <span style={{ fontSize: '0.72rem', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: 999, fontWeight: 800 }}>3 Formats</span>
-                </h3>
-                <p style={{ fontSize: '0.82rem', color: '#64748b', margin: 0 }}>
-                  Select the display style that best fits your counter, reception desk, or table setup.
-                </p>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <span className="bc-header-pill bc-pill-white" style={{ fontSize: '0.74rem' }}>
-                  <i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Custom Review QR
-                </span>
-                <span className="bc-header-pill bc-pill-white" style={{ fontSize: '0.74rem' }}>
-                  <i className="fa-solid fa-truck" style={{ color: '#16a34a' }}></i> 7–10 Day Delivery
-                </span>
-              </div>
-            </div>
-
-            {/* 3 Product Display Cards (Grid) */}
-            <div className="bc-stand-grid-3">
-              {/* Product 1: Plastic L-Stand */}
-              <div className="bc-stand-card">
-                <div className="bc-stand-carousel">
-                  <span className="bc-stand-badge-top bc-sbt-green">
-                    ★ Most Popular
-                  </span>
-                  
-                  {/* Photorealistic Interactive Stand Carousel Graphic */}
-                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                    <div style={{ width: 140, height: 190, background: '#ffffff', borderRadius: 12, boxShadow: '0 12px 28px rgba(0,0,0,0.18)', border: '2px solid rgba(255,255,255,0.8)', padding: 12, textAlign: 'center', transform: plasticSlide === 1 ? 'rotate(-6deg) scale(0.95)' : (plasticSlide === 2 ? 'rotate(6deg) scale(0.95)' : 'rotate(0deg) scale(1)'), transition: 'all 0.3s ease' }}>
-                      <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#0f172a', marginBottom: 2 }}>{bizName}</div>
-                      <div style={{ color: '#eab308', fontSize: '0.65rem', letterSpacing: 1, marginBottom: 4 }}>★★★★★</div>
-                      <div style={{ fontSize: '0.68rem', fontWeight: 900, color: '#2563eb', marginBottom: 6 }}>Review Us on Google</div>
-                      <img src={qrImageSrc} alt="QR" style={{ width: 75, height: 75, margin: '0 auto', display: 'block', borderRadius: 6, border: '1px solid #bbf7d0' }} />
-                      <div style={{ marginTop: 6, background: '#16a34a', color: '#fff', fontSize: '0.55rem', fontWeight: 800, padding: '2px 6px', borderRadius: 99 }}>SCAN WITH PHONE</div>
-                    </div>
-                  </div>
-
-                  {/* Carousel Controls */}
-                  <button type="button" className="bc-carousel-btn prev" onClick={() => setPlasticSlide((plasticSlide + 2) % 3)}>
-                    <i className="fa-solid fa-chevron-left"></i>
+            {/* If in Step-by-Step Checkout Mode (Screenshot 2) */}
+            {standCheckoutMode ? (
+              <div className="bc-stand-checkout-card">
+                {/* Top Nav: Back to Formats & Heading */}
+                <div className="bc-checkout-top-nav">
+                  <button
+                    type="button"
+                    className="btn btn-light"
+                    style={{ fontSize: '0.8rem', fontWeight: 800, padding: '0.45rem 0.95rem' }}
+                    onClick={() => setStandCheckoutMode(false)}
+                  >
+                    <i className="fa-solid fa-arrow-left" style={{ marginRight: 6 }}></i> Back to Formats
                   </button>
-                  <button type="button" className="bc-carousel-btn next" onClick={() => setPlasticSlide((plasticSlide + 1) % 3)}>
-                    <i className="fa-solid fa-chevron-right"></i>
-                  </button>
-                  <div className="bc-stand-dots">
-                    {[0, 1, 2].map(idx => (
-                      <span key={idx} className={`bc-stand-dot ${plasticSlide === idx ? 'active' : ''}`} onClick={() => setPlasticSlide(idx)} />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bc-stand-card-body">
-                  <h4 className="bc-stand-title">QR Code Plastic Stand</h4>
-                  <p className="bc-stand-desc">
-                    Crystal-clear scratch-resistant acrylic L-stand. Ideal for cash counters, billing desks, and reception areas.
-                  </p>
-
-                  <ul className="bc-stand-features">
-                    <li><i className="fa-solid fa-check"></i> Premium high-clarity transparent acrylic</li>
-                    <li><i className="fa-solid fa-check"></i> Scratch &amp; waterproof UV-cure print</li>
-                    <li><i className="fa-solid fa-check"></i> Angled ergonomic tilt for easy mobile scans</li>
-                  </ul>
-
-                  <div className="bc-stand-dispatch-pill">
-                    <i className="fa-solid fa-shield-check"></i> Prepaid Order · Fast Dispatch in 24h
-                  </div>
-
-                  <div className="bc-stand-bottom">
-                    <div className="bc-stand-price-col">
-                      <div className="bc-stand-price">₹499 <small>/ unit</small></div>
-                      <div className="bc-stand-strike">₹899 (Save 44%)</div>
-                    </div>
-                    <button
-                      type="button"
-                      className="bc-btn-order-now"
-                      onClick={() => {
-                        setOrderProduct({ title: 'QR Code Plastic Stand', price: 499, tag: 'Most Popular' });
-                        setOrderQuantity(1);
-                        setOrderModalOpen(true);
-                      }}
-                    >
-                      <i className="fa-solid fa-bag-shopping"></i> Order Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Product 2: Acrylic Wood Stand */}
-              <div className="bc-stand-card">
-                <div className="bc-stand-carousel">
-                  <span className="bc-stand-badge-top bc-sbt-blue">
-                    💎 Premium Executive
-                  </span>
-                  
-                  {/* Photorealistic Stand Carousel Graphic */}
-                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                    <div style={{ width: 140, height: 190, background: '#ffffff', borderRadius: 12, boxShadow: '0 14px 30px rgba(0,0,0,0.2)', border: '2px solid rgba(255,255,255,0.9)', padding: 12, textAlign: 'center', position: 'relative', transform: acrylicSlide === 1 ? 'rotate(-6deg) scale(0.95)' : (acrylicSlide === 2 ? 'rotate(6deg) scale(0.95)' : 'rotate(0deg) scale(1)'), transition: 'all 0.3s ease' }}>
-                      <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#0f172a', marginBottom: 2 }}>{bizName}</div>
-                      <div style={{ color: '#eab308', fontSize: '0.65rem', letterSpacing: 1, marginBottom: 4 }}>★★★★★</div>
-                      <div style={{ fontSize: '0.68rem', fontWeight: 900, color: '#7c3aed', marginBottom: 6 }}>Review Us on Google</div>
-                      <img src={qrImageSrc} alt="QR" style={{ width: 75, height: 75, margin: '0 auto', display: 'block', borderRadius: 6, border: '1px solid #ddd6fe' }} />
-                      <div style={{ marginTop: 6, background: '#7c3aed', color: '#fff', fontSize: '0.55rem', fontWeight: 800, padding: '2px 6px', borderRadius: 99 }}>SCAN WITH PHONE</div>
-                      <div style={{ position: 'absolute', bottom: -8, left: 10, right: 10, height: 12, background: '#78350f', borderRadius: 4, boxShadow: '0 3px 6px rgba(0,0,0,0.3)' }} />
-                    </div>
-                  </div>
-
-                  <button type="button" className="bc-carousel-btn prev" onClick={() => setAcrylicSlide((acrylicSlide + 2) % 3)}>
-                    <i className="fa-solid fa-chevron-left"></i>
-                  </button>
-                  <button type="button" className="bc-carousel-btn next" onClick={() => setAcrylicSlide((acrylicSlide + 1) % 3)}>
-                    <i className="fa-solid fa-chevron-right"></i>
-                  </button>
-                  <div className="bc-stand-dots">
-                    {[0, 1, 2].map(idx => (
-                      <span key={idx} className={`bc-stand-dot ${acrylicSlide === idx ? 'active' : ''}`} onClick={() => setAcrylicSlide(idx)} />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bc-stand-card-body">
-                  <h4 className="bc-stand-title">QR Code Acrylic Stand</h4>
-                  <p className="bc-stand-desc">
-                    Polished solid mahogany wood base with acrylic cardholder. Perfect for upscale salons, luxury hotels, clinics &amp; cafes.
-                  </p>
-
-                  <ul className="bc-stand-features">
-                    <li><i className="fa-solid fa-check"></i> Hand-finished natural weighted wood base</li>
-                    <li><i className="fa-solid fa-check"></i> Ultra high-definition vibrant color print</li>
-                    <li><i className="fa-solid fa-check"></i> Weighted anti-topple counter design</li>
-                  </ul>
-
-                  <div className="bc-stand-dispatch-pill">
-                    <i className="fa-solid fa-shield-check"></i> Prepaid Order · Fast Dispatch in 24h
-                  </div>
-
-                  <div className="bc-stand-bottom">
-                    <div className="bc-stand-price-col">
-                      <div className="bc-stand-price">₹699 <small>/ unit</small></div>
-                      <div className="bc-stand-strike">₹1,199 (Save 42%)</div>
-                    </div>
-                    <button
-                      type="button"
-                      className="bc-btn-order-now"
-                      onClick={() => {
-                        setOrderProduct({ title: 'QR Code Acrylic Stand', price: 699, tag: 'Premium Executive' });
-                        setOrderQuantity(1);
-                        setOrderModalOpen(true);
-                      }}
-                    >
-                      <i className="fa-solid fa-bag-shopping"></i> Order Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Product 3: Paper Cardstock Tent */}
-              <div className="bc-stand-card">
-                <div className="bc-stand-carousel">
-                  <span className="bc-stand-badge-top bc-sbt-purple">
-                    📦 Multi-Table Pack
-                  </span>
-                  
-                  {/* Photorealistic Stand Carousel Graphic */}
-                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                    <div style={{ width: 140, height: 180, background: '#ffffff', borderRadius: 8, boxShadow: '0 10px 24px rgba(0,0,0,0.15)', border: '1.5px solid #cbd5e1', padding: 10, textAlign: 'center', clipPath: 'polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%)', transform: paperSlide === 1 ? 'rotate(-6deg) scale(0.95)' : (paperSlide === 2 ? 'rotate(6deg) scale(0.95)' : 'rotate(0deg) scale(1)'), transition: 'all 0.3s ease' }}>
-                      <div style={{ fontSize: '0.62rem', fontWeight: 900, color: '#0f172a', marginBottom: 2 }}>{bizName}</div>
-                      <div style={{ color: '#eab308', fontSize: '0.6rem', letterSpacing: 1, marginBottom: 2 }}>★★★★★</div>
-                      <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#2563eb', marginBottom: 4 }}>Review Us on Google</div>
-                      <img src={qrImageSrc} alt="QR" style={{ width: 65, height: 65, margin: '0 auto', display: 'block', borderRadius: 4 }} />
-                      <div style={{ marginTop: 4, background: '#0d4b29', color: '#fff', fontSize: '0.52rem', fontWeight: 800, padding: '2px 4px', borderRadius: 99 }}>SCAN WITH PHONE</div>
-                    </div>
-                  </div>
-
-                  <button type="button" className="bc-carousel-btn prev" onClick={() => setPaperSlide((paperSlide + 2) % 3)}>
-                    <i className="fa-solid fa-chevron-left"></i>
-                  </button>
-                  <button type="button" className="bc-carousel-btn next" onClick={() => setPaperSlide((paperSlide + 1) % 3)}>
-                    <i className="fa-solid fa-chevron-right"></i>
-                  </button>
-                  <div className="bc-stand-dots">
-                    {[0, 1, 2].map(idx => (
-                      <span key={idx} className={`bc-stand-dot ${paperSlide === idx ? 'active' : ''}`} onClick={() => setPaperSlide(idx)} />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bc-stand-card-body">
-                  <h4 className="bc-stand-title">QR Code Paper Tent</h4>
-                  <p className="bc-stand-desc">
-                    Self-standing laminated heavy cardstock tents. Lightweight, foldable, and ideal for multi-table restaurant dining.
-                  </p>
-
-                  <ul className="bc-stand-features">
-                    <li><i className="fa-solid fa-check"></i> Value pack of 10+ folded paper tents</li>
-                    <li><i className="fa-solid fa-check"></i> 350 GSM matte laminated spill-proof cardstock</li>
-                    <li><i className="fa-solid fa-check"></i> Dual-sided 360° QR code customer visibility</li>
-                  </ul>
-
-                  <div className="bc-stand-dispatch-pill" style={{ background: '#eff6ff', color: '#1e40af', borderColor: '#bfdbfe' }}>
-                    <i className="fa-solid fa-box"></i> Pack of 10+ · Free Shipping
-                  </div>
-
-                  <div className="bc-stand-bottom">
-                    <div className="bc-stand-price-col">
-                      <div className="bc-stand-price">₹499 <small>/ pack (10 pcs)</small></div>
-                      <div className="bc-stand-strike">₹999 (Save 50%)</div>
-                    </div>
-                    <button
-                      type="button"
-                      className="bc-btn-order-now"
-                      onClick={() => {
-                        setOrderProduct({ title: 'QR Code Paper Tent (Pack of 10)', price: 499, tag: 'Multi-Table Pack' });
-                        setOrderQuantity(1);
-                        setOrderModalOpen(true);
-                      }}
-                    >
-                      <i className="fa-solid fa-bag-shopping"></i> Order Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Trust Grid (Screenshot 5) */}
-            <div className="bc-trust-grid-4">
-              <div className="bc-trust-box">
-                <div className="bc-trust-icon">
-                  <i className="fa-solid fa-link"></i>
-                </div>
-                <div>
-                  <h5>Custom Google Link</h5>
-                  <p>Pre-encoded with your verified review link</p>
-                </div>
-              </div>
-
-              <div className="bc-trust-box">
-                <div className="bc-trust-icon">
-                  <i className="fa-solid fa-shield-halved"></i>
-                </div>
-                <div>
-                  <h5>Premium Quality</h5>
-                  <p>Scratch-resistant &amp; waterproof finish</p>
-                </div>
-              </div>
-
-              <div className="bc-trust-box">
-                <div className="bc-trust-icon">
-                  <i className="fa-solid fa-truck-fast"></i>
-                </div>
-                <div>
-                  <h5>Fast Tracked Delivery</h5>
-                  <p>Doorstep shipping with tracking updates</p>
-                </div>
-              </div>
-
-              <div className="bc-trust-box">
-                <div className="bc-trust-icon">
-                  <i className="fa-brands fa-whatsapp"></i>
-                </div>
-                <div>
-                  <h5>Dedicated Support</h5>
-                  <p>Direct WhatsApp help for all orders</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ORDER CHECKOUT MODAL */}
-        {orderModalOpen && (
-          <div className="bc-order-modal-overlay" onClick={() => !placingOrder && setOrderModalOpen(false)}>
-            <div className="bc-order-modal" onClick={e => e.stopPropagation()}>
-              <div className="bc-order-modal-header">
-                <div>
-                  <h3>Order Physical QR Stand</h3>
-                  <p>{orderProduct.title} · {orderProduct.tag}</p>
-                </div>
-                <button type="button" className="bc-order-modal-close" onClick={() => !placingOrder && setOrderModalOpen(false)}>✕</button>
-              </div>
-
-              <form
-                className="bc-order-modal-body"
-                onSubmit={async e => {
-                  e.preventDefault();
-                  setPlacingOrder(true);
-                  await new Promise(r => setTimeout(r, 1200));
-                  setPlacingOrder(false);
-                  setOrderModalOpen(false);
-                  notify(`🎉 Order placed successfully for ${orderQuantity}x ${orderProduct.title}! Tracking details sent via WhatsApp.`);
-                }}
-              >
-                {/* Product summary banner */}
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                  <div>
-                    <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{orderProduct.title}</strong>
-                    <div style={{ fontSize: '0.74rem', color: '#64748b' }}>Custom branded with {bizName}</div>
-                  </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#16a34a' }}>₹{orderProduct.price * orderQuantity}</div>
-                    <div style={{ fontSize: '0.68rem', color: '#15803d' }}>Free Tracked Delivery</div>
+                    <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      STEP-BY-STEP CHECKOUT
+                    </div>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '2px 0 0 0' }}>
+                      Complete Your QR Stand Order
+                    </h2>
                   </div>
                 </div>
 
-                {/* Quantity selector */}
-                <div style={{ marginBottom: 14 }}>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 800, color: '#334155', marginBottom: 6 }}>Quantity</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-light"
-                      style={{ width: 34, height: 34, padding: 0 }}
-                      onClick={() => setOrderQuantity(Math.max(1, orderQuantity - 1))}
-                    >
-                      -
-                    </button>
-                    <span style={{ fontSize: '1rem', fontWeight: 900, minWidth: 24, textAlign: 'center' }}>{orderQuantity}</span>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-light"
-                      style={{ width: 34, height: 34, padding: 0 }}
-                      onClick={() => setOrderQuantity(orderQuantity + 1)}
-                    >
-                      +
-                    </button>
+                {/* Stepper Progress */}
+                <div className="bc-checkout-stepper">
+                  <div className="bc-step-item active">
+                    <span className="bc-step-circle">1</span>
+                    <span>Shipping &amp; Recipient Info</span>
+                  </div>
+                  <div className="bc-step-divider"></div>
+                  <div className="bc-step-item">
+                    <span className="bc-step-circle">2</span>
+                    <span>Prepaid UPI Payment</span>
                   </div>
                 </div>
 
-                {/* Shipping Details */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {/* Selected Stand Model Box */}
+                <div className="bc-selected-model-box">
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', marginBottom: 4 }}>Full Name</label>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', letterSpacing: '0.04em' }}>
+                      SELECTED STAND MODEL
+                    </span>
+                    <h4 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0f172a', margin: '2px 0 0 0' }}>
+                      {selectedStand.title}
+                    </h4>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    <div>
+                      <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', display: 'block' }}>
+                        UNIT PRICE
+                      </span>
+                      <strong style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a' }}>
+                        ₹{selectedStand.unitPrice}
+                      </strong>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', display: 'block', marginBottom: 4 }}>
+                        Quantity
+                      </span>
+                      <div className="bc-qty-control">
+                        <button
+                          type="button"
+                          className="bc-qty-btn"
+                          onClick={() => setSelectedStand(prev => ({ ...prev, qty: Math.max(1, (prev.qty || 1) - 1) }))}
+                        >
+                          -
+                        </button>
+                        <span className="bc-qty-val">{selectedStand.qty || 1}</span>
+                        <button
+                          type="button"
+                          className="bc-qty-btn"
+                          onClick={() => setSelectedStand(prev => ({ ...prev, qty: (prev.qty || 1) + 1 }))}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Shipping & Recipient Form */}
+                <form onSubmit={e => {
+                  e.preventDefault();
+                  openWebpressPay(selectedStand.unitPrice * (selectedStand.qty || 1), selectedStand.title, 'stand');
+                }}>
+                  <div className="bc-checkout-form-grid">
+                    <div>
+                      <label className="bc-label">Recipient Full Name *</label>
+                      <input
+                        type="text"
+                        className="bc-input"
+                        required
+                        value={standRecipientName}
+                        onChange={e => setStandRecipientName(e.target.value)}
+                        placeholder="Team Maruti InfoSoft"
+                      />
+                    </div>
+                    <div>
+                      <label className="bc-label">10-Digit Mobile Number *</label>
+                      <input
+                        type="tel"
+                        className="bc-input"
+                        required
+                        value={standPhone}
+                        onChange={e => setStandPhone(e.target.value)}
+                        placeholder="+1 6355722267"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bc-checkout-form-grid">
+                    <div>
+                      <label className="bc-label">Shop / Outlet Name *</label>
+                      <input
+                        type="text"
+                        className="bc-input"
+                        required
+                        value={standShopName}
+                        onChange={e => setStandShopName(e.target.value)}
+                        placeholder="Shop #12, Ground Floor"
+                      />
+                    </div>
+                    <div>
+                      <label className="bc-label">Business Display Name *</label>
+                      <input
+                        type="text"
+                        className="bc-input"
+                        required
+                        value={standBizName}
+                        onChange={e => setStandBizName(e.target.value)}
+                        placeholder="verde eco landing"
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '1.15rem' }}>
+                    <label className="bc-label">Full Delivery Address *</label>
                     <input
                       type="text"
+                      className="bc-input"
                       required
-                      className="bc-input-modern"
-                      placeholder="e.g. Rahul Patel"
-                      value={orderName}
-                      onChange={e => setOrderName(e.target.value)}
+                      value={standAddress}
+                      onChange={e => setStandAddress(e.target.value)}
+                      placeholder="Street name, Area, Building name, Flat number"
                     />
                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', marginBottom: 4 }}>WhatsApp Phone (for tracking)</label>
-                    <input
-                      type="tel"
-                      required
-                      className="bc-input-modern"
-                      placeholder="e.g. 98250 12345"
-                      value={orderPhone}
-                      onChange={e => setOrderPhone(e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', marginBottom: 4 }}>Delivery Street Address</label>
-                    <textarea
-                      rows="2"
-                      required
-                      className="bc-input-modern"
-                      placeholder="Shop/Office number, building name, road..."
-                      value={orderAddress}
-                      onChange={e => setOrderAddress(e.target.value)}
-                    />
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', gap: '0.85rem', marginBottom: '1.5rem' }}>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', marginBottom: 4 }}>City</label>
+                      <label className="bc-label">Nearby Landmark</label>
                       <input
                         type="text"
-                        required
-                        className="bc-input-modern"
-                        value={orderCity}
-                        onChange={e => setOrderCity(e.target.value)}
+                        className="bc-input"
+                        value={standLandmark}
+                        onChange={e => setStandLandmark(e.target.value)}
+                        placeholder="Opposite City Hospital (optional)"
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 800, color: '#334155', marginBottom: 4 }}>Pincode</label>
+                      <label className="bc-label">City *</label>
                       <input
                         type="text"
+                        className="bc-input"
                         required
-                        className="bc-input-modern"
-                        value={orderPincode}
-                        onChange={e => setOrderPincode(e.target.value)}
+                        value={standCity}
+                        onChange={e => setStandCity(e.target.value)}
+                        placeholder="City"
                       />
+                    </div>
+                    <div>
+                      <label className="bc-label">State *</label>
+                      <input
+                        type="text"
+                        className="bc-input"
+                        required
+                        value={standState}
+                        onChange={e => setStandState(e.target.value)}
+                        placeholder="State"
+                      />
+                    </div>
+                    <div>
+                      <label className="bc-label">6-Digit PIN *</label>
+                      <input
+                        type="text"
+                        className="bc-input"
+                        required
+                        value={standPincode}
+                        onChange={e => setStandPincode(e.target.value)}
+                        placeholder="e.g. 110001"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Total Payable Box */}
+                  <div className="bc-checkout-total-banner">
+                    <div>
+                      <strong style={{ fontSize: '0.95rem', color: '#0f172a', display: 'block' }}>
+                        Total Payable Amount:
+                      </strong>
+                      <span style={{ fontSize: '0.74rem', color: '#15803d', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <i className="fa-solid fa-circle-check"></i> Includes 18% GST &amp; Free Express Delivery
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '1.55rem', fontWeight: 900, color: '#0f172a' }}>
+                      ₹{selectedStand.unitPrice * (selectedStand.qty || 1)}
+                    </div>
+                  </div>
+
+                  {/* Footer Buttons */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <button
+                      type="button"
+                      className="btn btn-light"
+                      style={{ padding: '0.75rem 1.75rem', fontWeight: 800 }}
+                      onClick={() => setStandCheckoutMode(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-dark"
+                      style={{ background: '#16a34a', border: 'none', padding: '0.8rem 2rem', fontWeight: 800, fontSize: '0.88rem' }}
+                    >
+                      Proceed to Payment &amp; QR →
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              /* Normal Catalog List */
+              <>
+                {/* Subheader Title */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.25rem' }}>
+                  <div>
+                    <div style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#16a34a', marginBottom: 2 }}>
+                      DISPLAY COLLECTION
+                    </div>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      Choose Your Physical QR Display
+                      <span style={{ fontSize: '0.72rem', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: 999, fontWeight: 800 }}>3 Formats</span>
+                    </h3>
+                    <p style={{ fontSize: '0.82rem', color: '#64748b', margin: 0 }}>
+                      Select the display style that best fits your counter, reception desk, or table setup.
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <span className="bc-header-pill bc-pill-white" style={{ fontSize: '0.74rem' }}>
+                      <i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Custom Review QR
+                    </span>
+                    <span className="bc-header-pill bc-pill-white" style={{ fontSize: '0.74rem' }}>
+                      <i className="fa-solid fa-truck" style={{ color: '#16a34a' }}></i> 7–10 Day Delivery
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3 Product Display Cards (Grid) */}
+                <div className="bc-stand-grid-3">
+                  {/* Product 1: Plastic L-Stand */}
+                  <div className="bc-stand-card">
+                    <div className="bc-stand-carousel">
+                      <span className="bc-stand-badge-top bc-sbt-green">
+                        ★ Most Popular
+                      </span>
+                      
+                      <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                        <div style={{ width: 140, height: 190, background: '#ffffff', borderRadius: 12, boxShadow: '0 12px 28px rgba(0,0,0,0.18)', border: '2px solid rgba(255,255,255,0.8)', padding: 12, textAlign: 'center', transform: plasticSlide === 1 ? 'rotate(-6deg) scale(0.95)' : (plasticSlide === 2 ? 'rotate(6deg) scale(0.95)' : 'rotate(0deg) scale(1)'), transition: 'all 0.3s ease' }}>
+                          <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#0f172a', marginBottom: 2 }}>{bizName}</div>
+                          <div style={{ color: '#eab308', fontSize: '0.65rem', letterSpacing: 1, marginBottom: 4 }}>★★★★★</div>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 900, color: '#2563eb', marginBottom: 6 }}>Review Us on Google</div>
+                          <img src={qrImageSrc} alt="QR" style={{ width: 75, height: 75, margin: '0 auto', display: 'block', borderRadius: 6, border: '1px solid #bbf7d0' }} />
+                          <div style={{ marginTop: 6, background: '#16a34a', color: '#fff', fontSize: '0.55rem', fontWeight: 800, padding: '2px 6px', borderRadius: 99 }}>SCAN WITH PHONE</div>
+                        </div>
+                      </div>
+
+                      <button type="button" className="bc-carousel-btn prev" onClick={() => setPlasticSlide((plasticSlide + 2) % 3)}>
+                        <i className="fa-solid fa-chevron-left"></i>
+                      </button>
+                      <button type="button" className="bc-carousel-btn next" onClick={() => setPlasticSlide((plasticSlide + 1) % 3)}>
+                        <i className="fa-solid fa-chevron-right"></i>
+                      </button>
+                      <div className="bc-stand-dots">
+                        {[0, 1, 2].map(idx => (
+                          <span key={idx} className={`bc-stand-dot ${plasticSlide === idx ? 'active' : ''}`} onClick={() => setPlasticSlide(idx)} />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bc-stand-card-body">
+                      <h4 className="bc-stand-title">QR Code Plastic Stand</h4>
+                      <p className="bc-stand-desc">
+                        Crystal-clear scratch-resistant acrylic L-stand. Ideal for cash counters, billing desks, and reception areas.
+                      </p>
+
+                      <ul className="bc-stand-features">
+                        <li><i className="fa-solid fa-check"></i> Premium high-clarity transparent acrylic</li>
+                        <li><i className="fa-solid fa-check"></i> Scratch &amp; waterproof UV-cure print</li>
+                        <li><i className="fa-solid fa-check"></i> Angled ergonomic tilt for easy mobile scans</li>
+                      </ul>
+
+                      <div className="bc-stand-dispatch-pill">
+                        <i className="fa-solid fa-shield-check"></i> Prepaid Order · Fast Dispatch in 24h
+                      </div>
+
+                      <div className="bc-stand-bottom">
+                        <div className="bc-stand-price-col">
+                          <div className="bc-stand-price">₹499 <small>/ unit</small></div>
+                          <div className="bc-stand-strike">₹899 (Save 44%)</div>
+                        </div>
+                        <button
+                          type="button"
+                          className="bc-btn-order-now"
+                          onClick={() => {
+                            setSelectedStand({
+                              title: 'QR Code Plastic Stand',
+                              unitPrice: 499,
+                              price: 499,
+                              qty: 1,
+                              tag: 'Most Popular'
+                            });
+                            setStandCheckoutMode(true);
+                          }}
+                        >
+                          <i className="fa-solid fa-bag-shopping"></i> Order Now
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Product 2: Acrylic Wood Stand */}
+                  <div className="bc-stand-card">
+                    <div className="bc-stand-carousel">
+                      <span className="bc-stand-badge-top bc-sbt-blue">
+                        💎 Premium Executive
+                      </span>
+                      
+                      <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                        <div style={{ width: 140, height: 190, background: '#ffffff', borderRadius: 12, boxShadow: '0 14px 30px rgba(0,0,0,0.2)', border: '2px solid rgba(255,255,255,0.9)', padding: 12, textAlign: 'center', position: 'relative', transform: acrylicSlide === 1 ? 'rotate(-6deg) scale(0.95)' : (acrylicSlide === 2 ? 'rotate(6deg) scale(0.95)' : 'rotate(0deg) scale(1)'), transition: 'all 0.3s ease' }}>
+                          <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#0f172a', marginBottom: 2 }}>{bizName}</div>
+                          <div style={{ color: '#eab308', fontSize: '0.65rem', letterSpacing: 1, marginBottom: 4 }}>★★★★★</div>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 900, color: '#7c3aed', marginBottom: 6 }}>Review Us on Google</div>
+                          <img src={qrImageSrc} alt="QR" style={{ width: 75, height: 75, margin: '0 auto', display: 'block', borderRadius: 6, border: '1px solid #ddd6fe' }} />
+                          <div style={{ marginTop: 6, background: '#7c3aed', color: '#fff', fontSize: '0.55rem', fontWeight: 800, padding: '2px 6px', borderRadius: 99 }}>SCAN WITH PHONE</div>
+                          <div style={{ position: 'absolute', bottom: -8, left: 10, right: 10, height: 12, background: '#78350f', borderRadius: 4, boxShadow: '0 3px 6px rgba(0,0,0,0.3)' }} />
+                        </div>
+                      </div>
+
+                      <button type="button" className="bc-carousel-btn prev" onClick={() => setAcrylicSlide((acrylicSlide + 2) % 3)}>
+                        <i className="fa-solid fa-chevron-left"></i>
+                      </button>
+                      <button type="button" className="bc-carousel-btn next" onClick={() => setAcrylicSlide((acrylicSlide + 1) % 3)}>
+                        <i className="fa-solid fa-chevron-right"></i>
+                      </button>
+                      <div className="bc-stand-dots">
+                        {[0, 1, 2].map(idx => (
+                          <span key={idx} className={`bc-stand-dot ${acrylicSlide === idx ? 'active' : ''}`} onClick={() => setAcrylicSlide(idx)} />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bc-stand-card-body">
+                      <h4 className="bc-stand-title">QR Code Acrylic Stand</h4>
+                      <p className="bc-stand-desc">
+                        Polished solid mahogany wood base with acrylic cardholder. Perfect for upscale salons, luxury hotels, clinics &amp; cafes.
+                      </p>
+
+                      <ul className="bc-stand-features">
+                        <li><i className="fa-solid fa-check"></i> Hand-finished natural weighted wood base</li>
+                        <li><i className="fa-solid fa-check"></i> Ultra high-definition vibrant color print</li>
+                        <li><i className="fa-solid fa-check"></i> Weighted anti-topple counter design</li>
+                      </ul>
+
+                      <div className="bc-stand-dispatch-pill">
+                        <i className="fa-solid fa-shield-check"></i> Prepaid Order · Fast Dispatch in 24h
+                      </div>
+
+                      <div className="bc-stand-bottom">
+                        <div className="bc-stand-price-col">
+                          <div className="bc-stand-price">₹699 <small>/ unit</small></div>
+                          <div className="bc-stand-strike">₹1,199 (Save 42%)</div>
+                        </div>
+                        <button
+                          type="button"
+                          className="bc-btn-order-now"
+                          onClick={() => {
+                            setSelectedStand({
+                              title: 'QR Code Acrylic Stand',
+                              unitPrice: 699,
+                              price: 699,
+                              qty: 1,
+                              tag: 'Premium Executive'
+                            });
+                            setStandCheckoutMode(true);
+                          }}
+                        >
+                          <i className="fa-solid fa-bag-shopping"></i> Order Now
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Product 3: Paper Cardstock Tent */}
+                  <div className="bc-stand-card">
+                    <div className="bc-stand-carousel">
+                      <span className="bc-stand-badge-top bc-sbt-purple">
+                        📦 Multi-Table Pack
+                      </span>
+                      
+                      <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                        <div style={{ width: 140, height: 180, background: '#ffffff', borderRadius: 8, boxShadow: '0 10px 24px rgba(0,0,0,0.15)', border: '1.5px solid #cbd5e1', padding: 10, textAlign: 'center', clipPath: 'polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%)', transform: paperSlide === 1 ? 'rotate(-6deg) scale(0.95)' : (paperSlide === 2 ? 'rotate(6deg) scale(0.95)' : 'rotate(0deg) scale(1)'), transition: 'all 0.3s ease' }}>
+                          <div style={{ fontSize: '0.62rem', fontWeight: 900, color: '#0f172a', marginBottom: 2 }}>{bizName}</div>
+                          <div style={{ color: '#eab308', fontSize: '0.6rem', letterSpacing: 1, marginBottom: 2 }}>★★★★★</div>
+                          <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#2563eb', marginBottom: 4 }}>Review Us on Google</div>
+                          <img src={qrImageSrc} alt="QR" style={{ width: 65, height: 65, margin: '0 auto', display: 'block', borderRadius: 4 }} />
+                          <div style={{ marginTop: 4, background: '#0d4b29', color: '#fff', fontSize: '0.52rem', fontWeight: 800, padding: '2px 4px', borderRadius: 99 }}>SCAN WITH PHONE</div>
+                        </div>
+                      </div>
+
+                      <button type="button" className="bc-carousel-btn prev" onClick={() => setPaperSlide((paperSlide + 2) % 3)}>
+                        <i className="fa-solid fa-chevron-left"></i>
+                      </button>
+                      <button type="button" className="bc-carousel-btn next" onClick={() => setPaperSlide((paperSlide + 1) % 3)}>
+                        <i className="fa-solid fa-chevron-right"></i>
+                      </button>
+                      <div className="bc-stand-dots">
+                        {[0, 1, 2].map(idx => (
+                          <span key={idx} className={`bc-stand-dot ${paperSlide === idx ? 'active' : ''}`} onClick={() => setPaperSlide(idx)} />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bc-stand-card-body">
+                      <h4 className="bc-stand-title">QR Code Paper Tent</h4>
+                      <p className="bc-stand-desc">
+                        Self-standing laminated heavy cardstock tents. Lightweight, foldable, and ideal for multi-table restaurant dining.
+                      </p>
+
+                      <ul className="bc-stand-features">
+                        <li><i className="fa-solid fa-check"></i> Value pack of 10+ folded paper tents</li>
+                        <li><i className="fa-solid fa-check"></i> 350 GSM matte laminated spill-proof cardstock</li>
+                        <li><i className="fa-solid fa-check"></i> Dual-sided 360° QR code customer visibility</li>
+                      </ul>
+
+                      <div className="bc-stand-dispatch-pill" style={{ background: '#eff6ff', color: '#1e40af', borderColor: '#bfdbfe' }}>
+                        <i className="fa-solid fa-box"></i> Pack of 10+ · Free Shipping
+                      </div>
+
+                      <div className="bc-stand-bottom">
+                        <div className="bc-stand-price-col">
+                          <div className="bc-stand-price">₹499 <small>/ pack (10 pcs)</small></div>
+                          <div className="bc-stand-strike">₹999 (Save 50%)</div>
+                        </div>
+                        <button
+                          type="button"
+                          className="bc-btn-order-now"
+                          onClick={() => {
+                            setSelectedStand({
+                              title: 'QR Code Paper Tent (Pack of 10)',
+                              unitPrice: 499,
+                              price: 499,
+                              qty: 1,
+                              tag: 'Multi-Table Pack'
+                            });
+                            setStandCheckoutMode(true);
+                          }}
+                        >
+                          <i className="fa-solid fa-bag-shopping"></i> Order Now
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Submit button */}
-                <button
-                  type="submit"
-                  disabled={placingOrder}
-                  className="bc-btn-upgrade"
-                  style={{ width: '100%', marginTop: 16, padding: '0.85rem', fontSize: '0.9rem', background: '#16a34a' }}
-                >
-                  <i className="fa-solid fa-lock" style={{ marginRight: 6 }}></i>
-                  {placingOrder ? 'Processing Order…' : `Confirm Order & Pay ₹${orderProduct.price * orderQuantity}`}
-                </button>
-                <div style={{ textAlign: 'center', marginTop: 8, fontSize: '0.72rem', color: '#64748b' }}>
-                  🔒 Secure checkout · Free shipping across India · 7-10 day delivery
+                {/* Bottom Trust Grid (Screenshot 5) */}
+                <div className="bc-trust-grid-4">
+                  <div className="bc-trust-box">
+                    <div className="bc-trust-icon">
+                      <i className="fa-solid fa-link"></i>
+                    </div>
+                    <div>
+                      <h5>Custom Google Link</h5>
+                      <p>Pre-encoded with your verified review link</p>
+                    </div>
+                  </div>
+
+                  <div className="bc-trust-box">
+                    <div className="bc-trust-icon">
+                      <i className="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                      <h5>Premium Quality</h5>
+                      <p>Scratch-resistant &amp; waterproof finish</p>
+                    </div>
+                  </div>
+
+                  <div className="bc-trust-box">
+                    <div className="bc-trust-icon">
+                      <i className="fa-solid fa-truck-fast"></i>
+                    </div>
+                    <div>
+                      <h5>Fast Tracked Delivery</h5>
+                      <p>Dispatched in 24 hours via Blue Dart</p>
+                    </div>
+                  </div>
+
+                  <div className="bc-trust-box">
+                    <div className="bc-trust-icon">
+                      <i className="fa-solid fa-rotate-left"></i>
+                    </div>
+                    <div>
+                      <h5>Replacement Guarantee</h5>
+                      <p>Free reprint if damaged in transit</p>
+                    </div>
+                  </div>
                 </div>
-              </form>
-            </div>
+              </>
+            )}
           </div>
         )}
 
-        {/* ====================================================================
-            VIEW: AI SEO ANALYZER (EXACT REVIEWFLOW AI SCREENSHOT 1)
-            ==================================================================== */}
         {activeTab === 'AI SEO Analyzer' && (
           <div>
             {/* Header Card */}
@@ -4130,355 +4424,668 @@ export default function BusinessConsole({
             ==================================================================== */}
         {activeTab === 'Billing & Plans' && (
           <div>
-            {/* Header Card */}
-            <div className="bc-view-header">
-              <div className="bc-vh-left">
-                <div className="bc-vh-icon">
-                  <i className="fa-regular fa-credit-card"></i>
-                </div>
-                <div>
-                  <h2>Billing &amp; Subscription</h2>
-                  <p>Manage your active membership, renewals, invoice history &amp; AI feature tiers</p>
-                </div>
-              </div>
+            {planCheckoutStep === 'checkout' ? (
+              /* EXACT REVIEWFLOW AI PAGE 2: INSTANT UPI PLAN CHECKOUT (SCREENSHOT 3) */
               <div>
-                <span style={{
-                  background: isTrial && daysLeft === 0 ? '#fef2f2' : '#f0fdf4',
-                  border: isTrial && daysLeft === 0 ? '1px solid #fee2e2' : '1px solid #bbf7d0',
-                  color: isTrial && daysLeft === 0 ? '#dc2626' : '#15803d',
-                  padding: '0.35rem 0.85rem',
-                  borderRadius: 999,
-                  fontSize: '0.74rem',
-                  fontWeight: 800,
-                  display: 'inline-flex',
+                {/* Top Stepper Indicator */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <button
+                    type="button"
+                    style={{
+                      background: '#ffffff',
+                      border: '1px solid #bbf7d0',
+                      color: '#15803d',
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
+                      padding: '0.45rem 1rem',
+                      borderRadius: 999,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setPlanCheckoutStep('select')}
+                  >
+                    <i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Page 1: Select Plan
+                  </button>
+                  <span style={{ color: '#94a34a', fontSize: '0.9rem' }}>→</span>
+                  <div style={{
+                    background: '#16a34a',
+                    color: '#ffffff',
+                    fontSize: '0.82rem',
+                    fontWeight: 800,
+                    padding: '0.45rem 1.15rem',
+                    borderRadius: 999,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}>
+                    <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>2</span>
+                    Page 2: Instant Payment
+                  </div>
+                </div>
+
+                {/* Top Header Card */}
+                <div style={{
+                  background: '#f0fdf4',
+                  border: '1.5px solid #bbf7d0',
+                  borderRadius: 16,
+                  padding: '1rem 1.35rem',
+                  display: 'flex',
                   alignItems: 'center',
-                  gap: 5
+                  justifyContent: 'space-between',
+                  marginBottom: '1.5rem',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
                 }}>
-                  ● {isTrial && daysLeft === 0 ? 'Subscription Expired' : 'Active Subscription'}
-                </span>
-              </div>
-            </div>
-
-            {/* Red Warning Banner if expired or trial 0 days */}
-            <div style={{
-              background: '#fef2f2',
-              border: '1.5px solid #fecaca',
-              borderRadius: 14,
-              padding: '0.85rem 1.25rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '1rem',
-              marginBottom: '1.5rem'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#991b1b', fontSize: '0.82rem', fontWeight: 700 }}>
-                <i className="fa-solid fa-triangle-exclamation" style={{ color: '#dc2626', fontSize: '1.1rem' }}></i>
-                <span>Your subscription has expired. Review collection and dashboard automation are paused. Choose a plan below to reactivate instantly.</span>
-              </div>
-              <button
-                className="btn btn-sm"
-                style={{ background: '#991b1b', color: '#ffffff', border: 'none', fontWeight: 800, whiteSpace: 'nowrap', borderRadius: 8 }}
-                onClick={() => {
-                  const el = document.getElementById('billing-plans-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                Reactivate Plan Below ↓
-              </button>
-            </div>
-
-            {/* Current Plan Status Card */}
-            <div className="bc-status-card">
-              <div className="bc-status-left">
-                <span style={{ background: '#fef3c7', color: '#b45309', padding: '0.2rem 0.65rem', borderRadius: 6, fontSize: '0.68rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  {isTrial ? '3-DAY FREE TRIAL' : (planName.toUpperCase() + ' PLAN')}
-                </span>
-                <span style={{ fontSize: '0.76rem', color: '#64748b', marginLeft: 8 }}>
-                  Account: <b>{user?.name || 'Team Maruti InfoSoft'}</b>
-                </span>
-                <h3>{planName}</h3>
-              </div>
-
-              <div className="bc-status-stats">
-                <div className="bc-status-stat-box">
-                  <span className="stat-label">STATUS</span>
-                  <span className="stat-val" style={{ color: daysLeft === 0 ? '#ef4444' : '#16a34a' }}>
-                    ● {daysLeft === 0 ? 'Expired' : 'Active'}
-                  </span>
-                </div>
-                <div className="bc-status-stat-box">
-                  <span className="stat-label">VALID UNTIL</span>
-                  <span className="stat-val">{sub?.expiresAt ? new Date(sub.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Oct 24, 2026'}</span>
-                </div>
-                <div className="bc-status-stat-box">
-                  <span className="stat-label">DAYS LEFT</span>
-                  <span className="stat-val" style={{ color: daysLeft === 0 ? '#ef4444' : '#16a34a', fontSize: '1rem', fontWeight: 900 }}>
-                    {daysLeft} Days
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Select or Upgrade Your Plan Heading */}
-            <div id="billing-plans-section" style={{ textAlign: 'center', marginBottom: '1.25rem', scrollMarginTop: '80px' }}>
-              <h2 style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.35rem 0' }}>
-                Select or Upgrade Your Plan
-              </h2>
-              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: 0 }}>
-                Choose between Standard review collection or Pro Autopilot with automated 24/7 AI review replies.
-              </p>
-            </div>
-
-            {/* Toggle Switch */}
-            <div className="bc-billing-toggle-wrap">
-              <div className="bc-billing-toggle">
-                <button
-                  type="button"
-                  className={`bc-billing-toggle-btn ${billingReviewToggle === 'without' ? 'active' : ''}`}
-                  onClick={() => setBillingReviewToggle('without')}
-                >
-                  <i className="fa-solid fa-layer-group"></i>
-                  <span>Without Review Reply</span>
-                  <span className="bc-toggle-pill std">Standard</span>
-                </button>
-                <button
-                  type="button"
-                  className={`bc-billing-toggle-btn ${billingReviewToggle === 'with' ? 'active' : ''}`}
-                  onClick={() => setBillingReviewToggle('with')}
-                >
-                  <i className="fa-solid fa-reply"></i>
-                  <span>With Review Reply</span>
-                  <span className="bc-toggle-pill pro">⚡ Pro Autopilot</span>
-                </button>
-              </div>
-            </div>
-
-            {/* 3 Pricing Cards Grid */}
-            <div className="bc-billing-grid">
-              {/* Card 1: Monthly Plan */}
-              <div className="bc-billing-card">
-                <div className="bc-billing-badge-top green">FLEXIBLE MONTHLY</div>
-                <h4>Monthly Plan</h4>
-                <p className="bc-billing-card-sub">Complete review growth suite for single locations.</p>
-
-                <div className="bc-billing-price-row">
-                  <div className="price">₹ {billingReviewToggle === 'without' ? '199' : '299'} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ month</span></div>
-                  <div className="sub-price">Month-to-Month · Cancel anytime</div>
-                </div>
-
-                <div className={`bc-billing-ai-notice ${billingReviewToggle === 'without' ? 'off' : 'on'}`}>
-                  <i className={billingReviewToggle === 'without' ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-circle-check'}></i>
-                  <span>{billingReviewToggle === 'without' ? 'AI Powered Automatic Review Replies: Not Available' : '24/7 AI Automatic Review Replies: Included & Active'}</span>
-                </div>
-
-                <ul className="bc-billing-features">
-                  <li><i className="fa-solid fa-check"></i> Human-Like AI Written Reviews</li>
-                  <li><i className="fa-solid fa-check"></i> Custom Keywords, Services &amp; Staff</li>
-                  <li><i className="fa-solid fa-check"></i> Emoji Support &amp; Review Styles</li>
-                  <li><i className="fa-solid fa-check"></i> Customizable Google Review QR</li>
-                  <li><i className="fa-solid fa-check"></i> Printable QR Standee (PDF/PNG)</li>
-                  <li><i className="fa-solid fa-check"></i> Private Negative Feedback Routing</li>
-                  <li><i className="fa-solid fa-check"></i> Review, Rating &amp; Growth Analytics</li>
-                  <li><i className="fa-solid fa-check"></i> AI Google Business Analyzer</li>
-                  <li><i className="fa-solid fa-check"></i> 100% Ad-Free Customer Funnel</li>
-                  <li><i className="fa-solid fa-check"></i> Standard Priority Support</li>
-                </ul>
-
-                <div className="bc-billing-micro">Flexible monthly commitment</div>
-                <button
-                  className="btn btn-dark full"
-                  style={{ background: '#16a34a', border: 'none', fontWeight: 800, padding: '0.75rem' }}
-                  onClick={() => choosePlan ? choosePlan(billingReviewToggle === 'without' ? 'Starter' : 'Pro', 'Monthly') : notify('Monthly plan chosen.')}
-                >
-                  {billingReviewToggle === 'without' ? 'Upgrade to Starter' : 'Upgrade to Pro'}
-                </button>
-              </div>
-
-              {/* Card 2: Yearly Plan (Gold/Orange Border) */}
-              <div className="bc-billing-card featured">
-                <div className="bc-billing-badge-top orange">BEST VALUE - SAVE 16%</div>
-                <h4>Yearly Plan</h4>
-                <p className="bc-billing-card-sub">Annual membership with maximum savings for 12 full months.</p>
-
-                <div className="bc-billing-price-row">
-                  <div className="price">₹ {billingReviewToggle === 'without' ? '1999' : '2999'} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ year</span></div>
-                  <div className="sub-price" style={{ color: '#ea580c', fontWeight: 700 }}>
-                    ⚡ Save 16% · ₹{billingReviewToggle === 'without' ? '167' : '250'}/mo · Save ₹{billingReviewToggle === 'without' ? '389' : '589'}/yr
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+                    <div style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 12,
+                      background: '#16a34a',
+                      color: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.25rem',
+                      flexShrink: 0
+                    }}>
+                      <i className="fa-regular fa-credit-card"></i>
+                    </div>
+                    <div>
+                      <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.15rem 0' }}>
+                        Instant UPI Plan Checkout
+                      </h2>
+                      <p style={{ fontSize: '0.8rem', color: '#475569', margin: 0 }}>
+                        Upgrade your Google Business Profile account with automated instant activation.
+                      </p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', fontSize: '0.74rem', fontWeight: 700, padding: '0.3rem 0.75rem', borderRadius: 999 }}>
+                      Page 2 of 2
+                    </span>
+                    <span style={{ background: '#dcfce7', border: '1px solid #86efac', color: '#15803d', fontSize: '0.74rem', fontWeight: 800, padding: '0.3rem 0.85rem', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}></span>
+                      256-Bit Encrypted Gateway
+                    </span>
                   </div>
                 </div>
 
-                <div className={`bc-billing-ai-notice ${billingReviewToggle === 'without' ? 'off' : 'on'}`}>
-                  <i className={billingReviewToggle === 'without' ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-circle-check'}></i>
-                  <span>{billingReviewToggle === 'without' ? 'AI Powered Automatic Review Replies: Not Available' : '24/7 AI Automatic Review Replies: Included & Active'}</span>
+                {/* 2 Columns: Plan Features on Left, UPI Payment on Right */}
+                <div className="bc-plan-checkout-grid">
+                  {/* Left Column: STEP 1 OF 2 - Selected Plan Features */}
+                  <div className="bc-plan-checkout-card">
+                    <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#16a34a', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>
+                      STEP 1 OF 2
+                    </span>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0' }}>
+                      Selected Plan Features
+                    </h3>
+                    <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '0 0 1.25rem 0' }}>
+                      Review your chosen subscription tier and complete feature package.
+                    </p>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: '1px solid #f1f5f9', marginBottom: '1.25rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ background: '#16a34a', color: '#ffffff', fontSize: '0.72rem', fontWeight: 800, padding: '0.25rem 0.75rem', borderRadius: 999 }}>
+                          {checkoutPlanData.name}
+                        </span>
+                        <div>
+                          <strong style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0f172a' }}>
+                            ₹{checkoutPlanData.price}
+                          </strong>
+                          <span style={{ fontSize: '0.78rem', color: '#64748b', marginLeft: 4 }}>
+                            /{checkoutPlanData.period === 'Yearly' ? 'year' : 'month'}
+                          </span>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#64748b' }}>
+                        {checkoutPlanData.businessLimit}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <div>
+                        <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block' }}>
+                          INCLUDED WITH THIS PLAN
+                        </span>
+                        <h4 style={{ fontSize: '0.98rem', fontWeight: 800, color: '#0f172a', margin: '2px 0 0 0' }}>
+                          Everything You Get
+                        </h4>
+                      </div>
+                      <span style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', fontSize: '0.72rem', fontWeight: 800, padding: '0.2rem 0.65rem', borderRadius: 999 }}>
+                        12 Features
+                      </span>
+                    </div>
+
+                    {/* Features Grid (2 Columns) */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem 0.85rem', marginBottom: '1.5rem' }}>
+                      {[
+                        'Human-Like AI Written Reviews',
+                        'Custom Keywords, Services, Products & Names',
+                        'Emoji Support & Multiple Review Styles',
+                        'Personalized AI Review Suggestions',
+                        'Smart & Customizable Google Reviews QR Code',
+                        'Printable QR Standee & Direct Review Link',
+                        'Review, Rating & Growth Analytics',
+                        'AI Google Business Profile Analyzer',
+                        'Customer Review Tracking',
+                        'No Review Drop/Loss',
+                        '100% Ad-Free',
+                        'Priority Support'
+                      ].map((feat, idx) => (
+                        <div key={idx} className="bc-feature-item-pill">
+                          <span className="bc-feature-check-icon"><i className="fa-solid fa-check"></i></span>
+                          <span>{feat}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Instant Plan Activation Note */}
+                    <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '0.85rem 1.15rem', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                      <i className="fa-solid fa-shield-halved" style={{ color: '#16a34a', fontSize: '1.15rem', marginTop: 2 }}></i>
+                      <div>
+                        <strong style={{ fontSize: '0.82rem', fontWeight: 800, color: '#166534', display: 'block', marginBottom: 2 }}>
+                          Instant Plan Activation
+                        </strong>
+                        <p style={{ fontSize: '0.76rem', color: '#15803d', margin: 0, lineHeight: 1.4 }}>
+                          Your subscription updates automatically after a successful payment.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column: STEP 2 OF 2 - Instant UPI Payment */}
+                  <div className="bc-plan-checkout-card">
+                    <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#16a34a', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>
+                      STEP 2 OF 2
+                    </span>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0' }}>
+                      Instant UPI Payment
+                    </h3>
+                    <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '0 0 1.25rem 0' }}>
+                      Proceed to our secure automated UPI payment gateway.
+                    </p>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.85rem', borderBottom: '1px solid #f1f5f9', marginBottom: '1.15rem' }}>
+                      <span style={{ fontSize: '0.82rem', color: '#64748b' }}>Selected Plan</span>
+                      <strong style={{ fontSize: '0.84rem', color: '#0f172a' }}>{checkoutPlanData.name}</strong>
+                    </div>
+
+                    {/* Coupon Code Row */}
+                    <div style={{ marginBottom: '1.15rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                        <label style={{ fontSize: '0.76rem', fontWeight: 700, color: '#334155' }}>Coupon Code</label>
+                        {couponApplied && <span style={{ color: '#16a34a', fontSize: '0.72rem', fontWeight: 800 }}>✓ {couponDiscount}% Discount Applied</span>}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input
+                          type="text"
+                          className="bc-input"
+                          style={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}
+                          placeholder="ENTER COUPON CODE"
+                          value={couponCode}
+                          onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-light"
+                          style={{ padding: '0.55rem 1.15rem', fontWeight: 800, fontSize: '0.8rem' }}
+                          onClick={() => {
+                            if (!couponCode) {
+                              notify('Please enter a coupon code.');
+                              return;
+                            }
+                            const discount = couponCode === 'SAVE20' ? 20 : (couponCode === 'WELCOME' ? 10 : 15);
+                            setCouponApplied(true);
+                            setCouponDiscount(discount);
+                            const discountAmt = Math.round((checkoutPlanData.originalPrice * discount) / 100);
+                            setCheckoutPlanData(prev => ({ ...prev, price: prev.originalPrice - discountAmt }));
+                            notify(`🎉 Coupon ${couponCode} applied! You saved ₹${discountAmt}.`);
+                          }}
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Referral Code Row */}
+                    <div style={{ marginBottom: '1.35rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                        <label style={{ fontSize: '0.76rem', fontWeight: 700, color: '#334155' }}>Referral Code (Optional)</label>
+                        {referralVerified && <span style={{ color: '#16a34a', fontSize: '0.72rem', fontWeight: 800 }}>✓ Partner Code Verified</span>}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input
+                          type="text"
+                          className="bc-input"
+                          style={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}
+                          placeholder="E.G. PARTNER72"
+                          value={referralCode}
+                          onChange={e => setReferralCode(e.target.value.toUpperCase())}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-light"
+                          style={{ padding: '0.55rem 1.15rem', fontWeight: 800, fontSize: '0.8rem' }}
+                          onClick={() => {
+                            if (!referralCode) {
+                              notify('Please enter a referral code.');
+                              return;
+                            }
+                            setReferralVerified(true);
+                            notify(`✓ Referral code ${referralCode} verified! 30 Days extra validity added.`);
+                          }}
+                        >
+                          Verify
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Plan Summary Box */}
+                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 14, padding: '1rem 1.25rem', marginBottom: '1.25rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#64748b', marginBottom: 6 }}>
+                        <span>Plan Name</span>
+                        <strong style={{ color: '#0f172a' }}>{checkoutPlanData.name}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#64748b', marginBottom: 6 }}>
+                        <span>Billing Cycle</span>
+                        <strong style={{ color: '#0f172a' }}>{checkoutPlanData.period === 'Yearly' ? '1 Year' : '1 Month'}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#64748b', marginBottom: 6 }}>
+                        <span>Original Price</span>
+                        <strong style={{ color: '#0f172a' }}>₹{checkoutPlanData.originalPrice}</strong>
+                      </div>
+                      {couponApplied && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#16a34a', marginBottom: 6 }}>
+                          <span>Coupon Discount ({couponDiscount}%)</span>
+                          <strong>-₹{checkoutPlanData.originalPrice - checkoutPlanData.price}</strong>
+                        </div>
+                      )}
+                      <div style={{ height: 1, background: '#e2e8f0', margin: '8px 0' }}></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a' }}>Total Payable Amount</span>
+                        <strong style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0f172a' }}>₹{checkoutPlanData.price}</strong>
+                      </div>
+                    </div>
+
+                    {/* Two Trust Badges */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: '1.35rem' }}>
+                      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '0.65rem 0.85rem' }}>
+                        <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                          <i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Automatic Verification
+                        </div>
+                        <p style={{ fontSize: '0.68rem', color: '#64748b', margin: 0, lineHeight: 1.35 }}>
+                          No manual submission after successful payment.
+                        </p>
+                      </div>
+                      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '0.65rem 0.85rem' }}>
+                        <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                          <i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Any UPI App
+                        </div>
+                        <p style={{ fontSize: '0.68rem', color: '#64748b', margin: 0, lineHeight: 1.35 }}>
+                          Google Pay, PhonePe, Paytm, BHIM, Cred &amp; more.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Big Green Action Button */}
+                    <button
+                      type="button"
+                      className="btn full"
+                      style={{ background: '#16a34a', color: '#ffffff', fontWeight: 800, padding: '0.85rem', fontSize: '0.92rem', borderRadius: 10, border: 'none', cursor: 'pointer' }}
+                      onClick={() => openWebpressPay(checkoutPlanData.price, checkoutPlanData.name, 'plan')}
+                    >
+                      Pay ₹{checkoutPlanData.price} with UPI →
+                    </button>
+
+                    <div style={{ textAlign: 'center', marginTop: 12 }}>
+                      <div style={{ fontSize: '0.7rem', color: '#64748b', marginBottom: 4 }}>
+                        ● Secure UPI checkout · Instant status update after payment
+                      </div>
+                      <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginBottom: 12 }}>
+                        Supported UPI Apps: Google Pay · PhonePe · Paytm · BHIM · Cred
+                      </div>
+                      <button
+                        type="button"
+                        style={{ background: 'none', border: 'none', color: '#16a34a', fontSize: '0.76rem', fontWeight: 700, cursor: 'pointer' }}
+                        onClick={() => setPlanCheckoutStep('select')}
+                      >
+                        ← Return to Page 1: Billing &amp; Plans
+                      </button>
+                    </div>
+                  </div>
                 </div>
-
-                <ul className="bc-billing-features">
-                  <li><i className="fa-solid fa-check"></i> Human-Like AI Written Reviews</li>
-                  <li><i className="fa-solid fa-check"></i> Custom Keywords, Services &amp; Staff</li>
-                  <li><i className="fa-solid fa-check"></i> Emoji Support &amp; Review Styles</li>
-                  <li><i className="fa-solid fa-check"></i> Customizable Google Review QR</li>
-                  <li><i className="fa-solid fa-check"></i> Printable QR Standee (PDF/PNG High-Res)</li>
-                  <li><i className="fa-solid fa-check"></i> Private Negative Feedback Routing</li>
-                  <li><i className="fa-solid fa-check"></i> Review, Rating &amp; Growth Analytics</li>
-                  <li><i className="fa-solid fa-check"></i> AI Google Business Analyzer</li>
-                  <li><i className="fa-solid fa-check"></i> Priority VIP Support</li>
-                </ul>
-
-                <div className="bc-billing-micro">Best price guaranteed for 12 months</div>
-                <button
-                  className="btn full"
-                  style={{ background: '#ea580c', color: '#fff', border: 'none', fontWeight: 800, padding: '0.75rem' }}
-                  onClick={() => choosePlan ? choosePlan(billingReviewToggle === 'without' ? 'Starter' : 'Pro', 'Yearly') : notify('Yearly plan chosen.')}
-                >
-                  Upgrade to Yearly (Save 16%)
-                </button>
               </div>
-
-              {/* Card 3: Starter Multi-Business (10 Locations) */}
-              <div className="bc-billing-card">
-                <div className="bc-billing-badge-top outline-green">MULTI-BUSINESS - STARTER</div>
-                <h4>Starter Multi-Business (10 Locations)</h4>
-                <p className="bc-billing-card-sub">Centralized management for brands and growing teams managing up to 10 businesses or locations.</p>
-
-                <div className="bc-billing-price-row">
-                  <div className="price">₹ 2,999 <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ year</span></div>
-                  <div className="sub-price">₹250 / mo · Billed Annually</div>
-                </div>
-
-                <div className="bc-multi-highlight-box">
-                  <div style={{ fontWeight: 800, marginBottom: 4 }}><i className="fa-solid fa-check" style={{ marginRight: 5 }}></i> Up to 10 Businesses or Locations Managed</div>
-                  <p style={{ margin: '0 0 6px 0', fontSize: '0.72rem' }}>Manage Up to 10 Businesses or Locations simultaneously</p>
-                  <div style={{ fontSize: '0.71rem', color: '#14532d', background: '#dcfce7', padding: '4px 6px', borderRadius: 6 }}>
-                    🔑 <b>Bring Your Own AI API:</b> Use your own API key (Gemini, OpenAI, or Claude) for review generation (API keys not provided with Multi-Business plans)
+            ) : (
+              /* Normal Plans List */
+              <>
+                {/* Header Card */}
+                <div className="bc-view-header">
+                  <div className="bc-vh-left">
+                    <div className="bc-vh-icon">
+                      <i className="fa-regular fa-credit-card"></i>
+                    </div>
+                    <div>
+                      <h2>Billing &amp; Subscription</h2>
+                      <p>Manage your active membership, renewals, invoice history &amp; AI feature tiers</p>
+                    </div>
+                  </div>
+                  <div>
+                    <span style={{
+                      background: isTrial && daysLeft === 0 ? '#fef2f2' : '#f0fdf4',
+                      border: isTrial && daysLeft === 0 ? '1px solid #fee2e2' : '1px solid #bbf7d0',
+                      color: isTrial && daysLeft === 0 ? '#dc2626' : '#15803d',
+                      padding: '0.35rem 0.85rem',
+                      borderRadius: 999,
+                      fontSize: '0.74rem',
+                      fontWeight: 800,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5
+                    }}>
+                      ● {isTrial && daysLeft === 0 ? 'Subscription Expired' : 'Active Subscription'}
+                    </span>
                   </div>
                 </div>
 
-                <ul className="bc-billing-features">
-                  <li><i className="fa-solid fa-check"></i> Multi-Business Central Dashboard</li>
-                  <li><i className="fa-solid fa-check"></i> Dedicated Printable QR Standees per Location</li>
-                  <li><i className="fa-solid fa-check"></i> Private Negative Feedback Shield &amp; Routing</li>
-                  <li><i className="fa-solid fa-check"></i> Cross-Location Growth &amp; Review Analytics</li>
-                  <li><i className="fa-solid fa-check"></i> Standard Email &amp; WhatsApp Support Desk</li>
-                </ul>
-
-                <div className="bc-billing-micro">Starter Multi-Business capacity (10 locations)</div>
-                <button
-                  className="btn btn-dark full"
-                  style={{ background: '#16a34a', border: 'none', fontWeight: 800, padding: '0.75rem' }}
-                  onClick={() => choosePlan ? choosePlan('Agency', 'Yearly') : notify('Multi-Business plan selected.')}
-                >
-                  Choose 10 Businesses or Locations →
-                </button>
-              </div>
-            </div>
-
-            {/* 4 Value Badges Strip (Screenshot 2) */}
-            <div className="bc-billing-badges-row">
-              <div className="bc-bb-item">
-                <i className="fa-solid fa-bolt"></i>
-                <div className="bc-bb-text">
-                  <strong>Instant UPI Activation</strong>
-                  <small>Scan QR &amp; enter UTR for quick activation</small>
-                </div>
-              </div>
-              <div className="bc-bb-item">
-                <i className="fa-solid fa-shield-halved"></i>
-                <div className="bc-bb-text">
-                  <strong>Permanent QR Codes</strong>
-                  <small>Your flyers, links &amp; ratings never change</small>
-                </div>
-              </div>
-              <div className="bc-bb-item">
-                <i className="fa-solid fa-sliders"></i>
-                <div className="bc-bb-text">
-                  <strong>Switch or Upgrade Anytime</strong>
-                  <small>Seamless transitions without data loss</small>
-                </div>
-              </div>
-              <div className="bc-bb-item">
-                <i className="fa-brands fa-whatsapp"></i>
-                <div className="bc-bb-text">
-                  <strong>Priority WhatsApp Support</strong>
-                  <small>Direct assistance for billing &amp; GST invoices</small>
-                </div>
-              </div>
-            </div>
-
-            {/* Frequently Asked Questions 6-Box Grid (Screenshots 2 & 3) */}
-            <div className="bc-billing-faq-box">
-              <div className="bc-faq-header">
-                <h3><i className="fa-regular fa-circle-question" style={{ color: '#16a34a' }}></i> Frequently Asked Questions</h3>
-                <p>Everything you need to know about plans, billing, and activation</p>
-              </div>
-
-              <div className="bc-faq-2col">
-                <div className="bc-faq-item-card">
-                  <strong><i className="fa-solid fa-chevron-right" style={{ fontSize: '0.68rem', color: '#16a34a', marginRight: 6 }}></i> How does instant plan activation work?</strong>
-                  <p>Click Upgrade on any plan, scan the dynamic UPI QR code with any UPI app (GPay, PhonePe, Paytm), and submit the 12-digit UTR/transaction reference. Your account is activated automatically.</p>
+                {/* Red Warning Banner if expired or trial 0 days */}
+                <div style={{
+                  background: '#fef2f2',
+                  border: '1.5px solid #fecaca',
+                  borderRadius: 14,
+                  padding: '0.85rem 1.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '1rem',
+                  marginBottom: '1.5rem'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#991b1b', fontSize: '0.82rem', fontWeight: 700 }}>
+                    <i className="fa-solid fa-triangle-exclamation" style={{ color: '#dc2626', fontSize: '1.1rem' }}></i>
+                    <span>Your subscription has expired. Review collection and dashboard automation are paused. Choose a plan below to reactivate instantly.</span>
+                  </div>
+                  <button
+                    className="btn btn-sm"
+                    style={{ background: '#991b1b', color: '#ffffff', border: 'none', fontWeight: 800, whiteSpace: 'nowrap', borderRadius: 8 }}
+                    onClick={() => {
+                      const el = document.getElementById('billing-plans-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    Reactivate Plan Below ↓
+                  </button>
                 </div>
 
-                <div className="bc-faq-item-card">
-                  <strong><i className="fa-solid fa-chevron-right" style={{ fontSize: '0.68rem', color: '#16a34a', marginRight: 6 }}></i> Will my QR code or review link change when I upgrade?</strong>
-                  <p>No, never! Your Google Review QR code, short links, and printable standees are permanent and will never change when renewing or upgrading plans.</p>
+                {/* Current Plan Status Card */}
+                <div className="bc-status-card">
+                  <div className="bc-status-left">
+                    <span style={{ background: '#fef3c7', color: '#b45309', padding: '0.2rem 0.65rem', borderRadius: 6, fontSize: '0.68rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      {isTrial ? '3-DAY FREE TRIAL' : (planName.toUpperCase() + ' PLAN')}
+                    </span>
+                    <span style={{ fontSize: '0.76rem', color: '#64748b', marginLeft: 8 }}>
+                      Account: <b>{user?.name || 'Team Maruti InfoSoft'}</b>
+                    </span>
+                    <h3>{planName}</h3>
+                  </div>
+
+                  <div className="bc-status-stats">
+                    <div className="bc-status-stat-box">
+                      <span className="stat-label">STATUS</span>
+                      <span className="stat-val" style={{ color: daysLeft === 0 ? '#ef4444' : '#16a34a' }}>
+                        ● {daysLeft === 0 ? 'Expired' : 'Active'}
+                      </span>
+                    </div>
+                    <div className="bc-status-stat-box">
+                      <span className="stat-label">VALID UNTIL</span>
+                      <span className="stat-val">{sub?.expiresAt ? new Date(sub.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Oct 24, 2026'}</span>
+                    </div>
+                    <div className="bc-status-stat-box">
+                      <span className="stat-label">DAYS LEFT</span>
+                      <span className="stat-val" style={{ color: daysLeft === 0 ? '#ef4444' : '#16a34a', fontSize: '1rem', fontWeight: 900 }}>
+                        {daysLeft} Days
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="bc-faq-item-card">
-                  <strong><i className="fa-solid fa-chevron-right" style={{ fontSize: '0.68rem', color: '#16a34a', marginRight: 6 }}></i> What is the difference between Standard and Pro plans?</strong>
-                  <p>Standard plans include the complete review collection funnel, AI review writer &amp; negative feedback filtering. Pro plans additionally include 24/7 automated AI review replies posted directly to your Google Business Profile.</p>
+                {/* Select or Upgrade Your Plan Heading */}
+                <div id="billing-plans-section" style={{ textAlign: 'center', marginBottom: '1.25rem', scrollMarginTop: '80px' }}>
+                  <h2 style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.35rem 0' }}>
+                    Select or Upgrade Your Plan
+                  </h2>
+                  <p style={{ fontSize: '0.82rem', color: '#64748b', margin: 0 }}>
+                    Choose between Standard review collection or Pro Autopilot with automated 24/7 AI review replies.
+                  </p>
                 </div>
 
-                <div className="bc-faq-item-card">
-                  <strong><i className="fa-solid fa-chevron-right" style={{ fontSize: '0.68rem', color: '#16a34a', marginRight: 6 }}></i> Can I upgrade from Monthly to Yearly anytime?</strong>
-                  <p>Yes! You can switch from monthly to an annual plan anytime. Your new annual plan activates immediately and locks in up to 69% in savings for the full year.</p>
+                {/* Toggle Switch */}
+                <div className="bc-billing-toggle-wrap">
+                  <div className="bc-billing-toggle">
+                    <button
+                      type="button"
+                      className={`bc-billing-toggle-btn ${billingReviewToggle === 'without' ? 'active' : ''}`}
+                      onClick={() => setBillingReviewToggle('without')}
+                    >
+                      <i className="fa-solid fa-layer-group"></i>
+                      <span>Without Review Reply</span>
+                      <span className="bc-toggle-pill std">Standard</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`bc-billing-toggle-btn ${billingReviewToggle === 'with' ? 'active' : ''}`}
+                      onClick={() => setBillingReviewToggle('with')}
+                    >
+                      <i className="fa-solid fa-reply"></i>
+                      <span>With Review Reply</span>
+                      <span className="bc-toggle-pill pro">⚡ Pro Autopilot</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="bc-faq-item-card">
-                  <strong><i className="fa-solid fa-chevron-right" style={{ fontSize: '0.68rem', color: '#16a34a', marginRight: 6 }}></i> Do you provide GST invoices?</strong>
-                  <p>Yes. Send your business GST details and Order ID to our WhatsApp support team at +919707842047, and we will issue your official tax invoice promptly.</p>
+                {/* 3 Pricing Cards Grid */}
+                <div className="bc-billing-grid">
+                  {/* Card 1: Monthly Plan */}
+                  <div className="bc-billing-card">
+                    <div className="bc-billing-badge-top green">FLEXIBLE MONTHLY</div>
+                    <h4>Monthly Plan</h4>
+                    <p className="bc-billing-card-sub">Complete review growth suite for single locations.</p>
+
+                    <div className="bc-billing-price-row">
+                      <div className="price">₹ {billingReviewToggle === 'without' ? '199' : '299'} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ month</span></div>
+                      <div className="sub-price">Month-to-Month · Cancel anytime</div>
+                    </div>
+
+                    <div className={`bc-billing-ai-notice ${billingReviewToggle === 'without' ? 'off' : 'on'}`}>
+                      <i className={billingReviewToggle === 'without' ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-circle-check'}></i>
+                      <span>{billingReviewToggle === 'without' ? 'AI Powered Automatic Review Replies: Not Available' : '24/7 AI Automatic Review Replies: Included & Active'}</span>
+                    </div>
+
+                    <ul className="bc-billing-features">
+                      <li><i className="fa-solid fa-check"></i> Human-Like AI Written Reviews</li>
+                      <li><i className="fa-solid fa-check"></i> Custom Keywords, Services &amp; Staff</li>
+                      <li><i className="fa-solid fa-check"></i> Emoji Support &amp; Review Styles</li>
+                      <li><i className="fa-solid fa-check"></i> Customizable Google Review QR</li>
+                      <li><i className="fa-solid fa-check"></i> Printable QR Standee (PDF/PNG)</li>
+                      <li><i className="fa-solid fa-check"></i> Private Negative Feedback Routing</li>
+                      <li><i className="fa-solid fa-check"></i> Review, Rating &amp; Growth Analytics</li>
+                      <li><i className="fa-solid fa-check"></i> AI Google Business Analyzer</li>
+                      <li><i className="fa-solid fa-check"></i> 100% Ad-Free Customer Funnel</li>
+                      <li><i className="fa-solid fa-check"></i> Standard Priority Support</li>
+                    </ul>
+
+                    <div className="bc-billing-micro">Flexible monthly commitment</div>
+                    <button
+                      className="btn btn-dark full"
+                      style={{ background: '#16a34a', border: 'none', fontWeight: 800, padding: '0.75rem' }}
+                      onClick={() => startPlanCheckout(billingReviewToggle === 'without' ? 'Starter' : 'Pro', 'Monthly', billingReviewToggle === 'without' ? 199 : 299)}
+                    >
+                      {billingReviewToggle === 'without' ? 'Upgrade to Starter' : 'Upgrade to Pro'}
+                    </button>
+                  </div>
+
+                  {/* Card 2: Yearly Plan */}
+                  <div className="bc-billing-card featured">
+                    <div className="bc-billing-badge-top orange">BEST VALUE - SAVE 16%</div>
+                    <h4>Yearly Plan</h4>
+                    <p className="bc-billing-card-sub">Annual membership with maximum savings for 12 full months.</p>
+
+                    <div className="bc-billing-price-row">
+                      <div className="price">₹ {billingReviewToggle === 'without' ? '1999' : '2999'} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ year</span></div>
+                      <div className="sub-price" style={{ color: '#ea580c', fontWeight: 700 }}>
+                        ⚡ Save 16% · ₹{billingReviewToggle === 'without' ? '167' : '250'}/mo · Save ₹{billingReviewToggle === 'without' ? '389' : '589'}/yr
+                      </div>
+                    </div>
+
+                    <div className={`bc-billing-ai-notice ${billingReviewToggle === 'without' ? 'off' : 'on'}`}>
+                      <i className={billingReviewToggle === 'without' ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-circle-check'}></i>
+                      <span>{billingReviewToggle === 'without' ? 'AI Powered Automatic Review Replies: Not Available' : '24/7 AI Automatic Review Replies: Included & Active'}</span>
+                    </div>
+
+                    <ul className="bc-billing-features">
+                      <li><i className="fa-solid fa-check"></i> Human-Like AI Written Reviews</li>
+                      <li><i className="fa-solid fa-check"></i> Custom Keywords, Services &amp; Staff</li>
+                      <li><i className="fa-solid fa-check"></i> Emoji Support &amp; Review Styles</li>
+                      <li><i className="fa-solid fa-check"></i> Customizable Google Review QR</li>
+                      <li><i className="fa-solid fa-check"></i> Printable QR Standee (PDF/PNG High-Res)</li>
+                      <li><i className="fa-solid fa-check"></i> Private Negative Feedback Routing</li>
+                      <li><i className="fa-solid fa-check"></i> Review, Rating &amp; Growth Analytics</li>
+                      <li><i className="fa-solid fa-check"></i> AI Google Business Analyzer</li>
+                      <li><i className="fa-solid fa-check"></i> Priority VIP Support</li>
+                    </ul>
+
+                    <div className="bc-billing-micro">Best price guaranteed for 12 months</div>
+                    <button
+                      className="btn full"
+                      style={{ background: '#ea580c', color: '#fff', border: 'none', fontWeight: 800, padding: '0.75rem' }}
+                      onClick={() => startPlanCheckout(billingReviewToggle === 'without' ? 'Starter' : 'Pro', 'Yearly', billingReviewToggle === 'without' ? 1999 : 2999)}
+                    >
+                      Upgrade to Yearly (Save 16%)
+                    </button>
+                  </div>
+
+                  {/* Card 3: Starter Multi-Business (10 Locations) */}
+                  <div className="bc-billing-card">
+                    <div className="bc-billing-badge-top outline-green">MULTI-BUSINESS - STARTER</div>
+                    <h4>Starter Multi-Business (10 Locations)</h4>
+                    <p className="bc-billing-card-sub">Centralized management for brands and growing teams managing up to 10 businesses or locations.</p>
+
+                    <div className="bc-billing-price-row">
+                      <div className="price">₹ 2,999 <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ year</span></div>
+                      <div className="sub-price">₹250 / mo · Billed Annually</div>
+                    </div>
+
+                    <div className="bc-multi-highlight-box">
+                      <div style={{ fontWeight: 800, marginBottom: 4 }}><i className="fa-solid fa-check" style={{ marginRight: 5 }}></i> Up to 10 Businesses or Locations Managed</div>
+                      <p style={{ margin: '0 0 6px 0', fontSize: '0.72rem' }}>Manage Up to 10 Businesses or Locations simultaneously</p>
+                      <div style={{ fontSize: '0.71rem', color: '#14532d', background: '#dcfce7', padding: '4px 6px', borderRadius: 6 }}>
+                        🔑 <b>Bring Your Own AI API:</b> Use your own API key (Gemini, OpenAI, or Claude) for review generation (API keys not provided with Multi-Business plans)
+                      </div>
+                    </div>
+
+                    <ul className="bc-billing-features">
+                      <li><i className="fa-solid fa-check"></i> Multi-Business Central Dashboard</li>
+                      <li><i className="fa-solid fa-check"></i> Dedicated Printable QR Standees per Location</li>
+                      <li><i className="fa-solid fa-check"></i> Private Negative Feedback Shield &amp; Routing</li>
+                      <li><i className="fa-solid fa-check"></i> Cross-Location Growth &amp; Review Analytics</li>
+                      <li><i className="fa-solid fa-check"></i> Standard Email &amp; WhatsApp Support Desk</li>
+                    </ul>
+
+                    <div className="bc-billing-micro">Starter Multi-Business capacity (10 locations)</div>
+                    <button
+                      className="btn btn-dark full"
+                      style={{ background: '#16a34a', border: 'none', fontWeight: 800, padding: '0.75rem' }}
+                      onClick={() => startPlanCheckout('Agency', 'Yearly', 2999)}
+                    >
+                      Choose 10 Businesses or Locations →
+                    </button>
+                  </div>
                 </div>
 
-                <div className="bc-faq-item-card">
-                  <strong><i className="fa-solid fa-chevron-right" style={{ fontSize: '0.68rem', color: '#16a34a', marginRight: 6 }}></i> What happens if my subscription expires?</strong>
-                  <p>Your existing reviews remain 100% safe on Google. New QR scans will simply pause AI generation until you renew your subscription from this console.</p>
+                {/* 4 Value Badges Strip (Screenshot 2) */}
+                <div className="bc-billing-badges-row">
+                  <div className="bc-bb-item">
+                    <i className="fa-solid fa-bolt"></i>
+                    <div className="bc-bb-text">
+                      <strong>Instant UPI Activation</strong>
+                      <small>Scan QR &amp; enter UTR for quick activation</small>
+                    </div>
+                  </div>
+                  <div className="bc-bb-item">
+                    <i className="fa-solid fa-shield-halved"></i>
+                    <div className="bc-bb-text">
+                      <strong>Permanent QR Codes</strong>
+                      <small>Your flyers, links &amp; ratings never change</small>
+                    </div>
+                  </div>
+                  <div className="bc-bb-item">
+                    <i className="fa-solid fa-headset"></i>
+                    <div className="bc-bb-text">
+                      <strong>Priority WhatsApp Support</strong>
+                      <small>Direct access to our growth specialists</small>
+                    </div>
+                  </div>
+                  <div className="bc-bb-item">
+                    <i className="fa-solid fa-rotate-left"></i>
+                    <div className="bc-bb-text">
+                      <strong>Cancel Anytime</strong>
+                      <small>No lock-in or cancellation fees</small>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Transaction & Invoice History Section (Screenshot 3) */}
-            <div className="bc-billing-history-box">
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.25rem 0' }}>Transaction &amp; Invoice History</h3>
-              <p style={{ fontSize: '0.76rem', color: '#64748b', margin: '0 0 1.5rem 0' }}>Your recent subscription orders, activations, and payment references.</p>
-
-              <div className="bc-empty-history">
-                <i className="fa-solid fa-receipt"></i>
-                <strong>No Payment Records Found</strong>
-                <p>When you complete a plan upgrade or renewal, your invoice details will appear here.</p>
-              </div>
-            </div>
-
-            {/* Bottom Support Strip (Screenshot 3) */}
-            <div className="bc-billing-support-strip">
-              <div className="bc-bss-left">
-                <i className="fa-brands fa-whatsapp"></i>
-                <div>
-                  <strong>Need Help Choosing a Plan or Custom Invoicing?</strong>
-                  <p>Our dedicated account team is available on WhatsApp to assist with upgrades, GST invoices &amp; multi-branch pricing.</p>
+                {/* FAQ Accordion (Screenshot 2) */}
+                <div className="bc-faq-section">
+                  <h3>Frequently Asked Questions</h3>
+                  <div className="bc-faq-list">
+                    {[
+                      { q: 'How does the instant UPI activation work?', a: 'Once you scan the QR code and complete your UPI payment, your transaction is automatically verified through our bank gateway within 60 seconds. Your features and review replies activate immediately.' },
+                      { q: 'Will my QR code stop working if my plan expires?', a: 'No, your printed QR codes and Google review direct links always remain permanent and functional. However, AI review suggestions, automated replies, and analytics dashboards are temporarily paused until renewed.' },
+                      { q: 'Can I switch between monthly and yearly billing anytime?', a: 'Yes! You can upgrade to the yearly plan at any point to save 16%. Any remaining unused days on your monthly plan are automatically credited towards your annual membership.' },
+                      { q: 'How do automated AI review replies work?', a: 'Our system connects with your Google Business Profile to monitor new customer reviews 24/7. When a review is posted, our AI crafts an empathetic, personalized response matching your brand tone and publishes it automatically.' }
+                    ].map((faq, idx) => (
+                      <div key={idx} className="bc-faq-item">
+                        <button
+                          type="button"
+                          className="bc-faq-question"
+                          onClick={() => setBillingFaqOpen(billingFaqOpen === idx ? null : idx)}
+                        >
+                          <span>{faq.q}</span>
+                          <i className={`fa-solid ${billingFaqOpen === idx ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                        </button>
+                        {billingFaqOpen === idx && (
+                          <div className="bc-faq-answer">
+                            <p>{faq.a}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <button
-                className="btn btn-sm"
-                style={{ background: '#16a34a', color: '#ffffff', border: 'none', fontWeight: 800, borderRadius: 8, padding: '0.55rem 1.15rem' }}
-                onClick={() => window.open('https://wa.me/919707842047?text=Hello%20StarReview%20AI%20Billing%20Support!%20I%20need%20help%20choosing%20a%20plan.', '_blank')}
-              >
-                <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }}></i> Chat With Billing Support
-              </button>
-            </div>
+
+                {/* Bottom Support Strip (Screenshot 3) */}
+                <div className="bc-billing-support-strip">
+                  <div className="bc-bss-left">
+                    <i className="fa-brands fa-whatsapp"></i>
+                    <div>
+                      <strong>Need Help Choosing a Plan or Custom Invoicing?</strong>
+                      <p>Our dedicated account team is available on WhatsApp to assist with upgrades, GST invoices &amp; multi-branch pricing.</p>
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn-sm"
+                    style={{ background: '#16a34a', color: '#ffffff', border: 'none', fontWeight: 800, borderRadius: 8, padding: '0.55rem 1.15rem' }}
+                    onClick={() => window.open('https://wa.me/919707842047?text=Hello%20StarReview%20AI%20Billing%20Support!%20I%20need%20help%20choosing%20a%20plan.', '_blank')}
+                  >
+                    <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }}></i> Chat With Billing Support
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
 
-        {/* ====================================================================
-            VIEW: SETTINGS (EXACT REVIEWFLOW AI SCREENSHOT 4 - CENTERED CARD)
-            ==================================================================== */}
         {activeTab === 'Settings' && (
           <div>
             {/* Header Card */}
@@ -4815,6 +5422,272 @@ export default function BusinessConsole({
             )}
           </div>
         )}
+        {/* ====================================================================
+            WEBPRESS PAY UPI PAYMENT GATEWAY MODAL (SCREENSHOT 4)
+            ==================================================================== */}
+        {webpressModalOpen && (
+          <div className="bc-webpress-overlay" onClick={() => !verifyingPayment && setWebpressModalOpen(false)}>
+            <div style={{ width: '100%', maxWidth: 460 }} onClick={e => e.stopPropagation()}>
+              {/* Floating Pill above Card */}
+              <div style={{ textAlign: 'center' }}>
+                <span className="bc-webpress-float-pill">
+                  <i className="fa-solid fa-shield-halved"></i> Encrypted Bank Verified Checkout
+                </span>
+              </div>
+
+              {/* Main Card */}
+              <div className="bc-webpress-modal">
+                {/* Header */}
+                <div className="bc-webpress-header">
+                  <div className="bc-webpress-logo-wrap">
+                    <div className="bc-webpress-logo-box">
+                      WP
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <strong style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0f172a' }}>WebPress Pay</strong>
+                        <i className="fa-solid fa-circle-check" style={{ color: '#16a34a', fontSize: '0.95rem' }}></i>
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Instant UPI Payment Gateway</div>
+                    </div>
+                  </div>
+                  <div className="bc-webpress-timer">
+                    <i className="fa-regular fa-clock"></i>
+                    <span>{Math.floor(webpressCountdown / 60)}:{(webpressCountdown % 60).toString().padStart(2, '0')}</span>
+                  </div>
+                </div>
+
+                {/* Paying To Bar */}
+                <div className="bc-webpress-paying-to">
+                  <div>
+                    <span style={{ color: '#64748b' }}>Paying To: </span>
+                    <strong style={{ color: '#0f172a' }}>{webpressData.payee}</strong>
+                  </div>
+                  <button
+                    type="button"
+                    style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: 6, padding: '2px 8px', fontSize: '0.7rem', fontWeight: 700, color: '#475569', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                    onClick={() => {
+                      navigator.clipboard.writeText(webpressData.orderRef);
+                      notify('Order reference copied: ' + webpressData.orderRef);
+                    }}
+                  >
+                    <span>Ref: {webpressData.orderRef.slice(0, 14)}..</span>
+                    <i className="fa-regular fa-copy"></i>
+                  </button>
+                </div>
+
+                {/* Amount Box */}
+                <div className="bc-webpress-amount-box">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', letterSpacing: '0.04em' }}>AMOUNT TO PAY</span>
+                    <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.68rem', fontWeight: 800, padding: '2px 8px', borderRadius: 999 }}>
+                      🛡️ 0% Fee
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '2.3rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.02em', margin: '2px 0' }}>
+                    ₹{webpressData.amount.toLocaleString('en-IN')}.00
+                  </div>
+                  <div style={{ fontSize: '0.74rem', color: '#047857', fontWeight: 700 }}>
+                    ⚡ Instant Direct Bank Credit via UPI
+                  </div>
+                </div>
+
+                {/* Tabs Switcher: Scan QR Code | Pay via UPI App */}
+                <div style={{ display: 'flex', margin: '0 1.5rem', background: '#f1f5f9', borderRadius: 10, padding: 4, gap: 4 }}>
+                  <button
+                    type="button"
+                    style={{
+                      flex: 1,
+                      padding: '0.45rem',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: webpressTab === 'qr' ? '#ffffff' : 'transparent',
+                      color: webpressTab === 'qr' ? '#16a34a' : '#64748b',
+                      fontWeight: 800,
+                      fontSize: '0.78rem',
+                      cursor: 'pointer',
+                      boxShadow: webpressTab === 'qr' ? '0 2px 6px rgba(0,0,0,0.06)' : 'none'
+                    }}
+                    onClick={() => setWebpressTab('qr')}
+                  >
+                    <i className="fa-solid fa-qrcode" style={{ marginRight: 6 }}></i> Scan QR Code
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      flex: 1,
+                      padding: '0.45rem',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: webpressTab === 'upi' ? '#ffffff' : 'transparent',
+                      color: webpressTab === 'upi' ? '#16a34a' : '#64748b',
+                      fontWeight: 800,
+                      fontSize: '0.78rem',
+                      cursor: 'pointer',
+                      boxShadow: webpressTab === 'upi' ? '0 2px 6px rgba(0,0,0,0.06)' : 'none'
+                    }}
+                    onClick={() => setWebpressTab('upi')}
+                  >
+                    <i className="fa-solid fa-mobile-screen" style={{ marginRight: 6 }}></i> Pay via UPI App
+                  </button>
+                </div>
+
+                {/* Tab 1: QR Code with Corner Brackets */}
+                {webpressTab === 'qr' && (
+                  <div style={{ textAlign: 'center', padding: '0.5rem 1.5rem 1rem' }}>
+                    <div className="bc-webpress-qr-frame">
+                      <span className="bc-qr-corner tl"></span>
+                      <span className="bc-qr-corner tr"></span>
+                      <span className="bc-qr-corner bl"></span>
+                      <span className="bc-qr-corner br"></span>
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(`upi://pay?pa=labadas@upi&pn=Laba%20Das%20Webpress%20Hub&am=${webpressData.amount}&cu=INR&tn=${webpressData.orderRef}`)}`}
+                        alt="UPI Payment QR"
+                        style={{ width: 175, height: 175, display: 'block', borderRadius: 8 }}
+                      />
+                    </div>
+
+                    <div style={{ textAlign: 'center' }}>
+                      <span className="bc-webpress-pulse-pill">
+                        <span className="bc-webpress-pulse-dot"></span>
+                        Waiting for payment...
+                      </span>
+                      <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: 8 }}>
+                        Scan with PhonePe, Google Pay, Paytm, CRED or any UPI App
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 2: Pay via UPI Apps One-Click */}
+                {webpressTab === 'upi' && (
+                  <div style={{ padding: '1rem 1.5rem', textAlign: 'center' }}>
+                    <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '0 0 1rem 0' }}>
+                      Select your preferred UPI app to pay directly from your mobile device:
+                    </p>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: '1.25rem' }}>
+                      <a
+                        href={`upi://pay?pa=labadas@upi&pn=Laba%20Das%20Webpress%20Hub&am=${webpressData.amount}&cu=INR&tn=${webpressData.orderRef}`}
+                        className="btn btn-light"
+                        style={{ fontSize: '0.8rem', fontWeight: 800, padding: '0.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                        onClick={() => notify('Launching Google Pay...')}
+                      >
+                        <i className="fa-brands fa-google-pay" style={{ fontSize: '1.2rem', color: '#4285F4' }}></i> GPay
+                      </a>
+                      <a
+                        href={`upi://pay?pa=labadas@upi&pn=Laba%20Das%20Webpress%20Hub&am=${webpressData.amount}&cu=INR&tn=${webpressData.orderRef}`}
+                        className="btn btn-light"
+                        style={{ fontSize: '0.8rem', fontWeight: 800, padding: '0.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                        onClick={() => notify('Launching PhonePe...')}
+                      >
+                        <i className="fa-solid fa-mobile-screen" style={{ color: '#5f259f' }}></i> PhonePe
+                      </a>
+                      <a
+                        href={`upi://pay?pa=labadas@upi&pn=Laba%20Das%20Webpress%20Hub&am=${webpressData.amount}&cu=INR&tn=${webpressData.orderRef}`}
+                        className="btn btn-light"
+                        style={{ fontSize: '0.8rem', fontWeight: 800, padding: '0.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                        onClick={() => notify('Launching Paytm...')}
+                      >
+                        <i className="fa-solid fa-wallet" style={{ color: '#00baf2' }}></i> Paytm
+                      </a>
+                      <a
+                        href={`upi://pay?pa=labadas@upi&pn=Laba%20Das%20Webpress%20Hub&am=${webpressData.amount}&cu=INR&tn=${webpressData.orderRef}`}
+                        className="btn btn-light"
+                        style={{ fontSize: '0.8rem', fontWeight: 800, padding: '0.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                        onClick={() => notify('Launching CRED...')}
+                      >
+                        <i className="fa-solid fa-credit-card" style={{ color: '#0f172a' }}></i> CRED / Other
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Collapsible Order Details */}
+                <div style={{ margin: '0 1.5rem 1rem', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
+                  <button
+                    type="button"
+                    style={{ width: '100%', padding: '0.65rem 1rem', background: '#f8fafc', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem', fontWeight: 800, color: '#334155', cursor: 'pointer' }}
+                    onClick={() => setWebpressDetailsOpen(!webpressDetailsOpen)}
+                  >
+                    <span><i className="fa-solid fa-list-check" style={{ marginRight: 6 }}></i> Order Details</span>
+                    <i className={`fa-solid ${webpressDetailsOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                  </button>
+                  {webpressDetailsOpen && (
+                    <div style={{ padding: '0.75rem 1rem', fontSize: '0.74rem', background: '#ffffff', color: '#64748b' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span>Item:</span> <strong style={{ color: '#0f172a' }}>{webpressData.title}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span>Order Reference:</span> <code>{webpressData.orderRef}</code>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span>Customer:</span> <span>{user?.name || 'Team Maruti InfoSoft'}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span>GST / Taxes:</span> <span>Included (18%)</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Status:</span> <span style={{ color: '#ea580c', fontWeight: 800 }}>Awaiting Confirmation</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Simulation Button: I Have Paid / Verify Now */}
+                <div style={{ padding: '0 1.5rem 1rem' }}>
+                  <button
+                    type="button"
+                    disabled={verifyingPayment}
+                    style={{
+                      width: '100%',
+                      background: '#16a34a',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: 10,
+                      padding: '0.8rem',
+                      fontWeight: 800,
+                      fontSize: '0.86rem',
+                      cursor: verifyingPayment ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      boxShadow: '0 4px 14px rgba(22, 163, 74, 0.25)'
+                    }}
+                    onClick={confirmWebpressPayment}
+                  >
+                    {verifyingPayment ? (
+                      <>
+                        <i className="fa-solid fa-circle-notch fa-spin"></i> Verifying with NPCI &amp; Bank...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fa-solid fa-circle-check"></i> I Have Paid / Verify Instant Activation
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Footer Security Badges */}
+                <div style={{ background: '#f8fafc', borderTop: '1px solid #f1f5f9', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', fontWeight: 800, color: '#166534' }}>
+                    <i className="fa-solid fa-shield-halved"></i> 100% Secure &amp; NPCI Compliant
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: '0.64rem', fontWeight: 900, background: '#ffffff', border: '1px solid #cbd5e1', padding: '1px 6px', borderRadius: 4, color: '#334155' }}>UPI</span>
+                    <span style={{ fontSize: '0.64rem', fontWeight: 900, background: '#ffffff', border: '1px solid #cbd5e1', padding: '1px 6px', borderRadius: 4, color: '#334155' }}>NPCI</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Tagline */}
+              <div style={{ textAlign: 'center', marginTop: 12, fontSize: '0.72rem', color: '#64748b' }}>
+                Instant Direct Bank Settlement • Powered by <strong>WebPress Pay</strong>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Floating WhatsApp Bubble */}
         <a
           href={`https://wa.me/${business?.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I need assistance with StarReview AI Business Console.")}`}

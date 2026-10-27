@@ -4716,3 +4716,492 @@
   color: #64748b;
   margin: 0 0 1.5rem 0;
 }
+
+/* ==========================================================================
+   REVIEWFLOW AI: MAGIC REVIEW QR COUNTER BANNER & THEMES (SCREENSHOT 1)
+   ========================================================================== */
+.bc-counter-banner {
+  width: 100%;
+  max-width: 660px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+  transition: all 0.25s ease;
+}
+
+.bc-banner-left {
+  flex: 1.15;
+  padding: 1.75rem 1.75rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.bc-banner-right {
+  flex: 0.85;
+  background: linear-gradient(145deg, #ecfdf5 0%, #10b981 100%);
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-top-right-radius: 19px;
+  border-bottom-right-radius: 19px;
+}
+
+.bc-banner-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+}
+
+.bc-banner-btn-scan {
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1.15rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+  transition: all 0.15s ease;
+}
+
+.bc-banner-btn-scan:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+.bc-banner-badge-top {
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+.bc-banner-qr-box {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.bc-banner-badge-bottom {
+  margin-top: 0.75rem;
+  font-size: 0.72rem;
+  color: #ffffff;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* THEMES: Classic, Minimalist, Vibrant, Plain QR */
+.bc-counter-banner.theme-minimalist,
+.bc-a6-flyer.theme-minimalist {
+  border-color: #cbd5e1;
+}
+.bc-counter-banner.theme-minimalist .bc-banner-right {
+  background: linear-gradient(145deg, #334155 0%, #0f172a 100%);
+}
+.bc-counter-banner.theme-minimalist .bc-banner-btn-scan {
+  background: #0f172a;
+}
+.bc-counter-banner.theme-minimalist .bc-banner-pill {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.bc-counter-banner.theme-vibrant,
+.bc-a6-flyer.theme-vibrant {
+  border-color: #c084fc;
+  box-shadow: 0 16px 36px rgba(147, 51, 234, 0.12);
+}
+.bc-counter-banner.theme-vibrant .bc-banner-right {
+  background: linear-gradient(145deg, #6366f1 0%, #9333ea 100%);
+}
+.bc-counter-banner.theme-vibrant .bc-banner-btn-scan {
+  background: linear-gradient(135deg, #6366f1 0%, #9333ea 100%);
+}
+.bc-counter-banner.theme-vibrant .bc-banner-pill {
+  background: #faf5ff;
+  border-color: #e9d5ff;
+  color: #7e22ce;
+}
+
+.bc-counter-banner.theme-plain-qr,
+.bc-a6-flyer.theme-plain-qr {
+  border-color: #e2e8f0;
+}
+.bc-counter-banner.theme-plain-qr .bc-banner-right {
+  background: #f8fafc;
+}
+.bc-counter-banner.theme-plain-qr .bc-banner-badge-top,
+.bc-counter-banner.theme-plain-qr .bc-banner-badge-bottom {
+  color: #0f172a;
+  background: #e2e8f0;
+  text-shadow: none;
+}
+
+/* ==========================================================================
+   REVIEWFLOW AI: PHYSICAL QR STAND CHECKOUT FORM (SCREENSHOT 2)
+   ========================================================================== */
+.bc-stand-checkout-card {
+  max-width: 860px;
+  margin: 1.5rem auto 3rem auto;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 2rem 2.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.bc-checkout-top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 1.5rem;
+}
+
+.bc-checkout-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.bc-step-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.bc-step-item.active {
+  color: #16a34a;
+}
+
+.bc-step-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.bc-step-item.active .bc-step-circle {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.bc-step-divider {
+  width: 80px;
+  height: 2px;
+  background: #e2e8f0;
+}
+
+.bc-selected-model-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+}
+
+.bc-qty-control {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.bc-qty-btn {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #334155;
+  cursor: pointer;
+}
+
+.bc-qty-btn:hover {
+  background: #f1f5f9;
+}
+
+.bc-qty-val {
+  width: 36px;
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.bc-checkout-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.15rem;
+  margin-bottom: 1.5rem;
+}
+
+.bc-checkout-total-banner {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+/* ==========================================================================
+   REVIEWFLOW AI: PLAN CHECKOUT PAGE (SCREENSHOT 3)
+   ========================================================================== */
+.bc-plan-checkout-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.bc-plan-checkout-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 1.75rem 2rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+
+.bc-feature-item-pill {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #334155;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.bc-feature-check-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   REVIEWFLOW AI: WEBPRESS PAY UPI MODAL (SCREENSHOT 4)
+   ========================================================================== */
+.bc-webpress-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.bc-webpress-modal {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.22);
+  border-top: 4px solid #16a34a;
+  position: relative;
+  overflow: hidden;
+  animation: bcModalPop 0.25s ease-out;
+}
+
+@keyframes bcModalPop {
+  0% { transform: scale(0.96) translateY(10px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.bc-webpress-float-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1.5px solid #86efac;
+  color: #15803d;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 0.35rem 1rem;
+  border-radius: 9999px;
+  margin: 0 auto 0.85rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.bc-webpress-header {
+  padding: 1.25rem 1.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bc-webpress-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bc-webpress-logo-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #16a34a;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  font-weight: 900;
+  box-shadow: 0 4px 10px rgba(22, 163, 74, 0.25);
+}
+
+.bc-webpress-timer {
+  background: #fff7ed;
+  border: 1.5px solid #fdba74;
+  color: #ea580c;
+  font-size: 0.84rem;
+  font-weight: 900;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bc-webpress-paying-to {
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 0.65rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+}
+
+.bc-webpress-amount-box {
+  margin: 1rem 1.5rem;
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+  border: 1.5px solid #a7f3d0;
+  border-radius: 16px;
+  padding: 1.15rem;
+  text-align: center;
+}
+
+.bc-webpress-qr-frame {
+  position: relative;
+  width: 210px;
+  height: 210px;
+  margin: 1rem auto;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bc-qr-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: #16a34a;
+  border-style: solid;
+}
+.bc-qr-corner.tl { top: 0; left: 0; border-width: 3px 0 0 3px; border-top-left-radius: 8px; }
+.bc-qr-corner.tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-top-right-radius: 8px; }
+.bc-qr-corner.bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-bottom-left-radius: 8px; }
+.bc-qr-corner.br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-bottom-right-radius: 8px; }
+
+.bc-webpress-pulse-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  margin-top: 0.5rem;
+}
+
+.bc-webpress-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+  animation: pulseDot 1.2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
