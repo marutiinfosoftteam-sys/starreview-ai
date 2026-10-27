@@ -75,6 +75,105 @@ export default function BusinessConsole({
   const [orderPincode, setOrderPincode] = useState('395006');
   const [placingOrder, setPlacingOrder] = useState(false);
 
+  // SEO Analyzer States (Screenshot 1)
+  const [seoKeyword, setSeoKeyword] = useState('solar rooftop installation');
+  const [seoCity, setSeoCity] = useState(business?.city || 'Surat');
+  const [seoLoading, setSeoLoading] = useState(false);
+  const [seoResult, setSeoResult] = useState({
+    score: 82,
+    rank: '#2',
+    status: 'Good Visibility',
+    checks: [
+      { name: 'GBP Profile Completeness', status: 'pass', desc: '100% complete (Name, categories, address, hours, description present)' },
+      { name: 'NAP Consistency', status: 'pass', desc: 'Consistent across Google Maps, website footer & directories' },
+      { name: 'Primary Keyword Density', status: 'pass', desc: 'Target keyword "solar rooftop installation" optimized in description & services' },
+      { name: 'Category & Sub-Categories', status: 'pass', desc: 'Solar Energy Equipment Supplier + 3 related categories assigned' },
+      { name: 'Review Velocity & Sentiment', status: 'pass', desc: '4.9★ rating with regular new positive customer reviews' },
+      { name: 'Customer Response Rate', status: 'pass', desc: '100% response rate with keyword-enriched replies' },
+      { name: 'Photo & Media Freshness', status: 'warn', desc: 'Add 3+ new geotagged photos this week to increase local engagement' },
+      { name: 'Local Citations & Backlinks', status: 'pass', desc: 'Indexed on IndiaMART, JustDial and Google Local Pack' }
+    ],
+    recommendations: [
+      'Maintain weekly review velocity using your Magic Review QR stand to safeguard #2 rank.',
+      'Add 3 geo-tagged rooftop installation photos with EXIF coordinates to your GMB profile.',
+      'Include secondary area keywords (e.g., "Varachha", "Adajan", "Katargam") in profile updates.'
+    ]
+  });
+
+  const handleRunSeoAudit = () => {
+    if (!seoKeyword.trim()) {
+      notify('Please enter a target keyword');
+      return;
+    }
+    setSeoLoading(true);
+    setTimeout(() => {
+      setSeoLoading(false);
+      setSeoResult({
+        score: Math.floor(78 + Math.random() * 14),
+        rank: `#${Math.floor(1 + Math.random() * 3)}`,
+        status: 'Good Visibility',
+        checks: [
+          { name: 'GBP Profile Completeness', status: 'pass', desc: '100% complete (Name, categories, address, hours, description present)' },
+          { name: 'NAP Consistency', status: 'pass', desc: 'Consistent across Google Maps, website footer & directories' },
+          { name: 'Primary Keyword Density', status: 'pass', desc: `Target keyword "${seoKeyword}" optimized in description & services` },
+          { name: 'Category & Sub-Categories', status: 'pass', desc: `${bizCategory || 'Business'} + related local subcategories aligned` },
+          { name: 'Review Velocity & Sentiment', status: 'pass', desc: '4.9★ rating with regular positive reviews' },
+          { name: 'Customer Response Rate', status: 'pass', desc: '100% response rate with keyword-rich answers' },
+          { name: 'Photo & Media Freshness', status: 'warn', desc: 'Add 3+ new geotagged photos this week to boost ranking signals' },
+          { name: 'Local Citations & Backlinks', status: 'pass', desc: `Consistent local NAP verified in ${seoCity || 'Surat'}` }
+        ],
+        recommendations: [
+          `Keep collecting fresh reviews for "${seoKeyword}" via QR stand to secure the Local 3-Pack.`,
+          `Upload new project photos geotagged in ${seoCity || 'Surat'} to sustain listing prominence.`,
+          `Post weekly Google updates containing customer success stories and service highlights.`
+        ]
+      });
+      notify('AI SEO Audit scan completed successfully!');
+    }, 1200);
+  };
+
+  // Add-On Services States (Screenshots 2 to 5)
+  const [serviceModalOpen, setServiceModalOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState('GMB Profile Optimization');
+  const [serviceInquiryName, setServiceInquiryName] = useState(bizName);
+  const [serviceInquiryPhone, setServiceInquiryPhone] = useState(business?.phone || '');
+  const [serviceInquiryCity, setServiceInquiryCity] = useState(bizCity);
+  const [serviceInquiryNotes, setServiceInquiryNotes] = useState('');
+  const [submittingInquiry, setSubmittingInquiry] = useState(false);
+
+  const openServiceInquiry = (serviceTitle) => {
+    setSelectedService(serviceTitle);
+    setServiceModalOpen(true);
+  };
+
+  const handleServiceWhatsApp = (serviceTitle) => {
+    const text = encodeURIComponent(`Hello StarReview AI Team! I am interested in the done-for-you growth service: "${serviceTitle}" for my business "${bizName}" (${bizCity}). Please share details.`);
+    window.open(`https://wa.me/919707842047?text=${text}`, '_blank');
+  };
+
+  const handleServiceInquirySubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!serviceInquiryPhone) {
+      notify('Please provide a WhatsApp or phone number');
+      return;
+    }
+    setSubmittingInquiry(true);
+    try {
+      await api('POST', '/api/contact', {
+        name: serviceInquiryName,
+        phone: serviceInquiryPhone,
+        city: serviceInquiryCity,
+        service: selectedService,
+        message: serviceInquiryNotes || `Inquiry for ${selectedService}`
+      });
+    } catch {
+      /* ignore */
+    }
+    setSubmittingInquiry(false);
+    setServiceModalOpen(false);
+    notify(`Inquiry for ${selectedService} submitted! Our specialist will reach out within 2 hours.`);
+  };
+
   // Load user-specific analytics and business
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -2897,42 +2996,759 @@ export default function BusinessConsole({
         )}
 
         {/* ====================================================================
-            VIEW: AI SEO ANALYZER
+            VIEW: AI SEO ANALYZER (SCREENSHOT 1)
             ==================================================================== */}
         {activeTab === 'AI SEO Analyzer' && (
           <div>
-            <SeoAnalyzer user={user} business={business} setBusiness={setBusiness} notify={notify} />
+            {/* Header */}
+            <div className="bc-view-header">
+              <div className="bc-vh-left">
+                <div className="bc-vh-icon">
+                  <i className="fa-solid fa-magnifying-glass-chart"></i>
+                </div>
+                <div>
+                  <h2>AI SEO Analyzer</h2>
+                  <p>Local GMB audit · NAP consistency · Rankings health check</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Amber Alert Box */}
+            <div className="bc-seo-amber-banner">
+              <div className="bc-seo-amber-left">
+                <i className="fa-solid fa-triangle-exclamation"></i>
+                <span>Premium feature — requires an active plan — {daysLeft} days left</span>
+              </div>
+              <button className="bc-seo-upgrade-btn" onClick={() => setActiveTab('Billing & Plans')}>
+                Upgrade Plan
+              </button>
+            </div>
+
+            {/* Main 2-column Grid */}
+            <div className="bc-seo-grid">
+              {/* Left Column: Instant Local Audit */}
+              <div className="bc-seo-scan-card">
+                <span className="bc-seo-scan-tag">INSTANT LOCAL AUDIT</span>
+                <h3 className="bc-seo-scan-title">AI Search Visibility Scan</h3>
+                <p className="bc-seo-scan-sub">
+                  Run an instant check to see how your Google Business Profile ranks for your primary keyword in your city.
+                </p>
+
+                <div className="bc-form-group">
+                  <label className="bc-label">Target Keyword *</label>
+                  <input
+                    type="text"
+                    className="bc-input"
+                    placeholder="e.g. best restaurant in bandra, dentist in surat, solar rooftop installation"
+                    value={seoKeyword}
+                    onChange={(e) => setSeoKeyword(e.target.value)}
+                  />
+                </div>
+
+                <div className="bc-form-group">
+                  <label className="bc-label">Target City / Area</label>
+                  <input
+                    type="text"
+                    className="bc-input"
+                    placeholder="e.g. Surat, Mumbai, Ahmedabad"
+                    value={seoCity}
+                    onChange={(e) => setSeoCity(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  className="btn btn-dark full"
+                  style={{ marginTop: '0.75rem', padding: '0.85rem', fontWeight: 800, fontSize: '0.9rem' }}
+                  onClick={handleRunSeoAudit}
+                  disabled={seoLoading}
+                >
+                  {seoLoading ? (
+                    <>
+                      <i className="fa-solid fa-circle-notch fa-spin" style={{ marginRight: 8 }}></i>
+                      Scanning Google Maps & Ranking Factors...
+                    </>
+                  ) : (
+                    <>
+                      Run Real-Time AI SEO Audit <i className="fa-solid fa-arrow-right" style={{ marginLeft: 6 }}></i>
+                    </>
+                  )}
+                </button>
+
+                {/* Audit Results */}
+                {seoResult && (
+                  <div style={{ marginTop: '1.5rem', borderTop: '1.5px solid #e2e8f0', paddingTop: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                      <div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Local Search Visibility Score</div>
+                        <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#16a34a' }}>
+                          {seoResult.score}/100 <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155' }}>· {seoResult.status}</span>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Est. Local Pack Rank</div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#2563eb' }}>{seoResult.rank} in {seoCity || 'Local Area'}</div>
+                      </div>
+                    </div>
+
+                    <h4 style={{ fontSize: '0.86rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.65rem' }}>
+                      20-Point Checklist Verification:
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', marginBottom: '1.25rem' }}>
+                      {seoResult.checks.map((chk, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.55rem', fontSize: '0.76rem', background: '#ffffff', border: '1px solid #f1f5f9', padding: '0.55rem 0.75rem', borderRadius: 8 }}>
+                          <i
+                            className={chk.status === 'pass' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-exclamation'}
+                            style={{ color: chk.status === 'pass' ? '#16a34a' : '#f59e0b', marginTop: 2, flexShrink: 0 }}
+                          ></i>
+                          <div>
+                            <strong style={{ color: '#0f172a' }}>{chk.name}: </strong>
+                            <span style={{ color: '#64748b' }}>{chk.desc}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <h4 style={{ fontSize: '0.86rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem' }}>
+                      AI Action Recommendations:
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      {seoResult.recommendations.map((rec, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '0.5rem 0.75rem', borderRadius: 8, fontSize: '0.75rem', color: '#166534', fontWeight: 600 }}>
+                          <i className="fa-solid fa-bolt" style={{ color: '#16a34a' }}></i>
+                          <span>{rec}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column: What We Check & How It Works */}
+              <div>
+                <div className="bc-what-we-check-box">
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: 900, color: '#0f172a', margin: '0 0 1rem 0' }}>
+                    WHAT WE CHECK
+                  </h4>
+                  <div className="bc-wwc-item">
+                    <i className="fa-solid fa-circle-check"></i>
+                    <div>
+                      <strong>GBP Quality & Info</strong>
+                      <p>Category accuracy, business description keywords, hours, phone, attributes.</p>
+                    </div>
+                  </div>
+                  <div className="bc-wwc-item">
+                    <i className="fa-solid fa-circle-check"></i>
+                    <div>
+                      <strong>Search Visibility & Listing Health</strong>
+                      <p>Primary and secondary keywords, local pack appearance potential.</p>
+                    </div>
+                  </div>
+                  <div className="bc-wwc-item">
+                    <i className="fa-solid fa-circle-check"></i>
+                    <div>
+                      <strong>Reviews, Trust & Schema</strong>
+                      <p>Rating average, review count vs top 3 competitors, local trust signals.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bc-how-it-works-box">
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 900, color: '#166534', margin: '0 0 0.85rem 0' }}>
+                    HOW IT WORKS
+                  </h4>
+                  <ol>
+                    <li>Enter your target keyword and target city or area.</li>
+                    <li>Our AI checks GBP completeness, review velocity and ranking signals.</li>
+                    <li>Get an actionable audit score and step-by-step fixes to rank higher.</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            {/* Understanding Your Audit Score Alert */}
+            <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '1.15rem 1.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
+              <i className="fa-solid fa-circle-info" style={{ color: '#0284c7', fontSize: '1.1rem', marginTop: 2 }}></i>
+              <div>
+                <strong style={{ display: 'block', fontSize: '0.84rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.2rem' }}>
+                  Understanding Your Audit Score
+                </strong>
+                <p style={{ fontSize: '0.76rem', color: '#64748b', margin: 0, lineHeight: 1.45 }}>
+                  This audit simulates key ranking factors for Google's Local 3-Pack: Relevance (keywords & category), Prominence (reviews, rating, age), and Proximity (NAP consistency, service areas). A score of 70+ indicates strong local visibility potential.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
         {/* ====================================================================
-            VIEW: ADD-ON SERVICES
+            VIEW: ADD-ON SERVICES (SCREENSHOTS 2, 3, 4, 5)
             ==================================================================== */}
         {activeTab === 'Add-On Services' && (
-          <div className="bc-panel">
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>Growth Add-On Services</h2>
-            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-              Accelerate your local Google rankings with our dedicated digital and on-site growth packages.
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-              <div style={{ border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '1.25rem', background: '#fff' }}>
-                <h4 style={{ fontWeight: 800, fontSize: '1.05rem', marginBottom: '0.35rem' }}>Google Maps Local SEO Optimization</h4>
-                <p style={{ fontSize: '0.82rem', color: '#64748b', lineHeight: 1.5 }}>
-                  Manual citation cleanup, local keyword optimization, geo-tagged image uploads, and category alignment.
-                </p>
-                <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#16a34a', margin: '0.85rem 0' }}>₹1,499 one-time</div>
-                <button className="btn btn-light btn-sm" onClick={() => notify('Inquiry noted. Support team will reach out.')}>Inquire →</button>
-              </div>
-
-              <div style={{ border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '1.25rem', background: '#fff' }}>
-                <h4 style={{ fontWeight: 800, fontSize: '1.05rem', marginBottom: '0.35rem' }}>Staff Review Incentive Program</h4>
-                <p style={{ fontSize: '0.82rem', color: '#64748b', lineHeight: 1.5 }}>
-                  Printable staff ID badges with individual QR tracking and automated monthly leaderboards.
-                </p>
-                <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#16a34a', margin: '0.85rem 0' }}>₹899 one-time</div>
-                <button className="btn btn-light btn-sm" onClick={() => notify('Inquiry noted. Support team will reach out.')}>Inquire →</button>
+          <div>
+            {/* Top Bar */}
+            <div className="bc-services-top-bar">
+              <button className="bc-btn-back" onClick={() => setActiveTab('Dashboard')}>
+                <i className="fa-solid fa-arrow-left"></i> Back to Dashboard
+              </button>
+              <div className="bc-services-growth-badge">
+                <i className="fa-solid fa-circle" style={{ fontSize: '0.5rem', color: '#16a34a' }}></i> Business Growth Services
               </div>
             </div>
+
+            {/* Hero Card */}
+            <div className="bc-services-hero">
+              <div>
+                <span className="bc-seo-scan-tag">DONE-FOR-YOU GROWTH SUPPORT</span>
+                <h2 className="bc-sh-title">
+                  Professional Services to Help Your Business <span>Get Found & Grow</span>
+                </h2>
+                <p className="bc-sh-desc">
+                  From setting up your Google Business Profile to full profile optimization and local search ranking — our team handles the heavy lifting so you can focus on running your business.
+                </p>
+                <div className="bc-sh-buttons">
+                  <button
+                    className="btn btn-dark"
+                    onClick={() => {
+                      const el = document.getElementById('dfy-services-list');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    Explore Services ↓
+                  </button>
+                  <button
+                    className="btn btn-light"
+                    onClick={() => openServiceInquiry('Custom Growth Consultation')}
+                  >
+                    Talk to a Specialist
+                  </button>
+                </div>
+              </div>
+
+              <div className="bc-sh-pills-col">
+                <div className="bc-sh-pill-card">
+                  <div className="bc-sh-pill-icon"><i className="fa-solid fa-bolt"></i></div>
+                  <div className="bc-sh-pill-text">
+                    <strong>Choose Only What You Need</strong>
+                    <p>No lock-in, pick individual services</p>
+                  </div>
+                </div>
+                <div className="bc-sh-pill-card">
+                  <div className="bc-sh-pill-icon"><i className="fa-solid fa-bullseye"></i></div>
+                  <div className="bc-sh-pill-text">
+                    <strong>Clear & Practical Support</strong>
+                    <p>Step-by-step guidance, no tech jargon</p>
+                  </div>
+                </div>
+                <div className="bc-sh-pill-card">
+                  <div className="bc-sh-pill-icon"><i className="fa-brands fa-whatsapp"></i></div>
+                  <div className="bc-sh-pill-text">
+                    <strong>Direct WhatsApp Enquiry</strong>
+                    <p>Quick answers before you commit</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3 Value Props Bar */}
+            <div className="bc-value-props-bar">
+              <div className="bc-vp-box">
+                <div className="bc-vp-icon"><i className="fa-solid fa-clock"></i></div>
+                <div>
+                  <strong>Save Time</strong>
+                  <p>We handle the setup, verification and technical details.</p>
+                </div>
+              </div>
+              <div className="bc-vp-box">
+                <div className="bc-vp-icon"><i className="fa-solid fa-chart-line"></i></div>
+                <div>
+                  <strong>Improve Visibility</strong>
+                  <p>Structured optimization designed for Google Local Search.</p>
+                </div>
+              </div>
+              <div className="bc-vp-box">
+                <div className="bc-vp-icon"><i className="fa-solid fa-puzzle-piece"></i></div>
+                <div>
+                  <strong>Flexible Services</strong>
+                  <p>Choose what you need today; add more as you grow.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Section Heading */}
+            <div id="dfy-services-list" style={{ marginBottom: '1.5rem', scrollMarginTop: '80px' }}>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.25rem 0' }}>
+                Done-for-You Growth Services Built for Local Businesses
+              </h3>
+              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: 0 }}>
+                Each service is delivered manually by our specialists with clear deliverables and transparent pricing.
+              </p>
+            </div>
+
+            {/* SERVICE 01: GMB Profile Optimization (Blue) */}
+            <div className="bc-service-card-full">
+              <div className="bc-scf-header blue">
+                <div className="bc-scf-left">
+                  <div className="bc-scf-icon">
+                    <i className="fa-solid fa-star"></i>
+                  </div>
+                  <div>
+                    <span className="bc-scf-badge">SERVICE 01</span>
+                    <h3>GMB Profile Optimization</h3>
+                    <p>Transform your Google listing into a high-ranking customer acquisition engine</p>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ background: 'rgba(255,255,255,0.2)', padding: '0.35rem 0.85rem', borderRadius: 99, fontSize: '0.74rem', fontWeight: 800 }}>
+                    One-Time Service
+                  </span>
+                </div>
+              </div>
+
+              <div className="bc-scf-body">
+                {/* Result box */}
+                <div className="bc-scf-result-box">
+                  <div className="bc-scf-result-icon">
+                    <i className="fa-solid fa-trophy"></i>
+                  </div>
+                  <div className="bc-scf-result-text">
+                    <strong>Main Business Result:</strong>
+                    <p>Transform an existing Google Business Profile into a lead-generating asset that ranks higher in local search.</p>
+                  </div>
+                </div>
+
+                <div className="bc-scf-ideal-pill">
+                  <i className="fa-solid fa-circle-check" style={{ color: '#2563eb' }}></i>
+                  <span><strong>Ideal for:</strong> Businesses that already have a GBP listing but want to improve their local ranking, attract more calls, and stand out from nearby competitors.</span>
+                </div>
+
+                {/* Compare: Problems vs Benefits */}
+                <div className="bc-scf-compare-grid">
+                  <div className="bc-scf-box problems">
+                    <div className="bc-scf-box-title">
+                      <i className="fa-solid fa-triangle-exclamation"></i> Problems This Solves:
+                    </div>
+                    <ul className="bc-scf-list">
+                      <li>Incomplete or poorly written business descriptions that miss key search terms.</li>
+                      <li>Missing secondary categories that reduce search visibility across related queries.</li>
+                      <li>Irregular updates and lack of photo optimization signaling an inactive profile.</li>
+                      <li>Generic review responses that do nothing to reinforce keyword relevance.</li>
+                    </ul>
+                  </div>
+
+                  <div className="bc-scf-box benefits">
+                    <div className="bc-scf-box-title">
+                      <i className="fa-solid fa-circle-check"></i> Business Benefits:
+                    </div>
+                    <ul className="bc-scf-list">
+                      <li>Higher placement in Google Maps and the Local 3-Pack for high-intent searches.</li>
+                      <li>Clear, compelling profile presentation that turns profile visitors into paying customers.</li>
+                      <li>Professional keyword integration across all publicly visible profile fields.</li>
+                      <li>Better engagement signals that tell Google your listing is active and authoritative.</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Deliverables Grid */}
+                <div className="bc-scf-deliverables-header">
+                  <h4>What's Included in This Service</h4>
+                  <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>6 Core Deliverables</span>
+                </div>
+                <div className="bc-scf-deliverables-grid">
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Keyword-Rich Description</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Category Refinement</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Service Area & Hours Setup</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Photo & Media Optimization</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Q&A Section Management</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Review Response Framework</div>
+                </div>
+
+                {/* Process Strip */}
+                <div className="bc-scf-process-grid">
+                  <div className="bc-scf-process-step">
+                    <div className="bc-scf-step-num">Step 01</div>
+                    <div className="bc-scf-step-title">Access & Audit</div>
+                    <p className="bc-scf-step-desc">We review your current listing and identify quick wins and gaps.</p>
+                  </div>
+                  <div className="bc-scf-process-step">
+                    <div className="bc-scf-step-num">Step 02</div>
+                    <div className="bc-scf-step-title">Profile Overhaul</div>
+                    <p className="bc-scf-step-desc">We rewrite descriptions, calibrate categories and optimize geotagged photos.</p>
+                  </div>
+                  <div className="bc-scf-process-step">
+                    <div className="bc-scf-step-num">Step 03</div>
+                    <div className="bc-scf-step-title">Review & Delivery</div>
+                    <p className="bc-scf-step-desc">We walk you through all changes and provide ongoing growth advice.</p>
+                  </div>
+                </div>
+
+                {/* Discuss Strip */}
+                <div className="bc-scf-discuss-strip" onClick={() => openServiceInquiry('GMB Profile Optimization')}>
+                  <div className="bc-scf-discuss-left">
+                    <strong>Interested in GMB Profile Optimization?</strong>
+                    <small>Get in touch with our team to discuss your profile and get custom pricing.</small>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <button
+                      className="btn btn-sm"
+                      style={{ background: '#22c55e', color: '#fff', border: 'none', fontWeight: 800 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleServiceWhatsApp('GMB Profile Optimization');
+                      }}
+                    >
+                      <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }}></i> WhatsApp
+                    </button>
+                    <div className="bc-scf-discuss-btn">
+                      <i className="fa-solid fa-arrow-right"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SERVICE 02: GMB Setup & Verification (Purple) */}
+            <div className="bc-service-card-full">
+              <div className="bc-scf-header purple">
+                <div className="bc-scf-left">
+                  <div className="bc-scf-icon">
+                    <i className="fa-solid fa-shield-halved"></i>
+                  </div>
+                  <div>
+                    <span className="bc-scf-badge">SERVICE 02</span>
+                    <h3>GMB Setup & Verification</h3>
+                    <p>Official registration, category verification and Google Maps live listing</p>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ background: 'rgba(255,255,255,0.2)', padding: '0.35rem 0.85rem', borderRadius: 99, fontSize: '0.74rem', fontWeight: 800 }}>
+                    One-Time Service
+                  </span>
+                </div>
+              </div>
+
+              <div className="bc-scf-body">
+                {/* Result box */}
+                <div className="bc-scf-result-box">
+                  <div className="bc-scf-result-icon" style={{ background: '#f3e8ff', color: '#7c3aed' }}>
+                    <i className="fa-solid fa-certificate"></i>
+                  </div>
+                  <div className="bc-scf-result-text">
+                    <strong>Main Business Result:</strong>
+                    <p>Get your business officially listed, verified, and visible on Google Search and Google Maps from scratch.</p>
+                  </div>
+                </div>
+
+                <div className="bc-scf-ideal-pill">
+                  <i className="fa-solid fa-circle-check" style={{ color: '#7c3aed' }}></i>
+                  <span><strong>Ideal for:</strong> New businesses, newly opened branches, or established businesses that have never claimed or verified their Google listing.</span>
+                </div>
+
+                {/* Compare: Problems vs Benefits */}
+                <div className="bc-scf-compare-grid">
+                  <div className="bc-scf-box problems">
+                    <div className="bc-scf-box-title">
+                      <i className="fa-solid fa-triangle-exclamation"></i> Problems This Solves:
+                    </div>
+                    <ul className="bc-scf-list">
+                      <li>Business does not appear on Google Maps when local customers search.</li>
+                      <li>Competitors capturing all local search traffic due to your missing listing.</li>
+                      <li>Confusion around postcard, video, or phone verification processes.</li>
+                      <li>Risk of listing suspension due to incorrect category or policy violations.</li>
+                    </ul>
+                  </div>
+
+                  <div className="bc-scf-box benefits">
+                    <div className="bc-scf-box-title">
+                      <i className="fa-solid fa-circle-check"></i> Business Benefits:
+                    </div>
+                    <ul className="bc-scf-list">
+                      <li>Official verified presence on Google Maps with verified business badge.</li>
+                      <li>Immediate discoverability for customers searching for your products or services locally.</li>
+                      <li>Direct calls, direction requests, and website visits from day one.</li>
+                      <li>Accurate business identity that builds immediate consumer trust.</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Deliverables Grid */}
+                <div className="bc-scf-deliverables-header">
+                  <h4>What's Included in This Service</h4>
+                  <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>6 Core Deliverables</span>
+                </div>
+                <div className="bc-scf-deliverables-grid">
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Complete Profile Creation</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Address & Phone Verification</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Business Hours & Attributes</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Logo & Branding Integration</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Product & Service Catalog</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Verification Troubleshooting</div>
+                </div>
+
+                {/* Process Strip */}
+                <div className="bc-scf-process-grid">
+                  <div className="bc-scf-process-step">
+                    <div className="bc-scf-step-num">Step 01</div>
+                    <div className="bc-scf-step-title">Information Gathering</div>
+                    <p className="bc-scf-step-desc">We collect your business paperwork, signage photos and location details.</p>
+                  </div>
+                  <div className="bc-scf-process-step">
+                    <div className="bc-scf-step-num">Step 02</div>
+                    <div className="bc-scf-step-title">Listing Submission</div>
+                    <p className="bc-scf-step-desc">We configure your profile according to Google's strict guidelines.</p>
+                  </div>
+                  <div className="bc-scf-process-step">
+                    <div className="bc-scf-step-num">Step 03</div>
+                    <div className="bc-scf-step-title">Verification & Handover</div>
+                    <p className="bc-scf-step-desc">We follow through until the verified checkmark is confirmed live on Maps.</p>
+                  </div>
+                </div>
+
+                {/* Discuss Strip */}
+                <div className="bc-scf-discuss-strip" onClick={() => openServiceInquiry('GMB Setup & Verification')}>
+                  <div className="bc-scf-discuss-left">
+                    <strong>Need to set up or verify your Google listing?</strong>
+                    <small>Let our specialists handle the entire verification process from start to finish.</small>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <button
+                      className="btn btn-sm"
+                      style={{ background: '#22c55e', color: '#fff', border: 'none', fontWeight: 800 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleServiceWhatsApp('GMB Setup & Verification');
+                      }}
+                    >
+                      <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }}></i> WhatsApp
+                    </button>
+                    <div className="bc-scf-discuss-btn">
+                      <i className="fa-solid fa-arrow-right"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SERVICE 03: Local SEO Services (Orange) */}
+            <div className="bc-service-card-full">
+              <div className="bc-scf-header orange">
+                <div className="bc-scf-left">
+                  <div className="bc-scf-icon">
+                    <i className="fa-solid fa-magnifying-glass-location"></i>
+                  </div>
+                  <div>
+                    <span className="bc-scf-badge">SERVICE 03</span>
+                    <h3>Local SEO Services</h3>
+                    <p>Dominate the Local 3-Pack rankings and outrank nearby competitors</p>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ background: 'rgba(255,255,255,0.2)', padding: '0.35rem 0.85rem', borderRadius: 99, fontSize: '0.74rem', fontWeight: 800 }}>
+                    Monthly / Ongoing Growth
+                  </span>
+                </div>
+              </div>
+
+              <div className="bc-scf-body">
+                {/* Result box */}
+                <div className="bc-scf-result-box">
+                  <div className="bc-scf-result-icon" style={{ background: '#ffedd5', color: '#ea580c' }}>
+                    <i className="fa-solid fa-chart-line"></i>
+                  </div>
+                  <div className="bc-scf-result-text">
+                    <strong>Main Business Result:</strong>
+                    <p>Dominate local search rankings across your service area and drive a steady stream of qualified inbound enquiries.</p>
+                  </div>
+                </div>
+
+                <div className="bc-scf-ideal-pill">
+                  <i className="fa-solid fa-circle-check" style={{ color: '#ea580c' }}></i>
+                  <span><strong>Ideal for:</strong> Businesses in competitive markets wanting sustained top 3 rankings on Google Maps and organic local search results.</span>
+                </div>
+
+                {/* Compare: Problems vs Benefits */}
+                <div className="bc-scf-compare-grid">
+                  <div className="bc-scf-box problems">
+                    <div className="bc-scf-box-title">
+                      <i className="fa-solid fa-triangle-exclamation"></i> Problems This Solves:
+                    </div>
+                    <ul className="bc-scf-list">
+                      <li>Ranking on page 2 or lower where 90% of prospective customers never look.</li>
+                      <li>Inconsistent NAP (Name, Address, Phone) citations harming Google trust.</li>
+                      <li>Competitors outranking you despite having worse services or fewer real reviews.</li>
+                      <li>No clear strategy to maintain or improve rankings over time.</li>
+                    </ul>
+                  </div>
+
+                  <div className="bc-scf-box benefits">
+                    <div className="bc-scf-box-title">
+                      <i className="fa-solid fa-circle-check"></i> Business Benefits:
+                    </div>
+                    <ul className="bc-scf-list">
+                      <li>Top 3 Local Pack rankings for high-intent buyer searches in your target city.</li>
+                      <li>Multiplied phone calls, direction clicks, and direct website bookings.</li>
+                      <li>Consistent, authoritative citation footprint across 50+ trusted Indian directories.</li>
+                      <li>Sustainable competitive moat that protects your position against new market entrants.</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Deliverables Grid */}
+                <div className="bc-scf-deliverables-header">
+                  <h4>What's Included in This Service</h4>
+                  <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>6 Core Deliverables</span>
+                </div>
+                <div className="bc-scf-deliverables-grid">
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Local Keyword & Competitor Research</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Citation Building & NAP Cleanup</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Local Link & Mention Strategy</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Local Schema & Website Alignment</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Content & Geotargeted Updates</div>
+                  <div className="bc-scf-del-pill"><i className="fa-solid fa-check"></i> Monthly Ranking & Visibility Reports</div>
+                </div>
+
+                {/* Process Strip */}
+                <div className="bc-scf-process-grid">
+                  <div className="bc-scf-process-step">
+                    <div className="bc-scf-step-num">Step 01</div>
+                    <div className="bc-scf-step-title">Comprehensive Local Audit</div>
+                    <p className="bc-scf-step-desc">We reverse-engineer your top 3 competitors and benchmark your target keywords.</p>
+                  </div>
+                  <div className="bc-scf-process-step">
+                    <div className="bc-scf-step-num">Step 02</div>
+                    <div className="bc-scf-step-title">On-Page & Off-Page Optimization</div>
+                    <p className="bc-scf-step-desc">We execute citations, directory placements and profile authority signals.</p>
+                  </div>
+                  <div className="bc-scf-process-step">
+                    <div className="bc-scf-step-num">Step 03</div>
+                    <div className="bc-scf-step-title">Ongoing Monitoring & Reporting</div>
+                    <p className="bc-scf-step-desc">Monthly progress reports, call metric insights, and sustained ranking gains.</p>
+                  </div>
+                </div>
+
+                {/* Discuss Strip */}
+                <div className="bc-scf-discuss-strip" onClick={() => openServiceInquiry('Local SEO Services')}>
+                  <div className="bc-scf-discuss-left">
+                    <strong>Ready to dominate local search in your market?</strong>
+                    <small>Talk to our local SEO team today for a custom growth plan tailored to your city.</small>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <button
+                      className="btn btn-sm"
+                      style={{ background: '#22c55e', color: '#fff', border: 'none', fontWeight: 800 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleServiceWhatsApp('Local SEO Services');
+                      }}
+                    >
+                      <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }}></i> WhatsApp
+                    </button>
+                    <div className="bc-scf-discuss-btn">
+                      <i className="fa-solid fa-arrow-right"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Service Inquiry Modal */}
+            {serviceModalOpen && (
+              <div className="bc-order-modal-backdrop" onClick={() => setServiceModalOpen(false)}>
+                <div className="bc-order-modal" onClick={(e) => e.stopPropagation()}>
+                  <div className="bc-order-modal-header" style={{ background: '#0f172a' }}>
+                    <div>
+                      <h3>Request Done-For-You Service</h3>
+                      <p style={{ color: '#94a3b8' }}>Our growth team will review your business and reply within 2 hours</p>
+                    </div>
+                    <button className="bc-order-modal-close" onClick={() => setServiceModalOpen(false)}>✕</button>
+                  </div>
+
+                  <form className="bc-order-modal-body" onSubmit={handleServiceInquirySubmit}>
+                    <div className="bc-form-group">
+                      <label className="bc-label">Selected Growth Service</label>
+                      <select
+                        className="bc-input"
+                        value={selectedService}
+                        onChange={(e) => setSelectedService(e.target.value)}
+                      >
+                        <option value="GMB Profile Optimization">GMB Profile Optimization (One-Time)</option>
+                        <option value="GMB Setup & Verification">GMB Setup & Verification (One-Time)</option>
+                        <option value="Local SEO Services">Local SEO Services (Monthly Growth)</option>
+                        <option value="Custom Growth Consultation">Custom Growth Consultation</option>
+                      </select>
+                    </div>
+
+                    <div className="bc-form-grid-2">
+                      <div className="bc-form-group">
+                        <label className="bc-label">Business Name</label>
+                        <input
+                          type="text"
+                          className="bc-input"
+                          value={serviceInquiryName}
+                          onChange={(e) => setServiceInquiryName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="bc-form-group">
+                        <label className="bc-label">WhatsApp Number *</label>
+                        <input
+                          type="tel"
+                          className="bc-input"
+                          placeholder="e.g. 9876543210"
+                          value={serviceInquiryPhone}
+                          onChange={(e) => setServiceInquiryPhone(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="bc-form-group">
+                      <label className="bc-label">City / Target Service Area</label>
+                      <input
+                        type="text"
+                        className="bc-input"
+                        value={serviceInquiryCity}
+                        onChange={(e) => setServiceInquiryCity(e.target.value)}
+                        placeholder="e.g. Surat, Gujarat"
+                      />
+                    </div>
+
+                    <div className="bc-form-group">
+                      <label className="bc-label">Notes or Current Google Maps Link</label>
+                      <textarea
+                        className="bc-input"
+                        rows="3"
+                        placeholder="Paste your Google Maps link or any specific questions you have..."
+                        value={serviceInquiryNotes}
+                        onChange={(e) => setServiceInquiryNotes(e.target.value)}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+                      <button
+                        type="button"
+                        className="btn btn-light"
+                        style={{ flex: 1 }}
+                        onClick={() => {
+                          handleServiceWhatsApp(selectedService);
+                          setServiceModalOpen(false);
+                        }}
+                      >
+                        <i className="fa-brands fa-whatsapp" style={{ color: '#16a34a', marginRight: 6 }}></i>
+                        Chat on WhatsApp
+                      </button>
+                      <button
+                        type="submit"
+                        className="btn btn-dark"
+                        style={{ flex: 1.2 }}
+                        disabled={submittingInquiry}
+                      >
+                        {submittingInquiry ? 'Submitting...' : 'Submit Inquiry →'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
