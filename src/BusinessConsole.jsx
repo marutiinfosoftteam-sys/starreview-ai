@@ -134,7 +134,7 @@ export default function BusinessConsole({
           }
         } else if (lower.includes('bill') || lower.includes('plan')) {
           setActiveTab('Billing & Plans');
-          if (searchParams.get('upgrade') === 'true' || searchParams.get('checkout') === 'true' || lower.includes('payment') || searchParams.get('plan')) {
+          if (searchParams.get('checkout') === 'true' || lower.includes('plan-payment')) {
             setPlanCheckoutStep('checkout');
             const pParam = searchParams.get('plan') || '';
             const isMonthly = pParam.toLowerCase().includes('monthly');
@@ -144,7 +144,7 @@ export default function BusinessConsole({
             const period = isMonthly ? 'Monthly' : 'Yearly';
             const price = tier === 'Agency' ? 2999 : (period === 'Yearly' ? (tier === 'Starter' ? 999 : 2999) : (tier === 'Starter' ? 99 : 299));
             let displayName = `${tier} ${period} Plan`;
-            if (tier === 'Agency') displayName = 'Starter Multi-Business (10 Locations)';
+            if (tier === 'Agency') displayName = '10 Locations Agency Plan';
             else if (tier === 'Starter' && period === 'Yearly') displayName = 'Starter Yearly Plan';
             else if (tier === 'Pro' && period === 'Yearly') displayName = 'Pro Yearly Plan';
             setCheckoutPlanData({
@@ -156,6 +156,13 @@ export default function BusinessConsole({
               businessLimit: tier === 'Agency' ? 'Up to 10 Business Profiles' : '1 Single Business Profile',
               featuresCount: 13
             });
+          } else {
+            setPlanCheckoutStep('select');
+          }
+          if (lower.includes('with-review-reply') || hash.includes('with-review-reply')) {
+            setBillingReviewToggle('with');
+          } else if (lower.includes('without-review-reply') || hash.includes('without-review-reply')) {
+            setBillingReviewToggle('without');
           }
         } else if (lower.includes('feedback') || lower.includes('negative')) {
           setActiveTab('Negative Reviews');
@@ -450,7 +457,7 @@ export default function BusinessConsole({
     const p = price || (period === 'Yearly' ? (planTier === 'Starter' ? 999 : 2999) : (planTier === 'Starter' ? 99 : 299));
     let displayName = `${planTier} ${period} Plan`;
     if (planTier === 'Agency') {
-      displayName = 'Starter Multi-Business (10 Locations)';
+      displayName = '10 Locations Agency Plan';
     } else if (planTier === 'Starter' && period === 'Yearly') {
       displayName = 'Starter Yearly Plan';
     } else if (planTier === 'Pro' && period === 'Yearly') {
@@ -593,10 +600,16 @@ export default function BusinessConsole({
             <div className="bc-sidebar-alert">
               <div className="alert-title">
                 <i className="fa-solid fa-triangle-exclamation"></i>
-                {daysLeft > 0 ? `Free Trial — ${daysLeft} days` : 'Plan Expired'}
+                PLAN EXPIRED
               </div>
-              <p>{daysLeft > 0 ? 'Features fully unlocked' : 'Features locked.'}</p>
-              <button className="bc-sidebar-alert-btn" onClick={() => startPlanCheckout('Starter', 'Yearly', 999)}>
+              <p>Features locked.</p>
+              <button
+                className="bc-sidebar-alert-btn"
+                onClick={() => {
+                  setActiveTab('Billing & Plans');
+                  setPlanCheckoutStep('select');
+                }}
+              >
                 Upgrade Plan
               </button>
             </div>
@@ -630,6 +643,9 @@ export default function BusinessConsole({
                 className={`bc-nav-item ${isActive ? 'active' : ''}`}
                 onClick={() => {
                   setActiveTab(item.id);
+                  if (item.id === 'Billing & Plans') {
+                    setPlanCheckoutStep('select');
+                  }
                   setMobileOpen(false);
                 }}
                 title={collapsed ? item.label : undefined}
@@ -3695,7 +3711,7 @@ export default function BusinessConsole({
                   gap: 6,
                   cursor: 'pointer'
                 }}
-                onClick={() => startPlanCheckout('Pro', 'Yearly', 2999)}
+                onClick={() => { setActiveTab('Billing & Plans'); setPlanCheckoutStep('select'); }}
               >
                 <i className="fa-solid fa-bolt"></i> Upgrade Plan
               </button>
@@ -3754,7 +3770,7 @@ export default function BusinessConsole({
                     gap: 8,
                     boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
                   }}
-                  onClick={() => startPlanCheckout('Pro', 'Yearly', 2999)}
+                  onClick={() => { setActiveTab('Billing & Plans'); setPlanCheckoutStep('select'); }}
                 >
                   <i className="fa-solid fa-chart-simple"></i> Plan Expired — Upgrade to Analyze
                 </button>
@@ -5142,7 +5158,7 @@ export default function BusinessConsole({
                         Payment Verification In Progress
                       </div>
                       <div style={{ fontSize: '0.74rem', color: '#a16207' }}>
-                        You requested an upgrade to <strong>Individual</strong>. We are verifying your transaction UTR reference.
+                        You requested an upgrade to <strong>Pro_Yearly</strong>. We are verifying your transaction UTR reference.
                       </div>
                     </div>
                   </div>
@@ -5151,7 +5167,7 @@ export default function BusinessConsole({
                       type="button"
                       className="btn btn-light btn-sm"
                       style={{ fontSize: '0.74rem', fontWeight: 800, padding: '0.4rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: 6, background: '#ffffff', borderColor: '#fef08a', color: '#854d0e' }}
-                      onClick={() => openWebpressPay(999, 'Yearly Plan Verification', 'plan')}
+                      onClick={() => openWebpressPay(2999, 'Pro Yearly Plan Verification', 'plan')}
                     >
                       <i className="fa-regular fa-file-lines"></i> View Payment Details
                     </button>
@@ -5171,29 +5187,29 @@ export default function BusinessConsole({
                 <div className="bc-status-card">
                   <div className="bc-status-left">
                     <span style={{ background: '#fef3c7', color: '#b45309', padding: '0.2rem 0.65rem', borderRadius: 6, fontSize: '0.68rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      {isTrial ? '3-DAY FREE TRIAL' : (planName.toUpperCase() + ' PLAN')}
+                      3-DAY FREE TRIAL
                     </span>
                     <span style={{ fontSize: '0.76rem', color: '#64748b', marginLeft: 8 }}>
-                      Account: <b>{user?.name || 'Team Maruti InfoSoft'}</b>
+                      Account: <b>Team Maruti InfoSoft</b>
                     </span>
-                    <h3>{planName}</h3>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '4px 0 0 0' }}>Free Trial</h3>
                   </div>
 
                   <div className="bc-status-stats">
                     <div className="bc-status-stat-box">
                       <span className="stat-label">STATUS</span>
-                      <span className="stat-val" style={{ color: daysLeft === 0 ? '#ef4444' : '#16a34a' }}>
-                        ● {daysLeft === 0 ? 'Expired' : 'Active'}
+                      <span className="stat-val" style={{ color: '#dc2626', fontWeight: 800 }}>
+                        ● Expired
                       </span>
                     </div>
                     <div className="bc-status-stat-box">
                       <span className="stat-label">VALID UNTIL</span>
-                      <span className="stat-val">{sub?.expiresAt ? new Date(sub.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Oct 24, 2026'}</span>
+                      <span className="stat-val" style={{ fontWeight: 800, color: '#0f172a' }}>Oct 24, 2026</span>
                     </div>
                     <div className="bc-status-stat-box">
                       <span className="stat-label">DAYS LEFT</span>
-                      <span className="stat-val" style={{ color: daysLeft === 0 ? '#ef4444' : '#16a34a', fontSize: '1rem', fontWeight: 900 }}>
-                        {daysLeft} Days
+                      <span className="stat-val" style={{ color: '#dc2626', fontSize: '1rem', fontWeight: 900 }}>
+                        0 Days
                       </span>
                     </div>
                   </div>
@@ -5281,9 +5297,9 @@ export default function BusinessConsole({
                     <p className="bc-billing-card-sub">Annual membership with maximum savings for 12 full months.</p>
 
                     <div className="bc-billing-price-row">
-                      <div className="price">₹ {billingReviewToggle === 'without' ? '1999' : '2999'} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ year</span></div>
+                      <div className="price">₹ {billingReviewToggle === 'without' ? '999' : '2,999'} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ year</span></div>
                       <div className="sub-price" style={{ color: '#ea580c', fontWeight: 700 }}>
-                        ⚡ Save 16% · ₹{billingReviewToggle === 'without' ? '167' : '250'}/mo · Save ₹{billingReviewToggle === 'without' ? '389' : '589'}/yr
+                        ⚡ Save 16% · {billingReviewToggle === 'without' ? '₹83/mo · Save ₹189/yr' : '₹250/mo · Save ₹589/yr'}
                       </div>
                     </div>
 
@@ -5314,15 +5330,17 @@ export default function BusinessConsole({
                     </button>
                   </div>
 
-                  {/* Card 3: Starter Multi-Business (10 Locations) */}
+                  {/* Card 3: 10 Locations Agency Plan */}
                   <div className="bc-billing-card">
                     <div className="bc-billing-badge-top outline-green">MULTI-BUSINESS - STARTER</div>
-                    <h4>Starter Multi-Business (10 Locations)</h4>
+                    <h4>10 Locations Agency Plan</h4>
                     <p className="bc-billing-card-sub">Centralized management for brands and growing teams managing up to 10 businesses or locations.</p>
 
                     <div className="bc-billing-price-row">
                       <div className="price">₹ 2,999 <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ year</span></div>
-                      <div className="sub-price">₹250 / mo · Billed Annually</div>
+                      <div className="sub-price" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ecfdf5', color: '#15803d', fontWeight: 800, padding: '2px 8px', borderRadius: 6, fontSize: '0.74rem' }}>
+                        ⚡ ₹250 / mo · Billed Annually
+                      </div>
                     </div>
 
                     <div className="bc-multi-highlight-box">
@@ -5471,9 +5489,11 @@ export default function BusinessConsole({
                       </thead>
                       <tbody>
                         {[
-                          { id: '#ORDER_RF_652_1793086957_707', amount: '₹1,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 • 07:09' },
-                          { id: '#ORDER_RF_632_1793086915_873', amount: '₹1,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 • 07:08' },
-                          { id: '#ORDER_RF_632_1793086902_717', amount: '₹1,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 • 07:08' }
+                          { id: '#ORDER_RF_632_1793094812_257', amount: '₹2,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 - 09:40' },
+                          { id: '#ORDER_RF_632_1793093970_918', amount: '₹2,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 - 09:39' },
+                          { id: '#ORDER_RF_632_1793084957_707', amount: '₹1,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 - 07:09' },
+                          { id: '#ORDER_RF_632_1793084915_873', amount: '₹1,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 - 07:08' },
+                          { id: '#ORDER_RF_632_1793084902_717', amount: '₹1,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 - 07:08' }
                         ].map((tx, idx) => (
                           <tr key={idx}>
                             <td style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.76rem', color: '#0f172a' }}>{tx.id}</td>
