@@ -1,3 +1,22 @@
+export const countryDialOptions = [
+  { code: '+91', name: 'India', flag: '🇮🇳' },
+  { code: '+1', name: 'USA / Canada', flag: '🇺🇸' },
+  { code: '+44', name: 'United Kingdom', flag: '🇬🇧' },
+  { code: '+971', name: 'United Arab Emirates', flag: '🇦🇪' },
+  { code: '+61', name: 'Australia', flag: '🇦🇺' },
+  { code: '+65', name: 'Singapore', flag: '🇸🇬' },
+  { code: '+49', name: 'Germany', flag: '🇩🇪' },
+  { code: '+33', name: 'France', flag: '🇫🇷' },
+  { code: '+966', name: 'Saudi Arabia', flag: '🇸🇦' },
+  { code: '+974', name: 'Qatar', flag: '🇶🇦' },
+  { code: '+965', name: 'Kuwait', flag: '🇰🇼' },
+  { code: '+968', name: 'Oman', flag: '🇴🇲' },
+  { code: '+973', name: 'Bahrain', flag: '🇧🇭' },
+  { code: '+64', name: 'New Zealand', flag: '🇳🇿' },
+  { code: '+60', name: 'Malaysia', flag: '🇲🇾' },
+  { code: '+27', name: 'South Africa', flag: '🇿🇦' }
+];
+
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { api, getToken, setToken } from './api.js';
@@ -21,7 +40,7 @@ export default function BusinessConsole({
       const tab = (search.get('tab') || '').toLowerCase();
       if (tab === 'feedback' || tab === 'negative' || tab === 'negative-reviews' || tab === 'reviews') return 'Negative Reviews';
       if (tab === 'billing' || tab === 'plans') return 'Billing & Plans';
-      if (tab === 'stand' || tab === 'standee' || tab === 'qr') return 'Physical QR Stand';
+      if (tab === 'stand' || tab === 'standee' || tab === 'qr') return 'Magic Review QR';
       if (tab === 'seo' || tab === 'analyzer') return 'AI SEO Analyzer';
       if (tab === 'services' || tab === 'growth') return 'Growth Services';
       if (tab === 'auto-reply' || tab === 'reply') return 'Auto AI Reply';
@@ -46,7 +65,7 @@ export default function BusinessConsole({
         } else if (tab === 'billing' || tab === 'plans') {
           setActiveTab('Billing & Plans');
         } else if (tab === 'stand' || tab === 'standee' || tab === 'qr') {
-          setActiveTab('Physical QR Stand');
+          setActiveTab('Magic Review QR');
         } else if (tab === 'seo' || tab === 'analyzer') {
           setActiveTab('AI SEO Analyzer');
         } else if (tab === 'services' || tab === 'growth') {
@@ -72,7 +91,6 @@ export default function BusinessConsole({
       const tabMap = {
         'Dashboard': '',
         'Negative Reviews': 'feedback',
-        'Physical QR Stand': 'stand',
         'QR Code & Flyer': 'flyer',
         'Auto AI Reply': 'auto-reply',
         'AI SEO Analyzer': 'seo',
@@ -224,7 +242,7 @@ export default function BusinessConsole({
           if (searchParams.get('size') === 'banner' || lower.includes('banner')) setQrDisplaySize('Banner');
           if (searchParams.get('theme')) setQrTheme(searchParams.get('theme'));
         } else if (lower.includes('stand') || lower.includes('physical') || lower.includes('order')) {
-          setActiveTab('Physical QR Stand');
+          setActiveTab('Magic Review QR');
           if (searchParams.get('order') === 'true' || searchParams.get('checkout') === 'true' || lower.includes('order')) {
             setSelectedStand({
               title: 'QR Code Acrylic Stand',
@@ -296,7 +314,6 @@ export default function BusinessConsole({
       const url = new URL(window.location.href);
       let tabSlug = 'dashboard';
       if (activeTab === 'Magic Review QR') tabSlug = 'qr';
-      else if (activeTab === 'Physical QR Stand') tabSlug = 'stand';
       else if (activeTab === 'Billing & Plans') tabSlug = 'billing';
       else if (activeTab === 'Negative Reviews') tabSlug = 'feedback';
       else if (activeTab === 'Add-On Services') tabSlug = 'services';
@@ -324,7 +341,6 @@ export default function BusinessConsole({
       const url = new URL(window.location.href);
       let tabSlug = 'dashboard';
       if (tabName === 'Magic Review QR') tabSlug = 'qr';
-      else if (tabName === 'Physical QR Stand') tabSlug = 'stand';
       else if (tabName === 'Billing & Plans') tabSlug = 'billing';
       else if (tabName === 'Negative Reviews') tabSlug = 'feedback';
       else if (tabName === 'Add-On Services') tabSlug = 'services';
@@ -426,20 +442,40 @@ export default function BusinessConsole({
   // Billing and Settings States (Screenshots 1 to 4)
   const [billingReviewToggle, setBillingReviewToggle] = useState('without');
   const [settingsSubTab, setSettingsSubTab] = useState('Profile Settings');
-  const [settingsPhone, setSettingsPhone] = useState(business?.phone || '+1 6355722267');
+  // Country Code Picker States
+  const [settingsCountryCode, setSettingsCountryCode] = useState(() => {
+    const raw = business?.phone || '+91 9904482945';
+    for (const c of countryDialOptions) {
+      if (raw.startsWith(c.code)) return c.code;
+    }
+    return '+91';
+  });
+
+  const [settingsPhone, setSettingsPhone] = useState(() => {
+    const raw = business?.phone || '9904482945';
+    for (const c of countryDialOptions) {
+      if (raw.startsWith(c.code)) {
+        return raw.substring(c.code.length).trim();
+      }
+    }
+    return raw.replace(/^\+91/, '').trim();
+  });
+
+  const [bizFormCountryCode, setBizFormCountryCode] = useState('+91');
 
   const handleUpdatePhone = async (e) => {
     if (e) e.preventDefault();
     setSavingSettings(true);
     try {
-      const updatedBiz = { ...(business || {}), phone: settingsPhone };
+      const fullPhone = `${settingsCountryCode} ${settingsPhone.trim()}`.trim();
+      const updatedBiz = { ...(business || {}), phone: fullPhone };
       const r = await api('PUT', '/api/business', updatedBiz);
       if (r.ok && r.data?.business) {
         setBusiness(r.data.business);
       } else {
         setBusiness(updatedBiz);
       }
-      notify('Phone number updated successfully.');
+      notify(`Phone number updated successfully to ${fullPhone}`);
     } catch {
       notify('Phone number updated successfully.');
     } finally {
@@ -736,7 +772,6 @@ export default function BusinessConsole({
     { section: 'GROWTH TOOLS' },
     { id: 'Magic Review QR', label: 'Magic Review QR', icon: 'fa-solid fa-qrcode' },
     { id: 'Review Settings', label: 'Review Settings', icon: 'fa-solid fa-sliders' },
-    { id: 'Physical QR Stand', label: 'Physical QR Stand', icon: 'fa-solid fa-store', badge: 'New', badgeClass: 'bc-badge-yellow' },
     { id: 'AI SEO Analyzer', label: 'AI SEO Analyzer', icon: 'fa-solid fa-magnifying-glass-chart', badge: 'AI', badgeClass: 'bc-badge-yellow' },
     { id: 'Add-On Services', label: 'Add-On Services', icon: 'fa-solid fa-cubes' },
 
@@ -1024,40 +1059,7 @@ export default function BusinessConsole({
                 </div>
               </div>
 
-              <div
-                onClick={() => {
-                  setSelectedStand({
-                    title: 'QR Code Acrylic Stand',
-                    unitPrice: 699,
-                    price: 699,
-                    qty: 1,
-                    tag: 'Most Popular'
-                  });
-                  setActiveTab('Physical QR Stand');
-                  setStandCheckoutMode(true);
-                  setStandCheckoutStep(1);
-                }}
-                style={{
-                  background: '#ffffff',
-                  border: '1.5px solid #fed7aa',
-                  borderRadius: 14,
-                  padding: '1rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#ffedd5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ea580c', fontSize: '1.2rem', flexShrink: 0 }}>
-                  <i className="fa-solid fa-store"></i>
-                </div>
-                <div>
-                  <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>Physical QR Stand</div>
-                  <div style={{ fontSize: '0.72rem', color: '#ea580c', fontWeight: 700 }}>Step 1 &amp; 2 Order Form →</div>
-                </div>
-              </div>
+
 
               <div
                 onClick={() => {
@@ -1566,18 +1568,7 @@ export default function BusinessConsole({
                   </div>
                 </div>
 
-                {/* Counter Stand Promo */}
-                <div className="bc-promo-card">
-                  <div className="bc-promo-tag">Offline Growth</div>
-                  <h3>Get a Counter QR Stand</h3>
-                  <p>Make it easier for customers to scan and leave feedback directly at your counter.</p>
-                  <div className="bc-promo-bottom">
-                    <div className="bc-promo-price">₹499</div>
-                    <button className="bc-btn-stand" onClick={() => setActiveTab('Physical QR Stand')}>
-                      View QR Stand →
-                    </button>
-                  </div>
-                </div>
+
 
                 {/* Business Info Mini Card */}
                 <div className="bc-biz-info-card">
@@ -2410,15 +2401,7 @@ export default function BusinessConsole({
                 </div>
               </div>
               <div className="bc-view-header-badges">
-                <button
-                  type="button"
-                  className="btn btn-light"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', fontWeight: 800, padding: '0.45rem 0.85rem' }}
-                  onClick={() => setActiveTab('Physical QR Stand')}
-                >
-                  <i className="fa-solid fa-store" style={{ color: '#16a34a' }}></i> Physical Stand
-                  <span className="bc-nav-badge bc-badge-yellow" style={{ fontSize: '0.62rem', padding: '1px 6px' }}>NEW</span>
-                </button>
+
                 <button
                   type="button"
                   className="bc-btn-upgrade"
@@ -2529,29 +2512,6 @@ export default function BusinessConsole({
                   </button>
                 </div>
 
-                {/* Hardware & Stand Promo */}
-                <div className="bc-qr-card">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                    <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      HARDWARE &amp; STAND
-                    </span>
-                    <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#0f172a' }}>From ₹499</span>
-                  </div>
-                  <h4 style={{ fontSize: '0.98rem', fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0' }}>
-                    Want a Physical QR Stand?
-                  </h4>
-                  <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '0 0 10px 0', lineHeight: 1.4 }}>
-                    Order premium acrylic, wooden, or tent table stands printed and shipped to your address.
-                  </p>
-                  <button
-                    type="button"
-                    className="bc-btn-upgrade"
-                    style={{ width: '100%', background: '#16a34a' }}
-                    onClick={() => setActiveTab('Physical QR Stand')}
-                  >
-                    View Physical QR Stands →
-                  </button>
-                </div>
 
                 {/* Printing Best Practices */}
                 <div className="bc-qr-card">
@@ -3032,13 +2992,39 @@ export default function BusinessConsole({
                       <span className="bc-field-label">Phone Number</span>
                       <span className="bc-field-tag">(Optional)</span>
                     </div>
-                    <input
-                      type="tel"
-                      className="bc-input-modern"
-                      value={bizFormPhone}
-                      onChange={e => setBizFormPhone(e.target.value)}
-                      placeholder="6355722267"
-                    />
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <select
+                        value={bizFormCountryCode}
+                        onChange={(e) => setBizFormCountryCode(e.target.value)}
+                        style={{
+                          width: '165px',
+                          background: '#f8fafc',
+                          color: '#0f172a',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: 8,
+                          padding: '0.65rem 0.55rem',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          outline: 'none',
+                          boxSizing: 'border-box'
+                        }}
+                      >
+                        {countryDialOptions.map(c => (
+                          <option key={c.code} value={c.code}>
+                            {c.flag} {c.code} ({c.name})
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="tel"
+                        className="bc-input-modern"
+                        value={bizFormPhone}
+                        onChange={e => setBizFormPhone(e.target.value)}
+                        placeholder="99044 82945"
+                        style={{ flex: 1 }}
+                      />
+                    </div>
                     <p className="bc-field-subtext">Public customer support or booking phone number.</p>
                   </div>
                 </div>
@@ -3445,737 +3431,6 @@ export default function BusinessConsole({
                 <i className="fa-solid fa-floppy-disk"></i> {savingSettings ? 'Saving...' : 'Save All Review Settings'}
               </button>
             </div>
-          </div>
-        )}
-
-        {/* ====================================================================
-            VIEW: PHYSICAL QR STAND (EXACT MATCH TO SCREENSHOTS 4 & 5)
-            ==================================================================== */}
-        {activeTab === 'Physical QR Stand' && (
-          <div>
-            {/* Top Header Card */}
-            <div className="bc-view-header">
-              <div className="bc-view-header-left">
-                <div className="bc-view-header-icon">
-                  <i className="fa-solid fa-store"></i>
-                </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <h1 style={{ margin: 0 }}>Physical QR Stands</h1>
-                    <span className="bc-header-pill bc-pill-live" style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
-                      <i className="fa-solid fa-truck-fast"></i> 7-10 Day Delivery
-                    </span>
-                    <span className="bc-header-pill bc-pill-white" style={{ fontSize: '0.72rem', padding: '2px 8px', color: '#2563eb' }}>
-                      Custom Google Link
-                    </span>
-                  </div>
-                  <p>Turn walk-in visitors into 5-star Google reviews with custom-branded, high-durability countertop displays.</p>
-                </div>
-              </div>
-              <div className="bc-view-header-badges">
-                <button
-                  type="button"
-                  className="btn btn-light"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', fontWeight: 800, padding: '0.5rem 0.95rem' }}
-                  onClick={() => setActiveTab('Magic Review QR')}
-                >
-                  <i className="fa-solid fa-qrcode" style={{ color: '#16a34a' }}></i> Digital QR Center
-                </button>
-              </div>
-            </div>
-
-            {/* If in Step-by-Step Checkout Mode (Screenshot 2) */}
-            {standCheckoutMode ? (
-              <div className="bc-stand-checkout-card">
-                {/* Top Nav: Back to Formats & Heading */}
-                <div className="bc-checkout-top-nav">
-                  <button
-                    type="button"
-                    className="btn btn-light"
-                    style={{ fontSize: '0.8rem', fontWeight: 800, padding: '0.45rem 0.95rem' }}
-                    onClick={() => setStandCheckoutMode(false)}
-                  >
-                    <i className="fa-solid fa-arrow-left" style={{ marginRight: 6 }}></i> Back to Formats
-                  </button>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      STEP-BY-STEP CHECKOUT
-                    </div>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '2px 0 0 0' }}>
-                      Complete Your QR Stand Order
-                    </h2>
-                  </div>
-                </div>
-
-                {/* Stepper Progress */}
-                <div className="bc-checkout-stepper">
-                  <div className={`bc-step-item ${standCheckoutStep >= 1 ? 'active' : ''} ${standCheckoutStep > 1 ? 'completed' : ''}`}>
-                    <span className="bc-step-circle">{standCheckoutStep > 1 ? <i className="fa-solid fa-check"></i> : '1'}</span>
-                    <span>Shipping &amp; Recipient Info</span>
-                  </div>
-                  <div className={`bc-step-divider ${standCheckoutStep > 1 ? 'active' : ''}`}></div>
-                  <div className={`bc-step-item ${standCheckoutStep === 2 ? 'active' : ''}`}>
-                    <span className="bc-step-circle">2</span>
-                    <span>Prepaid UPI Payment</span>
-                  </div>
-                </div>
-
-                {standOrderPlaced ? (
-                  /* Order Success Confirmation Banner */
-                  <div style={{ background: '#f0fdf4', border: '2px solid #bbf7d0', borderRadius: 16, padding: '2rem 1.75rem', textAlign: 'center', margin: '1rem 0' }}>
-                    <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.75rem', margin: '0 auto 1rem auto' }}>
-                      <i className="fa-solid fa-check"></i>
-                    </div>
-                    <span style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '0.72rem', fontWeight: 800, padding: '3px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      ORDER CONFIRMED &amp; IN PRODUCTION
-                    </span>
-                    <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a', margin: '0.65rem 0 0.35rem 0' }}>
-                      Thank You, {standRecipientName}!
-                    </h3>
-                    <p style={{ fontSize: '0.84rem', color: '#475569', maxWidth: 540, margin: '0 auto 1.25rem auto', lineHeight: 1.5 }}>
-                      Your custom-branded <strong>{selectedStand.title}</strong> has been received and queued for high-definition UV-cure printing.
-                    </p>
-
-                    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem 1.25rem', maxWidth: 500, margin: '0 auto 1.5rem auto', fontSize: '0.8rem', textAlign: 'left' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                        <span style={{ color: '#64748b' }}>Order ID:</span>
-                        <strong style={{ color: '#0f172a' }}>{standOrderRef || 'ORDER_RF_635572'}</strong>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                        <span style={{ color: '#64748b' }}>Stand Model:</span>
-                        <strong>{selectedStand.title} × {selectedStand.qty || 1}</strong>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                        <span style={{ color: '#64748b' }}>Total Paid:</span>
-                        <strong style={{ color: '#16a34a' }}>₹{selectedStand.unitPrice * (selectedStand.qty || 1)}</strong>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#64748b' }}>Est. Delivery:</span>
-                        <strong>7-10 Business Days ({standCity || 'Surat'}, {standState || 'Gujarat'})</strong>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="btn"
-                      style={{ background: '#16a34a', color: '#ffffff', fontWeight: 800, padding: '0.75rem 2rem', borderRadius: 10, border: 'none', cursor: 'pointer' }}
-                      onClick={() => {
-                        setStandCheckoutMode(false);
-                        setStandCheckoutStep(1);
-                        setStandOrderPlaced(false);
-                      }}
-                    >
-                      ← Return to Stands Catalog
-                    </button>
-                  </div>
-                ) : standCheckoutStep === 1 ? (
-                  <div>
-                    {/* Selected Stand Model Box */}
-                    <div className="bc-selected-model-box">
-                      <div>
-                        <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', letterSpacing: '0.04em' }}>
-                          SELECTED STAND MODEL
-                        </span>
-                        <h4 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0f172a', margin: '2px 0 0 0' }}>
-                          {selectedStand.title}
-                        </h4>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                        <div>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', display: 'block' }}>
-                            UNIT PRICE
-                          </span>
-                          <strong style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a' }}>
-                            ₹{selectedStand.unitPrice}
-                          </strong>
-                        </div>
-                        <div>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', display: 'block', marginBottom: 4 }}>
-                            Quantity
-                          </span>
-                          <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: 8, background: '#ffffff', overflow: 'hidden' }}>
-                            <button
-                              type="button"
-                              style={{ border: 'none', background: 'none', width: 28, height: 36, cursor: 'pointer', fontWeight: 800, color: '#64748b' }}
-                              onClick={() => setSelectedStand(prev => ({ ...prev, qty: Math.max(1, (prev.qty || 1) - 1) }))}
-                            >-</button>
-                            <input
-                              type="number"
-                              min="1"
-                              max="99"
-                              value={selectedStand.qty || 1}
-                              onChange={e => setSelectedStand(prev => ({ ...prev, qty: Math.max(1, parseInt(e.target.value) || 1) }))}
-                              style={{ width: 44, height: 36, border: 'none', textAlign: 'center', fontWeight: 800, fontSize: '0.92rem', color: '#0f172a', outline: 'none' }}
-                            />
-                            <button
-                              type="button"
-                              style={{ border: 'none', background: 'none', width: 28, height: 36, cursor: 'pointer', fontWeight: 800, color: '#64748b' }}
-                              onClick={() => setSelectedStand(prev => ({ ...prev, qty: (prev.qty || 1) + 1 }))}
-                            >+</button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Shipping & Recipient Form */}
-                    <form onSubmit={e => {
-                      e.preventDefault();
-                      const ref = 'ORDER_RF_' + Math.floor(100000 + Math.random() * 900000);
-                      setStandOrderRef(ref);
-                      setStandCheckoutStep(2);
-                      notify('Proceeding to Step 2: UPI Prepaid Payment...');
-                    }}>
-                      <div className="bc-checkout-form-grid">
-                        <div>
-                          <label className="bc-label">Recipient Full Name *</label>
-                          <input
-                            type="text"
-                            className="bc-input"
-                            required
-                            value={standRecipientName}
-                            onChange={e => setStandRecipientName(e.target.value)}
-                            placeholder="Team Maruti InfoSoft"
-                          />
-                        </div>
-                        <div>
-                          <label className="bc-label">10-Digit Mobile Number *</label>
-                          <input
-                            type="tel"
-                            className="bc-input"
-                            required
-                            value={standPhone}
-                            onChange={e => setStandPhone(e.target.value)}
-                            placeholder="+1 6355722267"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="bc-checkout-form-grid">
-                        <div>
-                          <label className="bc-label">Shop / Outlet Name *</label>
-                          <input
-                            type="text"
-                            className="bc-input"
-                            required
-                            value={standShopName}
-                            onChange={e => setStandShopName(e.target.value)}
-                            placeholder="Shop #12, Ground Floor"
-                          />
-                        </div>
-                        <div>
-                          <label className="bc-label">Business Display Name *</label>
-                          <input
-                            type="text"
-                            className="bc-input"
-                            required
-                            value={standBizName}
-                            onChange={e => setStandBizName(e.target.value)}
-                            placeholder="verde eco landing"
-                          />
-                        </div>
-                      </div>
-
-                      <div style={{ marginBottom: '1.15rem' }}>
-                        <label className="bc-label">Full Delivery Address *</label>
-                        <input
-                          type="text"
-                          className="bc-input"
-                          required
-                          value={standAddress}
-                          onChange={e => setStandAddress(e.target.value)}
-                          placeholder="Street name, Area, Building name, Flat number"
-                        />
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', gap: '0.85rem', marginBottom: '1.5rem' }}>
-                        <div>
-                          <label className="bc-label">Nearby Landmark</label>
-                          <input
-                            type="text"
-                            className="bc-input"
-                            value={standLandmark}
-                            onChange={e => setStandLandmark(e.target.value)}
-                            placeholder="Opposite City Hospital (optional)"
-                          />
-                        </div>
-                        <div>
-                          <label className="bc-label">City *</label>
-                          <input
-                            type="text"
-                            className="bc-input"
-                            required
-                            value={standCity}
-                            onChange={e => setStandCity(e.target.value)}
-                            placeholder="City"
-                          />
-                        </div>
-                        <div>
-                          <label className="bc-label">State *</label>
-                          <input
-                            type="text"
-                            className="bc-input"
-                            required
-                            value={standState}
-                            onChange={e => setStandState(e.target.value)}
-                            placeholder="State"
-                          />
-                        </div>
-                        <div>
-                          <label className="bc-label">6-Digit PIN *</label>
-                          <input
-                            type="text"
-                            className="bc-input"
-                            required
-                            value={standPincode}
-                            onChange={e => setStandPincode(e.target.value)}
-                            placeholder="e.g. 110001"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Total Payable Box */}
-                      <div className="bc-checkout-total-banner">
-                        <div>
-                          <strong style={{ fontSize: '0.95rem', color: '#0f172a', display: 'block' }}>
-                            Total Payable Amount:
-                          </strong>
-                          <span style={{ fontSize: '0.74rem', color: '#15803d', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
-                            <i className="fa-solid fa-circle-check"></i> Includes 18% GST &amp; Free Express Delivery
-                          </span>
-                        </div>
-                        <div style={{ fontSize: '1.65rem', fontWeight: 900, color: '#16a34a' }}>
-                          ₹{selectedStand.unitPrice * (selectedStand.qty || 1)}
-                        </div>
-                      </div>
-
-                      {/* Footer Buttons */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <button
-                          type="button"
-                          className="btn btn-light"
-                          style={{ padding: '0.75rem 2rem', fontWeight: 800, borderRadius: 10, border: '1.5px solid #cbd5e1' }}
-                          onClick={() => setStandCheckoutMode(false)}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          className="btn btn-dark"
-                          style={{ background: '#16a34a', border: 'none', padding: '0.8rem 2.25rem', fontWeight: 800, fontSize: '0.88rem', borderRadius: 10, boxShadow: '0 4px 14px rgba(22, 163, 74, 0.25)' }}
-                        >
-                          Proceed to Payment &amp; QR →
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                ) : (
-                  /* Step 2: Prepaid UPI Payment */
-                  <div>
-                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 16, padding: '1.75rem', marginBottom: '1.5rem' }}>
-                      <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
-                        <span style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '0.72rem', fontWeight: 800, padding: '3px 10px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                          <i className="fa-solid fa-bolt"></i> Instant UPI QR Activation
-                        </span>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '4px 0' }}>
-                          Pay ₹{selectedStand.unitPrice * (selectedStand.qty || 1)} via UPI
-                        </h3>
-                        <p style={{ fontSize: '0.76rem', color: '#64748b', margin: 0 }}>
-                          Scan this QR code with any UPI app on your phone (Google Pay, PhonePe, Paytm, BHIM, Cred)
-                        </p>
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <div style={{ background: '#ffffff', padding: 14, borderRadius: 16, border: '2px solid #bbf7d0', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', position: 'relative' }}>
-                          <img src={activeQrUrl} alt="UPI QR" style={{ width: 180, height: 180, display: 'block', borderRadius: 8 }} />
-                          <div className="qr-center-logo">
-                            <svg width="18" height="18" viewBox="0 0 24 24">
-                              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                            </svg>
-                          </div>
-                        </div>
-                        <div style={{ marginTop: 10, fontSize: '0.74rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span>UPI ID: <strong>starreview.upi@okaxis</strong></span>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-light"
-                            style={{ padding: '2px 8px', fontSize: '0.68rem', fontWeight: 800 }}
-                            onClick={async () => {
-                              await navigator.clipboard.writeText('starreview.upi@okaxis');
-                              notify('UPI ID copied to clipboard!');
-                            }}
-                          >
-                            Copy
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Order Summary Recap */}
-                      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.95rem 1.15rem', marginBottom: '1.35rem', fontSize: '0.78rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                          <span style={{ color: '#64748b' }}>Order Reference:</span>
-                          <strong>{standOrderRef || 'ORDER_RF_635572'}</strong>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                          <span style={{ color: '#64748b' }}>Display Model:</span>
-                          <strong>{selectedStand.title} × {selectedStand.qty || 1}</strong>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                          <span style={{ color: '#64748b' }}>Recipient:</span>
-                          <strong>{standRecipientName} ({standPhone})</strong>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: '#64748b' }}>Delivery Address:</span>
-                          <strong style={{ textAlign: 'right', maxWidth: '60%' }}>{standAddress || 'Shop #12, Ground Floor'}, {standCity}, {standState} - {standPincode}</strong>
-                        </div>
-                      </div>
-
-                      {/* UTR Input Form */}
-                      <div>
-                        <label className="bc-label">12-Digit UPI Transaction Reference (UTR) *</label>
-                        <input
-                          type="text"
-                          className="bc-input"
-                          maxLength={12}
-                          placeholder="e.g. 429812345678"
-                          value={standUtr}
-                          onChange={e => setStandUtr(e.target.value.replace(/\D/g, ''))}
-                          style={{ marginBottom: 6 }}
-                        />
-                        <small style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', marginBottom: '1.25rem' }}>
-                          Open your UPI app after paying and enter the 12-digit UTR/Reference number.
-                        </small>
-
-                        <div style={{ display: 'flex', gap: 10 }}>
-                          <button
-                            type="button"
-                            className="btn btn-light"
-                            style={{ flex: 1, padding: '0.75rem', fontWeight: 800, borderRadius: 10, border: '1.5px solid #cbd5e1' }}
-                            onClick={() => setStandCheckoutStep(1)}
-                          >
-                            ← Back to Shipping Info
-                          </button>
-                          <button
-                            type="button"
-                            className="btn"
-                            style={{
-                              flex: 2,
-                              background: '#16a34a',
-                              color: '#ffffff',
-                              fontWeight: 800,
-                              padding: '0.75rem',
-                              borderRadius: 10,
-                              border: 'none',
-                              cursor: 'pointer',
-                              boxShadow: '0 4px 14px rgba(22, 163, 74, 0.25)'
-                            }}
-                            onClick={() => {
-                              if (standUtr.length < 6) {
-                                notify('Please enter a valid 12-digit UPI UTR reference number.');
-                                return;
-                              }
-                              setStandOrderPlaced(true);
-                              notify(`✓ Order confirmed! Custom-printed ${selectedStand.title} is queued for dispatch.`);
-                            }}
-                          >
-                            <i className="fa-solid fa-circle-check"></i> Confirm Payment &amp; Place Order
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* Normal Catalog List */
-              <>
-                {/* Subheader Title */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.25rem' }}>
-                  <div>
-                    <div style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#16a34a', marginBottom: 2 }}>
-                      DISPLAY COLLECTION
-                    </div>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      Choose Your Physical QR Display
-                      <span style={{ fontSize: '0.72rem', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: 999, fontWeight: 800 }}>3 Formats</span>
-                    </h3>
-                    <p style={{ fontSize: '0.82rem', color: '#64748b', margin: 0 }}>
-                      Select the display style that best fits your counter, reception desk, or table setup.
-                    </p>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <span className="bc-header-pill bc-pill-white" style={{ fontSize: '0.74rem' }}>
-                      <i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Custom Review QR
-                    </span>
-                    <span className="bc-header-pill bc-pill-white" style={{ fontSize: '0.74rem' }}>
-                      <i className="fa-solid fa-truck" style={{ color: '#16a34a' }}></i> 7–10 Day Delivery
-                    </span>
-                  </div>
-                </div>
-
-                {/* 3 Product Display Cards (Grid) */}
-                <div className="bc-stand-grid-3">
-                  {/* Product 1: Plastic L-Stand */}
-                  <div className="bc-stand-card">
-                    <div className="bc-stand-carousel">
-                      <span className="bc-stand-badge-top bc-sbt-green">
-                        ★ Most Popular
-                      </span>
-                      
-                      <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                        <div style={{ width: 140, height: 190, background: '#ffffff', borderRadius: 12, boxShadow: '0 12px 28px rgba(0,0,0,0.18)', border: '2px solid rgba(255,255,255,0.8)', padding: 12, textAlign: 'center', transform: plasticSlide === 1 ? 'rotate(-6deg) scale(0.95)' : (plasticSlide === 2 ? 'rotate(6deg) scale(0.95)' : 'rotate(0deg) scale(1)'), transition: 'all 0.3s ease' }}>
-                          <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#0f172a', marginBottom: 2 }}>{bizName}</div>
-                          <div style={{ color: '#eab308', fontSize: '0.65rem', letterSpacing: 1, marginBottom: 4 }}>★★★★★</div>
-                          <div style={{ fontSize: '0.68rem', fontWeight: 900, color: '#2563eb', marginBottom: 6 }}>Review Us on Google</div>
-                          <img src={activeQrUrl} alt="QR" style={{ width: 75, height: 75, margin: '0 auto', display: 'block', borderRadius: 6, border: '1px solid #bbf7d0' }} />
-                          <div style={{ marginTop: 6, background: '#16a34a', color: '#fff', fontSize: '0.55rem', fontWeight: 800, padding: '2px 6px', borderRadius: 99 }}>SCAN WITH PHONE</div>
-                        </div>
-                      </div>
-
-                      <button type="button" className="bc-carousel-btn prev" onClick={() => setPlasticSlide((plasticSlide + 2) % 3)}>
-                        <i className="fa-solid fa-chevron-left"></i>
-                      </button>
-                      <button type="button" className="bc-carousel-btn next" onClick={() => setPlasticSlide((plasticSlide + 1) % 3)}>
-                        <i className="fa-solid fa-chevron-right"></i>
-                      </button>
-                      <div className="bc-stand-dots">
-                        {[0, 1, 2].map(idx => (
-                          <span key={idx} className={`bc-stand-dot ${plasticSlide === idx ? 'active' : ''}`} onClick={() => setPlasticSlide(idx)} />
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="bc-stand-card-body">
-                      <h4 className="bc-stand-title">QR Code Plastic Stand</h4>
-                      <p className="bc-stand-desc">
-                        Crystal-clear scratch-resistant acrylic L-stand. Ideal for cash counters, billing desks, and reception areas.
-                      </p>
-
-                      <ul className="bc-stand-features">
-                        <li><i className="fa-solid fa-check"></i> Premium high-clarity transparent acrylic</li>
-                        <li><i className="fa-solid fa-check"></i> Scratch &amp; waterproof UV-cure print</li>
-                        <li><i className="fa-solid fa-check"></i> Angled ergonomic tilt for easy mobile scans</li>
-                      </ul>
-
-                      <div className="bc-stand-dispatch-pill">
-                        <i className="fa-solid fa-shield-check"></i> Prepaid Order · Fast Dispatch in 24h
-                      </div>
-
-                      <div className="bc-stand-bottom">
-                        <div className="bc-stand-price-col">
-                          <div className="bc-stand-price">₹499 <small>/ unit</small></div>
-                          <div className="bc-stand-strike">₹899 (Save 44%)</div>
-                        </div>
-                        <button
-                          type="button"
-                          className="bc-btn-order-now"
-                          onClick={() => {
-                            setSelectedStand({
-                              title: 'QR Code Plastic Stand',
-                              unitPrice: 499,
-                              price: 499,
-                              qty: 1,
-                              tag: 'Most Popular'
-                            });
-                            setStandCheckoutMode(true);
-                          }}
-                        >
-                          <i className="fa-solid fa-bag-shopping"></i> Order Now
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Product 2: Acrylic Wood Stand */}
-                  <div className="bc-stand-card">
-                    <div className="bc-stand-carousel">
-                      <span className="bc-stand-badge-top bc-sbt-blue">
-                        💎 Premium Executive
-                      </span>
-                      
-                      <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                        <div style={{ width: 140, height: 190, background: '#ffffff', borderRadius: 12, boxShadow: '0 14px 30px rgba(0,0,0,0.2)', border: '2px solid rgba(255,255,255,0.9)', padding: 12, textAlign: 'center', position: 'relative', transform: acrylicSlide === 1 ? 'rotate(-6deg) scale(0.95)' : (acrylicSlide === 2 ? 'rotate(6deg) scale(0.95)' : 'rotate(0deg) scale(1)'), transition: 'all 0.3s ease' }}>
-                          <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#0f172a', marginBottom: 2 }}>{bizName}</div>
-                          <div style={{ color: '#eab308', fontSize: '0.65rem', letterSpacing: 1, marginBottom: 4 }}>★★★★★</div>
-                          <div style={{ fontSize: '0.68rem', fontWeight: 900, color: '#7c3aed', marginBottom: 6 }}>Review Us on Google</div>
-                          <img src={activeQrUrl} alt="QR" style={{ width: 75, height: 75, margin: '0 auto', display: 'block', borderRadius: 6, border: '1px solid #ddd6fe' }} />
-                          <div style={{ marginTop: 6, background: '#7c3aed', color: '#fff', fontSize: '0.55rem', fontWeight: 800, padding: '2px 6px', borderRadius: 99 }}>SCAN WITH PHONE</div>
-                          <div style={{ position: 'absolute', bottom: -8, left: 10, right: 10, height: 12, background: '#78350f', borderRadius: 4, boxShadow: '0 3px 6px rgba(0,0,0,0.3)' }} />
-                        </div>
-                      </div>
-
-                      <button type="button" className="bc-carousel-btn prev" onClick={() => setAcrylicSlide((acrylicSlide + 2) % 3)}>
-                        <i className="fa-solid fa-chevron-left"></i>
-                      </button>
-                      <button type="button" className="bc-carousel-btn next" onClick={() => setAcrylicSlide((acrylicSlide + 1) % 3)}>
-                        <i className="fa-solid fa-chevron-right"></i>
-                      </button>
-                      <div className="bc-stand-dots">
-                        {[0, 1, 2].map(idx => (
-                          <span key={idx} className={`bc-stand-dot ${acrylicSlide === idx ? 'active' : ''}`} onClick={() => setAcrylicSlide(idx)} />
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="bc-stand-card-body">
-                      <h4 className="bc-stand-title">QR Code Acrylic Stand</h4>
-                      <p className="bc-stand-desc">
-                        Polished solid mahogany wood base with acrylic cardholder. Perfect for upscale salons, luxury hotels, clinics &amp; cafes.
-                      </p>
-
-                      <ul className="bc-stand-features">
-                        <li><i className="fa-solid fa-check"></i> Hand-finished natural weighted wood base</li>
-                        <li><i className="fa-solid fa-check"></i> Ultra high-definition vibrant color print</li>
-                        <li><i className="fa-solid fa-check"></i> Weighted anti-topple counter design</li>
-                      </ul>
-
-                      <div className="bc-stand-dispatch-pill">
-                        <i className="fa-solid fa-shield-check"></i> Prepaid Order · Fast Dispatch in 24h
-                      </div>
-
-                      <div className="bc-stand-bottom">
-                        <div className="bc-stand-price-col">
-                          <div className="bc-stand-price">₹699 <small>/ unit</small></div>
-                          <div className="bc-stand-strike">₹1,199 (Save 42%)</div>
-                        </div>
-                        <button
-                          type="button"
-                          className="bc-btn-order-now"
-                          onClick={() => {
-                            setSelectedStand({
-                              title: 'QR Code Acrylic Stand',
-                              unitPrice: 699,
-                              price: 699,
-                              qty: 1,
-                              tag: 'Premium Executive'
-                            });
-                            setStandCheckoutMode(true);
-                          }}
-                        >
-                          <i className="fa-solid fa-bag-shopping"></i> Order Now
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Product 3: Paper Cardstock Tent */}
-                  <div className="bc-stand-card">
-                    <div className="bc-stand-carousel">
-                      <span className="bc-stand-badge-top bc-sbt-purple">
-                        📦 Multi-Table Pack
-                      </span>
-                      
-                      <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                        <div style={{ width: 140, height: 180, background: '#ffffff', borderRadius: 8, boxShadow: '0 10px 24px rgba(0,0,0,0.15)', border: '1.5px solid #cbd5e1', padding: 10, textAlign: 'center', clipPath: 'polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%)', transform: paperSlide === 1 ? 'rotate(-6deg) scale(0.95)' : (paperSlide === 2 ? 'rotate(6deg) scale(0.95)' : 'rotate(0deg) scale(1)'), transition: 'all 0.3s ease' }}>
-                          <div style={{ fontSize: '0.62rem', fontWeight: 900, color: '#0f172a', marginBottom: 2 }}>{bizName}</div>
-                          <div style={{ color: '#eab308', fontSize: '0.6rem', letterSpacing: 1, marginBottom: 2 }}>★★★★★</div>
-                          <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#2563eb', marginBottom: 4 }}>Review Us on Google</div>
-                          <img src={activeQrUrl} alt="QR" style={{ width: 65, height: 65, margin: '0 auto', display: 'block', borderRadius: 4 }} />
-                          <div style={{ marginTop: 4, background: '#0d4b29', color: '#fff', fontSize: '0.52rem', fontWeight: 800, padding: '2px 4px', borderRadius: 99 }}>SCAN WITH PHONE</div>
-                        </div>
-                      </div>
-
-                      <button type="button" className="bc-carousel-btn prev" onClick={() => setPaperSlide((paperSlide + 2) % 3)}>
-                        <i className="fa-solid fa-chevron-left"></i>
-                      </button>
-                      <button type="button" className="bc-carousel-btn next" onClick={() => setPaperSlide((paperSlide + 1) % 3)}>
-                        <i className="fa-solid fa-chevron-right"></i>
-                      </button>
-                      <div className="bc-stand-dots">
-                        {[0, 1, 2].map(idx => (
-                          <span key={idx} className={`bc-stand-dot ${paperSlide === idx ? 'active' : ''}`} onClick={() => setPaperSlide(idx)} />
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="bc-stand-card-body">
-                      <h4 className="bc-stand-title">QR Code Paper Tent</h4>
-                      <p className="bc-stand-desc">
-                        Self-standing laminated heavy cardstock tents. Lightweight, foldable, and ideal for multi-table restaurant dining.
-                      </p>
-
-                      <ul className="bc-stand-features">
-                        <li><i className="fa-solid fa-check"></i> Value pack of 10+ folded paper tents</li>
-                        <li><i className="fa-solid fa-check"></i> 350 GSM matte laminated spill-proof cardstock</li>
-                        <li><i className="fa-solid fa-check"></i> Dual-sided 360° QR code customer visibility</li>
-                      </ul>
-
-                      <div className="bc-stand-dispatch-pill" style={{ background: '#eff6ff', color: '#1e40af', borderColor: '#bfdbfe' }}>
-                        <i className="fa-solid fa-box"></i> Pack of 10+ · Free Shipping
-                      </div>
-
-                      <div className="bc-stand-bottom">
-                        <div className="bc-stand-price-col">
-                          <div className="bc-stand-price">₹499 <small>/ pack (10 pcs)</small></div>
-                          <div className="bc-stand-strike">₹999 (Save 50%)</div>
-                        </div>
-                        <button
-                          type="button"
-                          className="bc-btn-order-now"
-                          onClick={() => {
-                            setSelectedStand({
-                              title: 'QR Code Paper Tent (Pack of 10)',
-                              unitPrice: 499,
-                              price: 499,
-                              qty: 1,
-                              tag: 'Multi-Table Pack'
-                            });
-                            setStandCheckoutMode(true);
-                          }}
-                        >
-                          <i className="fa-solid fa-bag-shopping"></i> Order Now
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Trust Grid (Screenshot 5) */}
-                <div className="bc-trust-grid-4">
-                  <div className="bc-trust-box">
-                    <div className="bc-trust-icon">
-                      <i className="fa-solid fa-link"></i>
-                    </div>
-                    <div>
-                      <h5>Custom Google Link</h5>
-                      <p>Pre-encoded with your verified review link</p>
-                    </div>
-                  </div>
-
-                  <div className="bc-trust-box">
-                    <div className="bc-trust-icon">
-                      <i className="fa-solid fa-shield-halved"></i>
-                    </div>
-                    <div>
-                      <h5>Premium Quality</h5>
-                      <p>Scratch-resistant &amp; waterproof finish</p>
-                    </div>
-                  </div>
-
-                  <div className="bc-trust-box">
-                    <div className="bc-trust-icon">
-                      <i className="fa-solid fa-truck-fast"></i>
-                    </div>
-                    <div>
-                      <h5>Fast Tracked Delivery</h5>
-                      <p>Dispatched in 24 hours via Blue Dart</p>
-                    </div>
-                  </div>
-
-                  <div className="bc-trust-box">
-                    <div className="bc-trust-icon">
-                      <i className="fa-solid fa-rotate-left"></i>
-                    </div>
-                    <div>
-                      <h5>Replacement Guarantee</h5>
-                      <p>Free reprint if damaged in transit</p>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
           </div>
         )}
 
@@ -6283,28 +5538,56 @@ export default function BusinessConsole({
 
                   <div style={{ marginBottom: '1.5rem' }}>
                     <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.45rem' }}>
-                      Phone Number (Optional)
+                      Phone / WhatsApp Number
                     </label>
-                    <input
-                      type="tel"
-                      value={settingsPhone}
-                      onChange={(e) => setSettingsPhone(e.target.value)}
-                      placeholder="+1 6355722267"
-                      style={{
-                        width: '100%',
-                        background: '#ffffff',
-                        color: '#0f172a',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: 8,
-                        padding: '0.65rem 0.85rem',
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        boxSizing: 'border-box',
-                        outline: 'none'
-                      }}
-                      onFocus={(e) => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22, 163, 74, 0.12)'; }}
-                      onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
-                    />
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <select
+                        value={settingsCountryCode}
+                        onChange={(e) => setSettingsCountryCode(e.target.value)}
+                        style={{
+                          width: '165px',
+                          background: '#f8fafc',
+                          color: '#0f172a',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: 8,
+                          padding: '0.65rem 0.55rem',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          outline: 'none',
+                          boxSizing: 'border-box'
+                        }}
+                      >
+                        {countryDialOptions.map(c => (
+                          <option key={c.code} value={c.code}>
+                            {c.flag} {c.code} ({c.name})
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="tel"
+                        value={settingsPhone}
+                        onChange={(e) => setSettingsPhone(e.target.value)}
+                        placeholder="99044 82945"
+                        style={{
+                          flex: 1,
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: 8,
+                          padding: '0.65rem 0.85rem',
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          boxSizing: 'border-box',
+                          outline: 'none'
+                        }}
+                        onFocus={(e) => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22, 163, 74, 0.12)'; }}
+                        onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
+                      />
+                    </div>
+                    <p style={{ margin: '6px 0 0', fontSize: '0.72rem', color: '#64748b' }}>
+                      Choose your country code and enter your primary phone or WhatsApp inquiry number.
+                    </p>
                   </div>
 
                   <button
