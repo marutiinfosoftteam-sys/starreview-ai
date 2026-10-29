@@ -7652,3 +7652,370 @@ footer {
     font-size: 12.5px;
   }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   APPLY FOR AGENCY SECTION (REDESIGNED & PROPERLY ALIGNED)
+   ═══════════════════════════════════════════════════════════════ */
+.rf-agency-page-wrapper {
+  padding: 60px 0 100px;
+  position: relative;
+  z-index: 1;
+}
+
+.rf-agency-layout-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 52px;
+  align-items: flex-start;
+}
+
+.rf-agency-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #166534;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 18px;
+}
+
+.rf-agency-info-col h1 {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 800;
+  line-height: 1.2;
+  color: #0f172a;
+  margin: 0 0 14px;
+  letter-spacing: -0.02em;
+}
+
+.rf-agency-info-col h1 span {
+  color: #16a34a;
+}
+
+.rf-agency-lead-desc {
+  font-size: 15px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0 0 32px;
+}
+
+.rf-agency-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rf-agency-perk-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.rf-agency-perk-card:hover {
+  border-color: #86efac;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.08);
+}
+
+.rf-agency-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #ecfdf5;
+  border: 1.5px solid #bbf7d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #16a34a;
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.rf-agency-perk-details h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px;
+  line-height: 1.35;
+}
+
+.rf-agency-perk-details p {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.rf-agency-form-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 32px 28px;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.06);
+  position: relative;
+}
+
+.rf-agency-form-card h2 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 6px;
+}
+
+.rf-agency-card-sub {
+  font-size: 13.5px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 24px;
+}
+
+.rf-agency-success-state {
+  text-align: center;
+  padding: 24px 16px;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: 16px;
+}
+
+.rf-agency-success-icon {
+  width: 56px;
+  height: 56px;
+  background: #dcfce7;
+  color: #16a34a;
+  font-size: 26px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+}
+
+@media (max-width: 900px) {
+  .rf-agency-layout-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PRIVACY POLICY PAGE STYLES (PROFESSIONAL & TRUSTWORTHY)
+   ═══════════════════════════════════════════════════════════════ */
+.rf-privacy-page-shell {
+  padding: 48px 0 90px;
+  position: relative;
+  z-index: 1;
+}
+
+.rf-privacy-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.rf-privacy-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.rf-privacy-back-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.rf-privacy-back-btn:hover {
+  color: #0f172a;
+}
+
+.rf-privacy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #166534;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.rf-privacy-header {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 24px;
+  margin-bottom: 36px;
+}
+
+.rf-privacy-header h1 {
+  font-size: clamp(32px, 4.5vw, 44px);
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px;
+}
+
+.rf-privacy-effective {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 16px;
+}
+
+.rf-privacy-lead {
+  font-size: 16px;
+  line-height: 1.65;
+  color: #334155;
+  margin: 0;
+}
+
+.rf-privacy-content {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.rf-privacy-section {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 28px 32px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.rf-privacy-section h2 {
+  font-size: 19px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 14px;
+  letter-spacing: -0.01em;
+}
+
+.rf-privacy-section p {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: #475569;
+  margin: 0 0 12px;
+}
+
+.rf-privacy-section ul {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.rf-privacy-section li {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.rf-privacy-contact-box {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.rf-privacy-contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 16px;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.rf-privacy-contact-grid a {
+  color: #16a34a;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.rf-privacy-contact-grid a:hover {
+  text-decoration: underline;
+}
+
+.rf-privacy-footer-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.rf-btn-dark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.rf-btn-dark:hover {
+  background: #1e293b;
+}
+
+.rf-btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #25d366;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 22px;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.rf-btn-whatsapp:hover {
+  transform: translateY(-2px);
+  color: #ffffff;
+}
+
+@media (max-width: 640px) {
+  .rf-privacy-section {
+    padding: 20px;
+  }
+  .rf-privacy-contact-grid {
+    grid-template-columns: 1fr;
+  }
+}

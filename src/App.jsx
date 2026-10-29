@@ -81,8 +81,7 @@ export default function App() {
     '/seo-analyzer': 'SEO analyzer',
     '/about': 'About us',
     '/faq': 'Frequently asked questions',
-    '/source-code': 'Source code',
-    '/multi-business': 'Multi-business plan',
+      '/multi-business': 'Multi-business plan',
     '/agency': 'Apply for agency',
     '/partner': 'Partner program',
     '/business-onboard': 'Business onboarding',
@@ -172,7 +171,7 @@ export default function App() {
   const [selectedPlanForReg, setSelectedPlanForReg] = useState(null);
   const [user, setUser] = useState(null);
   const [myBusiness, setMyBusiness] = useState(null);
-  const [cfg, setCfg] = useState({ whatsappNumber: '919707842047', languages: ['English', 'Hindi', 'Hinglish', 'Gujarati'] });
+  const [cfg, setCfg] = useState({ whatsappNumber: '919904482945', languages: ['English', 'Hindi', 'Hinglish', 'Gujarati'] });
   const [demoPlan, setDemoPlan] = useState('Starter');
   const [demoPeriod, setDemoPeriod] = useState('Monthly');
   const [demoResult, setDemoResult] = useState('');
@@ -366,22 +365,42 @@ export default function App() {
   };
 
   const handleGoogleAuth = async () => {
-    const emailToUse = email.trim() || 'google.user@mybusiness.com';
-    const r = await api('POST', '/api/auth/google', {
-      email: emailToUse,
-      name: fullName || 'Google Business Owner',
-      plan: selectedPlanForReg?.name || 'Starter'
-    });
-    if (r.ok) {
-      setToken(r.data.token);
-      setUser(r.data.user);
-      const bRes = await api('GET', '/api/business');
-      if (bRes.ok && bRes.data && bRes.data.business) {
-        setMyBusiness(bRes.data.business);
+    try {
+      let emailToUse = email.trim();
+      let nameToUse = fullName || 'Google Business Owner';
+      let idToken = null;
+
+      if (isFirebaseConfigured) {
+        notify('Opening Google sign-in...');
+        const fbResult = await loginWithGoogle();
+        emailToUse = fbResult.user.email || emailToUse;
+        nameToUse = fbResult.user.displayName || nameToUse;
+        idToken = fbResult.idToken;
       }
-      notify('✓ Authenticated with Google. Let’s connect your Google Business Profile:');
-      navigate('Business onboarding');
-    } else {
+
+      emailToUse = emailToUse || 'google.user@mybusiness.com';
+      const r = await api('POST', '/api/auth/firebase-login', {
+        email: emailToUse,
+        name: nameToUse,
+        idToken,
+        plan: selectedPlanForReg?.name || 'Starter'
+      });
+
+      if (r.ok) {
+        setToken(r.data.token);
+        setUser(r.data.user);
+        const bRes = await api('GET', '/api/business');
+        if (bRes.ok && bRes.data && bRes.data.business) {
+          setMyBusiness(bRes.data.business);
+        }
+        notify(`✓ Signed in as ${emailToUse}. Welcome to StarReview AI!`);
+        navigate('Business onboarding');
+      } else {
+        loginDemoConsole();
+      }
+    } catch (err) {
+      console.warn('[Google Auth Error]:', err.message);
+      notify('Google sign-in completed in demo mode');
       loginDemoConsole();
     }
   };
@@ -427,7 +446,7 @@ export default function App() {
 
   const choosePlan = (planName, period = 'Monthly') => {
     if (planName === 'Multi-Business' || planName === 'Agency') {
-      window.open(`https://wa.me/${cfg.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business / Agency Plan for StarReview AI. Please share pricing and business limit details.")}`, '_blank');
+      window.open(`https://wa.me/${cfg.whatsappNumber || '919904482945'}?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business / Agency Plan for StarReview AI. Please share pricing and business limit details.")}`, '_blank');
       return;
     }
     const amount = planName === 'Starter'
@@ -454,7 +473,6 @@ export default function App() {
     { label: 'How It Works', page: 'How it works' },
     { label: 'AI vs Normal QR', page: 'AI vs QR' },
     { label: 'Pricing', page: 'Pricing' },
-    { label: 'Source Code', page: 'Source code' },
     { label: 'Apply for Agency', page: 'Apply for agency' }
   ];
 
@@ -467,68 +485,15 @@ export default function App() {
           <span></span> Simple &amp; Transparent Plans
         </div>
         <h1>Turn More Customers Into <span>Google Reviews</span></h1>
-        <p>Start free for 3 days, then select the plan that matches your business growth. Scale easily with automated AI drafts, smart QR standees, and centralized multi-business tools.</p>
+        <p>Choose the ideal reputation acceleration plan that matches your business growth. Scale easily with automated AI drafts, smart QR standees, and centralized multi-business tools.</p>
         <div className="pricing-trust-row">
-          <span><i className="fa-solid fa-check"></i> No credit card for 3-day trial</span>
+          <span><i className="fa-solid fa-check"></i> Official Google Places Verified</span>
           <span><i className="fa-solid fa-check"></i> Single &amp; Multi-Business Options</span>
           <span><i className="fa-solid fa-check"></i> Upgrade or chat anytime</span>
         </div>
       </div>
 
       {/* 2. 3-DAY FREE TRIAL HIGHLIGHT BOX */}
-      <div className="trial-highlight-card">
-        <div className="trial-header-flex">
-          <div className="trial-title-wrap">
-            <div className="trial-gift-icon">
-              <i className="fa-solid fa-gift"></i>
-            </div>
-            <div>
-              <div className="trial-badge"><i className="fa-solid fa-check"></i> No Credit Card Required</div>
-              <h3>3 Days Free Trial — Explore Everything Risk-Free</h3>
-            </div>
-          </div>
-          <button className="pricing-cta cta-primary" style={{ padding: '0.65rem 1.4rem', width: 'auto' }} onClick={() => navigate('Account')}>
-            Start 3-Day Free Trial <i className="fa-solid fa-arrow-right" style={{ marginLeft: 6 }}></i>
-          </button>
-        </div>
-
-        <div className="trial-features-grid">
-          <div className="trial-feature-box">
-            <i className="fa-solid fa-wand-magic-sparkles"></i>
-            <div>
-              <strong>AI Review Generator</strong>
-              <span>3 human-like drafts in 24+ languages</span>
-            </div>
-          </div>
-          <div className="trial-feature-box">
-            <i className="fa-solid fa-qrcode"></i>
-            <div>
-              <strong>Smart QR Standee</strong>
-              <span>Printable A6 flyer &amp; direct link</span>
-            </div>
-          </div>
-          <div className="trial-feature-box">
-            <i className="fa-solid fa-sliders"></i>
-            <div>
-              <strong>Keywords &amp; Staff</strong>
-              <span>Inject custom products &amp; services</span>
-            </div>
-          </div>
-          <div className="trial-feature-box">
-            <i className="fa-solid fa-chart-line"></i>
-            <div>
-              <strong>Click &amp; Copy Analytics</strong>
-              <span>Track scans, generations &amp; copies</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="trial-footer-note">
-          <div><i className="fa-solid fa-circle-info" style={{ color: '#16a34a', marginRight: 4 }}></i> The 3-day free trial gives you full access to test review collection. Priority Support, Ad-Free Funnel, and Review Drop Guarantee are activated upon upgrading to a paid plan.</div>
-          <div><i className="fa-solid fa-bolt" style={{ color: '#ca8a04', marginRight: 4 }}></i> Instant activation · Cancel anytime</div>
-        </div>
-      </div>
-
       {/* 3. PLAN TOGGLE TABS */}
       <div className="pricing-toggle-wrap">
         <div className="pricing-toggle-pill">
@@ -698,7 +663,7 @@ export default function App() {
                 ))}
               </ul>
               <a
-                href={`https://wa.me/${cfg.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business Plan for StarReview AI.")}`}
+                href={`https://wa.me/${cfg.whatsappNumber || '919904482945'}?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business Plan for StarReview AI.")}`}
                 target="_blank"
                 rel="noreferrer"
                 className="pricing-cta cta-whatsapp"
@@ -850,7 +815,7 @@ export default function App() {
                 ))}
               </ul>
               <a
-                href={`https://wa.me/${cfg.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business Plan for StarReview AI.")}`}
+                href={`https://wa.me/${cfg.whatsappNumber || '919904482945'}?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business Plan for StarReview AI.")}`}
                 target="_blank"
                 rel="noreferrer"
                 className="pricing-cta cta-whatsapp"
@@ -863,142 +828,7 @@ export default function App() {
       </div>
 
       {/* 5. DETAILED COMPARISON TABLE ACROSS ALL PLANS */}
-      <div className="pricing-table-section">
-        <div className="comparison-heading">
-          <span className="comparison-kicker">Plan Breakdown</span>
-          <h2>Compare Features Across Plans</h2>
-          <p>Pick the right plan based on whether you need hands-free AI Review Replies and single vs multi-location scale. Test risk-free with our 3-day trial.</p>
-        </div>
-
-        <div className="comparison-table-wrapper">
-          <table className="comparison-table">
-            <thead>
-              <tr>
-                <th style={{ width: '26%' }}>Feature</th>
-                <th className="trial-col">
-                  <span style={{ display: 'block', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#166534', fontWeight: 800 }}>Risk-Free</span>
-                  3-Day Free Trial
-                </th>
-                <th>Standard Monthly</th>
-                <th className="yearly-col">Standard Yearly</th>
-                <th className="pro-col">Pro Monthly</th>
-                <th className="pro-col">Pro Yearly</th>
-                <th>Agency</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="feature-name">Business Locations</td>
-                <td className="tbl-text trial-col">1 Location</td>
-                <td className="tbl-text">1 Location</td>
-                <td className="tbl-text yearly-col">1 Location</td>
-                <td className="tbl-text pro-col">1 Location</td>
-                <td className="tbl-text pro-col">1 Location</td>
-                <td className="tbl-text"><strong>Multiple</strong></td>
-              </tr>
-              <tr>
-                <td className="feature-name" style={{ color: '#15803d' }}><strong>Automatic AI Review Reply</strong></td>
-                <td className="trial-col"><span className="tbl-cross"><i className="fa-solid fa-xmark"></i> No</span></td>
-                <td><span className="tbl-cross"><i className="fa-solid fa-xmark"></i> No</span></td>
-                <td className="yearly-col"><span className="tbl-cross"><i className="fa-solid fa-xmark"></i> No</span></td>
-                <td className="pro-col"><span className="tbl-check"><i className="fa-solid fa-check"></i> Yes (24/7)</span></td>
-                <td className="pro-col"><span className="tbl-check"><i className="fa-solid fa-check"></i> Yes (24/7)</span></td>
-                <td><span className="tbl-cross"><i className="fa-solid fa-xmark"></i> No</span></td>
-              </tr>
-              {[
-                ['Human-Like AI Written Reviews', true, true, true, true, true, true],
-                ['Custom Keywords, Services, Products & Staff', true, true, true, true, true, true],
-                ['Emoji Support & Multiple Review Styles', true, true, true, true, true, true],
-                ['Personalized AI Review Suggestions', true, true, true, true, true, true],
-                ['Smart & Customizable Google Review QR Code', true, true, true, true, true, true],
-                ['Printable QR Standee & Direct Review Link', true, true, true, true, true, true],
-                ['Review, Rating & Growth Analytics', true, true, true, true, true, true],
-                ['AI Google Business Profile Analyzer', true, true, true, true, true, true],
-                ['Customer Review Tracking', true, true, true, true, true, true],
-                ['No Review Drop / Loss Guarantee', false, true, true, true, true, true],
-                ['100% Ad-Free Funnel Experience', false, true, true, true, true, true],
-                ['Priority Support', false, true, true, true, true, true]
-              ].map(([feat, tr, sm, sy, pm, py, ag]) => (
-                <tr key={feat}>
-                  <td className="feature-name">{feat}</td>
-                  <td className="trial-col">
-                    {tr ? <span className="tbl-check"><i className="fa-solid fa-check"></i></span> : <span className="tbl-cross"><i className="fa-solid fa-xmark"></i></span>}
-                  </td>
-                  <td>
-                    {sm ? <span className="tbl-check"><i className="fa-solid fa-check"></i></span> : <span className="tbl-cross"><i className="fa-solid fa-xmark"></i></span>}
-                  </td>
-                  <td className="yearly-col">
-                    {sy ? <span className="tbl-check"><i className="fa-solid fa-check"></i></span> : <span className="tbl-cross"><i className="fa-solid fa-xmark"></i></span>}
-                  </td>
-                  <td className="pro-col">
-                    {pm ? <span className="tbl-check"><i className="fa-solid fa-check"></i></span> : <span className="tbl-cross"><i className="fa-solid fa-xmark"></i></span>}
-                  </td>
-                  <td className="pro-col">
-                    {py ? <span className="tbl-check"><i className="fa-solid fa-check"></i></span> : <span className="tbl-cross"><i className="fa-solid fa-xmark"></i></span>}
-                  </td>
-                  <td>
-                    {ag ? <span className="tbl-check"><i className="fa-solid fa-check"></i></span> : <span className="tbl-cross"><i className="fa-solid fa-xmark"></i></span>}
-                  </td>
-                </tr>
-              ))}
-              <tr>
-                <td className="feature-name">Pricing / Billing Cycle</td>
-                <td className="tbl-text trial-col"><strong style={{ color: '#16a34a' }}>Free (3 Days)</strong></td>
-                <td className="tbl-text">₹199/mo</td>
-                <td className="tbl-text yearly-col"><strong>₹1999/yr</strong></td>
-                <td className="tbl-text pro-col">₹299/mo</td>
-                <td className="tbl-text pro-col"><strong>₹2999/yr</strong></td>
-                <td className="tbl-text"><strong>WhatsApp</strong></td>
-              </tr>
-              <tr>
-                <td className="feature-name">Get Started</td>
-                <td className="trial-col">
-                  <button className="pricing-cta cta-primary" style={{ fontSize: '0.75rem', padding: '0.45rem 0.85rem', borderRadius: 8 }} onClick={() => navigate('Account')}>
-                    Start Free
-                  </button>
-                </td>
-                <td>
-                  <button className="pricing-cta cta-outline" style={{ fontSize: '0.75rem', padding: '0.45rem 0.85rem', borderRadius: 8 }} onClick={() => choosePlan('Starter', 'Monthly')}>
-                    Choose
-                  </button>
-                </td>
-                <td className="yearly-col">
-                  <button className="pricing-cta cta-primary" style={{ fontSize: '0.75rem', padding: '0.45rem 0.85rem', borderRadius: 8 }} onClick={() => choosePlan('Starter', 'Yearly')}>
-                    Choose
-                  </button>
-                </td>
-                <td className="pro-col">
-                  <button className="pricing-cta cta-outline" style={{ fontSize: '0.75rem', padding: '0.45rem 0.85rem', borderRadius: 8 }} onClick={() => choosePlan('Pro', 'Monthly')}>
-                    Choose
-                  </button>
-                </td>
-                <td className="pro-col">
-                  <button className="pricing-cta cta-primary" style={{ fontSize: '0.75rem', padding: '0.45rem 0.85rem', borderRadius: 8 }} onClick={() => choosePlan('Pro', 'Yearly')}>
-                    Choose
-                  </button>
-                </td>
-                <td>
-                  <a
-                    href={`https://wa.me/${cfg.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business Plan for StarReview AI.")}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="pricing-cta cta-outline"
-                    style={{ fontSize: '0.75rem', padding: '0.45rem 0.85rem', borderRadius: 8 }}
-                  >
-                    Inquire
-                  </a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.82rem', color: '#64748b' }}>
-          <i className="fa-solid fa-circle-info" style={{ color: '#16a34a', marginRight: '0.35rem' }}></i>
-          All accounts start with our instant 3-day free trial. Experience human-like AI review drafting and smart Google Review QR funnels before deciding to upgrade.
-        </div>
-      </div>
-    </section>
+          </section>
   );
 
   return (
@@ -1039,19 +869,19 @@ export default function App() {
               <div className="rf-mobile-drawer-actions">
                 {!user ? (
                   <>
-                    <button
-                      type="button"
+                    <a
+                      href="tel:+919904482945"
                       className="rf-btn-signin full"
-                      onClick={() => { setRegMode(false); navigate('Account', false); setMenu(false); }}
+                      style={{ textDecoration: 'none', textAlign: 'center' }}
                     >
-                      Sign In
-                    </button>
+                      <i className="fa-solid fa-phone" style={{ marginRight: 6 }}></i> Call: 9904482945
+                    </a>
                     <button
                       type="button"
                       className="rf-btn-startfree full"
-                      onClick={() => { setRegMode(true); navigate('Account', true); setMenu(false); }}
+                      onClick={() => { setRegMode(false); navigate('Account', false); setMenu(false); }}
                     >
-                      Start Free <span className="rf-nav-arrow">→</span>
+                      Sign In <span className="rf-nav-arrow">→</span>
                     </button>
                   </>
                 ) : (
@@ -1096,9 +926,9 @@ export default function App() {
                       setRegMode(true);
                       navigate('Account', true);
                     }}
-                    title="Start 3-Day Free Trial"
+                    title="Call for Pricing: 9904482945"
                   >
-                    Start Free <span className="rf-nav-arrow">→</span>
+                    Sign In <span className="rf-nav-arrow">→</span>
                   </button>
                 </>
               ) : (
@@ -1140,7 +970,7 @@ export default function App() {
                 <h1>Turn great service into <em>great reviews.</em></h1>
                 <p className="hero-sub">A simpler way to collect genuine customer feedback, create review drafts with AI, and understand what your customers love.</p>
                 <div className="hero-cta">
-                  <button className="btn btn-dark" onClick={() => navigate('Account')}>Get started free <span className="rf-nav-arrow">→</span></button>
+                  <button className="btn btn-dark" onClick={() => navigate('Account')}>Call for Pricing: 9904482945 <span className="rf-nav-arrow">→</span></button>
                   <button className="btn btn-light" onClick={() => navigate('How it works')}>Explore how it works <span>▶</span></button>
                 </div>
                 <div className="hero-note">
@@ -1428,20 +1258,20 @@ export default function App() {
             <section className="sr-stats-strip">
               <div className="wrap sr-stats-inner">
                 <div>
-                  <div className="sr-stat-val">84.6%</div>
-                  <div className="sr-stat-lbl">Avg. Conversion Rate</div>
+                  <div className="sr-stat-val">60s</div>
+                  <div className="sr-stat-lbl">Instant Setup Time</div>
                 </div>
                 <div>
-                  <div className="sr-stat-val">1,200+</div>
-                  <div className="sr-stat-lbl">Active Businesses</div>
+                  <div className="sr-stat-val">100%</div>
+                  <div className="sr-stat-lbl">Private Negative Filter</div>
                 </div>
                 <div>
-                  <div className="sr-stat-val">5★</div>
-                  <div className="sr-stat-lbl">Average Google Rating</div>
+                  <div className="sr-stat-val">24+</div>
+                  <div className="sr-stat-lbl">AI Draft Languages</div>
                 </div>
                 <div>
-                  <div className="sr-stat-val">10s</div>
-                  <div className="sr-stat-lbl">Average Review Time</div>
+                  <div className="sr-stat-val">Official</div>
+                  <div className="sr-stat-lbl">Google Places API</div>
                 </div>
               </div>
             </section>
@@ -1506,7 +1336,7 @@ export default function App() {
                   <h2>Make every customer voice <em>count.</em></h2>
                   <p>Start your 3-day free trial and set up your review page in minutes.</p>
                 </div>
-                <button className="btn btn-white" onClick={() => navigate('Account')}>Get started free <span className="rf-nav-arrow">→</span></button>
+                <button className="btn btn-white" onClick={() => navigate('Account')}>Call for Pricing: 9904482945 <span className="rf-nav-arrow">→</span></button>
               </div>
             </section>
           </main>
@@ -1724,7 +1554,7 @@ export default function App() {
                 <p>Join businesses boosting review conversion with smart QR and AI assistance.</p>
               </div>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <button className="rf-btn-startfree" onClick={() => navigate('Account', true)}>Get started free <span className="rf-nav-arrow">→</span></button>
+                <button className="rf-btn-startfree" onClick={() => navigate('Account', true)}>Call for Pricing: 9904482945 <span className="rf-nav-arrow">→</span></button>
                 <button className="rf-btn-signin" onClick={() => navigate('Try the demo')}>Try live demo →</button>
               </div>
             </div>
@@ -1751,7 +1581,7 @@ export default function App() {
                 </p>
                 <div className="vs-hero-actions">
                   <button className="rf-btn-startfree" onClick={() => navigate('Account', true)}>
-                    Start 3-Day Free Trial <span className="rf-nav-arrow">→</span>
+                    Call for Pricing: 9904482945 <span className="rf-nav-arrow">→</span>
                   </button>
                   <button className="rf-btn-signin" onClick={() => {
                     const el = document.getElementById('comparison-table');
@@ -1975,220 +1805,8 @@ export default function App() {
             <h2>Upgrade to Google Magic Review QR Today</h2>
             <p>Join smart business owners using <strong>StarReview AI</strong> to transform daily foot traffic into genuine, high-converting 5-star Google Business reviews effortlessly.</p>
             <button className="rf-btn-startfree" style={{ margin: '0 auto', fontSize: '1rem', padding: '10px 24px' }} onClick={() => navigate('Account', true)}>
-              Start 3-Day Free Trial <span className="rf-nav-arrow">→</span>
+              Call for Pricing: 9904482945 <span className="rf-nav-arrow">→</span>
             </button>
-          </section>
-        </main>
-      )}
-
-      {/* ====================================================================
-          SOURCE CODE & COMMERCIAL LICENSE PAGE (MATCHING REVIEWFLOW AI)
-          ==================================================================== */}
-      {page === 'Source code' && (
-        <main>
-          {/* Hero Section */}
-          <section className="wl-hero-section">
-            <div className="wl-container">
-              <div className="wl-badge">
-                <span></span> Commercial License • Full Source Code for ₹10,000 (One-Time)
-              </div>
-              <h1 className="wl-hero-title">
-                Launch Your Own <span className="gradient-text">AI Google Review SaaS</span> Business
-              </h1>
-              <p className="wl-hero-desc">
-                Own the complete, production-ready source code of StarReview AI for a single one-time payment of ₹10,000 with a full Commercial License. You have complete freedom to modify the code, build new features, rebrand everything, and launch unlimited client portals — <strong>you can do anything with the code except reselling it</strong>. Full server installation &amp; deployment included.
-              </p>
-
-              {/* Commercial License Pill */}
-              <div className="wl-hero-license-pill">
-                <span className="wl-hero-license-badge">
-                  <i className="fa-solid fa-file-contract"></i> Lifetime Commercial License Included
-                </span>
-                <span className="wl-hero-license-tag">₹10,000 One-Time • Zero Royalties</span>
-              </div>
-
-              {/* CTA Group */}
-              <div className="wl-cta-group">
-                <a
-                  href={`https://wa.me/${cfg.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I want to purchase the complete StarReview AI Source Code with Commercial License for ₹10,000. Please share payment and server setup details.")}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="wl-btn-primary"
-                >
-                  <i className="fa-solid fa-file-shield" style={{ fontSize: '1.1rem' }}></i>
-                  Get Full Source Code for ₹10,000
-                </a>
-                <button
-                  type="button"
-                  className="wl-btn-secondary"
-                  onClick={() => {
-                    const el = document.getElementById('license-terms');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  <i className="fa-solid fa-scale-balanced"></i>
-                  View License Terms
-                </button>
-              </div>
-
-              {/* 4 Quick Stat Cards */}
-              <div className="wl-stats-grid">
-                <div className="wl-stat-card">
-                  <div className="wl-stat-icon"><i className="fa-solid fa-code"></i></div>
-                  <div className="wl-stat-title">100% Unencrypted</div>
-                  <p className="wl-stat-desc">Pure, clean modern source code with zero encryption or license lockers.</p>
-                </div>
-                <div className="wl-stat-card">
-                  <div className="wl-stat-icon"><i className="fa-solid fa-server"></i></div>
-                  <div className="wl-stat-title">Full Setup Included</div>
-                  <p className="wl-stat-desc">Our developers deploy and configure everything on your server for free.</p>
-                </div>
-                <div className="wl-stat-card">
-                  <div className="wl-stat-icon"><i className="fa-solid fa-building-user"></i></div>
-                  <div className="wl-stat-title">Unlimited Portals</div>
-                  <p className="wl-stat-desc">Host unlimited businesses, agencies, and locations without restrictions.</p>
-                </div>
-                <div className="wl-stat-card">
-                  <div className="wl-stat-icon"><i className="fa-solid fa-scale-balanced"></i></div>
-                  <div className="wl-stat-title">Commercial Freedom</div>
-                  <p className="wl-stat-desc">Full commercial license included. You can do anything with the code except reselling it.</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Turnkey Package Section */}
-          <section className="wl-light-section">
-            <div className="wl-container">
-              <div className="wl-section-header">
-                <span className="wl-section-tag">Complete Turnkey Package</span>
-                <h2 className="wl-section-title">Everything You Need to Run a Profitable SaaS</h2>
-                <p className="wl-section-desc">You get the entire web application, frontend marketing pages, multi-business portals, AI generation engine, and automated tooling.</p>
-              </div>
-
-              <div className="wl-features-grid">
-                <div className="wl-feature-card">
-                  <div className="wl-feature-icon"><i className="fa-solid fa-robot"></i></div>
-                  <h3 className="wl-feature-title">AI Review Engine</h3>
-                  <p className="wl-feature-desc">Integrated with Google Gemini Flash (free/ultra-low cost), OpenAI GPT-4o, and Claude. Generates human-style, authentic reviews based on customer feelings.</p>
-                  <ul className="wl-feature-list">
-                    <li><i className="fa-solid fa-check"></i> Multi-language review drafting</li>
-                    <li><i className="fa-solid fa-check"></i> Staff &amp; service keywords</li>
-                    <li><i className="fa-solid fa-check"></i> Natural short-form wording</li>
-                  </ul>
-                </div>
-
-                <div className="wl-feature-card">
-                  <div className="wl-feature-icon"><i className="fa-solid fa-qrcode"></i></div>
-                  <h3 className="wl-feature-title">Dynamic Standee &amp; Flyer Designer</h3>
-                  <p className="wl-feature-desc">Built-in visual flyer generator. Clients can download print-ready table tents and QR posters with custom instructions and color themes.</p>
-                  <ul className="wl-feature-list">
-                    <li><i className="fa-solid fa-check"></i> 4 modern visual color schemes</li>
-                    <li><i className="fa-solid fa-check"></i> Instant SVG / PNG flyer download</li>
-                    <li><i className="fa-solid fa-check"></i> Custom incentive text customization</li>
-                  </ul>
-                </div>
-
-                <div className="wl-feature-card">
-                  <div className="wl-feature-icon"><i className="fa-solid fa-filter"></i></div>
-                  <h3 className="wl-feature-title">Smart Review Funnel</h3>
-                  <p className="wl-feature-desc">Intelligent 5-star gatekeeper. 5-star ratings route straight to the Google Business Profile, while lower ratings are captured in a private inbox.</p>
-                  <ul className="wl-feature-list">
-                    <li><i className="fa-solid fa-check"></i> Private feedback collection</li>
-                    <li><i className="fa-solid fa-check"></i> Customer phone &amp; email capture</li>
-                    <li><i className="fa-solid fa-check"></i> Real-time interaction tracking</li>
-                  </ul>
-                </div>
-
-                <div className="wl-feature-card">
-                  <div className="wl-feature-icon"><i className="fa-solid fa-users-gear"></i></div>
-                  <h3 className="wl-feature-title">Multi-Business &amp; Agency Suite</h3>
-                  <p className="wl-feature-desc">Agency sub-portal allowing marketing agencies and franchises to manage multiple client locations under one single dashboard.</p>
-                  <ul className="wl-feature-list">
-                    <li><i className="fa-solid fa-check"></i> Multi-location switching</li>
-                    <li><i className="fa-solid fa-check"></i> Bring Your Own AI API key</li>
-                    <li><i className="fa-solid fa-check"></i> White label agency management</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* License Box */}
-              <div className="wl-license-box" id="license-terms">
-                <div className="wl-license-header">
-                  <div className="wl-license-header-icon">
-                    <i className="fa-solid fa-scale-balanced"></i>
-                  </div>
-                  <div className="wl-license-header-text">
-                    <h3>Commercial License Terms &amp; Permissions</h3>
-                    <p>Total operational and development freedom. You can do anything with the code except reselling it.</p>
-                  </div>
-                </div>
-
-                <div className="wl-license-columns">
-                  <div className="wl-license-col can-do">
-                    <div className="wl-license-col-title">
-                      <i className="fa-solid fa-circle-check"></i> What You CAN Do (Complete Freedom)
-                    </div>
-                    <ul className="wl-license-items">
-                      <li className="wl-license-item">
-                        <i className="fa-solid fa-check"></i>
-                        <span><strong>100% White Label &amp; Rebrand:</strong> Place your own brand name, domain, logo, color palette, and email notifications.</span>
-                      </li>
-                      <li className="wl-license-item">
-                        <i className="fa-solid fa-check"></i>
-                        <span><strong>Modify &amp; Customize Source Code:</strong> Edit backend, database schema, CSS, and frontend design however you like.</span>
-                      </li>
-                      <li className="wl-license-item">
-                        <i className="fa-solid fa-check"></i>
-                        <span><strong>Build Custom Features:</strong> Integrate proprietary payment gateways, custom AI models, or third-party APIs.</span>
-                      </li>
-                      <li className="wl-license-item">
-                        <i className="fa-solid fa-check"></i>
-                        <span><strong>Unlimited Paying Clients:</strong> Charge clients monthly, yearly, or one-time fees. You keep 100% of revenue.</span>
-                      </li>
-                      <li className="wl-license-item">
-                        <i className="fa-solid fa-check"></i>
-                        <span><strong>Zero Royalties Forever:</strong> No recurring license fees, revenue share, or hidden developer costs.</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="wl-license-col cannot-do">
-                    <div className="wl-license-col-title">
-                      <i className="fa-solid fa-circle-xmark"></i> What You CANNOT Do
-                    </div>
-                    <ul className="wl-license-items">
-                      <li className="wl-license-item">
-                        <i className="fa-solid fa-xmark"></i>
-                        <span><strong>Resell Raw Source Code:</strong> You cannot resell, distribute, or publish the raw codebase, scripts, or templates to others.</span>
-                      </li>
-                      <li className="wl-license-item">
-                        <i className="fa-solid fa-xmark"></i>
-                        <span><strong>Create Source Code Competitors:</strong> You cannot operate a digital asset store, marketplace, or repository selling this software codebase.</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom CTA Banner */}
-              <div style={{ marginTop: '3.5rem', textAlign: 'center', background: 'linear-gradient(135deg, #1d4934 0%, #2f6747 100%)', padding: '3rem 2rem', borderRadius: 24, color: '#fff' }}>
-                <h3 style={{ fontSize: '1.8rem', fontWeight: 900, marginBottom: '0.75rem', color: '#fff' }}>Ready to Launch Your Own AI Review SaaS?</h3>
-                <p style={{ maxWidth: 650, margin: '0 auto 1.75rem', color: '#d1e2d7', fontSize: '1rem', lineHeight: 1.6 }}>
-                  One-time payment of ₹10,000 includes full source code, commercial license, free deployment assistance, and lifetime ownership.
-                </p>
-                <a
-                  href={`https://wa.me/${cfg.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I'm ready to buy the StarReview AI Source Code for ₹10,000. Please assist me with the purchase.")}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-primary"
-                  style={{ background: '#22c55e', color: '#092113', fontWeight: 800, padding: '0.9rem 2rem', borderRadius: 12, display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}
-                >
-                  <i className="fa-brands fa-whatsapp" style={{ fontSize: '1.2rem' }}></i>
-                  Get Source Code on WhatsApp (₹10,000)
-                </a>
-              </div>
-            </div>
           </section>
         </main>
       )}
@@ -2197,311 +1815,180 @@ export default function App() {
           APPLY FOR AGENCY / MULTI-BUSINESS PORTAL (MATCHING REVIEWFLOW AI)
           ==================================================================== */}
       {page === 'Apply for agency' && (
-        <main>
-          <div className="agency-page-wrapper">
-            <div className="agency-app-grid">
+        <main className="rf-agency-page-wrapper">
+          <div className="rf-agency-container wrap">
+            <div className="rf-agency-layout-grid">
               {/* LEFT: VALUE PROPOSITION */}
-              <div className="agency-info-col">
-                <div className="agency-info-badge">
-                  <i className="fa-solid fa-briefcase"></i> Multi-Business &amp; Agency Portal
+              <div className="rf-agency-info-col">
+                <div className="rf-agency-header-badge">
+                  <i className="fa-solid fa-briefcase"></i>
+                  <span>MULTI-LOCATION &amp; AGENCY PORTAL</span>
                 </div>
-                <h1>Scale Google Reviews for <span>All Your Locations</span></h1>
-                <p className="lead-desc">
+                <h1>Scale Google Reviews Across <span>All Your Locations</span></h1>
+                <p className="rf-agency-lead-desc">
                   Designed for marketing agencies, multi-location franchises, and brand managers seeking a centralized Google review acceleration system.
                 </p>
 
-                <div className="agency-perks">
-                  <div className="perk-item">
-                    <div className="perk-icon"><i className="fa-solid fa-layer-group"></i></div>
-                    <div className="perk-text">
+                <div className="rf-agency-cards-list">
+                  <div className="rf-agency-perk-card">
+                    <div className="rf-agency-icon-box">
+                      <i className="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div className="rf-agency-perk-details">
                       <h4>Centralized Multi-Location Console</h4>
-                      <p>Manage dozens of client or branch listings from a single intuitive agency dashboard.</p>
+                      <p>Manage dozens of client or branch listings from a single intuitive agency dashboard with unified reporting.</p>
                     </div>
                   </div>
-                  <div className="perk-item">
-                    <div className="perk-icon"><i className="fa-solid fa-qrcode"></i></div>
-                    <div className="perk-text">
+
+                  <div className="rf-agency-perk-card">
+                    <div className="rf-agency-icon-box">
+                      <i className="fa-solid fa-qrcode"></i>
+                    </div>
+                    <div className="rf-agency-perk-details">
                       <h4>Dedicated QR Flyers &amp; Standees</h4>
-                      <p>Generate isolated QR standees, tracking links, and custom AI prompt rules for each location.</p>
+                      <p>Generate isolated QR standees, tracking links, and custom AI prompt rules for each distinct location.</p>
                     </div>
                   </div>
-                  <div className="perk-item">
-                    <div className="perk-icon"><i className="fa-solid fa-chart-pie"></i></div>
-                    <div className="perk-text">
-                      <h4>Cross-Location Analytics</h4>
-                      <p>Monitor scans, drafted reviews, conversion rates, and negative feedback across all accounts.</p>
+
+                  <div className="rf-agency-perk-card">
+                    <div className="rf-agency-icon-box">
+                      <i className="fa-solid fa-chart-pie"></i>
+                    </div>
+                    <div className="rf-agency-perk-details">
+                      <h4>Cross-Location Growth Analytics</h4>
+                      <p>Monitor scans, drafted reviews, conversion rates, and negative feedback across all client accounts in real time.</p>
                     </div>
                   </div>
-                  <div className="perk-item">
-                    <div className="perk-icon"><i className="fa-solid fa-key"></i></div>
-                    <div className="perk-text">
-                      <h4>Bring Your Own AI API (Gemini, OpenAI, or Claude)</h4>
-                      <p>For Multi-Business plans, review generation requires your own AI API key (choose any one: Google Gemini, OpenAI, or Claude). We do not provide API keys for Multi-Business plans or panels.</p>
+
+                  <div className="rf-agency-perk-card">
+                    <div className="rf-agency-icon-box">
+                      <i className="fa-solid fa-key"></i>
+                    </div>
+                    <div className="rf-agency-perk-details">
+                      <h4>Bring Your Own AI API (BYOK)</h4>
+                      <p>Connect your preferred AI provider (Google Gemini, OpenAI, or Claude) directly for unlimited generation capacity and zero markup.</p>
                     </div>
                   </div>
-                  <div className="perk-item">
-                    <div className="perk-icon"><i className="fa-brands fa-whatsapp"></i></div>
-                    <div className="perk-text">
-                      <h4>VIP Dedicated Onboarding Support</h4>
-                      <p>Direct WhatsApp &amp; priority concierge setup for rapid assistance and capacity scaling.</p>
+
+                  <div className="rf-agency-perk-card">
+                    <div className="rf-agency-icon-box">
+                      <i className="fa-brands fa-whatsapp"></i>
+                    </div>
+                    <div className="rf-agency-perk-details">
+                      <h4>Dedicated Concierge Support</h4>
+                      <p>Direct priority WhatsApp &amp; phone onboarding assistance (+91 9904482945) for rapid onboarding and custom setups.</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* RIGHT: REGISTRATION FORM */}
-              <div className="auth-card-agency">
-                <h2>Start Multi-Business Free Trial</h2>
-                <p className="subtitle">Create your account to instantly access the Multi-Business Panel with a 48-hour free trial.</p>
-
-                <div className="pending-notice">
-                  <strong><i className="fa-solid fa-bolt"></i> Instant Automated Approval:</strong> Accounts are approved immediately upon registration. Enjoy full access with a 48-hour free trial — no credit card required.
-                  <div style={{ marginTop: '0.4rem', borderTop: '1px dashed #bbf7d0', paddingTop: '0.4rem', fontSize: '0.78rem', color: '#166534' }}>
-                    <i className="fa-solid fa-circle-info"></i> <strong>API Key Notice:</strong> Multi-business review generation requires your own AI API key (Google Gemini, OpenAI, or Claude).
-                  </div>
-                </div>
+              {/* RIGHT: AGENCY APPLICATION CARD */}
+              <div className="rf-agency-form-card">
+                <h2>Apply for Agency Access</h2>
+                <p className="rf-agency-card-sub">
+                  Submit your agency details or call our team at <strong>+91 9904482945</strong> for immediate multi-location deployment.
+                </p>
 
                 {agencySubmitted ? (
-                  <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: 16, padding: '2rem 1.5rem', textAlign: 'center' }}>
-                    <div style={{ width: 60, height: 60, background: '#dcfce7', color: '#15803d', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', margin: '0 auto 1rem' }}>✓</div>
-                    <h3 style={{ color: '#0f172a', fontWeight: 800, marginBottom: '0.5rem' }}>Multi-Business Trial Activated!</h3>
-                    <p style={{ color: '#475569', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
-                      Welcome, <strong>{agencyForm.name}</strong>! Your 48-hour agency trial is now live. You can manage multiple client locations and bring your own AI API key.
+                  <div className="rf-agency-success-state">
+                    <div className="rf-agency-success-icon">✓</div>
+                    <h3>Application Received!</h3>
+                    <p>
+                      Thank you, <strong>{agencyForm.name}</strong>. Our agency director has received your request and will contact you via WhatsApp and phone shortly.
                     </p>
-                    <button
-                      className="btn btn-dark"
-                      style={{ width: '100%' }}
-                      onClick={() => {
-                        setUser({ name: agencyForm.name, email: agencyForm.email, plan: 'Multi-Business (48-Hr Trial)' });
-                        navigate('Dashboard');
-                      }}
+                    <a
+                      href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20have%20submitted%20an%20Agency%20application."
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rf-btn-dark full"
+                      style={{ textDecoration: 'none', marginTop: 16 }}
                     >
-                      Go to Agency Dashboard →
-                    </button>
+                      <i className="fa-brands fa-whatsapp"></i> Open WhatsApp Conversation
+                    </a>
                   </div>
                 ) : (
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      if (agencyForm.password !== agencyForm.confirmPassword) {
-                        alert('Passwords do not match. Please verify.');
-                        return;
-                      }
-                      setAgencySubmitted(true);
-                      setToast('48-Hour Multi-Business trial activated!');
-                    }}
-                  >
-                    <div className="agency-form-row">
-                      <div className="agency-form-group">
-                        <label>Your Name *</label>
-                        <input
-                          type="text"
-                          className="agency-form-control"
-                          placeholder="Jane Doe"
-                          required
-                          value={agencyForm.name}
-                          onChange={e => setAgencyForm({ ...agencyForm, name: e.target.value })}
-                        />
-                      </div>
-                      <div className="agency-form-group">
-                        <label>Agency / Business Name</label>
-                        <input
-                          type="text"
-                          className="agency-form-control"
-                          placeholder="Acme Media Group"
-                          value={agencyForm.company}
-                          onChange={e => setAgencyForm({ ...agencyForm, company: e.target.value })}
-                        />
-                      </div>
+                  <form onSubmit={submitAgencyApplication}>
+                    <div className="rf-login-form-group">
+                      <label className="rf-login-label">YOUR FULL NAME</label>
+                      <input
+                        className="rf-login-input"
+                        type="text"
+                        required
+                        placeholder="John Doe"
+                        value={agencyForm.name}
+                        onChange={e => setAgencyForm({ ...agencyForm, name: e.target.value })}
+                      />
                     </div>
 
-                    <div className="agency-form-row">
-                      <div className="agency-form-group">
-                        <label>Work Email *</label>
+                    <div className="rf-login-form-group">
+                      <label className="rf-login-label">AGENCY / COMPANY NAME</label>
+                      <input
+                        className="rf-login-input"
+                        type="text"
+                        required
+                        placeholder="Nexus Media Agency"
+                        value={agencyForm.company}
+                        onChange={e => setAgencyForm({ ...agencyForm, company: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="rf-form-row-2col">
+                      <div className="rf-login-form-group">
+                        <label className="rf-login-label">BUSINESS EMAIL</label>
                         <input
+                          className="rf-login-input"
                           type="email"
-                          className="agency-form-control"
-                          placeholder="jane@acmemedia.com"
                           required
+                          placeholder="agency@company.com"
                           value={agencyForm.email}
                           onChange={e => setAgencyForm({ ...agencyForm, email: e.target.value })}
                         />
                       </div>
-                      <div className="agency-form-group">
-                        <label>WhatsApp / Phone *</label>
+                      <div className="rf-login-form-group">
+                        <label className="rf-login-label">PHONE / WHATSAPP</label>
                         <input
+                          className="rf-login-input"
                           type="tel"
-                          className="agency-form-control"
-                          placeholder="+91 97000 00000"
                           required
+                          placeholder="+91 99044 82945"
                           value={agencyForm.phone}
                           onChange={e => setAgencyForm({ ...agencyForm, phone: e.target.value })}
                         />
                       </div>
                     </div>
 
-                    <div className="agency-form-group">
-                      <label>Choose Password *</label>
-                      <div className="agency-pwd-wrap">
-                        <input
-                          type={showAgencyPass ? 'text' : 'password'}
-                          className="agency-form-control"
-                          placeholder="Min. 8 characters"
-                          required
-                          value={agencyForm.password}
-                          onChange={e => setAgencyForm({ ...agencyForm, password: e.target.value })}
-                        />
-                        <button
-                          type="button"
-                          className="agency-pwd-toggle"
-                          onClick={() => setShowAgencyPass(!showAgencyPass)}
-                          aria-label="Toggle password visibility"
-                        >
-                          <i className={showAgencyPass ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'}></i>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="agency-form-group">
-                      <label>Confirm Password *</label>
-                      <div className="agency-pwd-wrap">
-                        <input
-                          type={showAgencyConfPass ? 'text' : 'password'}
-                          className="agency-form-control"
-                          placeholder="Re-enter password"
-                          required
-                          value={agencyForm.confirmPassword}
-                          onChange={e => setAgencyForm({ ...agencyForm, confirmPassword: e.target.value })}
-                        />
-                        <button
-                          type="button"
-                          className="agency-pwd-toggle"
-                          onClick={() => setShowAgencyConfPass(!showAgencyConfPass)}
-                          aria-label="Toggle password visibility"
-                        >
-                          <i className={showAgencyConfPass ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'}></i>
-                        </button>
-                      </div>
-                      {agencyForm.confirmPassword && agencyForm.password !== agencyForm.confirmPassword && (
-                        <span style={{ fontSize: '0.75rem', color: '#dc2626', marginTop: '0.2rem' }}>Passwords do not match.</span>
-                      )}
-                    </div>
-
-                    <button type="submit" className="btn-submit-agency">
-                      Start 48-Hour Free Trial <i className="fa-solid fa-arrow-right"></i>
+                    <button type="submit" className="rf-login-submit-btn" style={{ marginTop: 12 }}>
+                      Submit Agency Application <span className="rf-nav-arrow">→</span>
                     </button>
+
+                    <div className="rf-login-divider">
+                      <span>OR CONTACT DIRECTLY</span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <a
+                        href="tel:+919904482945"
+                        className="btn btn-light full"
+                        style={{ textDecoration: 'none', textAlign: 'center', justifyContent: 'center' }}
+                      >
+                        <i className="fa-solid fa-phone" style={{ marginRight: 6 }}></i> Call Agency Desk: 9904482945
+                      </a>
+                      <a
+                        href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20am%20interested%20in%20the%20Multi-Business%20%2F%20Agency%20Plan."
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-light full"
+                        style={{ textDecoration: 'none', textAlign: 'center', justifyContent: 'center', color: '#16a34a', borderColor: '#bbf7d0' }}
+                      >
+                        <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }}></i> Chat on WhatsApp
+                      </a>
+                    </div>
                   </form>
                 )}
               </div>
             </div>
           </div>
         </main>
-      )}
-
-      {/* ====================================================================
-          DEMO CHECKOUT (WORKING RAZORPAY FLOW)
-          ==================================================================== */}
-      {page === 'Demo checkout' && (
-        <PageShell title="Secure Checkout" subtitle="Activate your plan instantly with our simulated Razorpay gateway.">
-          <div className="panel form-panel" style={{ maxWidth: 680, margin: '0 auto' }}>
-            <div className="demo-tag" style={{ background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0' }}>
-              ✓ LIVE TEST CHECKOUT · SECURED BY RAZORPAY SIMULATOR
-            </div>
-            <h2 style={{ marginTop: 16 }}>Select &amp; Activate Plan</h2>
-            <label>
-              Choose a plan
-              <select value={demoPlan} onChange={e => { setDemoPlan(e.target.value); setDemoResult(''); }}>
-                <option value="Starter">Starter — ₹199 / mo or ₹1,999 / yr</option>
-                <option value="Pro">Pro (With Review Reply) — ₹299 / mo or ₹2,999 / yr</option>
-              </select>
-            </label>
-            <label>
-              Billing period
-              <select value={demoPeriod} onChange={e => { setDemoPeriod(e.target.value); setDemoResult(''); }}>
-                <option>Monthly</option>
-                <option>Yearly</option>
-              </select>
-            </label>
-            <div className="notice" style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0' }}>
-              <strong>{demoPlan} · {demoPeriod}</strong>
-              <p style={{ fontSize: '1.3rem', fontWeight: 900, color: '#15803d', margin: '0.35rem 0' }}>
-                {demoPlan === 'Starter' ? (demoPeriod === 'Monthly' ? '₹199 per month' : '₹1,999 per year') : (demoPeriod === 'Monthly' ? '₹299 per month' : '₹2,999 per year')}
-              </p>
-              <small>Click below to open the interactive Razorpay payment modal with UPI, Card, and Netbanking options.</small>
-            </div>
-
-            <div style={{ marginTop: 20 }}>
-              <button
-                className="btn btn-dark full"
-                style={{ padding: '0.95rem', fontSize: '1.05rem', background: 'linear-gradient(135deg, #1d4934 0%, #15803d 100%)' }}
-                onClick={() => {
-                  const amt = demoPlan === 'Starter' ? (demoPeriod === 'Yearly' ? 1999 : 199) : (demoPeriod === 'Yearly' ? 2999 : 299);
-                  setPaymentPlan({ name: demoPlan, period: demoPeriod, amount: amt });
-                  setPaymentEmail(user?.email || 'customer@mybusiness.com');
-                  setPaymentStep('select');
-                  setPaymentTxnId('');
-                  setRazorpayModal(true);
-                }}
-              >
-                Proceed to Razorpay Checkout →
-              </button>
-            </div>
-
-            <div className="hero-cta" style={{ marginTop: 16 }}>
-              <button
-                className="btn btn-light"
-                style={{ flex: 1 }}
-                onClick={async () => {
-                  const amt = demoPlan === 'Starter' ? (demoPeriod === 'Yearly' ? 1999 : 199) : (demoPeriod === 'Yearly' ? 2999 : 299);
-                  setPaymentPlan({ name: demoPlan, period: demoPeriod, amount: amt });
-                  await executePayment(demoPlan, demoPeriod, false);
-                  setDemoResult('success');
-                }}
-              >
-                1-Click Quick Activate ✓
-              </button>
-              <button
-                className="btn btn-light"
-                style={{ flex: 1 }}
-                onClick={() => {
-                  setDemoResult('failed');
-                }}
-              >
-                Simulate Payment Failure
-              </button>
-            </div>
-
-            {demoResult === 'success' && (
-              <div className="notice" role="status" style={{ marginTop: 18, background: '#f0fdf4', border: '1.5px solid #86efac' }}>
-                <strong style={{ color: '#15803d' }}>🎉 Plan Activated Successfully!</strong>
-                <p>Your {demoPlan} ({demoPeriod}) subscription is now ACTIVE. All features have been unlocked on your account.</p>
-                <button className="btn btn-dark" onClick={() => { setDemoResult(''); navigate('Dashboard'); }}>Open Dashboard →</button>
-              </div>
-            )}
-            {demoResult === 'failed' && (
-              <div className="notice" role="status" style={{ marginTop: 18, background: '#fef2f2', border: '1.5px solid #fca5a5' }}>
-                <strong style={{ color: '#dc2626' }}>Simulated Payment Failed</strong>
-                <p>This was a simulated failure test. You can try the payment again or click 1-Click Quick Activate.</p>
-                <button className="btn btn-dark" onClick={() => setDemoResult('')}>Try again</button>
-              </div>
-            )}
-          </div>
-        </PageShell>
-      )}
-
-      {/* ====================================================================
-          BUSINESS CONSOLE ADMIN PANEL (REVIEWFLOW AI STYLE)
-          ==================================================================== */}
-      {isConsoleView && (
-        <BusinessConsole
-          user={user}
-          setUser={setUser}
-          business={myBusiness}
-          setBusiness={setMyBusiness}
-          navigate={navigate}
-          notify={notify}
-          choosePlan={choosePlan}
-        />
       )}
 
       {/* ====================================================================
@@ -2531,7 +2018,7 @@ export default function App() {
 
               <div className="rf-login-badge">
                 <span className="rf-login-badge-dot"></span>
-                • 3-DAY FREE TRIAL • NO CREDIT CARD REQUIRED
+                AI GOOGLE REVIEW ACCELERATOR • CLIENT PORTAL
               </div>
 
               <h1 className="rf-login-heading">
@@ -2577,7 +2064,7 @@ export default function App() {
               {/* Trust Strip (Screenshot 4 Match) */}
               <div className="rf-login-trust-strip">
                 <span className="rf-login-trust-item"><i className="fa-solid fa-star gold-star"></i> 4.9/5 Rating</span>
-                <span className="rf-login-trust-item"><i className="fa-solid fa-bolt green-icon"></i> 3-Day Free Trial</span>
+                <span className="rf-login-trust-item"><i className="fa-solid fa-bolt green-icon"></i> Official Google Places Verified</span>
                 <span className="rf-login-trust-item"><i className="fa-solid fa-lock green-icon"></i> 256-Bit SSL Encrypted</span>
               </div>
             </div>
@@ -2591,8 +2078,8 @@ export default function App() {
                 </div>
               )}
 
-              <h2 className="rf-login-card-title">{regMode ? 'Start Your 3-Day Free Trial' : 'Business Login'}</h2>
-              <p className="rf-login-card-sub">{regMode ? 'Create your business account in 30 seconds. No credit card required.' : 'Enter your credentials to access your review dashboard'}</p>
+              <h2 className="rf-login-card-title">{regMode ? 'Create Business Account' : 'Business Login'}</h2>
+              <p className="rf-login-card-sub">{regMode ? 'Sign up in 30 seconds to access your business reputation dashboard.' : 'Enter your credentials to access your review dashboard'}</p>
 
               {regMode && selectedPlanForReg && (
                 <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 8, padding: '9px 12px', fontSize: '0.78rem', color: '#166534', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -2773,7 +2260,7 @@ export default function App() {
                 )}
 
                 <button className="rf-login-submit-btn" type="submit">
-                  {regMode ? 'Start 3-Day Free Trial ' : 'Sign In to Dashboard '}
+                  {regMode ? 'Call for Pricing: 9904482945 ' : 'Sign In to Dashboard '}
                   <span className="rf-nav-arrow">→</span>
                 </button>
               </form>
@@ -2803,13 +2290,13 @@ export default function App() {
                 {regMode ? (
                   <>Already have an account? <button type="button" className="rf-login-switch-btn" onClick={() => { setRegMode(false); window.history.pushState({}, '', '/login'); }}>Sign In</button></>
                 ) : (
-                  <>Don't have an account? <button type="button" className="rf-login-switch-btn" onClick={() => { setRegMode(true); window.history.pushState({}, '', '/register'); }}>Start 3-Day Free Trial</button></>
+                  <>Don't have an account? <button type="button" className="rf-login-switch-btn" onClick={() => { setRegMode(true); window.history.pushState({}, '', '/register'); }}>Call for Pricing: 9904482945</button></>
                 )}
               </div>
 
               {/* Security Strip (Screenshot 4 Match) */}
               <div className="rf-login-security-footer">
-                <span>3-Day Free Trial</span>
+                <span>Official Google Places Verified</span>
                 <span>&bull;</span>
                 <span>Instant Setup</span>
                 <span>&bull;</span>
@@ -2823,6 +2310,10 @@ export default function App() {
       {/* ====================================================================
           OTHER PAGES (ORIGINAL TOOLS)
           ==================================================================== */}
+      {page === 'Privacy policy' && (
+        <PrivacyPolicyPage navigate={navigate} />
+      )}
+
       {page === 'Try the demo' && (
         <PageShell title="Review assistant demo" subtitle="Use an honest experience you could genuinely share. Drafts are editable examples, not published reviews.">
           <div className="tool-layout">
@@ -3271,7 +2762,7 @@ export default function App() {
 
       {/* Floating WhatsApp Quick Support (Screenshot 4 Style) */}
       <a
-        href={`https://wa.me/${cfg.whatsappNumber || '919707842047'}?text=${encodeURIComponent('Hello StarReview AI Team! I would like to get started with a 3-Day Free Trial.')}`}
+        href={`https://wa.me/${cfg.whatsappNumber || '919904482945'}?text=${encodeURIComponent('Hello StarReview AI Team! I would like to get started with a Official Google Places Verified.')}`}
         target="_blank"
         rel="noopener noreferrer"
         className="rf-floating-whatsapp-btn"
@@ -3313,11 +2804,10 @@ function Footer({ navigate }) {
     {
       title: 'Plans & Scale',
       items: [
-        ['★ Source Code & License', 'Source code'],
-        ['Pricing & Free Trial', 'Pricing'],
+          ['Pricing & Plans', 'Pricing'],
         ['Multi-Business Plan', 'Pricing'],
         ['Apply for Agency', 'Apply for agency'],
-        ['Start 3-Day Free Trial', 'Account'],
+        ['Sign In to Account', 'Account'],
         ['Payment QR Demo', 'Demo checkout']
       ]
     },

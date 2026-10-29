@@ -20,7 +20,7 @@ export const funnelUrl = (cfg, business) => {
     staff: ['Rahul', 'Priya'],
     services: ['Customer Service', 'Consultation'],
     googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
-    whatsappNumber: '919707842047',
+    whatsappNumber: '919904482945',
     brandColor: '#1d4934'
   };
   const staff = Array.isArray(b.staff) ? b.staff.join(',') : (b.staff || '');
@@ -32,7 +32,7 @@ export const funnelUrl = (cfg, business) => {
     s: staff,
     srv: srv,
     g: b.googleReviewUrl || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
-    wa: b.whatsappNumber || '919707842047',
+    wa: b.whatsappNumber || '919904482945',
     col: b.brandColor || '#1d4934'
   });
   return `${base}/r/${b.slug || 'demo'}?${params.toString()}`;
@@ -66,7 +66,7 @@ export function ReviewFunnel({ slug, notify }) {
         staff: staffList.length ? staffList : ['Rahul', 'Priya'],
         services: srvList.length ? srvList : ['Customer Service', 'Consultation'],
         googleReviewUrl: urlParams.get('g') || urlParams.get('googleReviewUrl') || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
-        whatsappNumber: urlParams.get('wa') || urlParams.get('whatsappNumber') || '919707842047',
+        whatsappNumber: urlParams.get('wa') || urlParams.get('whatsappNumber') || '919904482945',
         brandColor: urlParams.get('col') || '#1d4934',
         languages: ['English', 'Hindi', 'Gujarati', 'Hinglish', 'Marathi', 'Tamil']
       };
@@ -138,7 +138,7 @@ export function ReviewFunnel({ slug, notify }) {
 
 /* ---------- Business profile ---------- */
 export function BusinessSetup({ user, business, setBusiness, notify, navigate, cfg }) {
-  const blank = { name: '', city: '', category: '', googleReviewUrl: '', services: '', staff: '', keywords: '', whatsappNumber: '919707842047', brandColor: '#1d4934' };
+  const blank = { name: '', city: '', category: '', googleReviewUrl: '', services: '', staff: '', keywords: '', whatsappNumber: '919904482945', brandColor: '#1d4934' };
   const fromBiz = b => b ? { ...b, services: b.services.join(', '), staff: b.staff.join(', '), keywords: b.keywords.join(', ') } : blank;
   const [f, setF] = useState(fromBiz(business));
   useEffect(() => setF(fromBiz(business)), [business]);
@@ -161,7 +161,7 @@ export function BusinessSetup({ user, business, setBusiness, notify, navigate, c
       <label>Services (comma separated)<input value={f.services} onChange={set('services')} placeholder="Haircut, Facial, Spa" /></label>
       <label>Staff names (comma separated)<input value={f.staff} onChange={set('staff')} placeholder="Priya, Rahul" /></label>
       <label>Keywords, up to 5 (comma separated)<input value={f.keywords} onChange={set('keywords')} placeholder="bridal makeup, hair spa" /></label>
-      <label>WhatsApp Number (with country code)<input value={f.whatsappNumber || ''} onChange={set('whatsappNumber')} placeholder="919707842047" /></label>
+      <label>WhatsApp Number (with country code)<input value={f.whatsappNumber || ''} onChange={set('whatsappNumber')} placeholder="919904482945" /></label>
       <label>Brand color<input type="color" value={f.brandColor} onChange={set('brandColor')} /></label>
       <button className="btn btn-dark full">Save business</button>
       {business && <div className="notice small-notice">Your customer review page: <b>{funnelUrl(cfg, business)}</b>
@@ -360,9 +360,9 @@ export function QrFlyer({ business, cfg, notify, navigate, initialMode }) {
     else if (mode === 'funnel') t = funnelUrl(cfg, business);
     else if (mode === 'url') t = url.trim() || window.location.origin;
     else {
-      let d = (wa || cfg?.whatsappNumber || '919707842047').replace(/\D/g, '');
+      let d = (wa || cfg?.whatsappNumber || '919904482945').replace(/\D/g, '');
       if (d.length === 10) d = '91' + d;
-      t = d.length >= 10 && d.length <= 15 ? `https://wa.me/${d}?text=${encodeURIComponent(waMsg || 'Hi! I would like to share my review/feedback.')}` : `https://wa.me/919707842047?text=${encodeURIComponent(waMsg)}`;
+      t = d.length >= 10 && d.length <= 15 ? `https://wa.me/${d}?text=${encodeURIComponent(waMsg || 'Hi! I would like to share my review/feedback.')}` : `https://wa.me/919904482945?text=${encodeURIComponent(waMsg)}`;
     }
     if (t && /localhost|127\.0\.0\.1/.test(t)) {
       try {

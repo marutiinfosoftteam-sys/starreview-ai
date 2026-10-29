@@ -658,7 +658,7 @@ export default function BusinessConsole({
 
   const handleServiceWhatsApp = (serviceTitle) => {
     const text = encodeURIComponent(`Hello StarReview AI Team! I am interested in the done-for-you growth service: "${serviceTitle}" for my business "${bizName}" (${bizCity}). Please share details.`);
-    window.open(`https://wa.me/919707842047?text=${text}`, '_blank');
+    window.open(`https://wa.me/919904482945?text=${text}`, '_blank');
   };
 
   const handleServiceInquirySubmit = async (e) => {
@@ -2369,7 +2369,7 @@ export default function BusinessConsole({
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <a
-                          href={`https://wa.me/${(f.contact || '919707842047').replace(/\D/g, '')}?text=${encodeURIComponent('Hi, thank you for sharing your feedback with ' + bizName + '. We would like to resolve this for you immediately.')}`}
+                          href={`https://wa.me/${(f.contact || '919904482945').replace(/\D/g, '')}?text=${encodeURIComponent('Hi, thank you for sharing your feedback with ' + bizName + '. We would like to resolve this for you immediately.')}`}
                           target="_blank"
                           rel="noreferrer"
                           className="bc-btn-fetch"
@@ -5715,7 +5715,7 @@ export default function BusinessConsole({
                       <i className="fa-regular fa-file-lines"></i> View Payment Details
                     </button>
                     <a
-                      href="https://wa.me/919707842047?text=Hi!%20I%20need%20assistance%20verifying%20my%20payment%20UTR%20reference."
+                      href="https://wa.me/919904482945?text=Hi!%20I%20need%20assistance%20verifying%20my%20payment%20UTR%20reference."
                       target="_blank"
                       rel="noreferrer"
                       className="btn btn-sm"
@@ -5983,7 +5983,7 @@ export default function BusinessConsole({
                       },
                       {
                         q: 'Do you provide GST invoices?',
-                        a: 'Yes. Send your business GST details and Order ID to our WhatsApp support team at +919707842047, and we will issue your official tax invoice promptly.'
+                        a: 'Yes. Send your business GST details and Order ID to our WhatsApp support team at +919904482945, and we will issue your official tax invoice promptly.'
                       },
                       {
                         q: 'What happens if my subscription expires?',
@@ -6068,7 +6068,7 @@ export default function BusinessConsole({
                   <button
                     className="btn btn-sm"
                     style={{ background: '#16a34a', color: '#ffffff', border: 'none', fontWeight: 800, borderRadius: 8, padding: '0.55rem 1.15rem' }}
-                    onClick={() => window.open('https://wa.me/919707842047?text=Hello%20StarReview%20AI%20Billing%20Support!%20I%20need%20help%20choosing%20a%20plan.', '_blank')}
+                    onClick={() => window.open('https://wa.me/919904482945?text=Hello%20StarReview%20AI%20Billing%20Support!%20I%20need%20help%20choosing%20a%20plan.', '_blank')}
                   >
                     <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }}></i> Chat With Billing Support
                   </button>
@@ -7078,7 +7078,7 @@ export default function BusinessConsole({
 
         {/* Floating WhatsApp Bubble */}
         <a
-          href={`https://wa.me/${business?.whatsappNumber || '919707842047'}?text=${encodeURIComponent("Hi! I need assistance with StarReview AI Business Console.")}`}
+          href={`https://wa.me/${business?.whatsappNumber || '919904482945'}?text=${encodeURIComponent("Hi! I need assistance with StarReview AI Business Console.")}`}
           target="_blank"
           rel="noreferrer"
           className="bc-whatsapp-fab"
@@ -7088,7 +7088,7 @@ export default function BusinessConsole({
         </a>
         {/* Floating WhatsApp Widget */}
         <a
-          href="https://wa.me/919707842047?text=Hello%20StarReview%20AI%20Support"
+          href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%20Support"
           target="_blank"
           rel="noopener noreferrer"
           className="bc-floating-whatsapp"

@@ -47,7 +47,7 @@ const getDefaultDb = () => ({
       services: ['Eco friendly Packaging', 'Same-day Dispatch', 'Custom Branding'],
       staff: ['Aarav', 'Bhavik', 'Priya'],
       keywords: ['best quality', 'fast response', 'eco friendly'],
-      whatsappNumber: '919707842047',
+      whatsappNumber: '919904482945',
       brandColor: '#1d4934',
       competitors: [
         { name: 'Eco Pack Solutions', rating: 4.3, reviews: 52 },
@@ -227,7 +227,7 @@ function localDispatch(method, path, body) {
       status: 200,
       data: {
         publicUrl: window.location.origin,
-        whatsappNumber: db.businesses[0]?.whatsappNumber || '919707842047',
+        whatsappNumber: db.businesses[0]?.whatsappNumber || '919904482945',
         languages: LANGUAGES,
         status: 'ok',
         provider: 'demo'
@@ -262,7 +262,7 @@ function localDispatch(method, path, body) {
         services: ['Customer Service', 'Consultation'],
         staff: ['Rahul', 'Priya'],
         keywords: ['friendly', 'fast'],
-        whatsappNumber: '919707842047',
+        whatsappNumber: '919904482945',
         brandColor: '#1d4934',
         competitors: [],
         createdAt: new Date().toISOString()
@@ -277,6 +277,54 @@ function localDispatch(method, path, body) {
       data: {
         token: user.id,
         user: { id: user.id, email: user.email, subscription: user.subscription, access: true, replyAssistant: true }
+      }
+    };
+  }
+
+  // 3c. Auth: Firebase Login (Google Sign-In)
+  if (path === '/api/auth/firebase-login' && method === 'POST') {
+    const email = (body?.email || 'google.user@mybusiness.com').trim().toLowerCase();
+    const name = body?.name || 'Google Business Owner';
+    let user = db.users.find(u => u.email === email);
+    if (!user) {
+      const expires = new Date(Date.now() + 365 * 86400000).toISOString();
+      user = {
+        id: 'user_' + Math.random().toString(36).substring(2, 9),
+        email,
+        name,
+        subscription: { plan: body?.plan || 'Starter', status: 'active', expiresAt: expires, isTrial: false },
+        createdAt: new Date().toISOString()
+      };
+      db.users.push(user);
+
+      const prefix = email ? email.split('@')[0] : 'google';
+      const cleanName = name ? `${name}'s Business` : 'My Google Business';
+      const biz = {
+        id: 'biz_' + Math.random().toString(36).substring(2, 9),
+        userId: user.id,
+        name: cleanName,
+        slug: prefix.replace(/[^a-z0-9]/g, '-') + '-' + Math.random().toString(36).substring(2, 5),
+        city: 'Surat',
+        category: 'Services',
+        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+        services: ['Customer Care', 'High Quality Service'],
+        staff: ['Team Member'],
+        keywords: ['fast service', 'helpful'],
+        whatsappNumber: '919904482945',
+        brandColor: '#16a34a',
+        competitors: [],
+        createdAt: new Date().toISOString()
+      };
+      db.businesses.push(biz);
+      saveLocalDb(db);
+    }
+    setToken(user.id);
+    return {
+      ok: true,
+      status: 200,
+      data: {
+        token: user.id,
+        user: { id: user.id, email: user.email, name: user.name, subscription: user.subscription, access: true, replyAssistant: true }
       }
     };
   }
@@ -311,7 +359,7 @@ function localDispatch(method, path, body) {
         services: ['Customer Service', 'Consultation'],
         staff: ['Staff Member'],
         keywords: ['friendly', 'fast response'],
-        whatsappNumber: '919707842047',
+        whatsappNumber: '919904482945',
         brandColor: '#16a34a',
         competitors: [],
         createdAt: new Date().toISOString()
@@ -357,7 +405,7 @@ function localDispatch(method, path, body) {
         services: ['Customer Service', 'Consultation'],
         staff: ['Staff Member'],
         keywords: ['friendly', 'fast response'],
-        whatsappNumber: '919707842047',
+        whatsappNumber: '919904482945',
         brandColor: '#1d4934',
         competitors: [],
         createdAt: new Date().toISOString()
@@ -409,7 +457,7 @@ function localDispatch(method, path, body) {
         services: ['Customer Service'],
         staff: ['Team Member'],
         keywords: ['friendly', 'fast'],
-        whatsappNumber: '919707842047',
+        whatsappNumber: '919904482945',
         brandColor: '#1d4934',
         competitors: [],
         createdAt: new Date().toISOString()
@@ -437,7 +485,7 @@ function localDispatch(method, path, body) {
     if (body.staff !== undefined) b.staff = cleanList(body.staff);
     if (body.keywords !== undefined) b.keywords = cleanList(body.keywords);
     if (body.brandColor !== undefined) b.brandColor = body.brandColor;
-    if (body.whatsappNumber !== undefined) b.whatsappNumber = (body.whatsappNumber || '').trim() || '919707842047';
+    if (body.whatsappNumber !== undefined) b.whatsappNumber = (body.whatsappNumber || '').trim() || '919904482945';
     if (Array.isArray(body.competitors)) b.competitors = body.competitors;
     saveLocalDb(db);
     return { ok: true, status: 200, data: { business: b } };
@@ -610,7 +658,7 @@ function localDispatch(method, path, body) {
         staff: ['Rahul', 'Priya'],
         brandColor: '#1d4934',
         googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
-        whatsappNumber: '919707842047'
+        whatsappNumber: '919904482945'
       };
     }
     return {
@@ -623,7 +671,7 @@ function localDispatch(method, path, body) {
         staff: b.staff || [],
         brandColor: b.brandColor || '#1d4934',
         googleReviewUrl: b.googleReviewUrl || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
-        whatsappNumber: b.whatsappNumber || '919707842047',
+        whatsappNumber: b.whatsappNumber || '919904482945',
         languages: LANGUAGES
       }
     };

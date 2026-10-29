@@ -12,6 +12,8 @@ import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { LANGUAGES, localDrafts, localReply } from './lib/drafts.js';
 import { runSeoAudit } from './lib/seo.js';
+import { getDb, isMongoConfigured, getTenantBusiness, saveTenantBusiness, logAuditEvent } from './db/mongodb.js';
+import { generateOpenRouterDrafts, generateOpenRouterReply, isOpenRouterConfigured } from './lib/openrouter.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
@@ -57,7 +59,7 @@ const emptyStore = () => ({
     services: ['Customer Consultation', 'Express Delivery', 'Technical Support', 'VIP Assistance'],
     staff: ['Aarav Sharma', 'Priya Patel', 'Rohan Mehta'],
     keywords: ['fast service', 'friendly staff', 'clean store'],
-    whatsappNumber: '919707842047',
+    whatsappNumber: '919904482945',
     brandColor: '#1d4934',
     competitors: [
       { name: 'Local Competitor A', rating: 4.2, reviews: 68 },
@@ -129,6 +131,17 @@ const hasAccess = u => {
 const hasReplies = u => hasAccess(u) && ['Trial', 'Pro'].includes(u.subscription.plan);
 const publicUser = u => ({ id: u.id, email: u.email, subscription: u.subscription || null, access: hasAccess(u), replyAssistant: hasReplies(u) });
 const slugify = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'business';
+
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+
+function requireAdmin(req, res, next) {
+  auth(req, res, () => {
+    if (ADMIN_EMAIL && req.user?.email?.toLowerCase() === ADMIN_EMAIL) {
+      return next();
+    }
+    return res.status(403).json({ error: 'Access denied: Administrator privileges required.' });
+  });
+}
 
 function auth(req, res, next) {
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
@@ -210,7 +223,7 @@ app.get('/api/health', (_req, res) => res.json({
   paymentsConfigured: razorpayReady()
 }));
 app.get('/api/public-config', (_req, res) => res.json({
-  whatsappNumber: (process.env.WHATSAPP_NUMBER || '').replace(/\D/g, '') || '919707842047',
+  whatsappNumber: (process.env.WHATSAPP_NUMBER || '').replace(/\D/g, '') || '919904482945',
   publicUrl: process.env.PUBLIC_URL || null,
   languages: LANGUAGES, trialDays: TRIAL_DAYS
 }));
@@ -258,6 +271,89 @@ app.post('/api/auth/login', async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not sign in.' }); }
 });
 
+app.post('/api/auth/firebase-login', async (req, res) => {
+  try {
+    const email = clean(req.body?.email, 254).toLowerCase();
+    const name = clean(req.body?.name, 120) || 'Google User';
+    if (!email || !emailOk(email)) {
+      return res.status(400).json({ error: 'Valid email is required.' });
+    }
+
+    const mongo = await getDb();
+    let user = null;
+
+    if (mongo) {
+      user = await mongo.collection('users').findOne({ email });
+      if (!user) {
+        const now = new Date();
+        user = {
+          id: crypto.randomUUID(),
+          email,
+          name,
+          role: email === ADMIN_EMAIL ? 'admin' : 'user',
+          subscription: { plan: 'Starter', period: 'Yearly', status: 'active', startedAt: now.toISOString(), expiresAt: new Date(now.getTime() + 365 * 86400000).toISOString() },
+          createdAt: now.toISOString()
+        };
+        await mongo.collection('users').insertOne(user);
+        await mongo.collection('businesses').insertOne({
+          id: 'biz_' + crypto.randomUUID().slice(0, 8),
+          userId: user.id,
+          name: `${name}'s Business`,
+          slug: slugify(name) + '-' + crypto.randomBytes(2).toString('hex'),
+          city: 'Surat',
+          category: 'Services',
+          googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+          services: ['Customer Care', 'High Quality Service'],
+          staff: ['Staff Member'],
+          keywords: ['reliable', 'fast service'],
+          whatsappNumber: '919904482945',
+          brandColor: '#16a34a',
+          competitors: [],
+          createdAt: now.toISOString()
+        });
+      }
+    } else {
+      user = await mutate(db => {
+        let u = db.users.find(x => x.email === email);
+        if (!u) {
+          const now = new Date();
+          u = {
+            id: crypto.randomUUID(),
+            email,
+            name,
+            role: email === ADMIN_EMAIL ? 'admin' : 'user',
+            subscription: { plan: 'Starter', period: 'Yearly', status: 'active', startedAt: now.toISOString(), expiresAt: new Date(now.getTime() + 365 * 86400000).toISOString() },
+            createdAt: now.toISOString()
+          };
+          db.users.push(u);
+          db.businesses.push({
+            id: 'biz_' + crypto.randomUUID().slice(0, 8),
+            userId: u.id,
+            name: `${name}'s Business`,
+            slug: slugify(name) + '-' + crypto.randomBytes(2).toString('hex'),
+            city: 'Surat',
+            category: 'Services',
+            googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+            services: ['Customer Care', 'High Quality Service'],
+            staff: ['Staff Member'],
+            keywords: ['reliable', 'fast service'],
+            whatsappNumber: '919904482945',
+            brandColor: '#16a34a',
+            competitors: [],
+            createdAt: now.toISOString()
+          });
+        }
+        return u;
+      });
+    }
+
+    res.json({ token: signToken(user), user: publicUser(user) });
+  } catch (err) {
+    console.error('[Firebase Login Error]:', err);
+    res.status(500).json({ error: 'Could not complete Google authentication.' });
+  }
+});
+
 app.get('/api/auth/me', auth, async (req, res) => {
   const db = await readStore();
   const user = db.users.find(u => u.id === req.user.sub);
@@ -276,7 +372,7 @@ function parseBusiness(body) {
   const out = {
     name, googleReviewUrl: url, city: clean(body?.city, 80), category: clean(body?.category, 80),
     services: listOf(body?.services, 12, 60), staff: listOf(body?.staff, 20, 40), keywords: listOf(body?.keywords, 5, 40),
-    whatsappNumber: clean(body?.whatsappNumber, 25) || '919707842047',
+    whatsappNumber: clean(body?.whatsappNumber, 25) || '919904482945',
     brandColor: /^#[0-9a-fA-F]{6}$/.test(body?.brandColor || '') ? body.brandColor : '#1d4934'
   };
   if (Array.isArray(body?.competitors)) {
@@ -595,7 +691,7 @@ app.get('/api/public/business/:slug', async (req, res) => {
     staff: b.staff || [],
     brandColor: b.brandColor || '#1d4934',
     googleReviewUrl: b.googleReviewUrl || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
-    whatsappNumber: b.whatsappNumber || '919707842047',
+    whatsappNumber: b.whatsappNumber || '919904482945',
     languages: LANGUAGES
   });
 });

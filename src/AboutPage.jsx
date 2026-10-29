@@ -94,26 +94,24 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
 
           {/* CTA Buttons */}
           <div className="rf-hero-cta-group">
-            <button
-              type="button"
+            <a
+              href="tel:+919904482945"
               className="rf-btn-green-main"
-              onClick={handleStartFree}
+              style={{ textDecoration: 'none' }}
             >
-              <i className="fa-solid fa-rocket"></i>
-              Start 3-Day Free Trial
-            </button>
-            <button
-              type="button"
+              <i className="fa-solid fa-phone"></i>
+              Call for Pricing (9904482945)
+            </a>
+            <a
+              href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20would%20like%20to%20know%20more%20about%20your%20plans."
+              target="_blank"
+              rel="noopener noreferrer"
               className="rf-btn-outline-main"
-              onClick={() => {
-                const el = document.getElementById('working-process');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-                else navigate('How it works');
-              }}
+              style={{ textDecoration: 'none' }}
             >
-              <i className="fa-regular fa-circle-question"></i>
-              How It Works
-            </button>
+              <i className="fa-brands fa-whatsapp" style={{ color: '#25d366' }}></i>
+              Chat on WhatsApp
+            </a>
           </div>
 
           {/* Micro Trust Strip */}
@@ -818,37 +816,16 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
             Turn More Customers Into <span className="rf-text-green">Google Reviews</span>
           </h2>
           <p>
-            Start free for 3 days, then select the plan that matches your business growth. Scale easily with automated AI drafts, smart QR standees, and centralized multi-business tools.
+            Choose the ideal reputation acceleration plan that matches your business growth. Scale seamlessly with AI-assisted drafting, custom QR standees, and dedicated support.
           </p>
           <div className="rf-pricing-trust-pills">
-            <span><i className="fa-solid fa-check"></i> No credit card for 3-day trial</span>
+            <span><i className="fa-solid fa-check"></i> Official Google Places Verified</span>
             <span><i className="fa-solid fa-check"></i> Single &amp; Multi-Business Options</span>
             <span><i className="fa-solid fa-check"></i> Upgrade or chat anytime</span>
           </div>
         </div>
 
-        {/* 3-Day Free Trial Highlight Card */}
-        <div className="rf-trial-highlight-box">
-          <div className="rf-thb-left">
-            <div className="rf-thb-icon">
-              <i className="fa-solid fa-gift"></i>
-            </div>
-            <div>
-              <div className="rf-thb-tag">
-                <i className="fa-solid fa-check"></i> No Credit Card Required
-              </div>
-              <h3>3 Days Free Trial — Explore Everything Risk-Free</h3>
-              <p>Full access to AI review drafting, QR flyers, and private feedback shielding.</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            className="rf-btn-green-main"
-            onClick={handleStartFree}
-          >
-            Start 3-Day Free Trial <i className="fa-solid fa-arrow-right"></i>
-          </button>
-        </div>
+        
 
         {/* Plan Toggle Tab: Without Reply vs With Reply */}
         <div className="rf-pricing-toggle-wrap">
@@ -1054,7 +1031,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
 
         <div className="rf-faq-accordion">
           {[
-            ['How does the 3-day free trial work?', 'You get 100% full access to StarReview AI for 3 full days. You can connect your Google Places listing, test AI review drafting, download your print-ready QR flyer, and test review funnels. No credit card is required.'],
+            ['How do I get started with StarReview AI?', 'You can get started immediately by contacting our team at 9904482945 or signing in. Connect your Google Places listing, configure custom AI draft prompts, download print-ready QR standees, and begin gathering genuine 5-star customer reviews on autopilot.'],
             ['Does StarReview AI post reviews automatically?', 'No. In full compliance with Google Review Guidelines, customers remain in total control. They select a draft or edit it, and tap once to paste it into the official Google Maps review composer.'],
             ['Which languages are supported?', 'Over 24 languages are supported, including English, Hindi, Gujarati, Hinglish, Marathi, Bengali, Tamil, Telugu, and more.'],
             ['How does the Private Negative Review Shield protect my rating?', 'Customers who tap 1, 2, or 3 stars are smoothly directed to a private resolution inbox instead of the public Google review composer. You receive instant notifications to solve their concern privately before public damage occurs.'],
@@ -1082,13 +1059,13 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
             Join hundreds of local businesses capturing authentic 5-star reviews effortlessly with StarReview AI.
           </p>
           <div className="rf-final-cta-actions">
-            <button
-              type="button"
+            <a
+              href="tel:+919904482945"
               className="rf-btn-green-main"
-              onClick={handleStartFree}
+              style={{ textDecoration: 'none' }}
             >
-              <i className="fa-solid fa-rocket"></i> Start Free 3-Day Trial
-            </button>
+              <i className="fa-solid fa-phone"></i> Call for Pricing: 9904482945
+            </a>
             <button
               type="button"
               className="rf-btn-outline-main"
@@ -1111,7 +1088,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
           FLOATING WHATSAPP BUTTON (SCREENSHOTS 1, 2, 3, 4, 5)
           ==================================================================== */}
       <a
-        href="https://wa.me/919707842047?text=Hello%20StarReview%20AI%20Team!%20I%20want%20to%20learn%20more%20about%20the%20Google%20Magic%20Review%20QR."
+        href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%20Team!%20I%20want%20to%20learn%20more%20about%20the%20Google%20Magic%20Review%20QR."
         target="_blank"
         rel="noreferrer"
         className="rf-floating-whatsapp-btn"
