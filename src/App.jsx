@@ -352,7 +352,7 @@ export default function App() {
   }, []);
 
   // Dashboard & Console require active authentication (user must sign in)
-  const isConsoleView = !!user && (page === 'Dashboard' || page === 'Account');
+  const isConsoleView = page === 'Dashboard';
 
   const submitAuth = async (e) => {
     e.preventDefault();
@@ -2242,12 +2242,37 @@ export default function App() {
       )}
 
       {/* ====================================================================
+          BUSINESS CONSOLE ADMIN PANEL (REVIEWFLOW AI STYLE)
+          ==================================================================== */}
+      {page === 'Dashboard' && (
+        <BusinessConsole
+          user={user || {
+            id: 'demo_user',
+            name: 'Demo Business Owner',
+            email: 'owner@starreview.ai',
+            role: 'business',
+            access: true,
+            plan: 'Pro'
+          }}
+          setUser={setUser}
+          business={myBusiness || {
+            name: 'StarReview Demo Business',
+            address: 'Surat, Gujarat, India',
+            rating: 4.9,
+            totalReviews: 248,
+            phone: '+91 9904482945'
+          }}
+          setBusiness={setMyBusiness}
+          navigate={navigate}
+          notify={notify}
+          choosePlan={choosePlan}
+        />
+      )}
+
+      {/* ====================================================================
           ACCOUNT / LOGIN / REGISTER (REVIEWFLOW AI EXACT SHOWCASE & FORM)
           ==================================================================== */}
-      {/* ====================================================================
-          ACCOUNT / LOGIN / REGISTER (REVIEWFLOW AI SCREENSHOT 2 EXACT MATCH)
-          ==================================================================== */}
-      {(page === 'Account' || (page === 'Dashboard' && !user)) && (
+      {page === 'Account' && (
         <div className="rf-login-viewport">
           <div className="rf-login-container">
             {/* ═══════ LEFT COLUMN: LANDING SHOWCASE & TRUST (SCREENSHOT 4 MATCH) ═══════ */}
