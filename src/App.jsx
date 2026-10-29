@@ -70,6 +70,10 @@ export default function App() {
     '/demo-checkout': 'Demo checkout',
     '/dashboard': 'Dashboard',
     '/account': 'Account',
+    '/login': 'Account',
+    '/signin': 'Account',
+    '/register': 'Account',
+    '/signup': 'Account',
     '/contact': 'Contact',
     '/feedback': 'Feedback',
     '/business': 'My business',
@@ -108,10 +112,19 @@ export default function App() {
   const pageFromPath = () => {
     const p = window.location.pathname.replace(/\/$/, '') || '/';
     if (p.startsWith('/r/') || getReviewSlug()) return 'Review';
+    if (p === '/login' || p === '/signin') {
+      return 'Account';
+    }
+    if (p === '/register' || p === '/signup') {
+      return 'Account';
+    }
     try {
       const search = new URLSearchParams(window.location.search);
       const route = search.get('route');
       const tab = search.get('tab');
+      if (route && (route.includes('register') || route.includes('agency/register'))) {
+        return 'Account';
+      }
       if (route && (route.startsWith('business') || route.includes('feedback') || route.includes('qr') || route.includes('service') || route.includes('billing') || route.includes('stand'))) {
         return 'Dashboard';
       }
@@ -141,7 +154,15 @@ export default function App() {
   const [toast, setToast] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [regMode, setRegMode] = useState(false);
+  const [regMode, setRegMode] = useState(() => {
+    const p = window.location.pathname.replace(/\/$/, '') || '';
+    if (p === '/register' || p === '/signup') return true;
+    try {
+      const search = new URLSearchParams(window.location.search);
+      if (search.get('register') || search.get('signup') || search.get('route')?.includes('register')) return true;
+    } catch {}
+    return false;
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [user, setUser] = useState(null);
   const [myBusiness, setMyBusiness] = useState(null);
@@ -221,12 +242,23 @@ export default function App() {
     setTimeout(() => setToast(''), 3800);
   };
 
-  const navigate = (p) => {
+  const navigate = (p, isRegister = false) => {
     // Dashboard is protected: unauthenticated users must sign in or register first
     if (p === 'Dashboard' && !user && !getToken()) {
       notify('Please sign in or start a free trial to access your dashboard.');
       setRegMode(false);
       p = 'Account';
+    }
+    if (p === 'Account') {
+      setRegMode(!!isRegister);
+      const nextPath = isRegister ? '/register' : '/login';
+      if (window.location.pathname !== nextPath) {
+        window.history.pushState({ page: 'Account' }, '', nextPath);
+      }
+      setPage('Account');
+      setMenu(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
     const nextPath = slugMap[p] || '/';
     if (window.location.pathname !== nextPath) {
@@ -277,7 +309,16 @@ export default function App() {
 
   useEffect(() => {
     const onPopState = () => {
-      setPage(pageFromPath());
+      const p = window.location.pathname.replace(/\/$/, '') || '/';
+      if (p === '/login' || p === '/signin') {
+        setRegMode(false);
+        setPage('Account');
+      } else if (p === '/register' || p === '/signup') {
+        setRegMode(true);
+        setPage('Account');
+      } else {
+        setPage(pageFromPath());
+      }
       setMenu(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -372,7 +413,6 @@ export default function App() {
     { label: 'How It Works', page: 'How it works' },
     { label: 'AI vs Normal QR', page: 'AI vs QR' },
     { label: 'Pricing', page: 'Pricing' },
-    { label: 'About Us', page: 'About us' },
     { label: 'Source Code', page: 'Source code' },
     { label: 'Apply for Agency', page: 'Apply for agency' }
   ];
@@ -922,102 +962,119 @@ export default function App() {
 
   return (
     <>
-      {page !== 'Review' && !isConsoleView && (
-        <header className="header">
-          <button className="brand" onClick={() => navigate('Home')}>
-            <span className="brand-mark">✦</span>
-            <span>StarReview <b>AI</b></span>
-          </button>
-          <button className="menu-toggle" onClick={() => setMenu(!menu)} aria-label="Toggle menu">☰</button>
-          <nav className={menu ? 'nav open' : 'nav'}>
-            {navItems.map(item => (
-              <button
-                key={item.page}
-                className={page === item.page ? 'active' : ''}
-                onClick={() => { navigate(item.page); setMenu(false); }}
-              >
-                {item.label}
-              </button>
-            ))}
-            {!user ? (
-              <div className="mobile-auth-strip">
-                <button
-                  type="button"
-                  className="btn btn-light full"
-                  onClick={() => { setRegMode(false); navigate('Account'); setMenu(false); }}
-                >
-                  <i className="fa-solid fa-arrow-right-to-bracket" style={{ marginRight: 6 }}></i> Sign In
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-dark full"
-                  onClick={() => { setRegMode(true); navigate('Account'); setMenu(false); }}
-                >
-                  <i className="fa-solid fa-user-plus" style={{ marginRight: 6 }}></i> Sign Up Free ↗
-                </button>
+      {page !== 'Review' && !isConsoleView && page !== 'Account' && (
+        <header className="rf-top-header">
+          <div className="rf-top-header-inner">
+            <button className="rf-nav-brand" onClick={() => navigate('Home')} title="StarReview AI">
+              <div className="rf-nav-brand-icon">
+                <i className="fa-solid fa-star"></i>
               </div>
-            ) : (
-              <div className="mobile-auth-strip">
-                <button
-                  type="button"
-                  className="btn btn-dark full"
-                  onClick={() => { navigate('Dashboard'); setMenu(false); }}
-                >
-                  Open Dashboard ↗
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-light full"
-                  onClick={() => { logout(); setMenu(false); }}
-                >
-                  Sign Out
-                </button>
+              <div className="rf-nav-brand-info">
+                <span className="rf-nav-brand-title">StarReview <span>AI</span></span>
+                <span className="rf-nav-brand-sub">Helping customers share better reviews</span>
               </div>
-            )}
-          </nav>
-          <div className="header-actions">
-            {!user ? (
-              <>
+            </button>
+
+            <button className="menu-toggle rf-menu-toggle" onClick={() => setMenu(!menu)} aria-label="Toggle menu">☰</button>
+
+            <nav className={menu ? 'rf-nav-links open' : 'rf-nav-links'}>
+              {navItems.map(item => (
                 <button
-                  className="text-btn rf-nav-signin-btn"
-                  onClick={() => {
-                    setRegMode(false);
-                    navigate('Account');
-                  }}
-                  title="Sign in to your account"
+                  key={item.page}
+                  className={`rf-nav-link ${page === item.page ? 'active' : ''}`}
+                  onClick={() => { navigate(item.page); setMenu(false); }}
                 >
-                  <i className="fa-solid fa-arrow-right-to-bracket" style={{ marginRight: 5 }}></i> Sign In
+                  {item.label}
                 </button>
-                <button
-                  className="btn btn-dark btn-sm rf-nav-signup-btn"
-                  onClick={() => {
-                    setRegMode(true);
-                    navigate('Account');
-                  }}
-                  title="Start your 3-day free trial"
-                >
-                  Sign Up Free ↗
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  className="text-btn"
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
-                  onClick={() => navigate('Dashboard')}
-                >
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#16a34a', display: 'inline-block' }}></span>
-                  Dashboard
-                </button>
-                <button
-                  className="btn btn-light btn-sm"
-                  onClick={logout}
-                  title="Sign out of account"
-                >
-                  Sign Out
-                </button>
-              </>
-            )}
+              ))}
+
+              <div className="rf-mobile-drawer-actions">
+                {!user ? (
+                  <>
+                    <button
+                      type="button"
+                      className="rf-btn-signin full"
+                      onClick={() => { setRegMode(false); navigate('Account', false); setMenu(false); }}
+                    >
+                      Sign In
+                    </button>
+                    <button
+                      type="button"
+                      className="rf-btn-startfree full"
+                      onClick={() => { setRegMode(true); navigate('Account', true); setMenu(false); }}
+                    >
+                      Start Free <span className="rf-nav-arrow">→</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="rf-btn-startfree full"
+                      onClick={() => { navigate('Dashboard'); setMenu(false); }}
+                    >
+                      Dashboard ↗
+                    </button>
+                    <button
+                      type="button"
+                      className="rf-btn-signin full"
+                      onClick={() => { logout(); setMenu(false); }}
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                )}
+              </div>
+            </nav>
+
+            <div className="rf-nav-actions">
+              {!user ? (
+                <>
+                  <button
+                    type="button"
+                    className="rf-btn-signin"
+                    onClick={() => {
+                      setRegMode(false);
+                      navigate('Account', false);
+                    }}
+                    title="Sign In to Dashboard"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    type="button"
+                    className="rf-btn-startfree"
+                    onClick={() => {
+                      setRegMode(true);
+                      navigate('Account', true);
+                    }}
+                    title="Start 3-Day Free Trial"
+                  >
+                    Start Free <span className="rf-nav-arrow">→</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="rf-btn-startfree"
+                    style={{ padding: '7px 14px' }}
+                    onClick={() => navigate('Dashboard')}
+                    title="Open Business Dashboard"
+                  >
+                    <span className="rf-online-dot"></span> Dashboard
+                  </button>
+                  <button
+                    type="button"
+                    className="rf-btn-signin"
+                    onClick={logout}
+                    title="Sign Out"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </header>
       )}
@@ -2356,64 +2413,67 @@ export default function App() {
       {/* ====================================================================
           ACCOUNT / LOGIN / REGISTER (REVIEWFLOW AI EXACT SHOWCASE & FORM)
           ==================================================================== */}
+      {/* ====================================================================
+          ACCOUNT / LOGIN / REGISTER (REVIEWFLOW AI SCREENSHOT 2 EXACT MATCH)
+          ==================================================================== */}
       {(page === 'Account' || (page === 'Dashboard' && !user)) && (
-        <div className="rf-auth-wrapper">
-          <div className="rf-ambient-bg"></div>
-          <div className="rf-auth-grid">
-            {/* ═══════ LEFT COLUMN: LANDING SHOWCASE ═══════ */}
-            <div className="rf-landing-showcase">
-              <button type="button" className="rf-auth-back-nav" onClick={() => navigate('Home')}>
+        <div className="rf-login-viewport">
+          <div className="rf-login-container">
+            {/* ═══════ LEFT COLUMN: LANDING SHOWCASE & TRUST ═══════ */}
+            <div className="rf-login-showcase">
+              <button type="button" className="rf-login-back-btn" onClick={() => navigate('Home')}>
                 <i className="fa-solid fa-arrow-left"></i> Back to Homepage
               </button>
 
-              <div className="rf-brand-header-wrap">
-                <div className="rf-brand-logo-icon">
+              <div className="rf-login-brand-row" onClick={() => navigate('Home')} style={{ cursor: 'pointer' }} title="Return to Homepage">
+                <div className="rf-login-brand-icon">
                   <i className="fa-solid fa-star"></i>
                 </div>
-                <div className="rf-brand-titles">
-                  <span className="rf-brand-name">StarReview <span>AI</span></span>
-                  <span className="rf-brand-motto">Helping customers share better reviews</span>
+                <div className="rf-login-brand-titles">
+                  <div className="rf-login-brand-name">StarReview <span>AI</span></div>
+                  <div className="rf-login-brand-motto">Helping customers share better reviews</div>
                 </div>
               </div>
 
-              <div className="rf-showcase-badge">
-                <span></span> AI Google Review Platform &bull; Business Portal
+              <div className="rf-login-badge">
+                <span className="rf-login-badge-dot"></span>
+                AI GOOGLE REVIEW PLATFORM &bull; BUSINESS PORTAL
               </div>
 
-              <h1 className="rf-showcase-title">
+              <h1 className="rf-login-heading">
                 Grow Your Google Reviews &amp; <span>Rank #1 Locally</span>
               </h1>
 
-              <p className="rf-showcase-desc">
+              <p className="rf-login-desc">
                 Log in to your business dashboard to manage AI review funnels, generate custom QR standees, monitor new customer feedback, and build online reputation.
               </p>
 
               {/* 4 Key Perks */}
-              <div className="rf-showcase-perks">
-                <div className="rf-perk-card">
+              <div className="rf-login-perks-grid">
+                <div className="rf-perk-card-box">
                   <div className="rf-perk-icon-wrap"><i className="fa-solid fa-wand-magic-sparkles"></i></div>
-                  <div className="rf-perk-text">
+                  <div className="rf-perk-content">
                     <h4>1-Click AI Review Drafter</h4>
                     <p>Customers write detailed 5-star Google reviews in seconds using smart AI assistance.</p>
                   </div>
                 </div>
-                <div className="rf-perk-card">
+                <div className="rf-perk-card-box">
                   <div className="rf-perk-icon-wrap"><i className="fa-solid fa-qrcode"></i></div>
-                  <div className="rf-perk-text">
+                  <div className="rf-perk-content">
                     <h4>Smart QR Standees &amp; Flyers</h4>
                     <p>Place on checkout counters or tables to collect customer reviews on the spot.</p>
                   </div>
                 </div>
-                <div className="rf-perk-card">
+                <div className="rf-perk-card-box">
                   <div className="rf-perk-icon-wrap"><i className="fa-solid fa-shield-halved"></i></div>
-                  <div className="rf-perk-text">
+                  <div className="rf-perk-content">
                     <h4>Negative Review Firewall</h4>
                     <p>Route unhappy feedback to private inbox before it ever reaches public Google Maps.</p>
                   </div>
                 </div>
-                <div className="rf-perk-card">
+                <div className="rf-perk-card-box">
                   <div className="rf-perk-icon-wrap"><i className="fa-solid fa-chart-line"></i></div>
-                  <div className="rf-perk-text">
+                  <div className="rf-perk-content">
                     <h4>Real-Time Growth Analytics</h4>
                     <p>Track scans, review completions, customer sentiment, and local search ranking.</p>
                   </div>
@@ -2421,88 +2481,78 @@ export default function App() {
               </div>
 
               {/* Trust Strip */}
-              <div className="rf-showcase-trust">
-                <span><i className="fa-solid fa-star star-icon"></i> 4.9/5 Trusted by Businesses</span>
-                <span><i className="fa-solid fa-bolt"></i> 3x More Reviews</span>
-                <span><i className="fa-solid fa-lock"></i> 256-Bit SSL Secured</span>
+              <div className="rf-login-trust-strip">
+                <span className="rf-login-trust-item"><i className="fa-solid fa-star gold-star"></i> 4.9/5 Trusted by Businesses</span>
+                <span className="rf-login-trust-item"><i className="fa-solid fa-bolt green-icon"></i> 3x More Reviews</span>
+                <span className="rf-login-trust-item"><i className="fa-solid fa-lock green-icon"></i> 256-Bit SSL Secured</span>
               </div>
             </div>
 
-            {/* ═══════ RIGHT COLUMN: AUTH CARD ═══════ */}
-            <div className="rf-auth-card">
-              <div className="rf-card-header">
-                {page === 'Dashboard' && !user && (
-                  <div className="rf-auth-notice-banner">
-                    <i className="fa-solid fa-lock"></i>
-                    <span>Sign In Required: Please sign in or create an account to access the Business Console &amp; Dashboard.</span>
-                  </div>
-                )}
-                {/* 2-Tab Switcher: Sign In vs Sign Up */}
-                <div className="rf-auth-mode-toggle">
-                  <button
-                    type="button"
-                    className={`rf-amt-btn ${!regMode ? 'active' : ''}`}
-                    onClick={() => setRegMode(false)}
-                  >
-                    <i className="fa-solid fa-arrow-right-to-bracket" style={{ marginRight: 6 }}></i> Sign In
-                  </button>
-                  <button
-                    type="button"
-                    className={`rf-amt-btn ${regMode ? 'active' : ''}`}
-                    onClick={() => setRegMode(true)}
-                  >
-                    <i className="fa-solid fa-user-plus" style={{ marginRight: 6 }}></i> Sign Up (Free Trial)
-                  </button>
+            {/* ═══════ RIGHT COLUMN: AUTH CARD (SCREENSHOT 2 EXACT MATCH) ═══════ */}
+            <div className="rf-login-card">
+              {page === 'Dashboard' && !user && (
+                <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '10px 12px', fontSize: '0.8rem', color: '#92400e', marginBottom: 16, lineHeight: 1.4 }}>
+                  <i className="fa-solid fa-lock" style={{ marginRight: 6 }}></i>
+                  Sign In Required: Please sign in or create an account to access the Business Console &amp; Dashboard.
                 </div>
-                <h2>{regMode ? 'Create Business Account' : 'Business Login'}</h2>
-                <p>{regMode ? 'Start your 3-day full access free trial — no credit card needed' : 'Enter your credentials to access your review dashboard'}</p>
-              </div>
+              )}
 
-              {/* 1-Click Instant Console Preview */}
-              <div className="rf-instant-access-box">
-                <div className="rf-instant-access-text">
-                  <strong><i className="fa-solid fa-bolt" style={{ color: '#16a34a', marginRight: 5 }}></i> Instant Demo Access</strong>
-                  <small>Sample business: <b>verde eco landing</b></small>
+              <h2 className="rf-login-card-title">{regMode ? 'Start Multi-Business Free Trial' : 'Business Login'}</h2>
+              <p className="rf-login-card-sub">{regMode ? 'Create your account to instantly access your review dashboard with a 3-day free trial.' : 'Enter your credentials to access your review dashboard'}</p>
+
+              {regMode && (
+                <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 8, padding: '10px 12px', fontSize: '0.78rem', color: '#166534', marginBottom: 16, lineHeight: 1.45 }}>
+                  <i className="fa-solid fa-bolt" style={{ color: '#16a34a', marginRight: 5 }}></i>
+                  <strong>Instant Automated Approval:</strong> Accounts are approved immediately upon registration. Enjoy full access with a 3-day free trial — no credit card required.
                 </div>
+              )}
+
+              {/* Instant 1-Click Demo Shortcut */}
+              <div style={{ marginBottom: 16, background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <span style={{ fontSize: '0.78rem', color: '#475569' }}>
+                  <i className="fa-solid fa-bolt" style={{ color: '#16a34a', marginRight: 4 }}></i>
+                  Instant review test:
+                </span>
                 <button
                   type="button"
-                  className="rf-instant-access-btn"
+                  style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, padding: '4px 10px', cursor: 'pointer' }}
                   onClick={loginDemoConsole}
                 >
-                  Explore Console Demo ↗
-                </button>
-              </div>
-
-              {/* Direct Google Places Onboarding Option */}
-              <div style={{ marginBottom: '1.15rem' }}>
-                <button
-                  type="button"
-                  className="btn btn-light full"
-                  style={{ fontSize: '0.82rem', padding: '0.55rem', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontWeight: 700, border: '1.5px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8' }}
-                  onClick={() => navigate('Business onboarding')}
-                >
-                  <i className="fa-brands fa-google" style={{ color: '#4285F4' }}></i> Onboard with Google Places API Search ↗
+                  ⚡ Instant Demo Console ↗
                 </button>
               </div>
 
               <form onSubmit={submitAuth}>
-                <div className="rf-form-group">
-                  <label className="rf-form-label">Email or Username</label>
+                {regMode && (
+                  <div className="rf-login-form-group">
+                    <label className="rf-login-label">Business Name</label>
+                    <input
+                      className="rf-login-input"
+                      type="text"
+                      placeholder="e.g. Acme Dental Clinic or Cafe"
+                      value={business}
+                      onChange={(e) => setBusiness(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                <div className="rf-login-form-group">
+                  <label className="rf-login-label">EMAIL OR USERNAME</label>
                   <input
-                    className="rf-form-control"
-                    type="email"
+                    className="rf-login-input"
+                    type="text"
                     required
-                    placeholder="name@business.com or store"
+                    placeholder="WebpressHub or name@business.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
 
-                <div className="rf-form-group">
-                  <label className="rf-form-label">Password</label>
-                  <div className="rf-password-wrap">
+                <div className="rf-login-form-group">
+                  <label className="rf-login-label">PASSWORD</label>
+                  <div className="rf-pwd-wrapper">
                     <input
-                      className="rf-form-control"
+                      className="rf-login-input rf-pwd-input"
                       type={showPassword ? 'text' : 'password'}
                       required
                       minLength="6"
@@ -2512,42 +2562,46 @@ export default function App() {
                     />
                     <button
                       type="button"
-                      className="rf-password-toggle"
+                      className="rf-pwd-toggle-btn"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label="Toggle password visibility"
                     >
                       <i className={showPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'}></i>
                     </button>
                   </div>
                 </div>
 
-                <div className="rf-form-extra-row">
-                  <label className="rf-remember-label">
-                    <input type="checkbox" defaultChecked style={{ accentColor: '#16a34a' }} />
-                    Remember me
-                  </label>
-                  <span
-                    className="rf-forgot-link"
-                    onClick={() => notify('Password reset link sent to registered email address.')}
-                  >
-                    Forgot Password?
-                  </span>
-                </div>
+                {!regMode && (
+                  <div className="rf-login-aux-row">
+                    <label className="rf-login-remember">
+                      <input type="checkbox" defaultChecked />
+                      <span>Remember me</span>
+                    </label>
+                    <button
+                      type="button"
+                      className="rf-login-forgot-link"
+                      onClick={() => notify('Password reset instructions sent to your registered email.')}
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                )}
 
-                <button className="rf-btn-submit" type="submit">
+                <button className="rf-login-submit-btn" type="submit">
                   {regMode ? 'Start 3-Day Free Trial ' : 'Sign In to Dashboard '}
-                  <i className="fa-solid fa-arrow-right"></i>
+                  <span className="rf-nav-arrow">→</span>
                 </button>
               </form>
 
               {/* Divider */}
-              <div className="rf-auth-divider">
-                <span>or continue with</span>
+              <div className="rf-login-divider">
+                <span>OR CONTINUE WITH</span>
               </div>
 
               {/* Google Sign In */}
               <button
                 type="button"
-                className="rf-btn-google"
+                className="rf-google-btn"
                 onClick={loginDemoConsole}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
@@ -2559,20 +2613,20 @@ export default function App() {
                 Sign in with Google
               </button>
 
-              {/* Switch Link */}
-              <div className="rf-auth-card-footer">
+              {/* Switch Mode Link */}
+              <div className="rf-login-switch-row">
                 {regMode ? (
-                  <>Already have an account? <button type="button" onClick={() => setRegMode(false)}>Sign In</button></>
+                  <>Already have an account? <button type="button" className="rf-login-switch-btn" onClick={() => { setRegMode(false); window.history.pushState({}, '', '/login'); }}>Sign In</button></>
                 ) : (
-                  <>Don't have an account? <button type="button" onClick={() => setRegMode(true)}>Start 3-Day Free Trial</button></>
+                  <>Don't have an account? <button type="button" className="rf-login-switch-btn" onClick={() => { setRegMode(true); window.history.pushState({}, '', '/register'); }}>Start 3-Day Free Trial</button></>
                 )}
               </div>
 
-              {/* Secure Strip */}
-              <div className="rf-auth-security-strip">
-                <span><i className="fa-solid fa-bolt" style={{ color: '#16a34a' }}></i> Instant Access</span>
+              {/* Security Strip */}
+              <div className="rf-login-security-footer">
+                <span><i className="fa-solid fa-bolt"></i> Instant Access</span>
                 <span>&bull;</span>
-                <span><i className="fa-solid fa-lock" style={{ color: '#16a34a' }}></i> 256-Bit SSL Encrypted</span>
+                <span><i className="fa-solid fa-lock"></i> 256-Bit SSL Encrypted</span>
               </div>
             </div>
           </div>
