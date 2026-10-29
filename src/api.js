@@ -394,6 +394,158 @@ function localDispatch(method, path, body) {
     return { ok: true, status: 200, data: { business: b } };
   }
 
+  // 6b. Google Places: Autocomplete & Details (Fallback Simulator)
+  if (path.startsWith('/api/places/autocomplete')) {
+    const urlObj = new URL('https://dummy.com' + path);
+    const query = (urlObj.searchParams.get('input') || urlObj.searchParams.get('query') || '').trim();
+    const fallbackList = [
+      {
+        placeId: 'ChIJN1t_tDeuEmsRUsoyG83frY4',
+        name: 'Team Maruti InfoSoft',
+        address: 'Shop #12, Ground Floor, Royal Arcade, Sarthana Jakat Naka, Surat, Gujarat 395006',
+        city: 'Surat',
+        category: 'Software & IT Services',
+        rating: 4.9,
+        userRatingsTotal: 184,
+        phone: '+91 63557 22267',
+        types: ['point_of_interest', 'establishment'],
+        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4'
+      },
+      {
+        placeId: 'ChIJw0XqT3sE5zsR5wM9A8_F1b8',
+        name: 'Verde Eco Landing',
+        address: 'Ring Road Business Hub, Sarthana, Surat, Gujarat 395006',
+        city: 'Surat',
+        category: 'Eco Packaging & Retail',
+        rating: 4.8,
+        userRatingsTotal: 96,
+        phone: '+91 98251 44321',
+        types: ['store', 'point_of_interest'],
+        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJw0XqT3sE5zsR5wM9A8_F1b8'
+      },
+      {
+        placeId: 'ChIJP3Sa8ziYEmsRUKgyFmh9AQM',
+        name: 'Spice Haven Bistro & Lounge',
+        address: 'Ground Floor, Phoenix Palladium, Lower Parel, Mumbai, Maharashtra 400013',
+        city: 'Mumbai',
+        category: 'Restaurant & Dining',
+        rating: 4.7,
+        userRatingsTotal: 342,
+        phone: '+91 22 4920 1100',
+        types: ['restaurant', 'food', 'establishment'],
+        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJP3Sa8ziYEmsRUKgyFmh9AQM'
+      },
+      {
+        placeId: 'ChIJ2eUgeAK6j4ARbn5u_wAGqWA',
+        name: 'Sen Dental Care & Implant Center',
+        address: 'B-14, South Extension Part II, New Delhi, Delhi 110049',
+        city: 'New Delhi',
+        category: 'Dental Clinic & Healthcare',
+        rating: 4.9,
+        userRatingsTotal: 256,
+        phone: '+91 11 2625 8899',
+        types: ['dentist', 'health'],
+        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJ2eUgeAK6j4ARbn5u_wAGqWA'
+      },
+      {
+        placeId: 'ChIJLfySpTOuEmsRsc_6PtVqCu8',
+        name: 'Luxe Wellness Spa & Salon',
+        address: '100 Feet Road, Indiranagar, Bangalore, Karnataka 560038',
+        city: 'Bangalore',
+        category: 'Spa & Beauty Salon',
+        rating: 4.8,
+        userRatingsTotal: 178,
+        phone: '+91 80 4120 7766',
+        types: ['beauty_salon', 'spa'],
+        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJLfySpTOuEmsRsc_6PtVqCu8'
+      },
+      {
+        placeId: 'ChIJ36Y3F9K5wjsRU9qG-uHq3Xw',
+        name: 'Apex Auto Care & Diagnostics',
+        address: 'Plot 42, Senapati Bapat Road, Shivajinagar, Pune, Maharashtra 411016',
+        city: 'Pune',
+        category: 'Auto Repair & Service',
+        rating: 4.6,
+        userRatingsTotal: 135,
+        phone: '+91 20 2567 4433',
+        types: ['car_repair', 'point_of_interest'],
+        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJ36Y3F9K5wjsRU9qG-uHq3Xw'
+      }
+    ];
+
+    if (!query) return { ok: true, status: 200, data: { places: fallbackList } };
+
+    const lower = query.toLowerCase();
+    const matched = fallbackList.filter(p => p.name.toLowerCase().includes(lower) || p.city.toLowerCase().includes(lower));
+    if (matched.length > 0) return { ok: true, status: 200, data: { places: matched } };
+
+    const capitalized = query.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const hash = Math.abs(query.split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0));
+    const randomPlaceId = 'ChIJ' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 12);
+    const dynamicPlace = {
+      placeId: randomPlaceId,
+      name: capitalized,
+      address: `${capitalized}, Main Commercial Arcade, Surat, Gujarat 395006`,
+      city: 'Surat',
+      category: 'Local Business & Retail',
+      rating: 4.8,
+      userRatingsTotal: 84 + (hash % 150),
+      phone: '+91 63557 22267',
+      types: ['establishment', 'point_of_interest'],
+      googleReviewUrl: `https://search.google.com/local/writereview?placeid=${randomPlaceId}`
+    };
+    return { ok: true, status: 200, data: { places: [dynamicPlace, ...fallbackList.slice(0, 3)] } };
+  }
+
+  if (path.startsWith('/api/places/details')) {
+    const urlObj = new URL('https://dummy.com' + path);
+    const placeId = urlObj.searchParams.get('placeId') || urlObj.searchParams.get('place_id') || 'ChIJN1t_tDeuEmsRUsoyG83frY4';
+    return {
+      ok: true,
+      status: 200,
+      data: {
+        place: {
+          placeId,
+          name: 'Team Maruti InfoSoft',
+          address: 'Shop #12, Ground Floor, Royal Arcade, Sarthana Jakat Naka, Surat, Gujarat 395006',
+          city: 'Surat',
+          category: 'Software & IT Services',
+          rating: 4.9,
+          userRatingsTotal: 184,
+          phone: '+91 63557 22267',
+          website: 'https://marutiinfosoft.com',
+          googleMapsUrl: `https://maps.google.com/?q=place_id:${placeId}`,
+          googleReviewUrl: `https://search.google.com/local/writereview?placeid=${placeId}`,
+          isGoogleVerified: true
+        }
+      }
+    };
+  }
+
+  // 6c. Connect Google Place to Business Profile
+  if (path === '/api/business/connect-google-place' && method === 'POST') {
+    const effectiveUserId = currentUser ? currentUser.id : db.users[0].id;
+    let b = db.businesses.find(x => x.userId === effectiveUserId);
+    if (!b) {
+      b = { id: 'biz_' + Math.random().toString(36).substring(2, 9), userId: effectiveUserId, slug: 'business', competitors: [], createdAt: new Date().toISOString() };
+      db.businesses.push(b);
+    }
+    if (body.name) b.name = body.name;
+    if (body.placeId) b.placeId = body.placeId;
+    if (body.address) b.address = body.address;
+    if (body.city) b.city = body.city;
+    if (body.category) b.category = body.category;
+    if (body.rating) b.rating = body.rating;
+    if (body.userRatingsTotal) b.userRatingsTotal = body.userRatingsTotal;
+    if (body.googleReviewUrl) b.googleReviewUrl = body.googleReviewUrl;
+    if (body.website) b.website = body.website;
+    if (body.phone) b.phone = body.phone;
+    b.isGoogleVerified = true;
+    b.googleSyncedAt = new Date().toISOString();
+    saveLocalDb(db);
+    return { ok: true, status: 200, data: { ok: true, business: b } };
+  }
+
   // 7. Public Business by Slug (for QR scan)
   if (path.startsWith('/api/public/business/')) {
     const slug = path.replace('/api/public/business/', '');

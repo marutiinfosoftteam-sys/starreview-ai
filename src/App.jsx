@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { api, getToken, setToken } from './api.js';
 import { ReviewFunnel, BusinessSetup, ReplyAssistant, SeoAnalyzer, Dashboard, QrFlyer } from './tools.jsx';
 import BusinessConsole from './BusinessConsole.jsx';
+import BusinessOnboarding from './BusinessOnboarding.jsx';
+import AboutPage from './AboutPage.jsx';
 
 const features = [
   ['✦', 'AI review assistant', 'Help customers express their genuine experience with three editable draft suggestions in 24 languages.'],
@@ -286,9 +288,19 @@ export default function App() {
     setToken(r.data.token);
     setUser(r.data.user);
     setPassword('');
-    notify(regMode ? 'Account created. Your 3-day free trial has started!' : 'Signed in successfully.');
+    notify(regMode ? 'Account created. Welcome to StarReview AI!' : 'Signed in successfully.');
     const bRes = await api('GET', '/api/business');
-    if (bRes.ok) setMyBusiness(bRes.data.business);
+    if (bRes.ok && bRes.data && bRes.data.business) {
+      setMyBusiness(bRes.data.business);
+      // Guide new signups or unverified profiles through official Google Places onboarding
+      if (regMode || !bRes.data.business.isGoogleVerified) {
+        navigate('Business onboarding');
+        return;
+      }
+    } else {
+      navigate('Business onboarding');
+      return;
+    }
     navigate('Dashboard');
   };
 
@@ -353,6 +365,7 @@ export default function App() {
     { label: 'How It Works', page: 'How it works' },
     { label: 'AI vs Normal QR', page: 'AI vs QR' },
     { label: 'Pricing', page: 'Pricing' },
+    { label: 'About Us', page: 'About us' },
     { label: 'Source Code', page: 'Source code' },
     { label: 'Apply for Agency', page: 'Apply for agency' }
   ];
@@ -2355,6 +2368,18 @@ export default function App() {
                 </button>
               </div>
 
+              {/* Direct Google Places Onboarding Option */}
+              <div style={{ marginBottom: '1.15rem' }}>
+                <button
+                  type="button"
+                  className="btn btn-light full"
+                  style={{ fontSize: '0.82rem', padding: '0.55rem', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontWeight: 700, border: '1.5px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8' }}
+                  onClick={() => navigate('Business onboarding')}
+                >
+                  <i className="fa-brands fa-google" style={{ color: '#4285F4' }}></i> Onboard with Google Places API Search ↗
+                </button>
+              </div>
+
               <form onSubmit={submitAuth}>
                 <div className="rf-form-group">
                   <label className="rf-form-label">Email or Username</label>
@@ -2577,10 +2602,24 @@ export default function App() {
         </PageShell>
       )}
 
-      {['About us', 'Frequently asked questions', 'Multi-business plan', 'Partner program', 'Business onboarding', 'Privacy policy', 'Terms of service', 'Cookie policy', 'Sitemap'].includes(page) && (
+      {page === 'Business onboarding' && (
+        <BusinessOnboarding
+          user={user}
+          business={myBusiness}
+          setBusiness={setMyBusiness}
+          notify={notify}
+          navigate={navigate}
+        />
+      )}
+
+      {page === 'About us' && (
+        <AboutPage navigate={navigate} />
+      )}
+
+      {['Frequently asked questions', 'Multi-business plan', 'Partner program', 'Privacy policy', 'Terms of service', 'Cookie policy', 'Sitemap'].includes(page) && (
         <PageShell
-          title={({ 'About us': 'About StarReview AI', 'Frequently asked questions': 'Frequently asked questions', 'Source code': 'Source code and commercial licensing', 'Multi-business plan': 'Manage multiple business locations', 'Apply for agency': 'Agency partnerships', 'Partner program': 'Partner program', 'Business onboarding': 'Business onboarding', 'Privacy policy': 'Privacy policy', 'Terms of service': 'Terms of service', 'Cookie policy': 'Cookie policy', 'Sitemap': 'Website sitemap' })[page]}
-          subtitle={({ 'About us': 'Tools to help businesses collect genuine feedback and build customer trust.', 'Frequently asked questions': 'Helpful answers about trials, plans, reviews, and payments.', 'Source code': 'Ask our team about source-code access and commercial licensing.', 'Multi-business plan': 'A scalable workflow for teams managing more than one location.', 'Apply for agency': 'Tell us about your agency and the businesses you support.', 'Partner program': 'Contact us to learn about partner eligibility and commission terms.', 'Business onboarding': 'Get help setting up your business profile and review funnel.', 'Privacy policy': 'We aim to collect only the information needed to provide the service.', 'Terms of service': 'Use the platform responsibly.', 'Cookie policy': 'Cookies and local storage may be used to support sign-in and core site functionality.', 'Sitemap': 'Browse the main sections of StarReview AI.' })[page]}
+          title={({ 'Frequently asked questions': 'Frequently asked questions', 'Source code': 'Source code and commercial licensing', 'Multi-business plan': 'Manage multiple business locations', 'Apply for agency': 'Agency partnerships', 'Partner program': 'Partner program', 'Privacy policy': 'Privacy policy', 'Terms of service': 'Terms of service', 'Cookie policy': 'Cookie policy', 'Sitemap': 'Website sitemap' })[page]}
+          subtitle={({ 'Frequently asked questions': 'Helpful answers about trials, plans, reviews, and payments.', 'Source code': 'Ask our team about source-code access and commercial licensing.', 'Multi-business plan': 'A scalable workflow for teams managing more than one location.', 'Apply for agency': 'Tell us about your agency and the businesses you support.', 'Partner program': 'Contact us to learn about partner eligibility and commission terms.', 'Privacy policy': 'We aim to collect only the information needed to provide the service.', 'Terms of service': 'Use the platform responsibly.', 'Cookie policy': 'Cookies and local storage may be used to support sign-in and core site functionality.', 'Sitemap': 'Browse the main sections of StarReview AI.' })[page]}
         >
           <div className="legal-content">
             {page === 'Frequently asked questions' ? (
@@ -2920,9 +2959,9 @@ function Footer({ navigate }) {
     {
       title: 'Company',
       items: [
-        ['About Us', 'Features'],
+        ['About Us', 'About us'],
         ['Contact Support', 'Contact'],
-        ['Frequently Asked Questions', 'How it works'],
+        ['Frequently Asked Questions', 'Frequently asked questions'],
         ['HTML Sitemap', 'Sitemap'],
         ['XML Sitemap', 'Sitemap']
       ]
@@ -2933,7 +2972,7 @@ function Footer({ navigate }) {
         ['Operator Sign In', 'Account'],
         ['Partner Sign In', 'Account'],
         ['Join Partner Program (40%)', 'Contact'],
-        ['Business Onboard', 'Account'],
+        ['Business Onboard', 'Business onboarding'],
         ['Privacy Policy', 'Privacy policy'],
         ['Terms of Service', 'Terms of service'],
         ['Cookie Policy', 'Cookie policy']
