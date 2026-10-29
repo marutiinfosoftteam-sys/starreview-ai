@@ -1,3 +1,10 @@
+import React, { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
+import { api, getToken, setToken } from './api.js';
+import { QrFlyer, BusinessSetup, ReplyAssistant, SeoAnalyzer, funnelUrl } from './tools.jsx';
+import { downloadFlyerImage, downloadFlyerPdf, downloadPlainQr } from './flyerCanvas.js';
+import './console.css';
+
 export const countryDialOptions = [
   { code: '+91', name: 'India', flag: '🇮🇳' },
   { code: '+1', name: 'USA / Canada', flag: '🇺🇸' },
@@ -16,13 +23,6 @@ export const countryDialOptions = [
   { code: '+60', name: 'Malaysia', flag: '🇲🇾' },
   { code: '+27', name: 'South Africa', flag: '🇿🇦' }
 ];
-
-import React, { useState, useEffect } from 'react';
-import QRCode from 'qrcode';
-import { api, getToken, setToken } from './api.js';
-import { QrFlyer, BusinessSetup, ReplyAssistant, SeoAnalyzer, funnelUrl } from './tools.jsx';
-import { downloadFlyerImage, downloadFlyerPdf, downloadPlainQr } from './flyerCanvas.js';
-import './console.css';
 
 export default function BusinessConsole({
   user,

@@ -157,17 +157,6 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [copiedDraftIndex, setCopiedDraftIndex] = useState(null);
   const [previewGoogleDraft, setPreviewGoogleDraft] = useState(null);
-
-  // Auto-fill company name if user is logged in (Screenshot 3 requirement)
-  useEffect(() => {
-    if (myBusiness?.name) {
-      setBusiness(myBusiness.name);
-    } else if (user?.company) {
-      setBusiness(user.company);
-    } else if (user?.businessName) {
-      setBusiness(user.businessName);
-    }
-  }, [myBusiness, user]);
   const [feedback, setFeedback] = useState('');
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [toast, setToast] = useState('');
@@ -191,6 +180,17 @@ export default function App() {
   const [selectedPlanForReg, setSelectedPlanForReg] = useState(null);
   const [user, setUser] = useState(null);
   const [myBusiness, setMyBusiness] = useState(null);
+
+  // Auto-fill company name if user is logged in (Screenshot 3 requirement)
+  useEffect(() => {
+    if (myBusiness?.name) {
+      setBusiness(myBusiness.name);
+    } else if (user?.company) {
+      setBusiness(user.company);
+    } else if (user?.businessName) {
+      setBusiness(user.businessName);
+    }
+  }, [myBusiness, user]);
   const [cfg, setCfg] = useState({ whatsappNumber: '919904482945', languages: ['English', 'Hindi', 'Hinglish', 'Gujarati'] });
   const [demoPlan, setDemoPlan] = useState('Starter');
   const [demoPeriod, setDemoPeriod] = useState('Monthly');
