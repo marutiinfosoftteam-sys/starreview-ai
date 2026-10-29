@@ -10,7 +10,7 @@ const features = [
   ['fa-solid fa-qrcode', 'Smart QR funnels', 'Create a customer review page and a print-ready A6 QR flyer for your counter, table or receipt.'],
   ['fa-solid fa-shield-heart', 'Private feedback', 'Route unhappy customers to a private form so concerns reach your team first.'],
   ['fa-solid fa-chart-line', 'Reputation analytics', 'Track QR scans, drafts, copies, Google redirects and conversion in one dashboard.'],
-  ['fa-solid fa-reply-all', 'Reply assistant', 'Draft sentiment-aware replies to your Google reviews. Included in Pro and the free trial.'],
+  ['fa-solid fa-reply-all', 'Reply assistant', 'Draft sentiment-aware replies to your Google reviews. Included in Pro and Starter plans.'],
   ['fa-solid fa-print', 'Print-ready flyers', 'Pick your brand color and download a clean A6 flyer as a high-resolution PNG.'],
   ['fa-solid fa-gauge-high', 'Profile health check', 'Run a 20-point check of your Google Business Profile and get a 0 to 100 score with fixes.'],
   ['fa-solid fa-user-tag', 'Staff and service mentions', 'Customers can mention the staff member and service they used, so drafts feel specific and real.'],
@@ -28,12 +28,18 @@ const toolTarget = {
 };
 
 const industries = [
-  { icon: 'fa-solid fa-utensils', name: 'Restaurants' },
+  { icon: 'fa-solid fa-utensils', name: 'Restaurants & Cafes' },
   { icon: 'fa-solid fa-scissors', name: 'Salons & Spas' },
-  { icon: 'fa-solid fa-stethoscope', name: 'Clinics' },
-  { icon: 'fa-solid fa-shirt', name: 'Retail Stores' },
-  { icon: 'fa-solid fa-hotel', name: 'Hotels' },
-  { icon: 'fa-solid fa-car-side', name: 'Auto Services' }
+  { icon: 'fa-solid fa-stethoscope', name: 'Clinics & Healthcare' },
+  { icon: 'fa-solid fa-tooth', name: 'Dental Practices' },
+  { icon: 'fa-solid fa-bag-shopping', name: 'Retail Stores & Boutiques' },
+  { icon: 'fa-solid fa-hotel', name: 'Hotels & Hospitality' },
+  { icon: 'fa-solid fa-car-side', name: 'Auto Services & Garages' },
+  { icon: 'fa-solid fa-mug-hot', name: 'Coffee Shops & Bakeries' },
+  { icon: 'fa-solid fa-dumbbell', name: 'Gyms & Fitness Centers' },
+  { icon: 'fa-solid fa-scale-balanced', name: 'Legal & Financial Firms' },
+  { icon: 'fa-solid fa-house-chimney-user', name: 'Real Estate & Home Trades' },
+  { icon: 'fa-solid fa-paw', name: 'Pet Care & Veterinary' }
 ];
 
 const testimonials = [
@@ -250,7 +256,7 @@ export default function App() {
   const navigate = (p, isRegister = false) => {
     // Dashboard is protected: unauthenticated users must sign in or register first
     if (p === 'Dashboard' && !user && !getToken()) {
-      notify('Please sign in or start a free trial to access your dashboard.');
+      notify('Please sign in to access your dashboard.');
       setRegMode(false);
       p = 'Account';
     }
@@ -493,7 +499,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* 2. 3-DAY FREE TRIAL HIGHLIGHT BOX */}
+      {/* 2. PLAN HIGHLIGHT BOX */}
       {/* 3. PLAN TOGGLE TABS */}
       <div className="pricing-toggle-wrap">
         <div className="pricing-toggle-pill">
@@ -870,11 +876,13 @@ export default function App() {
                 {!user ? (
                   <>
                     <a
-                      href="tel:+919904482945"
-                      className="rf-btn-signin full"
-                      style={{ textDecoration: 'none', textAlign: 'center' }}
+                      href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20would%20like%20to%20inquire%20about%20your%20plans."
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rf-btn-whatsapp-nav full"
+                      style={{ textDecoration: 'none', textAlign: 'center', justifyContent: 'center' }}
                     >
-                      <i className="fa-solid fa-phone" style={{ marginRight: 6 }}></i> Call: 9904482945
+                      <i className="fa-brands fa-whatsapp"></i> WhatsApp Inquiry
                     </a>
                     <button
                       type="button"
@@ -908,6 +916,15 @@ export default function App() {
             <div className="rf-nav-actions">
               {!user ? (
                 <>
+                  <a
+                    href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20would%20like%20to%20inquire%20about%20your%20plans."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rf-nav-whatsapp-btn"
+                    title="WhatsApp Inquiry"
+                  >
+                    <i className="fa-brands fa-whatsapp"></i> WhatsApp Inquiry
+                  </a>
                   <button
                     type="button"
                     className="rf-btn-signin"
@@ -916,17 +933,6 @@ export default function App() {
                       navigate('Account', false);
                     }}
                     title="Sign In to Dashboard"
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    type="button"
-                    className="rf-btn-startfree"
-                    onClick={() => {
-                      setRegMode(true);
-                      navigate('Account', true);
-                    }}
-                    title="Call for Pricing: 9904482945"
                   >
                     Sign In <span className="rf-nav-arrow">→</span>
                   </button>
@@ -970,13 +976,24 @@ export default function App() {
                 <h1>Turn great service into <em>great reviews.</em></h1>
                 <p className="hero-sub">A simpler way to collect genuine customer feedback, create review drafts with AI, and understand what your customers love.</p>
                 <div className="hero-cta">
-                  <button className="btn btn-dark" onClick={() => navigate('Account')}>Call for Pricing: 9904482945 <span className="rf-nav-arrow">→</span></button>
-                  <button className="btn btn-light" onClick={() => navigate('How it works')}>Explore how it works <span>▶</span></button>
+                  <a
+                    href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20would%20like%20to%20inquire%20about%20your%20plans%20and%20pricing."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-whatsapp-hero"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <i className="fa-brands fa-whatsapp" style={{ fontSize: 18, marginRight: 6 }}></i>
+                    <span>Inquire on WhatsApp</span>
+                  </a>
+                  <button className="btn btn-light" onClick={() => navigate('How it works')}>
+                    Explore how it works <span>▶</span>
+                  </button>
                 </div>
                 <div className="hero-note">
-                  <span>✓ No credit card required</span>
-                  <span>✓ 3-day free trial</span>
-                  <span>✓ Your customers stay in control</span>
+                  <span><i className="fa-solid fa-check" style={{ color: '#16a34a', marginRight: 5 }}></i>Instant 60-Second Setup</span>
+                  <span><i className="fa-solid fa-check" style={{ color: '#16a34a', marginRight: 5 }}></i>100% Private Negative Shield</span>
+                  <span><i className="fa-solid fa-check" style={{ color: '#16a34a', marginRight: 5 }}></i>Your customers stay in control</span>
                 </div>
               </div>
               <div className="hero-art">
@@ -1002,48 +1019,46 @@ export default function App() {
               </div>
             </section>
 
-            {/* 2. MODERN AUTO-SCROLLING TICKER / MARQUEE (SCREENSHOT 3) */}
-            <section className="trust-strip rf-marquee-strip">
-              <div className="rf-marquee-shell">
-                <div className="rf-marquee-tag">
-                  <span className="rf-tag-pulse"></span>
-                  BUILT FOR EVERYDAY BUSINESSES
-                </div>
-                <div className="rf-marquee-viewport">
-                  <div className="rf-marquee-track">
-                    {[
-                      { icon: 'fa-utensils', label: 'Restaurants & Cafes' },
-                      { icon: 'fa-spa', label: 'Wellness, Salons & Beauty' },
-                      { icon: 'fa-hospital-user', label: 'Healthcare & Clinics' },
-                      { icon: 'fa-tooth', label: 'Dental Practices' },
-                      { icon: 'fa-bag-shopping', label: 'Retail & Boutiques' },
-                      { icon: 'fa-dumbbell', label: 'Gyms & Fitness Centers' },
-                      { icon: 'fa-wrench', label: 'Auto Care & Mechanics' },
-                      { icon: 'fa-mug-hot', label: 'Specialty Coffee & Bakeries' },
-                      { icon: 'fa-hotel', label: 'Hotels & Hospitality' },
-                      { icon: 'fa-scale-balanced', label: 'Legal & Professional Services' },
-                      { icon: 'fa-house-circle-check', label: 'Real Estate & Home Trades' },
-                      { icon: 'fa-paw', label: 'Pet Care & Veterinary' },
-                      // Duplicate for seamless infinite loop
-                      { icon: 'fa-utensils', label: 'Restaurants & Cafes' },
-                      { icon: 'fa-spa', label: 'Wellness, Salons & Beauty' },
-                      { icon: 'fa-hospital-user', label: 'Healthcare & Clinics' },
-                      { icon: 'fa-tooth', label: 'Dental Practices' },
-                      { icon: 'fa-bag-shopping', label: 'Retail & Boutiques' },
-                      { icon: 'fa-dumbbell', label: 'Gyms & Fitness Centers' },
-                      { icon: 'fa-wrench', label: 'Auto Care & Mechanics' },
-                      { icon: 'fa-mug-hot', label: 'Specialty Coffee & Bakeries' },
-                      { icon: 'fa-hotel', label: 'Hotels & Hospitality' },
-                      { icon: 'fa-scale-balanced', label: 'Legal & Professional Services' },
-                      { icon: 'fa-house-circle-check', label: 'Real Estate & Home Trades' },
-                      { icon: 'fa-paw', label: 'Pet Care & Veterinary' }
-                    ].map((item, idx) => (
-                      <div className="rf-marquee-pill" key={idx}>
-                        <i className={`fa-solid ${item.icon}`}></i>
-                        <span>{item.label}</span>
-                      </div>
-                    ))}
-                  </div>
+            {/* 2. FULL-WIDTH EDGE-TO-EDGE CONTINUOUS TICKER / SLIDER (SCREENSHOT 5 FIX) */}
+            <section className="rf-full-marquee-section">
+              <div className="rf-marquee-header-pill">
+                <span className="rf-tag-pulse"></span>
+                <span>BUILT FOR EVERYDAY LOCAL BUSINESSES</span>
+              </div>
+              <div className="rf-full-marquee-viewport">
+                <div className="rf-full-marquee-track">
+                  {[
+                    { icon: 'fa-utensils', label: 'Restaurants & Cafes' },
+                    { icon: 'fa-spa', label: 'Wellness, Salons & Beauty' },
+                    { icon: 'fa-hospital-user', label: 'Healthcare & Clinics' },
+                    { icon: 'fa-tooth', label: 'Dental Practices' },
+                    { icon: 'fa-bag-shopping', label: 'Retail & Boutiques' },
+                    { icon: 'fa-dumbbell', label: 'Gyms & Fitness Centers' },
+                    { icon: 'fa-wrench', label: 'Auto Care & Mechanics' },
+                    { icon: 'fa-mug-hot', label: 'Specialty Coffee & Bakeries' },
+                    { icon: 'fa-hotel', label: 'Hotels & Hospitality' },
+                    { icon: 'fa-scale-balanced', label: 'Legal & Professional Services' },
+                    { icon: 'fa-house-circle-check', label: 'Real Estate & Home Trades' },
+                    { icon: 'fa-paw', label: 'Pet Care & Veterinary' },
+                    // Seamless duplicate list for infinite edge-to-edge glide
+                    { icon: 'fa-utensils', label: 'Restaurants & Cafes' },
+                    { icon: 'fa-spa', label: 'Wellness, Salons & Beauty' },
+                    { icon: 'fa-hospital-user', label: 'Healthcare & Clinics' },
+                    { icon: 'fa-tooth', label: 'Dental Practices' },
+                    { icon: 'fa-bag-shopping', label: 'Retail & Boutiques' },
+                    { icon: 'fa-dumbbell', label: 'Gyms & Fitness Centers' },
+                    { icon: 'fa-wrench', label: 'Auto Care & Mechanics' },
+                    { icon: 'fa-mug-hot', label: 'Specialty Coffee & Bakeries' },
+                    { icon: 'fa-hotel', label: 'Hotels & Hospitality' },
+                    { icon: 'fa-scale-balanced', label: 'Legal & Professional Services' },
+                    { icon: 'fa-house-circle-check', label: 'Real Estate & Home Trades' },
+                    { icon: 'fa-paw', label: 'Pet Care & Veterinary' }
+                  ].map((item, idx) => (
+                    <div className="rf-full-marquee-pill" key={idx}>
+                      <i className={`fa-solid ${item.icon}`}></i>
+                      <span>{item.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </section>
@@ -1061,7 +1076,6 @@ export default function App() {
                     <div className="feature-icon"><i className={f[0]}></i></div>
                     <h3>{f[1]}</h3>
                     <p>{f[2]}</p>
-                    <button className="learn-link" onClick={() => navigate('Features')}>Learn more <i className="fa-solid fa-arrow-right" style={{ fontSize: 11, marginLeft: 4 }}></i></button>
                   </article>
                 ))}
               </div>
@@ -1256,22 +1270,47 @@ export default function App() {
 
             {/* 8. STATS STRIP */}
             <section className="sr-stats-strip">
-              <div className="wrap sr-stats-inner">
-                <div>
-                  <div className="sr-stat-val">60s</div>
-                  <div className="sr-stat-lbl">Instant Setup Time</div>
-                </div>
-                <div>
-                  <div className="sr-stat-val">100%</div>
-                  <div className="sr-stat-lbl">Private Negative Filter</div>
-                </div>
-                <div>
-                  <div className="sr-stat-val">24+</div>
-                  <div className="sr-stat-lbl">AI Draft Languages</div>
-                </div>
-                <div>
-                  <div className="sr-stat-val">Official</div>
-                  <div className="sr-stat-lbl">Google Places API</div>
+              <div className="wrap">
+                <div className="sr-stats-ranking-grid">
+                  <div className="sr-rank-card">
+                    <div className="sr-rank-badge">
+                      <span className="sr-rank-pulse"></span>
+                      <span>#1 SPEED</span>
+                    </div>
+                    <div className="sr-stat-val">60s</div>
+                    <div className="sr-stat-lbl">Instant Setup Time</div>
+                    <div className="sr-stat-sub">Live automated Google Places setup in 1 min</div>
+                  </div>
+
+                  <div className="sr-rank-card">
+                    <div className="sr-rank-badge">
+                      <span className="sr-rank-pulse"></span>
+                      <span>GRADE A+</span>
+                    </div>
+                    <div className="sr-stat-val">100%</div>
+                    <div className="sr-stat-lbl">Private Negative Filter</div>
+                    <div className="sr-stat-sub">Unhappy feedback routed to private resolution inbox</div>
+                  </div>
+
+                  <div className="sr-rank-card">
+                    <div className="sr-rank-badge">
+                      <span className="sr-rank-pulse"></span>
+                      <span>GLOBAL</span>
+                    </div>
+                    <div className="sr-stat-val">24+</div>
+                    <div className="sr-stat-lbl">AI Draft Languages</div>
+                    <div className="sr-stat-sub">Natural customer voice in English, Hindi, Gujarati</div>
+                  </div>
+
+                  <div className="sr-rank-card highlight">
+                    <div className="sr-rank-badge official">
+                      <i className="fa-solid fa-circle-check"></i>
+                      <span>CERTIFIED</span>
+                    </div>
+                    <div className="sr-stat-val">Official</div>
+                    <div className="sr-stat-lbl">Google Places API</div>
+                    <div className="sr-stat-sub">100% compliant direct Google Maps review flow</div>
+                  </div>
                 </div>
               </div>
             </section>
@@ -1318,7 +1357,7 @@ export default function App() {
                   ['Does it post reviews for customers?', 'No. Customers always copy, edit and post their own review. Nothing is posted automatically without customer action.'],
                   ['Which languages are supported?', 'Drafts can be created in 24 languages, including Hindi, Hinglish and Gujarati.'],
                   ['Can I customize the QR flyer?', 'Yes. Choose your brand color, headline and text, then download a print-ready A6 flyer.'],
-                  ['What does the free trial include?', 'All features for 3 days, with no credit card required.']
+                  ['Can I test or see a live demo?', 'Yes! You can explore our interactive QR demo or reach out on WhatsApp for a personalized walk-through.']
                 ].map(q => (
                   <details key={q[0]}>
                     <summary>{q[0]}</summary>
@@ -1334,9 +1373,17 @@ export default function App() {
                 <div>
                   <div className="eyebrow">YOUR NEXT GREAT REVIEW STARTS HERE</div>
                   <h2>Make every customer voice <em>count.</em></h2>
-                  <p>Start your 3-day free trial and set up your review page in minutes.</p>
+                  <p>Inquire with our team on WhatsApp and set up your review page in minutes.</p>
                 </div>
-                <button className="btn btn-white" onClick={() => navigate('Account')}>Call for Pricing: 9904482945 <span className="rf-nav-arrow">→</span></button>
+                <a
+                  href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20would%20like%20to%20inquire%20about%20StarReview%20AI."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-whatsapp-hero"
+                  style={{ textDecoration: 'none' }}
+                >
+                  <i className="fa-brands fa-whatsapp"></i> Inquire on WhatsApp
+                </a>
               </div>
             </section>
           </main>
@@ -1554,7 +1601,15 @@ export default function App() {
                 <p>Join businesses boosting review conversion with smart QR and AI assistance.</p>
               </div>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <button className="rf-btn-startfree" onClick={() => navigate('Account', true)}>Call for Pricing: 9904482945 <span className="rf-nav-arrow">→</span></button>
+                <a
+                    href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20would%20like%20to%20inquire%20about%20StarReview%20AI."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rf-btn-whatsapp-nav"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <i className="fa-brands fa-whatsapp"></i> Inquire on WhatsApp
+                  </a>
                 <button className="rf-btn-signin" onClick={() => navigate('Try the demo')}>Try live demo →</button>
               </div>
             </div>
@@ -1580,9 +1635,15 @@ export default function App() {
                   Compare a standard, static <strong>Google Business Review QR</strong> with the <strong>Google Magic Review QR</strong> powered by <strong>StarReview AI</strong>. Discover how an <strong>AI-Powered Review QR</strong> guides customers, personalizes authentic review drafts, supports 24+ languages, and boosts your <strong>Google My Business Review QR</strong> conversion rate by 300%.
                 </p>
                 <div className="vs-hero-actions">
-                  <button className="rf-btn-startfree" onClick={() => navigate('Account', true)}>
-                    Call for Pricing: 9904482945 <span className="rf-nav-arrow">→</span>
-                  </button>
+                  <a
+                    href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20would%20like%20to%20inquire%20about%20Google%20Magic%20Review%20QR."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rf-btn-whatsapp-nav"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <i className="fa-brands fa-whatsapp"></i> Inquire on WhatsApp
+                  </a>
                   <button className="rf-btn-signin" onClick={() => {
                     const el = document.getElementById('comparison-table');
                     if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -1804,9 +1865,15 @@ export default function App() {
           <section className="vs-cta-banner">
             <h2>Upgrade to Google Magic Review QR Today</h2>
             <p>Join smart business owners using <strong>StarReview AI</strong> to transform daily foot traffic into genuine, high-converting 5-star Google Business reviews effortlessly.</p>
-            <button className="rf-btn-startfree" style={{ margin: '0 auto', fontSize: '1rem', padding: '10px 24px' }} onClick={() => navigate('Account', true)}>
-              Call for Pricing: 9904482945 <span className="rf-nav-arrow">→</span>
-            </button>
+            <a
+              href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20would%20like%20to%20upgrade%20to%20Google%20Magic%20Review%20QR."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rf-btn-whatsapp-nav"
+              style={{ textDecoration: 'none', margin: '0 auto', display: 'inline-flex' }}
+            >
+              <i className="fa-brands fa-whatsapp"></i> Inquire on WhatsApp
+            </a>
           </section>
         </main>
       )}
@@ -2260,7 +2327,7 @@ export default function App() {
                 )}
 
                 <button className="rf-login-submit-btn" type="submit">
-                  {regMode ? 'Call for Pricing: 9904482945 ' : 'Sign In to Dashboard '}
+                  {regMode ? 'Create Account ' : 'Sign In to Dashboard '}
                   <span className="rf-nav-arrow">→</span>
                 </button>
               </form>
@@ -2290,7 +2357,7 @@ export default function App() {
                 {regMode ? (
                   <>Already have an account? <button type="button" className="rf-login-switch-btn" onClick={() => { setRegMode(false); window.history.pushState({}, '', '/login'); }}>Sign In</button></>
                 ) : (
-                  <>Don't have an account? <button type="button" className="rf-login-switch-btn" onClick={() => { setRegMode(true); window.history.pushState({}, '', '/register'); }}>Call for Pricing: 9904482945</button></>
+                  <>Don't have an account? <button type="button" className="rf-login-switch-btn" onClick={() => { setRegMode(true); window.history.pushState({}, '', '/register'); }}>Create an account</button></>
                 )}
               </div>
 
@@ -2469,7 +2536,7 @@ export default function App() {
             {page === 'Frequently asked questions' ? (
               <>
                 {[
-                  ['How does the free trial work?', 'New accounts receive a 3-day trial. No payment card is required to start.'],
+                  ['How do I get started?', 'Simply sign in or message us on WhatsApp at +91 9904482945 to activate your business review kit in minutes.'],
                   ['How do paid plans work?', 'Starter and Pro are available monthly or yearly. Payments are processed through Razorpay when live keys are configured.'],
                   ['Does StarReview AI post reviews automatically?', 'No. Customers remain in control and must review, edit, and post their own feedback.'],
                   ['Can I manage multiple locations?', 'Contact us about the multi-business and agency options.'],
@@ -2495,11 +2562,7 @@ export default function App() {
       )}
 
       {toast && <div className="toast">✓ {toast}</div>}
-      {page !== 'Review' && (
-        <button className="feedback-fab" onClick={() => navigate('Feedback')} title="Share feedback">
-          ♡ <span>Feedback</span>
-        </button>
-      )}
+      
       {/* ====================================================================
           RAZORPAY CHECKOUT MODAL SIMULATOR
           ==================================================================== */}
@@ -2762,7 +2825,7 @@ export default function App() {
 
       {/* Floating WhatsApp Quick Support (Screenshot 4 Style) */}
       <a
-        href={`https://wa.me/${cfg.whatsappNumber || '919904482945'}?text=${encodeURIComponent('Hello StarReview AI Team! I would like to get started with a Official Google Places Verified.')}`}
+        href={`https://wa.me/${cfg.whatsappNumber || '919904482945'}?text=${encodeURIComponent('Hello StarReview AI Team! I would like to inquire about your Google review management platform and plans.')}`}
         target="_blank"
         rel="noopener noreferrer"
         className="rf-floating-whatsapp-btn"

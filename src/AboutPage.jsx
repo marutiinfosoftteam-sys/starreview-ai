@@ -95,12 +95,14 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
           {/* CTA Buttons */}
           <div className="rf-hero-cta-group">
             <a
-              href="tel:+919904482945"
+              href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20would%20like%20to%20inquire%20about%20StarReview%20AI."
+              target="_blank"
+              rel="noopener noreferrer"
               className="rf-btn-green-main"
               style={{ textDecoration: 'none' }}
             >
-              <i className="fa-solid fa-phone"></i>
-              Call for Pricing (9904482945)
+              <i className="fa-brands fa-whatsapp"></i>
+              WhatsApp Inquiry: 9904482945
             </a>
             <a
               href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20would%20like%20to%20know%20more%20about%20your%20plans."
@@ -1060,11 +1062,13 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
           </p>
           <div className="rf-final-cta-actions">
             <a
-              href="tel:+919904482945"
+              href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20would%20like%20to%20inquire%20about%20StarReview%20AI."
+              target="_blank"
+              rel="noopener noreferrer"
               className="rf-btn-green-main"
               style={{ textDecoration: 'none' }}
             >
-              <i className="fa-solid fa-phone"></i> Call for Pricing: 9904482945
+              <i className="fa-brands fa-whatsapp"></i> WhatsApp Inquiry: 9904482945
             </a>
             <button
               type="button"
