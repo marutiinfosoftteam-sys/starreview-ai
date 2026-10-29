@@ -497,6 +497,15 @@
   padding-bottom: 90px;
 }
 
+/* ==========================================================================
+   HOW IT WORKS — 3-STEP VISUAL ROADMAP (REVIEWFLOW AI UNIFIED THEME)
+   ========================================================================== */
+
+.sr-works-page {
+  padding-top: 40px;
+  padding-bottom: 90px;
+}
+
 .sr-works-hero {
   text-align: center;
   max-width: 860px;
@@ -509,24 +518,24 @@
 }
 
 .sr-works-hero h1 {
-  font-family: Manrope, sans-serif;
-  font-size: clamp(36px, 4.8vw, 56px);
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: clamp(34px, 4.5vw, 54px);
   font-weight: 800;
   line-height: 1.15;
-  letter-spacing: -2px;
-  color: #17251c;
+  letter-spacing: -1.2px;
+  color: #0f172a;
   margin: 0 0 18px;
 }
 
 .sr-works-hero h1 span {
-  color: #2f6747;
+  color: #16a34a;
   font-style: normal;
 }
 
 .sr-works-hero p {
   font-size: 15px;
-  color: #637266;
-  line-height: 1.75;
+  color: #64748b;
+  line-height: 1.7;
   max-width: 680px;
   margin: 0 auto 32px;
 }
@@ -539,15 +548,15 @@
   max-width: 740px;
   margin: 0 auto;
   background: #ffffff;
-  border: 1px solid #e1e9df;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
   padding: 22px 24px;
-  box-shadow: 0 8px 24px rgba(29, 73, 52, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
 .sr-metric-item {
   text-align: center;
-  border-right: 1px solid #e6ece4;
+  border-right: 1px solid #e2e8f0;
   padding: 0 12px;
 }
 
@@ -556,23 +565,23 @@
 }
 
 .sr-metric-val {
-  font-family: Manrope, sans-serif;
-  font-size: 32px;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 34px;
   font-weight: 800;
-  color: #17261d;
+  color: #0f172a;
   line-height: 1.1;
   margin-bottom: 5px;
 }
 
 .sr-metric-val span {
-  color: #34714b;
+  color: #16a34a;
   font-size: 24px;
 }
 
 .sr-metric-lbl {
   font-size: 11px;
   font-weight: 700;
-  color: #718075;
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.8px;
 }
@@ -592,20 +601,20 @@
 
 .sr-step-card {
   background: #ffffff;
-  border: 1px solid #e3e9e1;
-  border-radius: 22px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
   padding: 38px 42px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 40px;
   align-items: center;
-  box-shadow: 0 6px 24px rgba(24, 45, 30, 0.03);
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.03);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .sr-step-card:hover {
-  border-color: #bcdbc0;
-  box-shadow: 0 16px 36px rgba(29, 73, 52, 0.08);
+  border-color: #a7f3d0;
+  box-shadow: 0 12px 36px rgba(22, 163, 74, 0.08);
   transform: translateY(-2px);
 }
 
@@ -623,8 +632,9 @@
   gap: 7px;
   font-size: 11px;
   font-weight: 800;
-  color: #245e39;
-  background: #e4f2e5;
+  color: #16a34a;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
   padding: 5px 12px;
   border-radius: 8px;
   margin-bottom: 14px;
@@ -633,19 +643,19 @@
 }
 
 .sr-step-info h3 {
-  font-family: Manrope, sans-serif;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 24px;
   font-weight: 800;
-  color: #17251c;
+  color: #0f172a;
   letter-spacing: -0.6px;
   margin: 0 0 12px;
   line-height: 1.25;
 }
 
 .sr-step-info p {
-  font-size: 13px;
-  color: #5d6c60;
-  line-height: 1.7;
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.65;
   margin: 0 0 18px;
 }
 
@@ -662,23 +672,23 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  font-size: 12px;
-  color: #455448;
+  font-size: 13px;
+  color: #334155;
   line-height: 1.55;
   font-weight: 500;
 }
 
 .sr-step-bullets li i {
-  color: #2d7345;
-  font-size: 14px;
+  color: #16a34a;
+  font-size: 15px;
   margin-top: 2px;
   flex-shrink: 0;
 }
 
 /* Phone Mockup */
 .sr-step-preview {
-  background: #f6faf4;
-  border: 1px solid #e1ebe0;
+  background: #fafbfb;
+  border: 1px solid #e2e8f0;
   border-radius: 18px;
   padding: 24px;
   display: flex;
@@ -688,10 +698,10 @@
 
 .sr-phone-mockup {
   background: #ffffff;
-  border: 1px solid #dce5da;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
   padding: 22px 20px;
-  box-shadow: 0 10px 28px rgba(25, 45, 32, 0.06);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.05);
 }
 
 .sr-mockup-header {
@@ -699,7 +709,7 @@
   align-items: center;
   gap: 11px;
   padding-bottom: 14px;
-  border-bottom: 1px solid #edf2ec;
+  border-bottom: 1px solid #f1f5f9;
   margin-bottom: 16px;
 }
 
@@ -707,7 +717,7 @@
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: #1d4934;
+  background: #16a34a;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -720,13 +730,13 @@
 .sr-mockup-biz-name {
   font-size: 13px;
   font-weight: 700;
-  color: #17251c;
+  color: #0f172a;
   line-height: 1.2;
 }
 
 .sr-mockup-biz-sub {
   font-size: 10px;
-  color: #79877b;
+  color: #64748b;
   margin-top: 2px;
 }
 
@@ -735,13 +745,13 @@
   justify-content: center;
   gap: 6px;
   margin: 14px 0;
-  color: #e9aa35;
+  color: #eab308;
   font-size: 26px;
 }
 
 .sr-mockup-btn {
-  background: #f1f6ef;
-  color: #3b5040;
+  background: #f1f5f9;
+  color: #334155;
   font-weight: 700;
   font-size: 12px;
   padding: 11px 16px;
@@ -754,41 +764,41 @@
 }
 
 .sr-mockup-btn.blue {
-  background: #1a73e8;
+  background: #16a34a;
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(26, 115, 232, 0.3);
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
   font-size: 13px;
   padding: 12px 18px;
 }
 
 .sr-mockup-btn.blue:hover {
-  background: #1557b0;
+  background: #15803d;
 }
 
 .sr-mockup-draft-chip {
-  background: #f2f8f0;
-  border: 1px solid #c9e4c6;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
   border-radius: 10px;
   padding: 12px 14px;
   font-size: 11px;
-  color: #1b4d2e;
+  color: #166534;
   line-height: 1.5;
   margin-bottom: 10px;
 }
 
 .sr-mockup-draft-chip.alt {
-  background: #fbfdfa;
-  border-color: #e4eae1;
-  color: #48574a;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #334155;
 }
 
 .sr-mockup-shield {
-  background: #fef9ed;
-  border: 1px solid #fae4a8;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
   border-radius: 10px;
   padding: 11px 13px;
   font-size: 11px;
-  color: #8c5310;
+  color: #92400e;
   line-height: 1.45;
   display: flex;
   align-items: flex-start;
@@ -809,8 +819,8 @@
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  background: #e4f5e7;
-  color: #287343;
+  background: #ecfdf5;
+  color: #16a34a;
   font-size: 20px;
   margin-bottom: 8px;
 }
@@ -835,14 +845,14 @@
 }
 
 .sr-compare-bad {
-  background: #fff8f8;
-  border: 1px solid #fedcdc;
+  background: #fffdfd;
+  border: 1.5px solid #fecaca;
 }
 
 .sr-compare-bad h4 {
-  color: #b91c1c;
-  font-family: Manrope, sans-serif;
-  font-size: 17px;
+  color: #dc2626;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 18px;
   font-weight: 800;
   margin: 0 0 18px;
   display: flex;
@@ -863,28 +873,28 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  font-size: 12px;
-  color: #7f2323;
+  font-size: 12.5px;
+  color: #991b1b;
   line-height: 1.55;
 }
 
 .sr-compare-bad li i {
   color: #dc2626;
-  font-size: 13px;
+  font-size: 14px;
   margin-top: 2px;
   flex-shrink: 0;
 }
 
 .sr-compare-good {
-  background: #f3f8f1;
-  border: 2px solid #a3d9a9;
-  box-shadow: 0 10px 30px rgba(29, 73, 52, 0.07);
+  background: #ffffff;
+  border: 2px solid #86efac;
+  box-shadow: 0 10px 30px rgba(22, 163, 74, 0.08);
 }
 
 .sr-compare-good h4 {
-  color: #1a5231;
-  font-family: Manrope, sans-serif;
-  font-size: 17px;
+  color: #16a34a;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 18px;
   font-weight: 800;
   margin: 0 0 18px;
   display: flex;
@@ -905,14 +915,14 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  font-size: 12px;
-  color: #1f452b;
+  font-size: 12.5px;
+  color: #166534;
   line-height: 1.55;
 }
 
 .sr-compare-good li i {
-  color: #1e7e34;
-  font-size: 13px;
+  color: #16a34a;
+  font-size: 14px;
   margin-top: 2px;
   flex-shrink: 0;
 }
@@ -928,12 +938,12 @@
   .sr-step-card.reverse .sr-step-preview { order: 2; }
   .sr-compare-grid { grid-template-columns: 1fr; }
   .sr-metrics-bar { grid-template-columns: 1fr; gap: 14px; }
-  .sr-metric-item { border-right: none; border-bottom: 1px solid #e6ece4; padding-bottom: 12px; }
+  .sr-metric-item { border-right: none; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
   .sr-metric-item:last-child { border-bottom: none; }
 }
 
 /* ==========================================================================
-   AI VS NORMAL QR COMPARISON PAGE (REVIEWFLOW AI STYLE IN STARREVIEW THEME)
+   AI VS NORMAL QR COMPARISON PAGE (REVIEWFLOW AI UNIFIED THEME)
    ========================================================================== */
 
 .vs-page-wrapper {
@@ -953,10 +963,10 @@
   align-items: center;
   gap: 36px;
   padding: 38px 42px;
-  border: 1px solid #dde7df;
+  border: 1px solid #e2e8f0;
   border-radius: 24px;
-  background: radial-gradient(circle at 90% 10%, rgba(52, 168, 83, 0.08), transparent 40%), linear-gradient(135deg, #ffffff 0%, #f7faf7 100%);
-  box-shadow: 0 12px 36px rgba(29, 73, 52, 0.05);
+  background: #ffffff;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
 }
 
 .vs-badge {
@@ -964,34 +974,34 @@
   align-items: center;
   gap: 7px;
   padding: 5px 14px;
-  background: #e6f3e8;
-  border: 1px solid #cce5d2;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 800;
-  color: #1b532f;
+  color: #16a34a;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   margin-bottom: 14px;
 }
 
 .vs-hero h1 {
-  font-family: Manrope, sans-serif;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(30px, 3.8vw, 42px);
   font-weight: 800;
   line-height: 1.18;
-  letter-spacing: -1.5px;
-  color: #17251c;
+  letter-spacing: -1px;
+  color: #0f172a;
   margin: 0 0 14px;
 }
 
 .vs-hero h1 span {
-  color: #2f6747;
+  color: #16a34a;
 }
 
 .vs-hero p {
   font-size: 14px;
-  color: #5d6c60;
+  color: #64748b;
   line-height: 1.7;
   margin: 0 0 22px;
 }
@@ -1009,31 +1019,32 @@
   align-items: center;
   gap: 14px;
   padding-left: 20px;
-  border-left: 1px solid #e1e9e3;
+  border-left: 1px solid #f1f5f9;
 }
 
 .compare-flow-card {
   min-height: 190px;
   padding: 20px 14px;
   border-radius: 18px;
-  border: 1px solid #e2e8e3;
+  border: 1px solid #e2e8f0;
   background: #ffffff;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  box-shadow: 0 6px 20px rgba(20, 45, 30, 0.04);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
 }
 
 .compare-flow-card.basic-flow {
-  background: linear-gradient(180deg, #fdfdfd, #f6f8f6);
+  background: #f8fafc;
+  border-color: #e2e8f0;
 }
 
 .compare-flow-card.smart-flow {
-  border-color: #b9dfc4;
-  background: linear-gradient(180deg, #ffffff, #f2f8f3);
-  box-shadow: 0 10px 24px rgba(47, 103, 71, 0.09);
+  border: 2px solid #86efac;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(22, 163, 74, 0.1);
 }
 
 .flow-label {
@@ -1041,12 +1052,12 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: #79877b;
+  color: #64748b;
   margin-bottom: 8px;
 }
 
 .smart-flow .flow-label {
-  color: #245e39;
+  color: #16a34a;
 }
 
 .flow-icon {
@@ -1057,31 +1068,30 @@
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  background: #f1f5f2;
-  color: #637266;
+  background: #f1f5f9;
+  color: #64748b;
   margin-bottom: 10px;
 }
 
 .smart-flow .flow-icon {
-  background: #e4f3e6;
-  color: #1e5e34;
+  background: #ecfdf5;
+  color: #16a34a;
 }
 
 .compare-flow-card strong {
-  font-family: Manrope, sans-serif;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 800;
-  color: #17251c;
+  color: #0f172a;
 }
 
 .compare-flow-card > span {
   font-size: 11px;
-  color: #718075;
+  color: #64748b;
   margin-top: 4px;
 }
 
 .flow-arrow {
-  color: #9cb1a2;
+  color: #cbd5e1;
   font-size: 16px;
 }
 
@@ -1096,9 +1106,9 @@
 .mini-feature-row span {
   font-size: 9px;
   font-weight: 800;
-  color: #1e5e34;
-  background: #e4f3e6;
-  border: 1px solid #c9e6ce;
+  color: #166534;
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
   padding: 3px 7px;
   border-radius: 999px;
 }
@@ -1112,11 +1122,11 @@
 }
 
 .vs-section-intro h2 {
-  font-family: Manrope, sans-serif;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(26px, 3.2vw, 36px);
   font-weight: 800;
-  color: #17251c;
-  letter-spacing: -1px;
+  color: #0f172a;
+  letter-spacing: -0.8px;
   margin: 8px 0;
 }
 
@@ -1138,25 +1148,25 @@
 }
 
 .summary-card {
-  border-radius: 22px;
+  border-radius: 20px;
   padding: 32px 28px;
   position: relative;
   border: 1.5px solid #e2e8f0;
   background: #ffffff;
-  box-shadow: 0 6px 24px rgba(20, 45, 30, 0.03);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
 }
 
 .summary-card.traditional {
-  background: #fbfbfc;
-  border-color: #fedcdc;
+  background: #fffdfd;
+  border-color: #fecaca;
 }
 
 .summary-card.reviewflow {
-  background: radial-gradient(circle at 100% 0%, rgba(52, 168, 83, 0.08), transparent 45%), #ffffff;
-  border: 2px solid #81c995;
-  box-shadow: 0 12px 36px rgba(47, 103, 71, 0.1);
+  background: #ffffff;
+  border: 2px solid #86efac;
+  box-shadow: 0 12px 36px rgba(22, 163, 74, 0.1);
 }
 
 .card-topline {
@@ -1172,11 +1182,7 @@
 }
 
 .card-topline.smart {
-  color: #2f6747;
-}
-
-.card-topline i {
-  font-size: 10px;
+  color: #16a34a;
 }
 
 .summary-chip {
@@ -1200,21 +1206,21 @@
 }
 
 .summary-chip.good {
-  background: #dcfce7;
+  background: #ecfdf5;
   color: #166534;
   border: 1px solid #bbf7d0;
 }
 
 .summary-card h3 {
-  font-family: Manrope, sans-serif;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 20px;
   font-weight: 800;
   margin: 0 0 8px;
-  color: #17251c;
+  color: #0f172a;
 }
 
 .summary-card p.card-desc {
-  font-size: 13px;
+  font-size: 13.5px;
   color: #64748b;
   line-height: 1.6;
   margin: 0 0 22px;
@@ -1240,7 +1246,7 @@
 }
 
 .summary-points.bad li {
-  border: 1px solid #f2dede;
+  border: 1px solid #fecaca;
   background: #fff8f8;
 }
 
@@ -1259,27 +1265,27 @@
 .summary-points.bad li strong {
   display: block;
   font-size: 12px;
-  color: #4a2828;
+  color: #7f1d1d;
   margin-bottom: 3px;
 }
 
 .summary-points.bad li span {
-  font-size: 11px;
+  font-size: 11.5px;
   line-height: 1.5;
-  color: #775f5f;
+  color: #991b1b;
 }
 
 .summary-points.good li {
-  border: 1px solid #d8ede0;
-  background: #f7faf8;
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
 }
 
 .summary-points.good li .point-icon {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: #dcfce7;
-  color: #15803d;
+  background: #ecfdf5;
+  color: #16a34a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1289,14 +1295,14 @@
 .summary-points.good li strong {
   display: block;
   font-size: 12px;
-  color: #173824;
+  color: #14532d;
   margin-bottom: 3px;
 }
 
 .summary-points.good li span {
-  font-size: 11px;
+  font-size: 11.5px;
   line-height: 1.5;
-  color: #556c5c;
+  color: #166534;
 }
 
 /* ── Detailed Comparison Table ── */
@@ -1358,26 +1364,26 @@
 }
 
 .vs-table th {
-  background: #f7faf7;
-  font-family: Manrope, sans-serif;
+  background: #f8fafc;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-weight: 800;
-  color: #17251c;
+  color: #0f172a;
   font-size: 13px;
 }
 
 .vs-table th.rf-col {
-  background: #edf6ef;
-  color: #1b532f;
-  border-left: 2px solid #b7dfc3;
-  border-right: 2px solid #b7dfc3;
+  background: #f0fdf4;
+  color: #166534;
+  border-left: 2px solid #86efac;
+  border-right: 2px solid #86efac;
 }
 
 .vs-table td.rf-col {
-  background: rgba(47, 103, 71, 0.03);
-  border-left: 2px solid #b7dfc3;
-  border-right: 2px solid #b7dfc3;
+  background: rgba(22, 163, 74, 0.03);
+  border-left: 2px solid #86efac;
+  border-right: 2px solid #86efac;
   font-weight: 600;
-  color: #1b532f;
+  color: #166534;
 }
 
 .vs-table tbody tr:last-child td {
@@ -1385,16 +1391,16 @@
 }
 
 .vs-table tbody tr:hover td {
-  background: #fafcfa;
+  background: #f8fafc;
 }
 
 .vs-table tbody tr:hover td.rf-col {
-  background: #edf6ef;
+  background: #f0fdf4;
 }
 
 .feature-title-cell {
   font-weight: 800;
-  color: #17251c;
+  color: #0f172a;
 }
 
 .feature-title-cell small {
@@ -1440,17 +1446,17 @@
 
 .deep-dive-card {
   background: #ffffff;
-  border: 1px solid #e1e8e2;
+  border: 1px solid #e2e8f0;
   border-radius: 18px;
   padding: 28px 24px;
-  box-shadow: 0 6px 20px rgba(20, 45, 30, 0.03);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .deep-dive-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(47, 103, 71, 0.08);
-  border-color: #8bc69e;
+  box-shadow: 0 12px 30px rgba(22, 163, 74, 0.1);
+  border-color: #86efac;
 }
 
 .deep-dive-icon {
@@ -1462,21 +1468,21 @@
   justify-content: center;
   margin-bottom: 16px;
   font-size: 20px;
-  background: #e6f3e8;
-  color: #245e39;
-  border: 1px solid #c9e6ce;
+  background: #ecfdf5;
+  color: #16a34a;
+  border: 1px solid #a7f3d0;
 }
 
 .deep-dive-card h4 {
-  font-family: Manrope, sans-serif;
-  font-size: 16px;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16.5px;
   font-weight: 800;
-  color: #17251c;
+  color: #0f172a;
   margin: 0 0 8px;
 }
 
 .deep-dive-card p {
-  font-size: 12px;
+  font-size: 12.5px;
   color: #64748b;
   line-height: 1.65;
   margin: 0;
@@ -1487,17 +1493,17 @@
   max-width: 1140px;
   margin: 0 auto 70px;
   padding: 56px 32px;
-  background: radial-gradient(circle at 100% 0%, rgba(82, 183, 114, 0.25) 0%, transparent 60%), linear-gradient(135deg, #1d4934 0%, #0f271a 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   border-radius: 24px;
   text-align: center;
   color: #ffffff;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 16px 45px rgba(29, 73, 52, 0.2);
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.15);
 }
 
 .vs-cta-banner h2 {
-  font-family: Manrope, sans-serif;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(26px, 3.5vw, 38px);
   font-weight: 800;
   margin: 0 0 12px;
@@ -1507,7 +1513,7 @@
 
 .vs-cta-banner p {
   font-size: 15px;
-  color: #d1e7d7;
+  color: #cbd5e1;
   max-width: 640px;
   margin: 0 auto 28px;
   line-height: 1.65;

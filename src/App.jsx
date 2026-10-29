@@ -1466,8 +1466,9 @@ export default function App() {
         <main className="wrap sr-works-page">
           {/* HERO SECTION */}
           <section className="sr-works-hero">
-            <div className="eyebrow">
-              <span className="pulse"></span> THE GOOGLE MAGIC REVIEW QR EXPERIENCE
+            <div className="rf-pill-badge" style={{ margin: '0 auto 18px', width: 'fit-content' }}>
+              <i className="fa-solid fa-wand-magic-sparkles"></i>
+              <span>THE GOOGLE MAGIC REVIEW QR EXPERIENCE</span>
             </div>
             <h1>How <span>StarReview AI</span> Turns Customers into 5-Star Reviews</h1>
             <p>
@@ -1494,7 +1495,9 @@ export default function App() {
           {/* 3-STEP VISUAL ROADMAP */}
           <section className="sr-roadmap-section">
             <div className="section-heading">
-              <div className="eyebrow">THE 3-STEP FLOW</div>
+              <div className="rf-pill-badge" style={{ margin: '0 auto 14px', width: 'fit-content' }}>
+                <span>THE 3-STEP FLOW</span>
+              </div>
               <h2>How It Works In <em>3 Simple Steps</em></h2>
               <p>A friction-free mobile review flow that turns satisfied in-store visitors into published 5-star Google Business reviews on autopilot.</p>
             </div>
@@ -1596,7 +1599,9 @@ export default function App() {
           {/* TRADITIONAL VS STARREVIEW COMPARISON SECTION */}
           <section className="sr-compare-section">
             <div className="section-heading">
-              <div className="eyebrow">HEAD TO HEAD COMPARISON</div>
+              <div className="rf-pill-badge" style={{ margin: '0 auto 14px', width: 'fit-content' }}>
+                <span>HEAD TO HEAD COMPARISON</span>
+              </div>
               <h2>Normal QR Code vs <em>Google Magic Review QR</em></h2>
               <p>Why standard Google QR codes fail to produce results, and how our <strong>Google Magic Review QR</strong> delivers 300%+ more reviews.</p>
             </div>
@@ -1630,13 +1635,15 @@ export default function App() {
           <div className="cta-wrap">
             <div className="cta-card">
               <div>
-                <div className="eyebrow">READY TO GROW?</div>
+                <div className="rf-pill-badge" style={{ marginBottom: 12 }}>
+                  <span>READY TO GROW?</span>
+                </div>
                 <h2>Ready to turn visits into<br /><em>5-star Google reviews?</em></h2>
                 <p>Join businesses boosting review conversion with smart QR and AI assistance.</p>
               </div>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <button className="btn btn-dark" onClick={() => navigate('Account')}>Get started free <span>↗</span></button>
-                <button className="btn btn-white" onClick={() => navigate('Try the demo')}>Try live demo <span>▶</span></button>
+                <button className="rf-btn-startfree" onClick={() => navigate('Account', true)}>Get started free <span className="rf-nav-arrow">→</span></button>
+                <button className="rf-btn-signin" onClick={() => navigate('Try the demo')}>Try live demo ↗</button>
               </div>
             </div>
           </div>
@@ -1652,18 +1659,19 @@ export default function App() {
           <section className="vs-hero">
             <div className="vs-hero-shell">
               <div className="vs-hero-copy">
-                <div className="vs-badge">
-                  <i className="fa-solid fa-code-compare"></i> Google Magic Review QR vs Normal QR
+                <div className="rf-pill-badge" style={{ marginBottom: 16 }}>
+                  <i className="fa-solid fa-code-compare"></i>
+                  <span>GOOGLE MAGIC REVIEW QR VS NORMAL QR</span>
                 </div>
                 <h1>Standard QR Codes Only Redirect.<br /><span>StarReview AI Helps Customers Write 5-Star Reviews.</span></h1>
                 <p>
                   Compare a standard, static <strong>Google Business Review QR</strong> with the <strong>Google Magic Review QR</strong> powered by <strong>StarReview AI</strong>. Discover how an <strong>AI-Powered Review QR</strong> guides customers, personalizes authentic review drafts, supports 24+ languages, and boosts your <strong>Google My Business Review QR</strong> conversion rate by 300%.
                 </p>
                 <div className="vs-hero-actions">
-                  <button className="btn btn-dark" onClick={() => navigate('Account')}>
-                    Start 3-Day Free Trial <i className="fa-solid fa-arrow-right" style={{ marginLeft: 6 }}></i>
+                  <button className="rf-btn-startfree" onClick={() => navigate('Account', true)}>
+                    Start 3-Day Free Trial <span className="rf-nav-arrow">→</span>
                   </button>
-                  <button className="btn btn-light" onClick={() => {
+                  <button className="rf-btn-signin" onClick={() => {
                     const el = document.getElementById('comparison-table');
                     if (el) el.scrollIntoView({ behavior: 'smooth' });
                   }}>
@@ -1697,7 +1705,9 @@ export default function App() {
 
           {/* 2. SIDE-BY-SIDE SUMMARY CARDS */}
           <section className="vs-section-intro">
-            <div className="eyebrow" style={{ justifyContent: 'center' }}>SIDE-BY-SIDE COMPARISON</div>
+            <div className="rf-pill-badge" style={{ margin: '0 auto 14px', width: 'fit-content' }}>
+              <span>SIDE-BY-SIDE COMPARISON</span>
+            </div>
             <h2>Normal QR Code vs Google Magic Review QR</h2>
             <p>The difference isn't the QR code itself — it is the frictionless experience that happens the second your customer scans it.</p>
           </section>
@@ -1809,7 +1819,9 @@ export default function App() {
           {/* 3. DETAILED COMPARISON TABLE */}
           <section className="vs-table-section" id="comparison-table">
             <div className="vs-table-heading">
-              <div className="vs-table-kicker">Feature Breakdown</div>
+              <div className="rf-pill-badge" style={{ margin: '0 auto 14px', width: 'fit-content' }}>
+                <span>FEATURE BREAKDOWN</span>
+              </div>
               <h2>Side-by-Side Capabilities</h2>
               <p>A detailed point-by-point comparison between basic QR codes and StarReview AI.</p>
             </div>
@@ -1880,8 +1892,8 @@ export default function App() {
           <section className="vs-cta-banner">
             <h2>Upgrade to Google Magic Review QR Today</h2>
             <p>Join smart business owners using <strong>StarReview AI</strong> to transform daily foot traffic into genuine, high-converting 5-star Google Business reviews effortlessly.</p>
-            <button className="vs-cta-btn" onClick={() => navigate('Account')}>
-              Start 3-Day Free Trial <i className="fa-solid fa-arrow-right"></i>
+            <button className="rf-btn-startfree" style={{ margin: '0 auto', fontSize: '1rem', padding: '10px 24px' }} onClick={() => navigate('Account', true)}>
+              Start 3-Day Free Trial <span className="rf-nav-arrow">→</span>
             </button>
           </section>
         </main>

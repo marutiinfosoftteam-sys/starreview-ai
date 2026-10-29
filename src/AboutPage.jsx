@@ -68,63 +68,6 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
   return (
     <div className="rf-landing-page">
       {/* ====================================================================
-          TOP AUTH BAR (LOGIN & FREE TRIAL ACCESS STRIP)
-          ==================================================================== */}
-      <div className="rf-about-auth-bar">
-        {!user ? (
-          <div className="rf-aab-inner wrap">
-            <div className="rf-aab-info">
-              <i className="fa-solid fa-lock" style={{ color: '#16a34a', fontSize: '1rem' }}></i>
-              <span>
-                <strong>Business Portal Access:</strong> Sign in with your registered account or start your 3-day free trial to access your dashboard.
-              </span>
-            </div>
-            <div className="rf-aab-actions">
-              <button
-                type="button"
-                className="rf-aab-btn signin"
-                onClick={handleSignIn}
-              >
-                <i className="fa-solid fa-arrow-right-to-bracket"></i> Sign In
-              </button>
-              <button
-                type="button"
-                className="rf-aab-btn signup"
-                onClick={handleStartFree}
-              >
-                <i className="fa-solid fa-user-plus"></i> Start Free Trial ↗
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="rf-aab-inner logged-in wrap">
-            <div className="rf-aab-info">
-              <span className="rf-online-pulse"></span>
-              <span>
-                Signed in as <b>{user.email}</b> &bull; Business Console Active
-              </span>
-            </div>
-            <div className="rf-aab-actions">
-              <button
-                type="button"
-                className="rf-aab-btn dashboard"
-                onClick={() => navigate('Dashboard')}
-              >
-                Open Dashboard ↗
-              </button>
-              <button
-                type="button"
-                className="rf-aab-btn signout"
-                onClick={logout}
-              >
-                Sign Out
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ====================================================================
           SCREENSHOT 1: HERO SECTION & FLOATING CHIPS + VIDEO PREVIEW
           ==================================================================== */}
       <section className="rf-hero-container">

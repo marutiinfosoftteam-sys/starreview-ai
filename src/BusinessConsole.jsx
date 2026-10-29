@@ -15,9 +15,78 @@ export default function BusinessConsole({
   choosePlan,
   initialTab = 'Dashboard'
 }) {
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const getInitialTabFromUrl = () => {
+    try {
+      const search = new URLSearchParams(window.location.search);
+      const tab = (search.get('tab') || '').toLowerCase();
+      if (tab === 'feedback' || tab === 'negative' || tab === 'negative-reviews' || tab === 'reviews') return 'Negative Reviews';
+      if (tab === 'billing' || tab === 'plans') return 'Billing & Plans';
+      if (tab === 'stand' || tab === 'standee' || tab === 'qr') return 'Physical QR Stand';
+      if (tab === 'seo' || tab === 'analyzer') return 'AI SEO Analyzer';
+      if (tab === 'services' || tab === 'growth') return 'Growth Services';
+      if (tab === 'auto-reply' || tab === 'reply') return 'Auto AI Reply';
+      if (tab === 'business') return 'Business Setup';
+      if (tab === 'flyer' || tab === 'qr-flyer') return 'QR Code & Flyer';
+    } catch {}
+    return initialTab;
+  };
+
+  const [activeTab, setActiveTab] = useState(getInitialTabFromUrl);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Sync tab with URL search params dynamically
+  useEffect(() => {
+    const handleUrlTab = () => {
+      try {
+        const search = new URLSearchParams(window.location.search);
+        const tab = (search.get('tab') || '').toLowerCase();
+        if (tab === 'feedback' || tab === 'negative' || tab === 'negative-reviews') {
+          setActiveTab('Negative Reviews');
+        } else if (tab === 'billing' || tab === 'plans') {
+          setActiveTab('Billing & Plans');
+        } else if (tab === 'stand' || tab === 'standee' || tab === 'qr') {
+          setActiveTab('Physical QR Stand');
+        } else if (tab === 'seo' || tab === 'analyzer') {
+          setActiveTab('AI SEO Analyzer');
+        } else if (tab === 'services' || tab === 'growth') {
+          setActiveTab('Growth Services');
+        } else if (tab === 'auto-reply' || tab === 'reply') {
+          setActiveTab('Auto AI Reply');
+        } else if (tab === 'business') {
+          setActiveTab('Business Setup');
+        } else if (tab === 'flyer' || tab === 'qr-flyer') {
+          setActiveTab('QR Code & Flyer');
+        }
+      } catch {}
+    };
+    handleUrlTab();
+    window.addEventListener('popstate', handleUrlTab);
+    return () => window.removeEventListener('popstate', handleUrlTab);
+  }, []);
+
+  const handleTabSelect = (tabId) => {
+    setActiveTab(tabId);
+    setMobileOpen(false);
+    try {
+      const tabMap = {
+        'Dashboard': '',
+        'Negative Reviews': 'feedback',
+        'Physical QR Stand': 'stand',
+        'QR Code & Flyer': 'flyer',
+        'Auto AI Reply': 'auto-reply',
+        'AI SEO Analyzer': 'seo',
+        'Growth Services': 'services',
+        'Business Setup': 'business',
+        'Billing & Plans': 'billing'
+      };
+      const slug = tabMap[tabId];
+      const targetUrl = slug ? `/dashboard?tab=${slug}` : '/dashboard';
+      if (window.location.pathname + window.location.search !== targetUrl) {
+        window.history.pushState({ tab: tabId }, '', targetUrl);
+      }
+    } catch {}
+  };
 
   // Derived business and subscription info (declared early to prevent TDZ ReferenceErrors)
   const bizName = business?.name || 'verde eco landing';
@@ -682,14 +751,14 @@ export default function BusinessConsole({
       <aside className={`bc-sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         {/* Brand */}
         <div className="bc-sidebar-header">
-          <div className="bc-brand-group" onClick={() => { setActiveTab('Dashboard'); setMobileOpen(false); }} style={{ cursor: 'pointer' }}>
+          <div className="bc-brand-group" onClick={() => { handleTabSelect('Dashboard'); }} style={{ cursor: 'pointer' }} title="StarReview AI Business Console">
             <div className="bc-brand-icon">
               <i className="fa-solid fa-star"></i>
             </div>
             {!collapsed && (
               <div className="bc-brand-text">
-                <h3>StarReview AI</h3>
-                <small>Business Console</small>
+                <h3>StarReview <span>AI</span></h3>
+                <small>Helping customers share better reviews</small>
               </div>
             )}
           </div>
@@ -761,11 +830,10 @@ export default function BusinessConsole({
                 key={item.id}
                 className={`bc-nav-item ${isActive ? 'active' : ''}`}
                 onClick={() => {
-                  setActiveTab(item.id);
+                  handleTabSelect(item.id);
                   if (item.id === 'Billing & Plans') {
                     setPlanCheckoutStep('select');
                   }
-                  setMobileOpen(false);
                 }}
                 title={collapsed ? item.label : undefined}
               >
