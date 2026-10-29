@@ -623,7 +623,7 @@ export default function BusinessConsole({
       <aside className={`bc-sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         {/* Brand */}
         <div className="bc-sidebar-header">
-          <div className="bc-brand-group" onClick={() => setActiveTab('Dashboard')} style={{ cursor: 'pointer' }}>
+          <div className="bc-brand-group" onClick={() => { setActiveTab('Dashboard'); setMobileOpen(false); }} style={{ cursor: 'pointer' }}>
             <div className="bc-brand-icon">
               <i className="fa-solid fa-star"></i>
             </div>
@@ -634,13 +634,24 @@ export default function BusinessConsole({
               </div>
             )}
           </div>
-          <button
-            className="bc-collapse-btn"
-            onClick={() => setCollapsed(!collapsed)}
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            <i className={`fa-solid ${collapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button
+              className="bc-collapse-btn"
+              onClick={() => setCollapsed(!collapsed)}
+              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              <i className={`fa-solid ${collapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
+            </button>
+            <button
+              type="button"
+              className="bc-mobile-close-btn"
+              onClick={() => setMobileOpen(false)}
+              title="Close menu"
+              aria-label="Close menu"
+            >
+              <i className="fa-solid fa-xmark"></i>
+            </button>
+          </div>
         </div>
 
         {/* Plan Status Card in Sidebar */}
@@ -729,15 +740,56 @@ export default function BusinessConsole({
         </div>
       </aside>
 
+      {/* Backdrop overlay for mobile drawer */}
+      {mobileOpen && (
+        <div
+          className="bc-mobile-backdrop"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Close navigation overlay"
+        />
+      )}
+
       {/* ── MAIN CONTENT AREA ── */}
       <main className="bc-main">
         <div className="bc-container">
-        {/* Mobile menu trigger */}
-        <div style={{ display: 'none', marginBottom: '1rem' }} className="bc-mobile-bar">
-          <button className="btn btn-light btn-sm" onClick={() => setMobileOpen(true)}>
-            ☰ Menu
+        {/* Modern Mobile / Tablet Top Bar (Sticky on <= 1024px) */}
+        <header className="bc-mobile-topbar">
+          <button
+            type="button"
+            className="bc-mobile-menu-btn"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open navigation menu"
+          >
+            <i className="fa-solid fa-bars"></i>
           </button>
-        </div>
+          <div className="bc-mobile-brand" onClick={() => { setActiveTab('Dashboard'); setPlanCheckoutStep('select'); }}>
+            <div className="bc-brand-icon-xs">
+              <i className="fa-solid fa-star"></i>
+            </div>
+            <div className="bc-mobile-title-wrap">
+              <span className="bc-mobile-app-name">StarReview AI</span>
+              <span className="bc-mobile-tab-tag">{activeTab}</span>
+            </div>
+          </div>
+          <div className="bc-mobile-actions">
+            {activeTab !== 'Billing & Plans' ? (
+              <button
+                type="button"
+                className="bc-mobile-btn-upgrade"
+                onClick={() => {
+                  setActiveTab('Billing & Plans');
+                  setPlanCheckoutStep('select');
+                }}
+              >
+                <i className="fa-solid fa-bolt"></i> Upgrade
+              </button>
+            ) : (
+              <span className="bc-mobile-pill-active">
+                <span className="bc-live-dot"></span> Active
+              </span>
+            )}
+          </div>
+        </header>
 
         {/* ====================================================================
             VIEW: DASHBOARD (EXACT SCREENSHOT MATCH)
@@ -5133,7 +5185,7 @@ export default function BusinessConsole({
               /* EXACT REVIEWFLOW AI: INSTANT UPI PLAN CHECKOUT (SCREENSHOT 1) */
               <div>
                 {/* Top Header Card */}
-                <div style={{
+                <div className="bc-checkout-top-header" style={{
                   background: '#f0fdf4',
                   border: '1.5px solid #bbf7d0',
                   borderRadius: 16,
@@ -5227,7 +5279,7 @@ export default function BusinessConsole({
                     </div>
 
                     {/* Features Grid (2 Columns) */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem 0.75rem', marginBottom: '1.5rem' }}>
+                    <div className="bc-features-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem 0.75rem', marginBottom: '1.5rem' }}>
                       {[
                         'Human-Like AI Written Reviews',
                         'Custom Keywords, Services, Products & Names',
@@ -5379,7 +5431,7 @@ export default function BusinessConsole({
                     </div>
 
                     {/* Two Trust Badges */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: '1.35rem' }}>
+                    <div className="bc-trust-badges-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: '1.35rem' }}>
                       <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '0.65rem 0.85rem' }}>
                         <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
                           <i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Automatic Verification
@@ -5459,7 +5511,7 @@ export default function BusinessConsole({
                 </div>
 
                 {/* Red Warning Banner if expired or trial 0 days (Screenshot 1) */}
-                <div style={{
+                <div className="bc-billing-alert-banner" style={{
                   background: '#fef2f2',
                   border: '1.5px solid #fecaca',
                   borderRadius: 14,
@@ -5487,7 +5539,7 @@ export default function BusinessConsole({
                 </div>
 
                 {/* Yellow Payment Verification In Progress Banner (Screenshot 1) */}
-                <div style={{
+                <div className="bc-billing-verify-banner" style={{
                   background: '#fefce8',
                   border: '1.5px solid #fef08a',
                   borderRadius: 14,
@@ -5770,7 +5822,7 @@ export default function BusinessConsole({
                     <span style={{ fontSize: '0.74rem', color: '#64748b' }}>Everything you need to know about plans, billing, and activation</span>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1rem' }}>
+                  <div className="bc-faq-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
                     {[
                       {
                         q: 'How does instant plan activation work?',
@@ -5820,7 +5872,7 @@ export default function BusinessConsole({
                 </div>
 
                 {/* Transaction & Invoice History Table (Screenshot 3) */}
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 20, padding: '2rem 2.25rem', marginBottom: '2rem', boxShadow: '0 4px 16px rgba(0,0,0,0.02)' }}>
+                <div className="bc-history-section" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 20, padding: '2rem 2.25rem', marginBottom: '2rem', boxShadow: '0 4px 16px rgba(0,0,0,0.02)' }}>
                   <div style={{ marginBottom: '1.25rem' }}>
                     <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0' }}>Transaction &amp; Invoice History</h3>
                     <p style={{ fontSize: '0.76rem', color: '#64748b', margin: 0 }}>Your recent subscription orders, activations, and payment references.</p>

@@ -1228,6 +1228,7 @@
     transform: translateX(0);
   }
   .bc-main {
+    margin-left: 0 !important;
     padding: 1rem;
   }
   .bc-business-card {
@@ -5466,3 +5467,486 @@
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.85); }
 }
+
+/* ==========================================================================
+   RESPONSIVE OVERHAUL: TABLETS, PHONES, PCS & LAPTOPS
+   Specifically optimized for Billing & Plans (?tab=billing) & entire console
+   ========================================================================== */
+
+/* Base mobile navigation elements (hidden on desktop) */
+.bc-mobile-topbar {
+  display: none;
+}
+
+.bc-mobile-close-btn {
+  display: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.15s ease;
+}
+.bc-mobile-close-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.bc-mobile-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: bcFadeIn 0.2s ease-out;
+}
+
+@keyframes bcFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   1. LAPTOP & LARGE TABLET BREAKPOINT (max-width: 1200px)
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .bc-billing-grid {
+    gap: 1rem;
+  }
+  .bc-billing-card {
+    padding: 1.35rem 1.15rem;
+  }
+  .bc-billing-price-row .price {
+    font-size: 1.65rem;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   2. TABLET BREAKPOINT (max-width: 1024px)
+   Covers iPad Pro, iPad Air, iPad Mini, Galaxy Tab, small laptops
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  /* Prevent horizontal window scroll */
+  html, body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+  }
+
+  .bc-layout {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+
+  /* Sidebar transforms into off-canvas drawer */
+  .bc-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 290px !important;
+    max-width: 82vw !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: none !important;
+  }
+
+  .bc-sidebar.mobile-open {
+    transform: translateX(0) !important;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.45) !important;
+  }
+
+  .bc-mobile-close-btn {
+    display: inline-flex !important;
+  }
+
+  .bc-collapse-btn {
+    display: none !important;
+  }
+
+  /* Main container releases desktop margin */
+  .bc-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    padding: 1rem 1.25rem 4rem !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .bc-sidebar.collapsed ~ .bc-main {
+    margin-left: 0 !important;
+  }
+
+  .bc-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Sticky Topbar for Tablet & Mobile */
+  .bc-mobile-topbar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: #ffffff !important;
+    border: 1px solid var(--bc-border) !important;
+    border-radius: 14px !important;
+    padding: 0.65rem 0.95rem !important;
+    margin-bottom: 1.25rem !important;
+    position: sticky !important;
+    top: 10px !important;
+    z-index: 100 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .bc-mobile-menu-btn {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #0f172a;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .bc-mobile-menu-btn:hover {
+    background: #e2e8f0;
+  }
+
+  .bc-mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .bc-brand-icon-xs {
+    width: 28px;
+    height: 28px;
+    background: #16a34a;
+    color: #ffffff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+  }
+
+  .bc-mobile-title-wrap {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  .bc-mobile-app-name {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .bc-mobile-tab-tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #16a34a;
+  }
+
+  .bc-mobile-btn-upgrade {
+    background: #16a34a;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.74rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+  }
+
+  .bc-mobile-pill-active {
+    background: #ecfdf5;
+    border: 1px solid #bbf7d0;
+    color: #15803d;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Billing & Plans Tablet Optimization */
+  .bc-billing-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+    gap: 1.15rem !important;
+  }
+
+  .bc-plan-checkout-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.35rem !important;
+  }
+
+  .bc-status-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1.15rem !important;
+    padding: 1.35rem !important;
+  }
+
+  .bc-status-stats {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.65rem !important;
+  }
+
+  .bc-status-stat-box {
+    min-width: 0 !important;
+    padding: 0.65rem 0.5rem !important;
+  }
+
+  .bc-billing-badges-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.85rem !important;
+  }
+
+  .bc-faq-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   3. MOBILE PHONES (max-width: 768px)
+   Covers standard iPhones & Android phones (360px - 768px)
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .bc-main {
+    padding: 0.75rem 0.75rem 3.5rem !important;
+  }
+
+  /* View Header Card */
+  .bc-view-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.85rem !important;
+    padding: 1.15rem 1rem !important;
+    border-radius: 16px !important;
+  }
+
+  .bc-view-header-left {
+    gap: 0.85rem !important;
+  }
+
+  .bc-view-header-icon {
+    width: 42px !important;
+    height: 42px !important;
+    font-size: 1.1rem !important;
+    border-radius: 12px !important;
+  }
+
+  .bc-view-header h1 {
+    font-size: 1.15rem !important;
+  }
+
+  .bc-view-header p {
+    font-size: 0.76rem !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Alert & Verification Banners */
+  .bc-billing-alert-banner,
+  .bc-billing-verify-banner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.85rem !important;
+    padding: 0.85rem 1rem !important;
+    border-radius: 14px !important;
+  }
+
+  .bc-billing-alert-banner button,
+  .bc-billing-verify-banner button,
+  .bc-billing-verify-banner a {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 0.55rem !important;
+  }
+
+  /* Toggle Switch */
+  .bc-billing-toggle-wrap {
+    margin: 1rem 0 1.35rem !important;
+    width: 100% !important;
+  }
+
+  .bc-billing-toggle {
+    width: 100% !important;
+    max-width: 440px !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    border-radius: 14px !important;
+    padding: 3px !important;
+  }
+
+  .bc-billing-toggle-btn {
+    padding: 0.55rem 0.4rem !important;
+    font-size: 0.72rem !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    text-align: center !important;
+    border-radius: 10px !important;
+    gap: 3px !important;
+  }
+
+  .bc-toggle-pill {
+    font-size: 0.6rem !important;
+    padding: 1px 5px !important;
+  }
+
+  /* Pricing Cards: 1 Single Column */
+  .bc-billing-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  .bc-billing-card {
+    padding: 1.5rem 1.25rem !important;
+    border-radius: 16px !important;
+  }
+
+  .bc-billing-price-row .price {
+    font-size: 1.85rem !important;
+  }
+
+  .bc-billing-features {
+    font-size: 0.78rem !important;
+    gap: 0.55rem !important;
+  }
+
+  /* Value Badges: 1 Column */
+  .bc-billing-badges-row {
+    grid-template-columns: 1fr !important;
+    gap: 0.65rem !important;
+    margin: 1.5rem 0 !important;
+  }
+
+  /* FAQ Accordion Section */
+  .bc-faq-section {
+    padding: 1.25rem 1rem !important;
+    border-radius: 16px !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .bc-faq-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  /* History & Invoices Section */
+  .bc-history-section {
+    padding: 1.25rem 1rem !important;
+    border-radius: 16px !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .bc-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: block !important;
+    width: 100% !important;
+    margin-top: 0.85rem !important;
+  }
+
+  .bc-table th,
+  .bc-table td {
+    padding: 0.65rem 0.85rem !important;
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* Checkout Page (Step 2) */
+  .bc-checkout-top-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+    padding: 1rem !important;
+    border-radius: 14px !important;
+  }
+
+  .bc-plan-checkout-card {
+    padding: 1.25rem 1rem !important;
+    border-radius: 16px !important;
+  }
+
+  .bc-features-grid-2col {
+    grid-template-columns: 1fr !important;
+    gap: 0.5rem !important;
+  }
+
+  .bc-trust-badges-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .bc-feature-item-pill {
+    padding: 0.55rem 0.75rem !important;
+    font-size: 0.74rem !important;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   4. SMALL MOBILE SCREENS (max-width: 480px)
+   Covers iPhone SE, iPhone 12/13 Mini, Galaxy S series (320px - 480px)
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .bc-status-card {
+    padding: 1rem !important;
+  }
+
+  .bc-status-stats {
+    gap: 4px !important;
+  }
+
+  .bc-status-stat-box {
+    padding: 0.45rem 0.2rem !important;
+  }
+
+  .bc-status-stat-box .stat-label {
+    font-size: 0.58rem !important;
+  }
+
+  .bc-status-stat-box .stat-val {
+    font-size: 0.76rem !important;
+  }
+
+  .bc-billing-card {
+    padding: 1.35rem 1rem !important;
+  }
+
+  .bc-mobile-topbar {
+    padding: 0.55rem 0.75rem !important;
+  }
+
+  .bc-mobile-app-name {
+    font-size: 0.78rem !important;
+  }
+}
+
