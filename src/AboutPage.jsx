@@ -1,7 +1,23 @@
 import React, { useState } from 'react';
+import { api } from './api.js';
 
-export default function AboutPage({ user, navigate, setRegMode, notify, logout }) {
-  const [activeReplyTab, setActiveReplyTab] = useState('demo');
+export default function AboutPage({ user, navigate, setRegMode, notify, logout, choosePlan }) {
+  // Live Demo States
+  const [demoBiz, setDemoBiz] = useState('Verde Eco Landing');
+  const [demoRating, setDemoRating] = useState(5);
+  const [demoExp, setDemoExp] = useState('super quick service and very friendly staff');
+  const [demoStaff, setDemoStaff] = useState('Priya');
+  const [demoKeyword, setDemoKeyword] = useState('eco packaging');
+  const [demoLang, setDemoLang] = useState('English');
+  const [demoDrafts, setDemoDrafts] = useState([
+    "Loved the eco packaging at Verde Eco Landing! Priya helped us find exactly what we needed. Highly recommend for great customer service! ★★★★★",
+    "Fantastic experience with Verde Eco Landing. Quick appointment, friendly team, and the eco packaging quality was outstanding. Thanks Priya!",
+    "Best place in town! The staff was super welcoming and attentive. Five stars all the way for exceptional service and great value."
+  ]);
+  const [demoLoading, setDemoLoading] = useState(false);
+
+  // Pricing Toggle: 'without-reply' vs 'with-reply'
+  const [pricingToggle, setPricingToggle] = useState('without-reply');
 
   const handleStartFree = () => {
     if (user) {
@@ -21,8 +37,93 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout }
     }
   };
 
+  const handleGenerateDrafts = async (e) => {
+    e?.preventDefault?.();
+    setDemoLoading(true);
+    try {
+      const r = await api('POST', '/api/drafts', {
+        business: demoBiz,
+        experience: demoExp,
+        staff: demoStaff,
+        keywords: demoKeyword,
+        language: demoLang,
+        rating: demoRating
+      });
+      if (r.ok && r.data && Array.isArray(r.data.drafts) && r.data.drafts.length > 0) {
+        setDemoDrafts(r.data.drafts);
+        if (notify) notify('✦ 3 New AI drafts created! Ready to copy.');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDemoLoading(false);
+    }
+  };
+
+  const handleCopy = (text) => {
+    navigator.clipboard?.writeText(text);
+    if (notify) notify('Copied review draft to clipboard! ↗');
+  };
+
   return (
     <div className="rf-landing-page">
+      {/* ====================================================================
+          TOP AUTH BAR (LOGIN & FREE TRIAL ACCESS STRIP)
+          ==================================================================== */}
+      <div className="rf-about-auth-bar">
+        {!user ? (
+          <div className="rf-aab-inner wrap">
+            <div className="rf-aab-info">
+              <i className="fa-solid fa-lock" style={{ color: '#16a34a', fontSize: '1rem' }}></i>
+              <span>
+                <strong>Business Portal Access:</strong> Sign in with your registered account or start your 3-day free trial to access your dashboard.
+              </span>
+            </div>
+            <div className="rf-aab-actions">
+              <button
+                type="button"
+                className="rf-aab-btn signin"
+                onClick={handleSignIn}
+              >
+                <i className="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+              </button>
+              <button
+                type="button"
+                className="rf-aab-btn signup"
+                onClick={handleStartFree}
+              >
+                <i className="fa-solid fa-user-plus"></i> Start Free Trial ↗
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="rf-aab-inner logged-in wrap">
+            <div className="rf-aab-info">
+              <span className="rf-online-pulse"></span>
+              <span>
+                Signed in as <b>{user.email}</b> &bull; Business Console Active
+              </span>
+            </div>
+            <div className="rf-aab-actions">
+              <button
+                type="button"
+                className="rf-aab-btn dashboard"
+                onClick={() => navigate('Dashboard')}
+              >
+                Open Dashboard ↗
+              </button>
+              <button
+                type="button"
+                className="rf-aab-btn signout"
+                onClick={logout}
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* ====================================================================
           SCREENSHOT 1: HERO SECTION & FLOATING CHIPS + VIDEO PREVIEW
           ==================================================================== */}
@@ -61,7 +162,11 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout }
             <button
               type="button"
               className="rf-btn-outline-main"
-              onClick={() => navigate('How it works')}
+              onClick={() => {
+                const el = document.getElementById('working-process');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                else navigate('How it works');
+              }}
             >
               <i className="fa-regular fa-circle-question"></i>
               How It Works
@@ -125,7 +230,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout }
               <div className="rf-video-banner-art">
                 <div className="rf-vba-left">
                   <div className="rf-vba-logo">
-                    <span className="star-icon">★</span> ReviewFlow <b>AI</b>
+                    <span className="star-icon">★</span> StarReview <b>AI</b>
                   </div>
                   <div className="rf-vba-gmb">
                     <svg width="20" height="20" viewBox="0 0 24 24">
@@ -154,7 +259,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout }
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                       </svg>
                       <div>
-                        <strong>WebPress Hub</strong>
+                        <strong>Team Maruti InfoSoft</strong>
                         <div style={{ color: '#eab308', fontSize: '0.7rem' }}>★★★★★</div>
                       </div>
                     </div>
@@ -164,7 +269,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout }
                         <i className="fa-solid fa-qrcode" style={{ fontSize: '4.5rem', color: '#0f172a' }}></i>
                       </div>
                     </div>
-                    <div className="rf-msp-footer">Takes less than <b>30 seconds</b></div>
+                    <div className="rf-msp-footer">Takes less than <b>10 seconds</b></div>
                   </div>
                 </div>
               </div>
@@ -197,7 +302,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout }
             <span>&bull;</span> CORE SYSTEM FEATURES
           </div>
           <h2>
-            Why Businesses Choose <span className="rf-text-green">Review Flow AI</span>
+            Why Businesses Choose <span className="rf-text-green">StarReview AI</span>
           </h2>
           <p>
             A complete review growth engine that turns store visits into 5-star Google Business reviews effortlessly.
@@ -397,13 +502,13 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout }
       {/* ====================================================================
           SCREENSHOT 4: THE 4-STEP REVIEW FUNNEL
           ==================================================================== */}
-      <section className="rf-funnel-section wrap">
+      <section className="rf-funnel-section wrap" id="working-process">
         <div className="rf-section-center-head">
           <div className="rf-badge-sub">
             <span>&bull;</span> THE 4-STEP REVIEW FUNNEL
           </div>
           <h2>
-            How Review Flow AI <span className="rf-text-green">Generates 5-Star Reviews</span>
+            How StarReview AI <span className="rf-text-green">Generates 5-Star Reviews</span>
           </h2>
           <p>
             A friction-free mobile experience that turns happy in-store customers into authentic 5-star Google Business reviews in 10 seconds.
@@ -461,7 +566,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout }
             Normal QR Codes vs. <span className="rf-text-green">Google Magic Review QR</span>
           </h2>
           <p>
-            See why traditional static QR stickers fail while Review Flow AI converts up to 84% of customer scans.
+            See why traditional static QR stickers fail while StarReview AI converts up to 84% of customer scans.
           </p>
         </div>
 
@@ -503,7 +608,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout }
           {/* Right: Review Flow AI Magic QR */}
           <div className="rf-comp-card magic-qr">
             <div className="rf-comp-badge green">
-              <i className="fa-solid fa-wand-magic-sparkles"></i> REVIEW FLOW AI MAGIC QR
+              <i className="fa-solid fa-wand-magic-sparkles"></i> STARREVIEW AI MAGIC QR
             </div>
             <h3>AI-Powered Review QR Funnel</h3>
             <p className="rf-comp-sub">
@@ -552,10 +657,518 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout }
       </section>
 
       {/* ====================================================================
+          SECTION 6: WORKING PROCESS - LIVE INTERACTIVE REVIEW GENERATOR TOOL
+          ==================================================================== */}
+      <section className="rf-interactive-demo-section wrap">
+        <div className="rf-section-center-head">
+          <div className="rf-badge-sub">
+            <span>&bull;</span> LIVE WORKING PROCESS DEMO
+          </div>
+          <h2>
+            Test the AI Review Generator <span className="rf-text-green">Right Now</span>
+          </h2>
+          <p>
+            Experience the exact working flow your customers will see. Select your rating, enter your details, and see instant AI suggestions.
+          </p>
+        </div>
+
+        <div className="rf-demo-box-card">
+          <div className="rf-demo-form-side">
+            <div className="rf-dfs-title">
+              <i className="fa-solid fa-sliders" style={{ color: '#16a34a' }}></i>
+              <span>Interactive Customer Review Form</span>
+            </div>
+
+            <div className="rf-demo-group">
+              <label>Business Name</label>
+              <input
+                type="text"
+                value={demoBiz}
+                onChange={e => setDemoBiz(e.target.value)}
+                placeholder="e.g. Verde Eco Landing"
+              />
+            </div>
+
+            <div className="rf-demo-group">
+              <label>How was your experience?</label>
+              <div className="rf-demo-stars-select">
+                {[1, 2, 3, 4, 5].map(n => (
+                  <button
+                    type="button"
+                    key={n}
+                    className={`rf-star-btn ${demoRating >= n ? 'on' : ''}`}
+                    onClick={() => setDemoRating(n)}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="rf-demo-group">
+              <label>Describe your real experience</label>
+              <textarea
+                rows="2"
+                value={demoExp}
+                onChange={e => setDemoExp(e.target.value)}
+                placeholder="What did you appreciate?"
+              />
+            </div>
+
+            <div className="rf-demo-row-2">
+              <div className="rf-demo-group">
+                <label>Staff Member (Optional)</label>
+                <input
+                  type="text"
+                  value={demoStaff}
+                  onChange={e => setDemoStaff(e.target.value)}
+                  placeholder="e.g. Priya"
+                />
+              </div>
+
+              <div className="rf-demo-group">
+                <label>Language</label>
+                <select value={demoLang} onChange={e => setDemoLang(e.target.value)}>
+                  <option>English</option>
+                  <option>Hindi</option>
+                  <option>Hinglish</option>
+                  <option>Gujarati</option>
+                </select>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-dark full rf-btn-generate"
+              disabled={demoLoading}
+              onClick={handleGenerateDrafts}
+            >
+              {demoLoading ? (
+                <>
+                  <i className="fa-solid fa-circle-notch fa-spin"></i> Generating 3 AI Drafts...
+                </>
+              ) : (
+                <>
+                  ✦ Generate Real-Time Drafts <i className="fa-solid fa-arrow-right"></i>
+                </>
+              )}
+            </button>
+            <p className="rf-demo-tiny-hint">
+              Drafts are suggestions only. Customers always review, edit and post themselves.
+            </p>
+          </div>
+
+          {/* Right Drafts Preview */}
+          <div className="rf-demo-drafts-side">
+            <div className="rf-dds-header">
+              <div>
+                <span className="rf-dds-badge">3 EDITABLE SUGGESTIONS</span>
+                <h4>Ready-to-Post Review Variations</h4>
+              </div>
+              <span className="rf-dds-live-tag">LIVE PREVIEW</span>
+            </div>
+
+            <div className="rf-dds-list">
+              {demoDrafts.map((draft, i) => (
+                <div className="rf-dds-card" key={i}>
+                  <div className="rf-dds-top">
+                    <span className="rf-dds-opt">Option {i + 1}</span>
+                    <button
+                      type="button"
+                      className="rf-dds-copy-btn"
+                      onClick={() => handleCopy(draft)}
+                    >
+                      <i className="fa-regular fa-copy"></i> Copy Draft ↗
+                    </button>
+                  </div>
+                  <p>{draft}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ====================================================================
+          SECTION 7: PHYSICAL QR STANDEES & TABLE DISPLAYS
+          ==================================================================== */}
+      <section className="rf-standees-section wrap">
+        <div className="rf-section-center-head">
+          <div className="rf-badge-sub">
+            <span>&bull;</span> PHYSICAL &amp; DIGITAL MARKETING KITS
+          </div>
+          <h2>
+            Custom Designer <span className="rf-text-green">QR Standees &amp; Table Displays</span>
+          </h2>
+          <p>
+            Place these beautiful acrylic and flyer displays at billing counters, dining tables, and reception desks to boost review volume by up to 340%.
+          </p>
+        </div>
+
+        <div className="rf-standees-grid">
+          {/* Stand 1 */}
+          <div className="rf-stand-card">
+            <div className="rf-stand-tag">MOST POPULAR</div>
+            <div className="rf-stand-img-box">
+              <i className="fa-solid fa-cube" style={{ fontSize: '3.5rem', color: '#16a34a' }}></i>
+            </div>
+            <h4>Clear Acrylic L-Stand</h4>
+            <p>Durable 3mm scratch-resistant acrylic stand with laser-engraved QR code and Google review branding.</p>
+            <div className="rf-stand-price">₹ 699 <small>per unit</small></div>
+            <button
+              type="button"
+              className="btn btn-dark full"
+              onClick={handleStartFree}
+            >
+              Order for Your Business ↗
+            </button>
+          </div>
+
+          {/* Stand 2 */}
+          <div className="rf-stand-card">
+            <div className="rf-stand-tag" style={{ background: '#eff6ff', color: '#2563eb' }}>TABLE TOP</div>
+            <div className="rf-stand-img-box">
+              <i className="fa-solid fa-shapes" style={{ fontSize: '3.5rem', color: '#2563eb' }}></i>
+            </div>
+            <h4>Double-Sided Table Tent</h4>
+            <p>Perfect for restaurants, salons, and waiting lounges. Readable from both sides with NFC contactless tap support.</p>
+            <div className="rf-stand-price">₹ 899 <small>per unit</small></div>
+            <button
+              type="button"
+              className="btn btn-dark full"
+              onClick={handleStartFree}
+            >
+              Order for Your Business ↗
+            </button>
+          </div>
+
+          {/* Stand 3 */}
+          <div className="rf-stand-card">
+            <div className="rf-stand-tag" style={{ background: '#fef3c7', color: '#b45309' }}>PRINT-READY</div>
+            <div className="rf-stand-img-box">
+              <i className="fa-solid fa-file-pdf" style={{ fontSize: '3.5rem', color: '#d97706' }}></i>
+            </div>
+            <h4>Print-Ready A6 Flyers</h4>
+            <p>Instant high-resolution vector PDF &amp; PNG downloads customized with your logo, colors, and direct review URL.</p>
+            <div className="rf-stand-price">Included Free <small>in all plans</small></div>
+            <button
+              type="button"
+              className="btn btn-light full"
+              onClick={() => navigate('QR flyer')}
+            >
+              Customize &amp; Download ↗
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ====================================================================
+          SECTION 8: EXACT PRICING SECTION (FROM USER SCREENSHOT)
+          ==================================================================== */}
+      <section className="rf-pricing-section wrap" id="pricing-section">
+        {/* Pricing Hero */}
+        <div className="rf-section-center-head">
+          <div className="rf-badge-sub">
+            <span>&bull;</span> SIMPLE &amp; TRANSPARENT PLANS
+          </div>
+          <h2>
+            Turn More Customers Into <span className="rf-text-green">Google Reviews</span>
+          </h2>
+          <p>
+            Start free for 3 days, then select the plan that matches your business growth. Scale easily with automated AI drafts, smart QR standees, and centralized multi-business tools.
+          </p>
+          <div className="rf-pricing-trust-pills">
+            <span><i className="fa-solid fa-check"></i> No credit card for 3-day trial</span>
+            <span><i className="fa-solid fa-check"></i> Single &amp; Multi-Business Options</span>
+            <span><i className="fa-solid fa-check"></i> Upgrade or chat anytime</span>
+          </div>
+        </div>
+
+        {/* 3-Day Free Trial Highlight Card */}
+        <div className="rf-trial-highlight-box">
+          <div className="rf-thb-left">
+            <div className="rf-thb-icon">
+              <i className="fa-solid fa-gift"></i>
+            </div>
+            <div>
+              <div className="rf-thb-tag">
+                <i className="fa-solid fa-check"></i> No Credit Card Required
+              </div>
+              <h3>3 Days Free Trial — Explore Everything Risk-Free</h3>
+              <p>Full access to AI review drafting, QR flyers, and private feedback shielding.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="rf-btn-green-main"
+            onClick={handleStartFree}
+          >
+            Start 3-Day Free Trial <i className="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+
+        {/* Plan Toggle Tab: Without Reply vs With Reply */}
+        <div className="rf-pricing-toggle-wrap">
+          <div className="rf-pricing-toggle-pill">
+            <button
+              type="button"
+              className={`rf-pt-btn ${pricingToggle === 'without-reply' ? 'active' : ''}`}
+              onClick={() => setPricingToggle('without-reply')}
+            >
+              Starter (Without Review Reply)
+            </button>
+            <button
+              type="button"
+              className={`rf-pt-btn ${pricingToggle === 'with-reply' ? 'active pro-tab' : ''}`}
+              onClick={() => setPricingToggle('with-reply')}
+            >
+              <span>⚡</span> Pro (With 24/7 AI Review Reply)
+            </button>
+          </div>
+        </div>
+
+        {/* Pricing Cards Grid */}
+        <div className="rf-pricing-grid">
+          {/* Card 1: Monthly */}
+          <div className="rf-pricing-card">
+            <div className="rf-pc-badge top-green">FLEXIBLE MONTHLY</div>
+            <h3>Monthly Plan</h3>
+            <p className="rf-pc-sub">Complete review growth suite for single locations.</p>
+            <div className="rf-pc-price">
+              ₹ {pricingToggle === 'without-reply' ? '99' : '299'} <span>/ month</span>
+            </div>
+
+            <div className={`rf-pc-ai-notice ${pricingToggle === 'without-reply' ? 'off' : 'on'}`}>
+              <i className={pricingToggle === 'without-reply' ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-circle-check'}></i>
+              <span>{pricingToggle === 'without-reply' ? 'AI Auto Review Replies: Not Included' : '24/7 AI Auto Review Replies: Included & Active'}</span>
+            </div>
+
+            <ul className="rf-pc-features">
+              <li><i className="fa-solid fa-circle-check"></i> 1 Google Business Location</li>
+              <li><i className="fa-solid fa-circle-check"></i> Unlimited Smart QR Scans</li>
+              <li><i className="fa-solid fa-circle-check"></i> AI Review Generator (24 Languages)</li>
+              <li><i className="fa-solid fa-circle-check"></i> Private Feedback Shield (1-3★)</li>
+              <li><i className="fa-solid fa-circle-check"></i> Print-Ready A6 QR Flyer Download</li>
+              <li><i className="fa-solid fa-circle-check"></i> Standard Analytics &amp; Conversion Funnel</li>
+            </ul>
+
+            <button
+              type="button"
+              className="rf-btn-card-action"
+              onClick={() => {
+                if (choosePlan) choosePlan(pricingToggle === 'without-reply' ? 'Starter' : 'Pro', 'Monthly');
+                else handleStartFree();
+              }}
+            >
+              {pricingToggle === 'without-reply' ? 'Upgrade to Starter (₹99/mo)' : 'Upgrade to Pro (₹299/mo)'}
+            </button>
+          </div>
+
+          {/* Card 2: Yearly (Featured - Save 16%) */}
+          <div className="rf-pricing-card featured">
+            <div className="rf-pc-badge top-orange">BEST VALUE - SAVE 16%</div>
+            <h3>Annual Membership</h3>
+            <p className="rf-pc-sub">Maximum savings for 12 full months of continuous growth.</p>
+            <div className="rf-pc-price">
+              ₹ {pricingToggle === 'without-reply' ? '999' : '2,999'} <span>/ year</span>
+            </div>
+            <div className="rf-pc-savings-strip">
+              ⚡ Save 16% &bull; {pricingToggle === 'without-reply' ? '₹83/mo · Save ₹189/yr' : '₹250/mo · Save ₹589/yr'}
+            </div>
+
+            <div className={`rf-pc-ai-notice ${pricingToggle === 'without-reply' ? 'off' : 'on'}`}>
+              <i className={pricingToggle === 'without-reply' ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-circle-check'}></i>
+              <span>{pricingToggle === 'without-reply' ? 'AI Auto Review Replies: Not Included' : '24/7 AI Auto Review Replies: Included & Active'}</span>
+            </div>
+
+            <ul className="rf-pc-features">
+              <li><i className="fa-solid fa-circle-check"></i> Everything in Monthly Plan</li>
+              <li><i className="fa-solid fa-circle-check"></i> 1 Full Year Active Service (Save 16%)</li>
+              <li><i className="fa-solid fa-circle-check"></i> Priority WhatsApp Support</li>
+              <li><i className="fa-solid fa-circle-check"></i> Custom QR Standee Vector Graphics</li>
+              <li><i className="fa-solid fa-circle-check"></i> SEO Competitor Health Analyzer</li>
+            </ul>
+
+            <button
+              type="button"
+              className="rf-btn-card-action featured-btn"
+              onClick={() => {
+                if (choosePlan) choosePlan(pricingToggle === 'without-reply' ? 'Starter' : 'Pro', 'Yearly');
+                else handleStartFree();
+              }}
+            >
+              {pricingToggle === 'without-reply' ? 'Upgrade Yearly (₹999/yr)' : 'Upgrade Yearly (₹2,999/yr)'}
+            </button>
+          </div>
+
+          {/* Card 3: Multi-Business */}
+          <div className="rf-pricing-card">
+            <div className="rf-pc-badge outline-green">MULTI-BUSINESS - 10 LOCATIONS</div>
+            <h3>Multi-Location Agency</h3>
+            <p className="rf-pc-sub">Centralized console for managing up to 10 businesses.</p>
+            <div className="rf-pc-price">
+              ₹ 999 <span>/ month</span>
+            </div>
+
+            <ul className="rf-pc-features" style={{ marginTop: '1rem' }}>
+              <li><i className="fa-solid fa-circle-check"></i> Up to 10 Business Locations</li>
+              <li><i className="fa-solid fa-circle-check"></i> Multi-Location Central Dashboard</li>
+              <li><i className="fa-solid fa-circle-check"></i> Individual QR Funnels for Each Branch</li>
+              <li><i className="fa-solid fa-circle-check"></i> Full AI Review Generator for All Branches</li>
+              <li><i className="fa-solid fa-circle-check"></i> Dedicated Account Manager &amp; WhatsApp</li>
+            </ul>
+
+            <button
+              type="button"
+              className="rf-btn-card-action"
+              onClick={() => navigate('Apply for agency')}
+            >
+              Apply for Multi-Business &amp; Agency ↗
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ====================================================================
+          SECTION 9: TESTIMONIALS & REAL BUSINESS RESULTS
+          ==================================================================== */}
+      <section className="rf-testimonials-section wrap">
+        <div className="rf-section-center-head">
+          <div className="rf-badge-sub">
+            <span>&bull;</span> VERIFIED REPUTATION RESULTS
+          </div>
+          <h2>
+            Trusted by Hundreds of <span className="rf-text-green">Local Businesses</span>
+          </h2>
+          <p>
+            Real results from retail shops, clinics, restaurants, and salons using StarReview AI.
+          </p>
+        </div>
+
+        <div className="rf-testimonials-grid">
+          {/* Testimonial 1 */}
+          <div className="rf-test-card">
+            <div className="rf-test-stars">★★★★★</div>
+            <p className="rf-test-quote">
+              "We went from 38 reviews to over 240 in less than 3 months! Customers love that they don't have to think about what to write — the AI suggestions match our restaurant service perfectly."
+            </p>
+            <div className="rf-test-author">
+              <div className="rf-author-avatar" style={{ background: '#2563eb' }}>RM</div>
+              <div>
+                <strong>Rajesh Malhotra</strong>
+                <small>Owner, Spice Haven Bistro</small>
+              </div>
+              <span className="rf-verified-badge">✓ Verified Business</span>
+            </div>
+          </div>
+
+          {/* Testimonial 2 */}
+          <div className="rf-test-card">
+            <div className="rf-test-stars">★★★★★</div>
+            <p className="rf-test-quote">
+              "The private feedback shield saved our clinic rating twice already! Instead of angry 1-star reviews on Google, we resolved patient issues directly within an hour. Essential tool."
+            </p>
+            <div className="rf-test-author">
+              <div className="rf-author-avatar" style={{ background: '#16a34a' }}>AS</div>
+              <div>
+                <strong>Dr. Ananya Sen</strong>
+                <small>Founder, Sen Dental Care</small>
+              </div>
+              <span className="rf-verified-badge">✓ Verified Clinic</span>
+            </div>
+          </div>
+
+          {/* Testimonial 3 */}
+          <div className="rf-test-card">
+            <div className="rf-test-stars">★★★★★</div>
+            <p className="rf-test-quote">
+              "The A6 table standee flyers look extremely premium. Customers simply scan their camera, pick their language, and post in under 10 seconds. Best ROI this year."
+            </p>
+            <div className="rf-test-author">
+              <div className="rf-author-avatar" style={{ background: '#9333ea' }}>VM</div>
+              <div>
+                <strong>Vikram Mehta</strong>
+                <small>Director, Luxe Wellness Spa</small>
+              </div>
+              <span className="rf-verified-badge">✓ Verified Salon</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ====================================================================
+          SECTION 10: FAQ ACCORDION
+          ==================================================================== */}
+      <section className="rf-faq-section wrap">
+        <div className="rf-section-center-head">
+          <div className="rf-badge-sub">
+            <span>&bull;</span> FREQUENTLY ASKED QUESTIONS
+          </div>
+          <h2>
+            Got Questions? <span className="rf-text-green">We Have Answers</span>
+          </h2>
+        </div>
+
+        <div className="rf-faq-accordion">
+          {[
+            ['How does the 3-day free trial work?', 'You get 100% full access to StarReview AI for 3 full days. You can connect your Google Places listing, test AI review drafting, download your print-ready QR flyer, and test review funnels. No credit card is required.'],
+            ['Does StarReview AI post reviews automatically?', 'No. In full compliance with Google Review Guidelines, customers remain in total control. They select a draft or edit it, and tap once to paste it into the official Google Maps review composer.'],
+            ['Which languages are supported?', 'Over 24 languages are supported, including English, Hindi, Gujarati, Hinglish, Marathi, Bengali, Tamil, Telugu, and more.'],
+            ['How does the Private Negative Review Shield protect my rating?', 'Customers who tap 1, 2, or 3 stars are smoothly directed to a private resolution inbox instead of the public Google review composer. You receive instant notifications to solve their concern privately before public damage occurs.'],
+            ['How do I connect my Google Business Profile Place ID?', 'You can search your business listing via our official Google Places API integration right after sign up, or configure it manually at any time from your Business Console.'],
+            ['Can I manage multiple locations or client accounts?', 'Yes. Our Multi-Business and Agency packages allow managing up to 10 or more business locations with a single centralized dashboard.']
+          ].map(([q, a], idx) => (
+            <details className="rf-faq-item" key={idx}>
+              <summary className="rf-faq-summary">
+                <span>{q}</span>
+                <i className="fa-solid fa-chevron-down"></i>
+              </summary>
+              <p className="rf-faq-answer">{a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* ====================================================================
+          SECTION 11: FINAL CALL TO ACTION BANNER
+          ==================================================================== */}
+      <section className="rf-final-cta-section wrap">
+        <div className="rf-final-cta-box">
+          <h2>Ready to Skyrocket Your Google Reviews?</h2>
+          <p>
+            Join hundreds of local businesses capturing authentic 5-star reviews effortlessly with StarReview AI.
+          </p>
+          <div className="rf-final-cta-actions">
+            <button
+              type="button"
+              className="rf-btn-green-main"
+              onClick={handleStartFree}
+            >
+              <i className="fa-solid fa-rocket"></i> Start Free 3-Day Trial
+            </button>
+            <button
+              type="button"
+              className="rf-btn-outline-main"
+              onClick={handleSignIn}
+            >
+              <i className="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Dashboard
+            </button>
+            <button
+              type="button"
+              className="rf-btn-outline-main"
+              onClick={() => navigate('Business onboarding')}
+            >
+              <i className="fa-brands fa-google" style={{ color: '#4285F4' }}></i> Onboard with Google Places
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ====================================================================
           FLOATING WHATSAPP BUTTON (SCREENSHOTS 1, 2, 3, 4, 5)
           ==================================================================== */}
       <a
-        href="https://wa.me/919707842047?text=Hello%20ReviewFlow%20AI%20Team!%20I%20want%20to%20learn%20more%20about%20the%20Google%20Magic%20Review%20QR."
+        href="https://wa.me/919707842047?text=Hello%20StarReview%20AI%20Team!%20I%20want%20to%20learn%20more%20about%20the%20Google%20Magic%20Review%20QR."
         target="_blank"
         rel="noreferrer"
         className="rf-floating-whatsapp-btn"

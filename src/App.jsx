@@ -2724,6 +2724,7 @@ export default function App() {
           setRegMode={setRegMode}
           notify={notify}
           logout={logout}
+          choosePlan={choosePlan}
         />
       )}
 
