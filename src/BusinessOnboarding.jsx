@@ -474,7 +474,7 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
                     rel="noreferrer"
                     className="rf-btn-test-link"
                   >
-                    Test Link ↗
+                    Test Link →
                   </a>
                 </div>
               </div>
@@ -558,7 +558,7 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
                 navigate('Dashboard');
               }}
             >
-              View Billing &amp; Subscription Plans ↗
+              View Billing &amp; Subscription Plans →
             </button>
           </div>
         </div>

@@ -62,7 +62,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
 
   const handleCopy = (text) => {
     navigator.clipboard?.writeText(text);
-    if (notify) notify('Copied review draft to clipboard! ↗');
+    if (notify) notify('Copied review draft to clipboard!');
   };
 
   return (
@@ -721,7 +721,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
                       className="rf-dds-copy-btn"
                       onClick={() => handleCopy(draft)}
                     >
-                      <i className="fa-regular fa-copy"></i> Copy Draft ↗
+                      <i className="fa-regular fa-copy"></i> Copy Draft
                     </button>
                   </div>
                   <p>{draft}</p>
@@ -763,7 +763,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
               className="btn btn-dark full"
               onClick={handleStartFree}
             >
-              Order for Your Business ↗
+              Order for Your Business →
             </button>
           </div>
 
@@ -781,7 +781,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
               className="btn btn-dark full"
               onClick={handleStartFree}
             >
-              Order for Your Business ↗
+              Order for Your Business →
             </button>
           </div>
 
@@ -799,7 +799,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
               className="btn btn-light full"
               onClick={() => navigate('QR flyer')}
             >
-              Customize &amp; Download ↗
+              Customize &amp; Download →
             </button>
           </div>
         </div>
@@ -966,7 +966,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
               className="rf-btn-card-action"
               onClick={() => navigate('Apply for agency')}
             >
-              Apply for Multi-Business &amp; Agency ↗
+              Apply for Multi-Business &amp; Agency →
             </button>
           </div>
         </div>

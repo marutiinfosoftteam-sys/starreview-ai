@@ -2924,7 +2924,7 @@ export default function BusinessConsole({
                       handleConsolePlacesSearch(bizFormName || 'Team Maruti');
                     }}
                   >
-                    <i className="fa-brands fa-google"></i> Search &amp; Link Google Place ↗
+                    <i className="fa-brands fa-google"></i> Search &amp; Link Google Place
                   </button>
                 </div>
 

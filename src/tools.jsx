@@ -8,7 +8,7 @@ const Stars = ({ value, onChange }) => (
   </div>
 );
 const SignInPrompt = ({ navigate, text }) => (
-  <div className="panel narrow center-text"><h3>Sign in required</h3><p>{text}</p><button className="btn btn-dark" onClick={() => navigate('Account')}>Sign in or start free trial ↗</button></div>
+  <div className="panel narrow center-text"><h3>Sign in required</h3><p>{text}</p><button className="btn btn-dark" onClick={() => navigate('Account')}>Sign in or start free trial →</button></div>
 );
 export const funnelUrl = (cfg, business) => {
   const base = (cfg?.publicUrl || window.location.origin).replace(/\/$/, '');
@@ -124,7 +124,7 @@ export function ReviewFunnel({ slug, notify }) {
   </div>);
   if (step === 'drafts') return shell(<div>
     <p>Edit a draft if you like, then copy it and post it on Google.</p>
-    {drafts.map((d, i) => <div className="draft" key={i}><div className="draft-top"><b>Option {i + 1}</b></div><textarea rows="4" value={d} onChange={e => setDrafts(drafts.map((x, j) => j === i ? e.target.value : x))} /><button className="btn btn-dark full" onClick={() => copyAndPost(d)}>Copy & post on Google ↗</button></div>)}
+    {drafts.map((d, i) => <div className="draft" key={i}><div className="draft-top"><b>Option {i + 1}</b></div><textarea rows="4" value={d} onChange={e => setDrafts(drafts.map((x, j) => j === i ? e.target.value : x))} /><button className="btn btn-dark full" onClick={() => copyAndPost(d)}>Copy & post on Google →</button></div>)}
     <button className="text-btn centered" onClick={() => setStep('compose')}>← Back</button>
   </div>);
   if (step === 'private') return shell(<form onSubmit={sendPrivate}>
@@ -165,7 +165,7 @@ export function BusinessSetup({ user, business, setBusiness, notify, navigate, c
       <label>Brand color<input type="color" value={f.brandColor} onChange={set('brandColor')} /></label>
       <button className="btn btn-dark full">Save business</button>
       {business && <div className="notice small-notice">Your customer review page: <b>{funnelUrl(cfg, business)}</b>
-        <div className="row-gap"><button type="button" className="btn btn-light btn-sm" onClick={() => window.open(funnelUrl(cfg, business), '_blank')}>Open ↗</button><button type="button" className="btn btn-light btn-sm" onClick={() => navigate('QR flyer')}>Create QR flyer ↗</button></div></div>}
+        <div className="row-gap"><button type="button" className="btn btn-light btn-sm" onClick={() => window.open(funnelUrl(cfg, business), '_blank')}>Open →</button><button type="button" className="btn btn-light btn-sm" onClick={() => navigate('QR flyer')}>Create QR flyer →</button></div></div>}
     </form>
   );
 }
@@ -197,7 +197,7 @@ export function ReplyAssistant({ user, notify, navigate }) {
       </div>
       <div className="panel drafts-panel">
         <div className="panel-heading"><h3>Suggested reply</h3></div>
-        {reply ? <div className="draft"><textarea rows="7" value={reply} onChange={e => setReply(e.target.value)} /><button className="btn btn-dark full" onClick={() => { navigator.clipboard?.writeText(reply); notify('Reply copied.'); }}>Copy reply ↗</button></div>
+        {reply ? <div className="draft"><textarea rows="7" value={reply} onChange={e => setReply(e.target.value)} /><button className="btn btn-dark full" onClick={() => { navigator.clipboard?.writeText(reply); notify('Reply copied.'); }}>Copy reply →</button></div>
           : <div className="empty-state"><div className="empty-icon">✉</div><h3>Your reply will appear here</h3><p>Paste a review and choose its star rating.</p></div>}
       </div>
     </div>
@@ -284,7 +284,7 @@ export function Dashboard({ user, business, navigate }) {
   return (
     <>
       {user && sub && <div className="notice">{sub.plan === 'Trial' ? `Free trial active until ${new Date(sub.expiresAt).toLocaleDateString()}.` : `${sub.plan} plan active until ${new Date(sub.expiresAt).toLocaleDateString()}.`}{!user.access && ' Your plan has expired. Your review page is paused until you renew.'}</div>}
-      {user && !business && <div className="notice">Set up your business to get your review page and live numbers. <button className="text-btn" onClick={() => navigate('My business')}>Set up now ↗</button></div>}
+      {user && !business && <div className="notice">Set up your business to get your review page and live numbers. <button className="text-btn" onClick={() => navigate('My business')}>Set up now →</button></div>}
       <div className="dash-grid">{cards.map(m => <div className="metric-card" key={m[0]}><span>{m[0]}</span><strong>{m[1]}</strong><small>{m[2]}</small></div>)}</div>
       <div className="dash-bottom">
         <div className="panel">
@@ -296,11 +296,11 @@ export function Dashboard({ user, business, navigate }) {
         <div className="panel">
           <h3>Quick actions</h3>
           <div className="quick-actions">
-            <button onClick={() => navigate('My business')}>◈ Business profile <span>↗</span></button>
-            <button onClick={() => navigate('QR flyer')}>▦ QR flyer <span>↗</span></button>
-            <button onClick={() => navigate('Reply assistant')}>✉ Reply assistant <span>↗</span></button>
-            <button onClick={() => navigate('SEO analyzer')}>◎ SEO analyzer <span>↗</span></button>
-            <button onClick={() => navigate('Pricing')}>◇ Plans <span>↗</span></button>
+            <button onClick={() => navigate('My business')}>◈ Business profile <span>→</span></button>
+            <button onClick={() => navigate('QR flyer')}>▦ QR flyer <span>→</span></button>
+            <button onClick={() => navigate('Reply assistant')}>✉ Reply assistant <span>→</span></button>
+            <button onClick={() => navigate('SEO analyzer')}>◎ SEO analyzer <span>→</span></button>
+            <button onClick={() => navigate('Pricing')}>◇ Plans <span>→</span></button>
           </div>
           <div className="notice small-notice">{user ? 'Numbers update as customers use your review page.' : 'Sign in to see your own live numbers.'}</div>
         </div>
@@ -395,7 +395,7 @@ export function QrFlyer({ business, cfg, notify, navigate, initialMode }) {
     <div className="tool-layout">
       <div className="panel form-panel">
         <label>What should the QR open?<div className="pricing-toggle">{tab('funnel', 'Review page')}{tab('whatsapp', 'WhatsApp')}{tab('url', 'Custom link')}{tab('paymentDemo', 'Payment demo')}</div></label>
-        {mode === 'funnel' && !business && <p className="tiny-note">Set up your business first. <button type="button" className="text-btn" onClick={() => navigate('My business')}>Open business profile ↗</button></p>}
+        {mode === 'funnel' && !business && <p className="tiny-note">Set up your business first. <button type="button" className="text-btn" onClick={() => navigate('My business')}>Open business profile →</button></p>}
         {mode === 'funnel' && business && <p className="tiny-note">Opens your customer review page: {resolvedQrTarget || funnelUrl(cfg, business)}</p>}
         {mode === 'whatsapp' && <><label>WhatsApp number with country code<input value={wa} onChange={e => setWa(e.target.value)} placeholder="919876543210" /></label><label>Pre-filled message<textarea rows="2" value={waMsg} onChange={e => setWaMsg(e.target.value)} /></label></>}
         {mode === 'url' && <label>Link<input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://your-link.com" /></label>}

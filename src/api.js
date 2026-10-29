@@ -281,6 +281,55 @@ function localDispatch(method, path, body) {
     };
   }
 
+  // 3b. Auth: Google Sign-in / Registration
+  if (path === '/api/auth/google' && method === 'POST') {
+    const email = (body?.email || 'google.user@mybusiness.com').trim().toLowerCase();
+    let user = db.users.find(u => u.email === email);
+    if (!user) {
+      const trialExpires = new Date(Date.now() + 3 * 86400000).toISOString();
+      user = {
+        id: 'user_' + Math.random().toString(36).substring(2, 9),
+        email,
+        name: body?.name || 'Google Business Owner',
+        mobile: body?.mobile || '',
+        googleLinked: true,
+        subscription: { plan: body?.plan || 'Starter', status: 'active', expiresAt: trialExpires, isTrial: true },
+        createdAt: new Date().toISOString()
+      };
+      db.users.push(user);
+
+      const prefix = email ? email.split('@')[0] : 'google';
+      const cleanName = body?.name ? `${body.name}'s Business` : 'My Google Business';
+      const biz = {
+        id: 'biz_' + Math.random().toString(36).substring(2, 9),
+        userId: user.id,
+        name: cleanName,
+        slug: prefix.replace(/[^a-z0-9]/g, '-') + '-' + Math.random().toString(36).substring(2, 5),
+        city: 'Surat',
+        category: 'Services',
+        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+        services: ['Customer Service', 'Consultation'],
+        staff: ['Staff Member'],
+        keywords: ['friendly', 'fast response'],
+        whatsappNumber: '919707842047',
+        brandColor: '#16a34a',
+        competitors: [],
+        createdAt: new Date().toISOString()
+      };
+      db.businesses.push(biz);
+      saveLocalDb(db);
+    }
+    setToken(user.id);
+    return {
+      ok: true,
+      status: 200,
+      data: {
+        token: user.id,
+        user: { id: user.id, email: user.email, name: user.name, subscription: user.subscription, access: true, replyAssistant: true }
+      }
+    };
+  }
+
   // 3. Auth: Login (Strict user isolation & auto account creation for testing)
   if (path === '/api/auth/login' && method === 'POST') {
     const email = (body?.email || '').trim().toLowerCase();

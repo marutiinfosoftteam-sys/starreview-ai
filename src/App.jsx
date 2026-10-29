@@ -6,15 +6,15 @@ import BusinessOnboarding from './BusinessOnboarding.jsx';
 import AboutPage from './AboutPage.jsx';
 
 const features = [
-  ['✦', 'AI review assistant', 'Help customers express their genuine experience with three editable draft suggestions in 24 languages.'],
-  ['▦', 'Smart QR funnels', 'Create a customer review page and a print-ready A6 QR flyer for your counter, table or receipt.'],
-  ['♡', 'Private feedback', 'Route unhappy customers to a private form so concerns reach your team first.'],
-  ['↗', 'Reputation analytics', 'Track QR scans, drafts, copies, Google redirects and conversion in one dashboard.'],
-  ['✉', 'Reply assistant', 'Draft sentiment-aware replies to your Google reviews. Included in Pro and the free trial.'],
-  ['▤', 'Print-ready flyers', 'Pick your brand color and download a clean A6 flyer as a high-resolution PNG.'],
-  ['◎', 'Profile health check', 'Run a 20-point check of your Google Business Profile and get a 0 to 100 score with fixes.'],
-  ['◈', 'Staff and service mentions', 'Customers can mention the staff member and service they used, so drafts feel specific and real.'],
-  ['⇄', 'Competitor comparison', 'Add up to four local competitors and see how your rating and reviews compare.']
+  ['fa-solid fa-wand-magic-sparkles', 'AI review assistant', 'Help customers express their genuine experience with three editable draft suggestions in 24 languages.'],
+  ['fa-solid fa-qrcode', 'Smart QR funnels', 'Create a customer review page and a print-ready A6 QR flyer for your counter, table or receipt.'],
+  ['fa-solid fa-shield-heart', 'Private feedback', 'Route unhappy customers to a private form so concerns reach your team first.'],
+  ['fa-solid fa-chart-line', 'Reputation analytics', 'Track QR scans, drafts, copies, Google redirects and conversion in one dashboard.'],
+  ['fa-solid fa-reply-all', 'Reply assistant', 'Draft sentiment-aware replies to your Google reviews. Included in Pro and the free trial.'],
+  ['fa-solid fa-print', 'Print-ready flyers', 'Pick your brand color and download a clean A6 flyer as a high-resolution PNG.'],
+  ['fa-solid fa-gauge-high', 'Profile health check', 'Run a 20-point check of your Google Business Profile and get a 0 to 100 score with fixes.'],
+  ['fa-solid fa-user-tag', 'Staff and service mentions', 'Customers can mention the staff member and service they used, so drafts feel specific and real.'],
+  ['fa-solid fa-chart-simple', 'Competitor comparison', 'Add up to four local competitors and see how your rating and reviews compare.']
 ];
 
 const toolTarget = {
@@ -164,6 +164,12 @@ export default function App() {
     return false;
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [fullName, setFullName] = useState('John Doe');
+  const [mobileCode, setMobileCode] = useState('+1');
+  const [mobileNumber, setMobileNumber] = useState('9876543210');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [selectedPlanForReg, setSelectedPlanForReg] = useState(null);
   const [user, setUser] = useState(null);
   const [myBusiness, setMyBusiness] = useState(null);
   const [cfg, setCfg] = useState({ whatsappNumber: '919707842047', languages: ['English', 'Hindi', 'Hinglish', 'Gujarati'] });
@@ -331,16 +337,23 @@ export default function App() {
 
   const submitAuth = async (e) => {
     e.preventDefault();
-    const r = await api('POST', regMode ? '/api/auth/register' : '/api/auth/login', { email, password });
+    if (regMode && confirmPassword && password !== confirmPassword) {
+      notify('Passwords do not match');
+      return;
+    }
+    const payload = regMode
+      ? { email, password, fullName, mobile: `${mobileCode} ${mobileNumber}`, plan: selectedPlanForReg?.name || 'Starter' }
+      : { email, password };
+    const r = await api('POST', regMode ? '/api/auth/register' : '/api/auth/login', payload);
     if (!r.ok) return notify(r.data.error || 'Authentication failed');
     setToken(r.data.token);
     setUser(r.data.user);
     setPassword('');
+    setConfirmPassword('');
     notify(regMode ? 'Account created. Welcome to StarReview AI!' : 'Signed in successfully.');
     const bRes = await api('GET', '/api/business');
     if (bRes.ok && bRes.data && bRes.data.business) {
       setMyBusiness(bRes.data.business);
-      // Guide new signups or unverified profiles through official Google Places onboarding
       if (regMode || !bRes.data.business.isGoogleVerified) {
         navigate('Business onboarding');
         return;
@@ -350,6 +363,27 @@ export default function App() {
       return;
     }
     navigate('Dashboard');
+  };
+
+  const handleGoogleAuth = async () => {
+    const emailToUse = email.trim() || 'google.user@mybusiness.com';
+    const r = await api('POST', '/api/auth/google', {
+      email: emailToUse,
+      name: fullName || 'Google Business Owner',
+      plan: selectedPlanForReg?.name || 'Starter'
+    });
+    if (r.ok) {
+      setToken(r.data.token);
+      setUser(r.data.user);
+      const bRes = await api('GET', '/api/business');
+      if (bRes.ok && bRes.data && bRes.data.business) {
+        setMyBusiness(bRes.data.business);
+      }
+      notify('✓ Authenticated with Google. Let’s connect your Google Business Profile:');
+      navigate('Business onboarding');
+    } else {
+      loginDemoConsole();
+    }
   };
 
   const loginDemoConsole = async () => {
@@ -403,6 +437,13 @@ export default function App() {
     setPaymentPlan({ name: planName, period, amount });
     setDemoPlan(planName);
     setDemoPeriod(period);
+    setSelectedPlanForReg({ name: planName, period, amount });
+
+    if (!user) {
+      setRegMode(true);
+      navigate('Account', true);
+      return;
+    }
     setPaymentEmail(user?.email || 'customer@mybusiness.com');
     setPaymentStep('select');
     setPaymentTxnId('');
@@ -962,6 +1003,13 @@ export default function App() {
 
   return (
     <>
+      {/* Background Animated Ambient Mesh (Screenshot 4 Style) */}
+      <div className="rf-global-ambient-glow" aria-hidden="true">
+        <div className="rf-ambient-blob rf-blob-1"></div>
+        <div className="rf-ambient-blob rf-blob-2"></div>
+        <div className="rf-ambient-blob rf-blob-3"></div>
+      </div>
+
       {page !== 'Review' && !isConsoleView && page !== 'Account' && (
         <header className="rf-top-header">
           <div className="rf-top-header-inner">
@@ -1013,7 +1061,7 @@ export default function App() {
                       className="rf-btn-startfree full"
                       onClick={() => { navigate('Dashboard'); setMenu(false); }}
                     >
-                      Dashboard ↗
+                      Dashboard →
                     </button>
                     <button
                       type="button"
@@ -1092,7 +1140,7 @@ export default function App() {
                 <h1>Turn great service into <em>great reviews.</em></h1>
                 <p className="hero-sub">A simpler way to collect genuine customer feedback, create review drafts with AI, and understand what your customers love.</p>
                 <div className="hero-cta">
-                  <button className="btn btn-dark" onClick={() => navigate('Account')}>Get started free <span>↗</span></button>
+                  <button className="btn btn-dark" onClick={() => navigate('Account')}>Get started free <span className="rf-nav-arrow">→</span></button>
                   <button className="btn btn-light" onClick={() => navigate('How it works')}>Explore how it works <span>▶</span></button>
                 </div>
                 <div className="hero-note">
@@ -1116,7 +1164,7 @@ export default function App() {
                   <div className="card-divider"></div>
                   <div className="ai-label">✦ Suggested response</div>
                   <p className="reply">Thank you for your kind words! We’re so glad you had a great experience and look forward to welcoming you again.</p>
-                  <button className="copy-demo" onClick={() => copy('Thank you for your kind words! We’re so glad you had a great experience and look forward to welcoming you again.')}>Copy response ↗</button>
+                  <button className="copy-demo" onClick={() => copy('Thank you for your kind words! We’re so glad you had a great experience and look forward to welcoming you again.')}>Copy response</button>
                 </div>
                 <div className="float-pill pill-bottom"><span className="green-check">✓</span> Feedback made simple</div>
                 <div className="sparkle s1">✳</div>
@@ -1124,15 +1172,49 @@ export default function App() {
               </div>
             </section>
 
-            {/* 2. ORIGINAL TRUST STRIP */}
-            <section className="trust-strip">
-              <div className="wrap trust-inner">
-                <span>BUILT FOR EVERYDAY BUSINESSES</span>
-                <div>Restaurants</div>
-                <div>Wellness &amp; beauty</div>
-                <div>Clinics</div>
-                <div>Retail</div>
-                <div>Local services</div>
+            {/* 2. MODERN AUTO-SCROLLING TICKER / MARQUEE (SCREENSHOT 3) */}
+            <section className="trust-strip rf-marquee-strip">
+              <div className="rf-marquee-shell">
+                <div className="rf-marquee-tag">
+                  <span className="rf-tag-pulse"></span>
+                  BUILT FOR EVERYDAY BUSINESSES
+                </div>
+                <div className="rf-marquee-viewport">
+                  <div className="rf-marquee-track">
+                    {[
+                      { icon: 'fa-utensils', label: 'Restaurants & Cafes' },
+                      { icon: 'fa-spa', label: 'Wellness, Salons & Beauty' },
+                      { icon: 'fa-hospital-user', label: 'Healthcare & Clinics' },
+                      { icon: 'fa-tooth', label: 'Dental Practices' },
+                      { icon: 'fa-bag-shopping', label: 'Retail & Boutiques' },
+                      { icon: 'fa-dumbbell', label: 'Gyms & Fitness Centers' },
+                      { icon: 'fa-wrench', label: 'Auto Care & Mechanics' },
+                      { icon: 'fa-mug-hot', label: 'Specialty Coffee & Bakeries' },
+                      { icon: 'fa-hotel', label: 'Hotels & Hospitality' },
+                      { icon: 'fa-scale-balanced', label: 'Legal & Professional Services' },
+                      { icon: 'fa-house-circle-check', label: 'Real Estate & Home Trades' },
+                      { icon: 'fa-paw', label: 'Pet Care & Veterinary' },
+                      // Duplicate for seamless infinite loop
+                      { icon: 'fa-utensils', label: 'Restaurants & Cafes' },
+                      { icon: 'fa-spa', label: 'Wellness, Salons & Beauty' },
+                      { icon: 'fa-hospital-user', label: 'Healthcare & Clinics' },
+                      { icon: 'fa-tooth', label: 'Dental Practices' },
+                      { icon: 'fa-bag-shopping', label: 'Retail & Boutiques' },
+                      { icon: 'fa-dumbbell', label: 'Gyms & Fitness Centers' },
+                      { icon: 'fa-wrench', label: 'Auto Care & Mechanics' },
+                      { icon: 'fa-mug-hot', label: 'Specialty Coffee & Bakeries' },
+                      { icon: 'fa-hotel', label: 'Hotels & Hospitality' },
+                      { icon: 'fa-scale-balanced', label: 'Legal & Professional Services' },
+                      { icon: 'fa-house-circle-check', label: 'Real Estate & Home Trades' },
+                      { icon: 'fa-paw', label: 'Pet Care & Veterinary' }
+                    ].map((item, idx) => (
+                      <div className="rf-marquee-pill" key={idx}>
+                        <i className={`fa-solid ${item.icon}`}></i>
+                        <span>{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -1146,10 +1228,10 @@ export default function App() {
               <div className="feature-grid">
                 {features.map(f => (
                   <article className="feature-card" key={f[1]}>
-                    <div className="feature-icon">{f[0]}</div>
+                    <div className="feature-icon"><i className={f[0]}></i></div>
                     <h3>{f[1]}</h3>
                     <p>{f[2]}</p>
-                    <button className="learn-link" onClick={() => navigate('Features')}>Learn more <span>↗</span></button>
+                    <button className="learn-link" onClick={() => navigate('Features')}>Learn more <i className="fa-solid fa-arrow-right" style={{ fontSize: 11, marginLeft: 4 }}></i></button>
                   </article>
                 ))}
               </div>
@@ -1162,7 +1244,7 @@ export default function App() {
                   <div className="eyebrow">TRY THE LIVE DEMO</div>
                   <h2>Make it easy to say<br /><em>something wonderful.</em></h2>
                   <p>Explore a sample customer flow. Choose a rating, describe a real experience, and see editable draft suggestions.</p>
-                  <button className="btn btn-dark" onClick={() => navigate('Try the demo')}>Try review assistant <span>↗</span></button>
+                  <button className="btn btn-dark" onClick={() => navigate('Try the demo')}>Try review assistant →</button>
                 </div>
                 <div className="mini-dashboard">
                   <div className="mini-top">
@@ -1177,7 +1259,7 @@ export default function App() {
                   <div className="mini-suggestion">
                     <span>✦</span>
                     <div><b>Ready to draft</b><small>Personalized suggestions in seconds</small></div>
-                    <span>↗</span>
+                    <span>→</span>
                   </div>
                 </div>
               </div>
@@ -1196,7 +1278,7 @@ export default function App() {
                     <li className="sr-reply-bullet"><i className="fa-solid fa-circle-check"></i> <div><strong>Local SEO Keyword Injections:</strong> Mentions your top services and city naturally to boost rankings.</div></li>
                   </ul>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <button className="btn btn-white" onClick={() => navigate('Account')}>Activate Autopilot Replies <span>↗</span></button>
+                    <button className="btn btn-white" onClick={() => navigate('Account')}>Activate Autopilot Replies →</button>
                     <button className="btn btn-light" onClick={() => navigate('Reply assistant')}>Try Reply Assistant</button>
                   </div>
                 </div>
@@ -1309,7 +1391,7 @@ export default function App() {
                       <li><i className="fa-solid fa-circle-check"></i> Boosts Google Maps 3-Pack local ranking with authentic keyword velocity</li>
                     </ul>
                     <div style={{ marginTop: 20 }}>
-                      <button className="btn btn-dark btn-sm" onClick={() => navigate('How it works')}>Explore full roadmap &amp; comparison <span>↗</span></button>
+                      <button className="btn btn-dark btn-sm" onClick={() => navigate('How it works')}>Explore full roadmap &amp; comparison →</button>
                     </div>
                   </div>
                   <div className="sr-step-preview">
@@ -1424,7 +1506,7 @@ export default function App() {
                   <h2>Make every customer voice <em>count.</em></h2>
                   <p>Start your 3-day free trial and set up your review page in minutes.</p>
                 </div>
-                <button className="btn btn-white" onClick={() => navigate('Account')}>Get started free <span>↗</span></button>
+                <button className="btn btn-white" onClick={() => navigate('Account')}>Get started free <span className="rf-nav-arrow">→</span></button>
               </div>
             </section>
           </main>
@@ -1448,10 +1530,10 @@ export default function App() {
           <div className="feature-grid">
             {features.map(f => (
               <article className="feature-card" key={f[1]}>
-                <div className="feature-icon">{f[0]}</div>
+                <div className="feature-icon"><i className={f[0]}></i></div>
                 <h3>{f[1]}</h3>
                 <p>{f[2]}</p>
-                <button className="learn-link" onClick={() => navigate(toolTarget[f[1]] || 'Dashboard')}>Open tool ↗</button>
+                <button className="learn-link" onClick={() => navigate(toolTarget[f[1]] || 'Dashboard')}>Open tool <i className="fa-solid fa-arrow-right" style={{ fontSize: 11, marginLeft: 4 }}></i></button>
               </article>
             ))}
           </div>
@@ -1643,7 +1725,7 @@ export default function App() {
               </div>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <button className="rf-btn-startfree" onClick={() => navigate('Account', true)}>Get started free <span className="rf-nav-arrow">→</span></button>
-                <button className="rf-btn-signin" onClick={() => navigate('Try the demo')}>Try live demo ↗</button>
+                <button className="rf-btn-signin" onClick={() => navigate('Try the demo')}>Try live demo →</button>
               </div>
             </div>
           </div>
@@ -2361,7 +2443,7 @@ export default function App() {
                   setRazorpayModal(true);
                 }}
               >
-                Proceed to Razorpay Checkout ↗
+                Proceed to Razorpay Checkout →
               </button>
             </div>
 
@@ -2393,7 +2475,7 @@ export default function App() {
               <div className="notice" role="status" style={{ marginTop: 18, background: '#f0fdf4', border: '1.5px solid #86efac' }}>
                 <strong style={{ color: '#15803d' }}>🎉 Plan Activated Successfully!</strong>
                 <p>Your {demoPlan} ({demoPeriod}) subscription is now ACTIVE. All features have been unlocked on your account.</p>
-                <button className="btn btn-dark" onClick={() => { setDemoResult(''); navigate('Dashboard'); }}>Open Dashboard ↗</button>
+                <button className="btn btn-dark" onClick={() => { setDemoResult(''); navigate('Dashboard'); }}>Open Dashboard →</button>
               </div>
             )}
             {demoResult === 'failed' && (
@@ -2431,7 +2513,7 @@ export default function App() {
       {(page === 'Account' || (page === 'Dashboard' && !user)) && (
         <div className="rf-login-viewport">
           <div className="rf-login-container">
-            {/* ═══════ LEFT COLUMN: LANDING SHOWCASE & TRUST ═══════ */}
+            {/* ═══════ LEFT COLUMN: LANDING SHOWCASE & TRUST (SCREENSHOT 4 MATCH) ═══════ */}
             <div className="rf-login-showcase">
               <button type="button" className="rf-login-back-btn" onClick={() => navigate('Home')}>
                 <i className="fa-solid fa-arrow-left"></i> Back to Homepage
@@ -2449,58 +2531,58 @@ export default function App() {
 
               <div className="rf-login-badge">
                 <span className="rf-login-badge-dot"></span>
-                AI GOOGLE REVIEW PLATFORM &bull; BUSINESS PORTAL
+                • 3-DAY FREE TRIAL • NO CREDIT CARD REQUIRED
               </div>
 
               <h1 className="rf-login-heading">
-                Grow Your Google Reviews &amp; <span>Rank #1 Locally</span>
+                Get 10x More 5-Star Google Reviews <span style={{ color: '#16a34a' }}>On Autopilot</span>
               </h1>
 
               <p className="rf-login-desc">
-                Log in to your business dashboard to manage AI review funnels, generate custom QR standees, monitor new customer feedback, and build online reputation.
+                Turn everyday walk-in and online customers into glowing 5-star Google reviews. Boost your local search ranking and attract more paying customers effortlessly.
               </p>
 
-              {/* 4 Key Perks */}
+              {/* 4 Key Perks (Screenshot 4 Match) */}
               <div className="rf-login-perks-grid">
+                <div className="rf-perk-card-box">
+                  <div className="rf-perk-icon-wrap"><i className="fa-solid fa-bolt"></i></div>
+                  <div className="rf-perk-content">
+                    <h4>Instant 60-Second Setup</h4>
+                    <p>Connect your Google Business Profile and launch your custom review page.</p>
+                  </div>
+                </div>
                 <div className="rf-perk-card-box">
                   <div className="rf-perk-icon-wrap"><i className="fa-solid fa-wand-magic-sparkles"></i></div>
                   <div className="rf-perk-content">
-                    <h4>1-Click AI Review Drafter</h4>
-                    <p>Customers write detailed 5-star Google reviews in seconds using smart AI assistance.</p>
+                    <h4>AI-Assisted Customer Reviews</h4>
+                    <p>Solves customer writer's block with tailored 5-star review suggestions.</p>
                   </div>
                 </div>
                 <div className="rf-perk-card-box">
                   <div className="rf-perk-icon-wrap"><i className="fa-solid fa-qrcode"></i></div>
                   <div className="rf-perk-content">
-                    <h4>Smart QR Standees &amp; Flyers</h4>
-                    <p>Place on checkout counters or tables to collect customer reviews on the spot.</p>
+                    <h4>Print-Ready Standees &amp; Flyers</h4>
+                    <p>Download branded QR flyers, table tents, and counter standees instantly.</p>
                   </div>
                 </div>
                 <div className="rf-perk-card-box">
                   <div className="rf-perk-icon-wrap"><i className="fa-solid fa-shield-halved"></i></div>
                   <div className="rf-perk-content">
-                    <h4>Negative Review Firewall</h4>
-                    <p>Route unhappy feedback to private inbox before it ever reaches public Google Maps.</p>
-                  </div>
-                </div>
-                <div className="rf-perk-card-box">
-                  <div className="rf-perk-icon-wrap"><i className="fa-solid fa-chart-line"></i></div>
-                  <div className="rf-perk-content">
-                    <h4>Real-Time Growth Analytics</h4>
-                    <p>Track scans, review completions, customer sentiment, and local search ranking.</p>
+                    <h4>Private Negative Feedback Filter</h4>
+                    <p>Catch customer complaints privately before they hurt your Google Maps rating.</p>
                   </div>
                 </div>
               </div>
 
-              {/* Trust Strip */}
+              {/* Trust Strip (Screenshot 4 Match) */}
               <div className="rf-login-trust-strip">
-                <span className="rf-login-trust-item"><i className="fa-solid fa-star gold-star"></i> 4.9/5 Trusted by Businesses</span>
-                <span className="rf-login-trust-item"><i className="fa-solid fa-bolt green-icon"></i> 3x More Reviews</span>
-                <span className="rf-login-trust-item"><i className="fa-solid fa-lock green-icon"></i> 256-Bit SSL Secured</span>
+                <span className="rf-login-trust-item"><i className="fa-solid fa-star gold-star"></i> 4.9/5 Rating</span>
+                <span className="rf-login-trust-item"><i className="fa-solid fa-bolt green-icon"></i> 3-Day Free Trial</span>
+                <span className="rf-login-trust-item"><i className="fa-solid fa-lock green-icon"></i> 256-Bit SSL Encrypted</span>
               </div>
             </div>
 
-            {/* ═══════ RIGHT COLUMN: AUTH CARD (SCREENSHOT 2 EXACT MATCH) ═══════ */}
+            {/* ═══════ RIGHT COLUMN: AUTH CARD (SCREENSHOT 4 MATCH) ═══════ */}
             <div className="rf-login-card">
               {page === 'Dashboard' && !user && (
                 <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '10px 12px', fontSize: '0.8rem', color: '#92400e', marginBottom: 16, lineHeight: 1.4 }}>
@@ -2509,13 +2591,13 @@ export default function App() {
                 </div>
               )}
 
-              <h2 className="rf-login-card-title">{regMode ? 'Start Multi-Business Free Trial' : 'Business Login'}</h2>
-              <p className="rf-login-card-sub">{regMode ? 'Create your account to instantly access your review dashboard with a 3-day free trial.' : 'Enter your credentials to access your review dashboard'}</p>
+              <h2 className="rf-login-card-title">{regMode ? 'Start Your 3-Day Free Trial' : 'Business Login'}</h2>
+              <p className="rf-login-card-sub">{regMode ? 'Create your business account in 30 seconds. No credit card required.' : 'Enter your credentials to access your review dashboard'}</p>
 
-              {regMode && (
-                <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 8, padding: '10px 12px', fontSize: '0.78rem', color: '#166534', marginBottom: 16, lineHeight: 1.45 }}>
-                  <i className="fa-solid fa-bolt" style={{ color: '#16a34a', marginRight: 5 }}></i>
-                  <strong>Instant Automated Approval:</strong> Accounts are approved immediately upon registration. Enjoy full access with a 3-day free trial — no credit card required.
+              {regMode && selectedPlanForReg && (
+                <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 8, padding: '9px 12px', fontSize: '0.78rem', color: '#166534', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span><i className="fa-solid fa-crown" style={{ color: '#16a34a', marginRight: 6 }}></i>Selected: <strong>{selectedPlanForReg.name} Plan ({selectedPlanForReg.period})</strong></span>
+                  <span style={{ fontSize: '0.72rem', background: '#dcfce7', padding: '2px 7px', borderRadius: 6, fontWeight: 700 }}>3-Day Trial</span>
                 </div>
               )}
 
@@ -2523,80 +2605,171 @@ export default function App() {
               <div style={{ marginBottom: 16, background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <span style={{ fontSize: '0.78rem', color: '#475569' }}>
                   <i className="fa-solid fa-bolt" style={{ color: '#16a34a', marginRight: 4 }}></i>
-                  Instant review test:
+                  Fast Preview:
                 </span>
                 <button
                   type="button"
                   style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, padding: '4px 10px', cursor: 'pointer' }}
                   onClick={loginDemoConsole}
                 >
-                  ⚡ Instant Demo Console ↗
+                  ⚡ Instant Demo Console →
                 </button>
               </div>
 
               <form onSubmit={submitAuth}>
-                {regMode && (
-                  <div className="rf-login-form-group">
-                    <label className="rf-login-label">Business Name</label>
-                    <input
-                      className="rf-login-input"
-                      type="text"
-                      placeholder="e.g. Acme Dental Clinic or Cafe"
-                      value={business}
-                      onChange={(e) => setBusiness(e.target.value)}
-                    />
-                  </div>
-                )}
+                {regMode ? (
+                  <>
+                    {/* Row 1: Full Name & Mobile Number (Screenshot 4) */}
+                    <div className="rf-form-row-2col">
+                      <div className="rf-login-form-group">
+                        <label className="rf-login-label">FULL NAME</label>
+                        <input
+                          className="rf-login-input"
+                          type="text"
+                          required
+                          placeholder="John Doe"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                        />
+                      </div>
+                      <div className="rf-login-form-group">
+                        <label className="rf-login-label">MOBILE NUMBER</label>
+                        <div className="rf-phone-input-group">
+                          <select
+                            className="rf-country-code-select"
+                            value={mobileCode}
+                            onChange={(e) => setMobileCode(e.target.value)}
+                          >
+                            <option value="+1">+1</option>
+                            <option value="+91">+91</option>
+                            <option value="+44">+44</option>
+                            <option value="+61">+61</option>
+                            <option value="+971">+971</option>
+                            <option value="+65">+65</option>
+                          </select>
+                          <input
+                            className="rf-login-input"
+                            type="tel"
+                            placeholder="9876543210"
+                            value={mobileNumber}
+                            onChange={(e) => setMobileNumber(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
 
-                <div className="rf-login-form-group">
-                  <label className="rf-login-label">EMAIL OR USERNAME</label>
-                  <input
-                    className="rf-login-input"
-                    type="text"
-                    required
-                    placeholder="WebpressHub or name@business.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
+                    {/* Row 2: Business Email */}
+                    <div className="rf-login-form-group">
+                      <label className="rf-login-label">BUSINESS EMAIL</label>
+                      <input
+                        className="rf-login-input"
+                        type="email"
+                        required
+                        placeholder="name@business.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
 
-                <div className="rf-login-form-group">
-                  <label className="rf-login-label">PASSWORD</label>
-                  <div className="rf-pwd-wrapper">
-                    <input
-                      className="rf-login-input rf-pwd-input"
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      minLength="6"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="rf-pwd-toggle-btn"
-                      onClick={() => setShowPassword(!showPassword)}
-                      aria-label="Toggle password visibility"
-                    >
-                      <i className={showPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'}></i>
-                    </button>
-                  </div>
-                </div>
+                    {/* Row 3: Password & Confirm Password (Screenshot 4) */}
+                    <div className="rf-form-row-2col">
+                      <div className="rf-login-form-group">
+                        <label className="rf-login-label">PASSWORD</label>
+                        <div className="rf-pwd-wrapper">
+                          <input
+                            className="rf-login-input rf-pwd-input"
+                            type={showPassword ? 'text' : 'password'}
+                            required
+                            minLength="6"
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                          />
+                          <button
+                            type="button"
+                            className="rf-pwd-toggle-btn"
+                            onClick={() => setShowPassword(!showPassword)}
+                            aria-label="Toggle password visibility"
+                          >
+                            <i className={showPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'}></i>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="rf-login-form-group">
+                        <label className="rf-login-label">CONFIRM PASSWORD</label>
+                        <div className="rf-pwd-wrapper">
+                          <input
+                            className="rf-login-input rf-pwd-input"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            required
+                            minLength="6"
+                            placeholder="••••••••"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                          />
+                          <button
+                            type="button"
+                            className="rf-pwd-toggle-btn"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            aria-label="Toggle password visibility"
+                          >
+                            <i className={showConfirmPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'}></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="rf-login-form-group">
+                      <label className="rf-login-label">EMAIL OR USERNAME</label>
+                      <input
+                        className="rf-login-input"
+                        type="text"
+                        required
+                        placeholder="WebpressHub or name@business.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
 
-                {!regMode && (
-                  <div className="rf-login-aux-row">
-                    <label className="rf-login-remember">
-                      <input type="checkbox" defaultChecked />
-                      <span>Remember me</span>
-                    </label>
-                    <button
-                      type="button"
-                      className="rf-login-forgot-link"
-                      onClick={() => notify('Password reset instructions sent to your registered email.')}
-                    >
-                      Forgot Password?
-                    </button>
-                  </div>
+                    <div className="rf-login-form-group">
+                      <label className="rf-login-label">PASSWORD</label>
+                      <div className="rf-pwd-wrapper">
+                        <input
+                          className="rf-login-input rf-pwd-input"
+                          type={showPassword ? 'text' : 'password'}
+                          required
+                          minLength="6"
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="rf-pwd-toggle-btn"
+                          onClick={() => setShowPassword(!showPassword)}
+                          aria-label="Toggle password visibility"
+                        >
+                          <i className={showPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'}></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="rf-login-aux-row">
+                      <label className="rf-login-remember">
+                        <input type="checkbox" defaultChecked />
+                        <span>Remember me</span>
+                      </label>
+                      <button
+                        type="button"
+                        className="rf-login-forgot-link"
+                        onClick={() => notify('Password reset instructions sent to your registered email.')}
+                      >
+                        Forgot Password?
+                      </button>
+                    </div>
+                  </>
                 )}
 
                 <button className="rf-login-submit-btn" type="submit">
@@ -2607,14 +2780,14 @@ export default function App() {
 
               {/* Divider */}
               <div className="rf-login-divider">
-                <span>OR CONTINUE WITH</span>
+                <span>{regMode ? 'OR SIGN UP WITH' : 'OR CONTINUE WITH'}</span>
               </div>
 
-              {/* Google Sign In */}
+              {/* Google Sign In / Sign Up */}
               <button
                 type="button"
                 className="rf-google-btn"
-                onClick={loginDemoConsole}
+                onClick={handleGoogleAuth}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -2622,7 +2795,7 @@ export default function App() {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
-                Sign in with Google
+                {regMode ? 'Sign up with Google' : 'Sign in with Google'}
               </button>
 
               {/* Switch Mode Link */}
@@ -2634,11 +2807,13 @@ export default function App() {
                 )}
               </div>
 
-              {/* Security Strip */}
+              {/* Security Strip (Screenshot 4 Match) */}
               <div className="rf-login-security-footer">
-                <span><i className="fa-solid fa-bolt"></i> Instant Access</span>
+                <span>3-Day Free Trial</span>
                 <span>&bull;</span>
-                <span><i className="fa-solid fa-lock"></i> 256-Bit SSL Encrypted</span>
+                <span>Instant Setup</span>
+                <span>&bull;</span>
+                <span>256-Bit SSL</span>
               </div>
             </div>
           </div>
@@ -2665,7 +2840,7 @@ export default function App() {
               <div className="panel-heading"><div><div className="eyebrow">YOUR SUGGESTIONS</div><h3>Drafts you can edit</h3></div><span className="demo-tag">DEMO MODE</span></div>
               {drafts.length ? drafts.map((d, i) => (
                 <div className="draft" key={i}>
-                  <div className="draft-top"><b>Option {i + 1}</b><button className="copy-btn" onClick={() => copy(d)}>Copy ↗</button></div>
+                  <div className="draft-top"><b>Option {i + 1}</b><button className="copy-btn" onClick={() => copy(d)}>Copy</button></div>
                   <p>{d}</p>
                 </div>
               )) : (
@@ -2740,10 +2915,10 @@ export default function App() {
             <label>Work email<input type="email" required placeholder="you@company.com" /></label>
             <label>What can we help with?<select><option>Product demo</option><option>Agency / multiple locations</option><option>Technical integrations</option><option>General question</option></select></label>
             <label>Message<textarea required rows="4" placeholder="Tell us about your business…" /></label>
-            <button className="btn btn-dark">Submit inquiry ↗</button>
+            <button className="btn btn-dark">Submit inquiry →</button>
             {cfg.whatsappNumber && (
               <a className="btn btn-light" href={`https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent('Hi StarReview AI, I need help.')}`} target="_blank" rel="noreferrer">
-                Chat on WhatsApp ↗
+                <i className="fa-brands fa-whatsapp"></i> Chat on WhatsApp
               </a>
             )}
           </form>
@@ -2815,13 +2990,13 @@ export default function App() {
             ) : page === 'Sitemap' ? (
               <div className="sitemap-links">
                 {[['Home', 'Home'], ['Features', 'Features'], ['How it works', 'How it works'], ['AI vs Normal QR', 'AI vs QR'], ['Pricing', 'Pricing'], ['AI review assistant', 'Try the demo'], ['QR flyer builder', 'QR flyer'], ['Dashboard', 'Dashboard'], ['Contact support', 'Contact'], ['Feedback', 'Feedback'], ['Privacy policy', 'Privacy policy'], ['Terms of service', 'Terms of service'], ['Cookie policy', 'Cookie policy']].map(([label, target]) => (
-                  <button className="learn-link" key={label} onClick={() => navigate(target)}>{label} ↗</button>
+                  <button className="learn-link" key={label} onClick={() => navigate(target)}>{label} →</button>
                 ))}
               </div>
             ) : (
               <>
                 <p>StarReview AI helps local businesses create a clear customer feedback workflow, prepare editable review drafts, and understand feedback trends.</p>
-                <button className="btn btn-dark" onClick={() => navigate('Contact')}>Contact support ↗</button>
+                <button className="btn btn-dark" onClick={() => navigate('Contact')}>Contact support →</button>
               </>
             )}
           </div>
@@ -2900,7 +3075,7 @@ export default function App() {
                       navigate('Dashboard');
                     }}
                   >
-                    Open Dashboard ↗
+                    Open Dashboard →
                   </button>
                   <button
                     className="btn btn-light"
@@ -3093,6 +3268,18 @@ export default function App() {
       )}
 
       {page !== 'Review' && !isConsoleView && <Footer navigate={navigate} />}
+
+      {/* Floating WhatsApp Quick Support (Screenshot 4 Style) */}
+      <a
+        href={`https://wa.me/${cfg.whatsappNumber || '919707842047'}?text=${encodeURIComponent('Hello StarReview AI Team! I would like to get started with a 3-Day Free Trial.')}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="rf-floating-whatsapp-btn"
+        title="Chat with us on WhatsApp"
+      >
+        <i className="fa-brands fa-whatsapp"></i>
+        <span>Chat on WhatsApp</span>
+      </a>
     </>
   );
 }
