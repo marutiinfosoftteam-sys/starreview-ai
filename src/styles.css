@@ -4622,3 +4622,201 @@ th.trial-col {
     width: 100%;
   }
 }
+
+/* ==========================================================================
+   REVIEWFLOW AI STYLE AUTHENTICATION & DASHBOARD GATING STYLES
+   ========================================================================== */
+
+/* Top Navigation Auth Buttons */
+.rf-nav-signin-btn {
+  font-weight: 700 !important;
+  color: #334155 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 6px 10px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.rf-nav-signin-btn:hover {
+  color: #16a34a !important;
+  background: #f0fdf4 !important;
+}
+
+.rf-nav-signup-btn {
+  background: #16a34a !important;
+  border-color: #16a34a !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  padding: 8px 16px !important;
+  border-radius: 999px !important;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25) !important;
+}
+
+.rf-nav-signup-btn:hover {
+  background: #15803d !important;
+  border-color: #15803d !important;
+}
+
+.mobile-auth-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 1rem 0 0.5rem;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 0.75rem;
+}
+
+/* About Page Auth Bar */
+.rf-about-auth-bar {
+  margin-bottom: 2rem;
+}
+
+.rf-aab-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 0.85rem 1.25rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.rf-aab-inner.logged-in {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.rf-aab-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.86rem;
+  color: #334155;
+  flex: 1;
+}
+
+.rf-online-pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.25);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.rf-aab-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rf-aab-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.rf-aab-btn.signin {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.rf-aab-btn.signin:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.rf-aab-btn.signup {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.rf-aab-btn.signup:hover {
+  background: #15803d;
+}
+
+.rf-aab-btn.dashboard {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.rf-aab-btn.signout {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #64748b;
+}
+
+.rf-aab-btn.signout:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+/* Auth Mode Toggle Tabs (Sign In vs Sign Up) */
+.rf-auth-mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.rf-amt-btn {
+  background: none;
+  border: none;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #64748b;
+  border-radius: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.rf-amt-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Notice Banner when Dashboard redirect happens */
+.rf-auth-notice-banner {
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.25rem;
+  font-size: 0.84rem;
+  color: #92400e;
+  font-weight: 700;
+  line-height: 1.4;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.rf-auth-notice-banner i {
+  color: #d97706;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}

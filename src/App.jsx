@@ -222,6 +222,12 @@ export default function App() {
   };
 
   const navigate = (p) => {
+    // Dashboard is protected: unauthenticated users must sign in or register first
+    if (p === 'Dashboard' && !user && !getToken()) {
+      notify('Please sign in or start a free trial to access your dashboard.');
+      setRegMode(false);
+      p = 'Account';
+    }
     const nextPath = slugMap[p] || '/';
     if (window.location.pathname !== nextPath) {
       window.history.pushState({ page: p }, '', nextPath);
@@ -235,7 +241,7 @@ export default function App() {
     setToken('');
     setUser(null);
     setMyBusiness(null);
-    notify('Signed out.');
+    notify('Signed out successfully.');
     navigate('Home');
   };
 
@@ -279,7 +285,8 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  const isConsoleView = (page === 'Dashboard' || (page === 'Account' && !!user));
+  // Dashboard & Console require active authentication (user must sign in)
+  const isConsoleView = !!user && (page === 'Dashboard' || page === 'Account');
 
   const submitAuth = async (e) => {
     e.preventDefault();
@@ -932,10 +939,85 @@ export default function App() {
                 {item.label}
               </button>
             ))}
+            {!user ? (
+              <div className="mobile-auth-strip">
+                <button
+                  type="button"
+                  className="btn btn-light full"
+                  onClick={() => { setRegMode(false); navigate('Account'); setMenu(false); }}
+                >
+                  <i className="fa-solid fa-arrow-right-to-bracket" style={{ marginRight: 6 }}></i> Sign In
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-dark full"
+                  onClick={() => { setRegMode(true); navigate('Account'); setMenu(false); }}
+                >
+                  <i className="fa-solid fa-user-plus" style={{ marginRight: 6 }}></i> Sign Up Free ↗
+                </button>
+              </div>
+            ) : (
+              <div className="mobile-auth-strip">
+                <button
+                  type="button"
+                  className="btn btn-dark full"
+                  onClick={() => { navigate('Dashboard'); setMenu(false); }}
+                >
+                  Open Dashboard ↗
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-light full"
+                  onClick={() => { logout(); setMenu(false); }}
+                >
+                  Sign Out
+                </button>
+              </div>
+            )}
           </nav>
           <div className="header-actions">
-            <button className="text-btn" onClick={() => navigate(user ? 'Dashboard' : 'Account')}>{user ? 'Business Console' : 'Sign in'}</button>
-            <button className="btn btn-dark btn-sm" onClick={() => navigate(user ? 'Dashboard' : 'Account')}>{user ? 'Open Console ↗' : 'Start free ↗'}</button>
+            {!user ? (
+              <>
+                <button
+                  className="text-btn rf-nav-signin-btn"
+                  onClick={() => {
+                    setRegMode(false);
+                    navigate('Account');
+                  }}
+                  title="Sign in to your account"
+                >
+                  <i className="fa-solid fa-arrow-right-to-bracket" style={{ marginRight: 5 }}></i> Sign In
+                </button>
+                <button
+                  className="btn btn-dark btn-sm rf-nav-signup-btn"
+                  onClick={() => {
+                    setRegMode(true);
+                    navigate('Account');
+                  }}
+                  title="Start your 3-day free trial"
+                >
+                  Sign Up Free ↗
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className="text-btn"
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
+                  onClick={() => navigate('Dashboard')}
+                >
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#16a34a', display: 'inline-block' }}></span>
+                  Dashboard
+                </button>
+                <button
+                  className="btn btn-light btn-sm"
+                  onClick={logout}
+                  title="Sign out of account"
+                >
+                  Sign Out
+                </button>
+              </>
+            )}
           </div>
         </header>
       )}
@@ -2261,7 +2343,7 @@ export default function App() {
           ==================================================================== */}
       {isConsoleView && (
         <BusinessConsole
-          user={user || { id: 'demo-user-1', email: 'team@maruti.com', subscription: { plan: 'Trial', status: 'active', expiresAt: new Date(Date.now() + 2 * 86400000).toISOString(), isTrial: true } }}
+          user={user}
           setUser={setUser}
           business={myBusiness}
           setBusiness={setMyBusiness}
@@ -2274,7 +2356,7 @@ export default function App() {
       {/* ====================================================================
           ACCOUNT / LOGIN / REGISTER (REVIEWFLOW AI EXACT SHOWCASE & FORM)
           ==================================================================== */}
-      {page === 'Account' && !user && (
+      {(page === 'Account' || (page === 'Dashboard' && !user)) && (
         <div className="rf-auth-wrapper">
           <div className="rf-ambient-bg"></div>
           <div className="rf-auth-grid">
@@ -2349,6 +2431,29 @@ export default function App() {
             {/* ═══════ RIGHT COLUMN: AUTH CARD ═══════ */}
             <div className="rf-auth-card">
               <div className="rf-card-header">
+                {page === 'Dashboard' && !user && (
+                  <div className="rf-auth-notice-banner">
+                    <i className="fa-solid fa-lock"></i>
+                    <span>Sign In Required: Please sign in or create an account to access the Business Console &amp; Dashboard.</span>
+                  </div>
+                )}
+                {/* 2-Tab Switcher: Sign In vs Sign Up */}
+                <div className="rf-auth-mode-toggle">
+                  <button
+                    type="button"
+                    className={`rf-amt-btn ${!regMode ? 'active' : ''}`}
+                    onClick={() => setRegMode(false)}
+                  >
+                    <i className="fa-solid fa-arrow-right-to-bracket" style={{ marginRight: 6 }}></i> Sign In
+                  </button>
+                  <button
+                    type="button"
+                    className={`rf-amt-btn ${regMode ? 'active' : ''}`}
+                    onClick={() => setRegMode(true)}
+                  >
+                    <i className="fa-solid fa-user-plus" style={{ marginRight: 6 }}></i> Sign Up (Free Trial)
+                  </button>
+                </div>
                 <h2>{regMode ? 'Create Business Account' : 'Business Login'}</h2>
                 <p>{regMode ? 'Start your 3-day full access free trial — no credit card needed' : 'Enter your credentials to access your review dashboard'}</p>
               </div>
@@ -2613,7 +2718,13 @@ export default function App() {
       )}
 
       {page === 'About us' && (
-        <AboutPage navigate={navigate} />
+        <AboutPage
+          user={user}
+          navigate={navigate}
+          setRegMode={setRegMode}
+          notify={notify}
+          logout={logout}
+        />
       )}
 
       {['Frequently asked questions', 'Multi-business plan', 'Partner program', 'Privacy policy', 'Terms of service', 'Cookie policy', 'Sitemap'].includes(page) && (

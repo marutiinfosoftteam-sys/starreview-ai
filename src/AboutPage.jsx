@@ -1,8 +1,92 @@
 import React from 'react';
 
-export default function AboutPage({ navigate }) {
+export default function AboutPage({ user, navigate, setRegMode, notify, logout }) {
+  const handleOpenBilling = () => {
+    if (!user) {
+      if (notify) notify('Please sign in or start a free trial to view your billing dashboard.');
+      if (setRegMode) setRegMode(false);
+      navigate('Account');
+      return;
+    }
+    if (window.history.pushState) {
+      window.history.pushState({}, '', '/dashboard?tab=billing');
+    }
+    navigate('Dashboard');
+  };
+
+  const handleOpenDashboard = () => {
+    if (!user) {
+      if (notify) notify('Please sign in to access your dashboard.');
+      if (setRegMode) setRegMode(false);
+      navigate('Account');
+      return;
+    }
+    navigate('Dashboard');
+  };
+
   return (
     <div className="rf-about-page wrap">
+      {/* 0. AUTH STATUS BAR (MATCHING REVIEWFLOW AI PORTAL ACCESS) */}
+      <div className="rf-about-auth-bar">
+        {!user ? (
+          <div className="rf-aab-inner">
+            <div className="rf-aab-info">
+              <i className="fa-solid fa-lock" style={{ color: '#16a34a', fontSize: '1rem' }}></i>
+              <span>
+                <strong>Business Portal Access:</strong> Sign in with your registered account or create a 3-day free trial to open the dashboard.
+              </span>
+            </div>
+            <div className="rf-aab-actions">
+              <button
+                type="button"
+                className="rf-aab-btn signin"
+                onClick={() => {
+                  if (setRegMode) setRegMode(false);
+                  navigate('Account');
+                }}
+              >
+                <i className="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+              </button>
+              <button
+                type="button"
+                className="rf-aab-btn signup"
+                onClick={() => {
+                  if (setRegMode) setRegMode(true);
+                  navigate('Account');
+                }}
+              >
+                <i className="fa-solid fa-user-plus"></i> Sign Up Free (3-Day Trial)
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="rf-aab-inner logged-in">
+            <div className="rf-aab-info">
+              <span className="rf-online-pulse"></span>
+              <span>
+                Signed in as <b>{user.email}</b> &bull; Business Console Active
+              </span>
+            </div>
+            <div className="rf-aab-actions">
+              <button
+                type="button"
+                className="rf-aab-btn dashboard"
+                onClick={handleOpenDashboard}
+              >
+                Open Dashboard ↗
+              </button>
+              <button
+                type="button"
+                className="rf-aab-btn signout"
+                onClick={logout}
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* 1. HERO SECTION */}
       <section className="rf-about-hero">
         <div className="rf-about-pill">
@@ -17,28 +101,71 @@ export default function AboutPage({ navigate }) {
         </p>
 
         <div className="rf-about-cta-row">
-          <button
-            type="button"
-            className="btn btn-dark rf-about-hero-btn"
-            onClick={() => navigate('Business onboarding')}
-          >
-            <i className="fa-brands fa-google" style={{ color: '#4285F4' }}></i>
-            Onboard Business with Google Places
-          </button>
+          {!user ? (
+            <>
+              <button
+                type="button"
+                className="btn btn-dark rf-about-hero-btn"
+                onClick={() => {
+                  if (setRegMode) setRegMode(true);
+                  navigate('Account');
+                }}
+              >
+                <i className="fa-solid fa-rocket" style={{ color: '#4ade80' }}></i>
+                Start 3-Day Free Trial (Sign Up)
+              </button>
 
-          <button
-            type="button"
-            className="btn btn-light rf-about-hero-btn-outline"
-            onClick={() => {
-              if (window.history.pushState) {
-                window.history.pushState({}, '', '/dashboard?tab=billing');
-              }
-              navigate('Dashboard');
-            }}
-          >
-            <i className="fa-regular fa-credit-card"></i>
-            Explore Billing &amp; Plans
-          </button>
+              <button
+                type="button"
+                className="btn btn-light rf-about-hero-btn-outline"
+                onClick={() => {
+                  if (setRegMode) setRegMode(false);
+                  navigate('Account');
+                }}
+              >
+                <i className="fa-solid fa-arrow-right-to-bracket" style={{ color: '#2563eb' }}></i>
+                Sign In to Dashboard
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-light rf-about-hero-btn-outline"
+                onClick={() => navigate('Business onboarding')}
+              >
+                <i className="fa-brands fa-google" style={{ color: '#4285F4' }}></i>
+                Onboard with Google Places
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="btn btn-dark rf-about-hero-btn"
+                onClick={handleOpenDashboard}
+              >
+                <i className="fa-solid fa-table-columns" style={{ color: '#4ade80' }}></i>
+                Open Business Console &amp; Dashboard
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-light rf-about-hero-btn-outline"
+                onClick={handleOpenBilling}
+              >
+                <i className="fa-regular fa-credit-card"></i>
+                Manage Billing &amp; Plans
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-light rf-about-hero-btn-outline"
+                onClick={() => navigate('Business onboarding')}
+              >
+                <i className="fa-brands fa-google" style={{ color: '#4285F4' }}></i>
+                Google Places Sync
+              </button>
+            </>
+          )}
         </div>
 
         <div className="rf-about-stats-grid">
@@ -245,32 +372,63 @@ export default function AboutPage({ navigate }) {
         <h2>Ready to Skyrocket Your Google Reviews?</h2>
         <p>Join hundreds of local businesses capturing 5-star reviews effortlessly with StarReview AI.</p>
         <div className="rf-about-cta-actions">
-          <button
-            type="button"
-            className="btn btn-dark"
-            onClick={() => navigate('Business onboarding')}
-          >
-            Start Free 3-Day Trial <i className="fa-solid fa-arrow-right"></i>
-          </button>
-          <button
-            type="button"
-            className="btn btn-light"
-            onClick={() => navigate('Try the demo')}
-          >
-            Try Interactive Review Generator ✦
-          </button>
-          <button
-            type="button"
-            className="btn btn-light"
-            onClick={() => {
-              if (window.history.pushState) {
-                window.history.pushState({}, '', '/dashboard?tab=billing');
-              }
-              navigate('Dashboard');
-            }}
-          >
-            View Billing &amp; Pricing Plans ↗
-          </button>
+          {!user ? (
+            <>
+              <button
+                type="button"
+                className="btn btn-dark"
+                onClick={() => {
+                  if (setRegMode) setRegMode(true);
+                  navigate('Account');
+                }}
+              >
+                <i className="fa-solid fa-rocket" style={{ marginRight: 6 }}></i>
+                Sign Up — Start 3-Day Free Trial
+              </button>
+              <button
+                type="button"
+                className="btn btn-light"
+                onClick={() => {
+                  if (setRegMode) setRegMode(false);
+                  navigate('Account');
+                }}
+              >
+                <i className="fa-solid fa-arrow-right-to-bracket" style={{ marginRight: 6 }}></i>
+                Sign In to Dashboard
+              </button>
+              <button
+                type="button"
+                className="btn btn-light"
+                onClick={() => navigate('Try the demo')}
+              >
+                Try Interactive Review Generator ✦
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="btn btn-dark"
+                onClick={handleOpenDashboard}
+              >
+                Go to Business Console &amp; Dashboard <i className="fa-solid fa-arrow-right"></i>
+              </button>
+              <button
+                type="button"
+                className="btn btn-light"
+                onClick={handleOpenBilling}
+              >
+                View Billing &amp; Subscription Plans ↗
+              </button>
+              <button
+                type="button"
+                className="btn btn-light"
+                onClick={() => navigate('Try the demo')}
+              >
+                Try Review Generator ✦
+              </button>
+            </>
+          )}
         </div>
       </section>
     </div>
