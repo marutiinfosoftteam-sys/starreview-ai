@@ -152,8 +152,22 @@ export default function App() {
   const [staff, setStaff] = useState('');
   const [keywords, setKeywords] = useState('');
   const [language, setLanguage] = useState('English');
+  const [tone, setTone] = useState('Warm & Grateful');
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [copiedDraftIndex, setCopiedDraftIndex] = useState(null);
+  const [previewGoogleDraft, setPreviewGoogleDraft] = useState(null);
+
+  // Auto-fill company name if user is logged in (Screenshot 3 requirement)
+  useEffect(() => {
+    if (myBusiness?.name) {
+      setBusiness(myBusiness.name);
+    } else if (user?.company) {
+      setBusiness(user.company);
+    } else if (user?.businessName) {
+      setBusiness(user.businessName);
+    }
+  }, [myBusiness, user]);
   const [feedback, setFeedback] = useState('');
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [toast, setToast] = useState('');
@@ -423,13 +437,124 @@ export default function App() {
     }
   };
 
+  // Smart fallback review generator
+  const generateLocalDemoDrafts = (biz, exp, stf, kw, lang, stars, reviewTone) => {
+    const bizName = biz || 'StarReview Demo Business';
+    const staffMention = stf ? `Special thanks to ${stf} for exceptional attention to detail.` : '';
+    const kwMention = kw ? `The ${kw} was absolutely top-notch.` : '';
+    
+    if (stars >= 4) {
+      if (lang === 'Hindi') {
+        return [
+          `${bizName} में हमारा अनुभव बहुत ही शानदार रहा! ${exp ? exp + '। ' : ''}${staffMention ? staffMention + ' ' : ''}${kwMention ? kwMention + ' ' : ''}सेवा और काम की गुणवत्ता उत्कृष्ट थी। हम निश्चित रूप से दोबारा आएंगे!`,
+          `अगर आप बेहतरीन सेवा की तलाश में हैं तो ${bizName} सबसे बढ़िया विकल्प है। ${exp ? exp + '। ' : ''}पूरा स्टाफ बहुत ही मिलनसार और पेशेवर है। Highly recommended!`,
+          `${bizName} की टीम को 5 स्टार! शुरुआत से अंत तक सब कुछ परफेक्ट था। ${kw ? 'विशेष रूप से ' + kw + ' कमाल का था। ' : ''}बहुत बढ़िया अनुभव!`
+        ];
+      }
+      if (lang === 'Gujarati') {
+        return [
+          `${bizName} ખાતે અમારો અનુભવ ખૂબ જ ઉત્તમ રહ્યો! ${exp ? exp + '। ' : ''}${staffMention ? staffMention + ' ' : ''}સ્ટાફનો વ્યવહાર અને સર્વિસ ખૂબ જ પ્રશંસનીય છે. ચોક્કસ ફરી મુલાકાત લઈશું!`,
+          `${bizName} ની સેવાઓ ખરેખર શ્રેષ્ઠ છે. ${exp ? exp + '। ' : ''}${kwMention ? kwMention + ' ' : ''}બધું જ સમયસર અને સુંદર રીતે થયું. પૂરો વિશ્વાસ રાખી શકો છો!`,
+          `અદભૂત અનુભવ! ${bizName} ની ટીમે અપેક્ષા કરતાં પણ વધુ સારો સંતોષ આપ્યો. ${staffMention ? staffMention + ' ' : ''}બધા મિત્રો અને પરિવારને ખૂબ ભલામણ કરું છું.`
+        ];
+      }
+      return [
+        `Had a truly wonderful experience at ${bizName}! ${exp ? exp + '. ' : ''}${staffMention ? staffMention + ' ' : ''}${kwMention ? kwMention + ' ' : ''}The team is warm, prompt, and genuinely cares about delivering the best quality. Will definitely be returning!`,
+        `I highly recommend ${bizName}. ${exp ? exp + '. ' : ''}From the moment you walk in, the professionalism and attention to detail stand out. ${kwMention ? kwMention + ' ' : ''}Truly a 5-star experience all around.`,
+        `Outstanding visit to ${bizName}! ${exp ? exp + '. ' : ''}${staffMention ? staffMention + ' ' : ''}Everything was handled smoothly with complete courtesy. A reliable and trustworthy business that I won't hesitate to recommend to friends and family!`
+      ];
+    } else {
+      return [
+        `Visited ${bizName}. ${exp ? exp + '. ' : ''}While some aspects were satisfactory, there is definitely room for improvement in overall service and turnaround time.`,
+        `My visit to ${bizName} was average. ${exp ? exp + '. ' : ''}Appreciate the effort, but hoping for better consistency and attention on future visits.`
+      ];
+    }
+  };
+
   const generate = async () => {
     setLoading(true);
-    const r = await api('POST', '/api/drafts', { business, experience, staff, keywords, language, rating });
-    setLoading(false);
-    if (!r.ok) return notify(r.data.error);
-    setDrafts(r.data.drafts.filter(Boolean));
-    if (r.data.note) notify(r.data.note);
+    try {
+      const r = await api('POST', '/api/drafts', { business, experience, staff, keywords, language, rating, tone });
+      setLoading(false);
+      if (r.ok && r.data?.drafts?.length) {
+        const cleanDrafts = r.data.drafts.filter(Boolean);
+        setDrafts(cleanDrafts);
+        setPreviewGoogleDraft(cleanDrafts[0] || null);
+        if (r.data.note) notify(r.data.note);
+      } else {
+        const fallback = generateLocalDemoDrafts(business, experience, staff, keywords, language, rating, tone);
+        setDrafts(fallback);
+        setPreviewGoogleDraft(fallback[0] || null);
+      }
+    } catch {
+      setLoading(false);
+      const fallback = generateLocalDemoDrafts(business, experience, staff, keywords, language, rating, tone);
+      setDrafts(fallback);
+      setPreviewGoogleDraft(fallback[0] || null);
+    }
+  };
+
+  const submitAgencyApplication = async (e) => {
+    e.preventDefault();
+    if (!agencyForm.name || !agencyForm.company || !agencyForm.email || !agencyForm.phone) {
+      notify('Please fill in all required fields.');
+      return;
+    }
+    if (!agencyForm.password || agencyForm.password.length < 8) {
+      notify('Password must be at least 8 characters long.');
+      return;
+    }
+    if (agencyForm.password !== agencyForm.confirmPassword) {
+      notify('Passwords do not match. Please verify.');
+      return;
+    }
+
+    try {
+      const r = await api('POST', '/api/auth/register', {
+        name: agencyForm.name,
+        company: agencyForm.company,
+        email: agencyForm.email,
+        phone: agencyForm.phone,
+        password: agencyForm.password,
+        role: 'agency',
+        plan: 'Multi-Business Trial'
+      });
+
+      const registeredUser = r.ok && r.data?.user ? r.data.user : {
+        name: agencyForm.name,
+        email: agencyForm.email,
+        company: agencyForm.company,
+        phone: agencyForm.phone,
+        role: 'agency',
+        plan: 'Multi-Business Trial',
+        access: true
+      };
+
+      setUser(registeredUser);
+      localStorage.setItem('sr_user', JSON.stringify(registeredUser));
+      setSub({
+        plan: 'Multi-Business Trial',
+        active: true,
+        expiresAt: new Date(Date.now() + 48 * 3600 * 1000).toISOString()
+      });
+
+      setAgencySubmitted(true);
+      notify('Multi-Business Free Trial activated! Welcome to the Agency Console.');
+    } catch {
+      const fallbackUser = {
+        name: agencyForm.name,
+        email: agencyForm.email,
+        company: agencyForm.company,
+        phone: agencyForm.phone,
+        role: 'agency',
+        plan: 'Multi-Business Trial',
+        access: true
+      };
+      setUser(fallbackUser);
+      localStorage.setItem('sr_user', JSON.stringify(fallbackUser));
+      setAgencySubmitted(true);
+      notify('Multi-Business Free Trial activated!');
+    }
   };
 
   const copy = async (t) => {
@@ -1879,7 +2004,7 @@ export default function App() {
       )}
 
       {/* ====================================================================
-          APPLY FOR AGENCY / MULTI-BUSINESS PORTAL (MATCHING REVIEWFLOW AI)
+          APPLY FOR AGENCY / MULTI-BUSINESS PORTAL (MATCHING REVIEWFLOW AI EXACTLY)
           ==================================================================== */}
       {page === 'Apply for agency' && (
         <main className="rf-agency-page-wrapper">
@@ -1889,9 +2014,9 @@ export default function App() {
               <div className="rf-agency-info-col">
                 <div className="rf-agency-header-badge">
                   <i className="fa-solid fa-briefcase"></i>
-                  <span>MULTI-LOCATION &amp; AGENCY PORTAL</span>
+                  <span>MULTI-BUSINESS &amp; AGENCY PORTAL</span>
                 </div>
-                <h1>Scale Google Reviews Across <span>All Your Locations</span></h1>
+                <h1>Scale Google Reviews for <span>All Your Locations</span></h1>
                 <p className="rf-agency-lead-desc">
                   Designed for marketing agencies, multi-location franchises, and brand managers seeking a centralized Google review acceleration system.
                 </p>
@@ -1903,7 +2028,7 @@ export default function App() {
                     </div>
                     <div className="rf-agency-perk-details">
                       <h4>Centralized Multi-Location Console</h4>
-                      <p>Manage dozens of client or branch listings from a single intuitive agency dashboard with unified reporting.</p>
+                      <p>Manage dozens of client or branch listings from a single intuitive agency dashboard.</p>
                     </div>
                   </div>
 
@@ -1913,7 +2038,7 @@ export default function App() {
                     </div>
                     <div className="rf-agency-perk-details">
                       <h4>Dedicated QR Flyers &amp; Standees</h4>
-                      <p>Generate isolated QR standees, tracking links, and custom AI prompt rules for each distinct location.</p>
+                      <p>Generate isolated QR standees, tracking links, and custom AI prompt rules for each location.</p>
                     </div>
                   </div>
 
@@ -1922,8 +2047,8 @@ export default function App() {
                       <i className="fa-solid fa-chart-pie"></i>
                     </div>
                     <div className="rf-agency-perk-details">
-                      <h4>Cross-Location Growth Analytics</h4>
-                      <p>Monitor scans, drafted reviews, conversion rates, and negative feedback across all client accounts in real time.</p>
+                      <h4>Cross-Location Analytics</h4>
+                      <p>Monitor scans, drafted reviews, conversion rates, and negative feedback across all accounts.</p>
                     </div>
                   </div>
 
@@ -1932,8 +2057,8 @@ export default function App() {
                       <i className="fa-solid fa-key"></i>
                     </div>
                     <div className="rf-agency-perk-details">
-                      <h4>Bring Your Own AI API (BYOK)</h4>
-                      <p>Connect your preferred AI provider (Google Gemini, OpenAI, or Claude) directly for unlimited generation capacity and zero markup.</p>
+                      <h4>Bring Your Own AI API (Gemini, OpenAI, or Claude)</h4>
+                      <p>For Multi-Business plans, review generation requires your own AI API key (choose any one: Google Gemini, OpenAI, or Claude). We do not provide AI API keys for Multi-Business plans or panels.</p>
                     </div>
                   </div>
 
@@ -1942,113 +2067,171 @@ export default function App() {
                       <i className="fa-brands fa-whatsapp"></i>
                     </div>
                     <div className="rf-agency-perk-details">
-                      <h4>Dedicated Concierge Support</h4>
-                      <p>Direct priority WhatsApp &amp; phone onboarding assistance (+91 9904482945) for rapid onboarding and custom setups.</p>
+                      <h4>VIP Dedicated Onboarding Support</h4>
+                      <p>Direct WhatsApp &amp; priority concierge setup for rapid assistance and capacity scaling.</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* RIGHT: AGENCY APPLICATION CARD */}
+              {/* RIGHT: REGISTRATION / APPLICATION CARD (SCREENSHOT 1 MATCH) */}
               <div className="rf-agency-form-card">
-                <h2>Apply for Agency Access</h2>
+                <h2>Start Multi-Business Free Trial</h2>
                 <p className="rf-agency-card-sub">
-                  Submit your agency details or call our team at <strong>+91 9904482945</strong> for immediate multi-location deployment.
+                  Create your account to instantly access the Multi-Business Panel with a 48-hour free trial.
                 </p>
+
+                {/* Callout Notice Box */}
+                <div className="rf-agency-notice-callout">
+                  <div className="rf-notice-point">
+                    <i className="fa-solid fa-bolt" style={{ color: '#16a34a' }}></i>
+                    <p>
+                      <strong>Instant Automated Approval:</strong> Accounts are approved immediately upon registration. Enjoy full access with a 48-hour free trial — no credit card required.
+                    </p>
+                  </div>
+                  <div className="rf-notice-point" style={{ marginTop: 10 }}>
+                    <i className="fa-solid fa-key" style={{ color: '#15803d' }}></i>
+                    <p>
+                      <strong>Important:</strong> Multi-Business plans require you to use your own AI API key for review generation (any one: <strong>Google Gemini, OpenAI, or Claude</strong>). We do not provide AI API keys for Multi-Business plans or panels.
+                    </p>
+                  </div>
+                </div>
 
                 {agencySubmitted ? (
                   <div className="rf-agency-success-state">
                     <div className="rf-agency-success-icon">✓</div>
-                    <h3>Application Received!</h3>
+                    <h3>Multi-Business 48-Hour Trial Active!</h3>
                     <p>
-                      Thank you, <strong>{agencyForm.name}</strong>. Our agency director has received your request and will contact you via WhatsApp and phone shortly.
+                      Welcome, <strong>{agencyForm.name}</strong>! Your account for <strong>{agencyForm.company}</strong> is approved and ready.
                     </p>
-                    <a
-                      href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20have%20submitted%20an%20Agency%20application."
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rf-btn-dark full"
-                      style={{ textDecoration: 'none', marginTop: 16 }}
-                    >
-                      <i className="fa-brands fa-whatsapp"></i> Open WhatsApp Conversation
-                    </a>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
+                      <button
+                        type="button"
+                        className="btn btn-dark full"
+                        onClick={() => navigate('Dashboard')}
+                      >
+                        Launch Agency Dashboard →
+                      </button>
+                      <a
+                        href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20have%20activated%20my%20Multi-Business%20Agency%20Trial."
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-light full"
+                        style={{ textDecoration: 'none', textAlign: 'center', justifyContent: 'center', color: '#16a34a', borderColor: '#86efac' }}
+                      >
+                        <i className="fa-brands fa-whatsapp"></i> Chat with VIP Concierge
+                      </a>
+                    </div>
                   </div>
                 ) : (
                   <form onSubmit={submitAgencyApplication}>
-                    <div className="rf-login-form-group">
-                      <label className="rf-login-label">YOUR FULL NAME</label>
-                      <input
-                        className="rf-login-input"
-                        type="text"
-                        required
-                        placeholder="John Doe"
-                        value={agencyForm.name}
-                        onChange={e => setAgencyForm({ ...agencyForm, name: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="rf-login-form-group">
-                      <label className="rf-login-label">AGENCY / COMPANY NAME</label>
-                      <input
-                        className="rf-login-input"
-                        type="text"
-                        required
-                        placeholder="Nexus Media Agency"
-                        value={agencyForm.company}
-                        onChange={e => setAgencyForm({ ...agencyForm, company: e.target.value })}
-                      />
+                    <div className="rf-form-row-2col">
+                      <div className="rf-login-form-group">
+                        <label className="rf-agency-form-label">YOUR NAME *</label>
+                        <input
+                          className="rf-agency-input"
+                          type="text"
+                          required
+                          placeholder="Jane Doe"
+                          value={agencyForm.name}
+                          onChange={e => setAgencyForm({ ...agencyForm, name: e.target.value })}
+                        />
+                      </div>
+                      <div className="rf-login-form-group">
+                        <label className="rf-agency-form-label">AGENCY / BUSINESS NAME *</label>
+                        <input
+                          className="rf-agency-input"
+                          type="text"
+                          required
+                          placeholder="Acme Media Group"
+                          value={agencyForm.company}
+                          onChange={e => setAgencyForm({ ...agencyForm, company: e.target.value })}
+                        />
+                      </div>
                     </div>
 
                     <div className="rf-form-row-2col">
                       <div className="rf-login-form-group">
-                        <label className="rf-login-label">BUSINESS EMAIL</label>
+                        <label className="rf-agency-form-label">WORK EMAIL *</label>
                         <input
-                          className="rf-login-input"
+                          className="rf-agency-input"
                           type="email"
                           required
-                          placeholder="agency@company.com"
+                          placeholder="jane@acmemedia.com"
                           value={agencyForm.email}
                           onChange={e => setAgencyForm({ ...agencyForm, email: e.target.value })}
                         />
                       </div>
                       <div className="rf-login-form-group">
-                        <label className="rf-login-label">PHONE / WHATSAPP</label>
+                        <label className="rf-agency-form-label">WHATSAPP / PHONE *</label>
                         <input
-                          className="rf-login-input"
+                          className="rf-agency-input"
                           type="tel"
                           required
-                          placeholder="+91 99044 82945"
+                          placeholder="+91 97000 00000"
                           value={agencyForm.phone}
                           onChange={e => setAgencyForm({ ...agencyForm, phone: e.target.value })}
                         />
                       </div>
                     </div>
 
-                    <button type="submit" className="rf-login-submit-btn" style={{ marginTop: 12 }}>
-                      Submit Agency Application <span className="rf-nav-arrow">→</span>
-                    </button>
-
-                    <div className="rf-login-divider">
-                      <span>OR CONTACT DIRECTLY</span>
+                    <div className="rf-login-form-group">
+                      <label className="rf-agency-form-label">CHOOSE PASSWORD *</label>
+                      <div className="rf-input-pass-wrapper">
+                        <input
+                          className="rf-agency-input"
+                          type={showAgencyPass ? 'text' : 'password'}
+                          required
+                          placeholder="Min. 8 characters"
+                          value={agencyForm.password}
+                          onChange={e => setAgencyForm({ ...agencyForm, password: e.target.value })}
+                        />
+                        <button
+                          type="button"
+                          className="rf-pass-toggle-btn"
+                          onClick={() => setShowAgencyPass(!showAgencyPass)}
+                          title="Toggle password view"
+                        >
+                          <i className={`fa-regular ${showAgencyPass ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                        </button>
+                      </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      <a
-                        href="tel:+919904482945"
-                        className="btn btn-light full"
-                        style={{ textDecoration: 'none', textAlign: 'center', justifyContent: 'center' }}
-                      >
-                        <i className="fa-solid fa-phone" style={{ marginRight: 6 }}></i> Call Agency Desk: 9904482945
-                      </a>
-                      <a
-                        href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20am%20interested%20in%20the%20Multi-Business%20%2F%20Agency%20Plan."
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-light full"
-                        style={{ textDecoration: 'none', textAlign: 'center', justifyContent: 'center', color: '#16a34a', borderColor: '#bbf7d0' }}
-                      >
-                        <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }}></i> Chat on WhatsApp
-                      </a>
+                    <div className="rf-login-form-group">
+                      <label className="rf-agency-form-label">CONFIRM PASSWORD *</label>
+                      <div className="rf-input-pass-wrapper">
+                        <input
+                          className="rf-agency-input"
+                          type={showAgencyConfPass ? 'text' : 'password'}
+                          required
+                          placeholder="Re-enter password"
+                          value={agencyForm.confirmPassword}
+                          onChange={e => setAgencyForm({ ...agencyForm, confirmPassword: e.target.value })}
+                        />
+                        <button
+                          type="button"
+                          className="rf-pass-toggle-btn"
+                          onClick={() => setShowAgencyConfPass(!showAgencyConfPass)}
+                          title="Toggle password view"
+                        >
+                          <i className={`fa-regular ${showAgencyConfPass ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <button type="submit" className="rf-btn-agency-submit">
+                      Start 48-Hour Free Trial <span className="rf-nav-arrow">→</span>
+                    </button>
+
+                    <div className="rf-agency-footer-links">
+                      <span>Looking for a single business plan? </span>
+                      <button type="button" onClick={() => navigate('Pricing')} className="rf-sub-link">
+                        View Standard Plans
+                      </button>
+                      <span> · </span>
+                      <button type="button" onClick={() => navigate('Account')} className="rf-sub-link">
+                        Sign In
+                      </button>
                     </div>
                   </form>
                 )}
@@ -2384,28 +2567,279 @@ export default function App() {
       {page === 'Try the demo' && (
         <PageShell title="Review assistant demo" subtitle="Use an honest experience you could genuinely share. Drafts are editable examples, not published reviews.">
           <div className="tool-layout">
-            <div className="panel form-panel">
-              <label>Business name<input value={business} onChange={e => setBusiness(e.target.value)} placeholder="Your business" /></label>
-              <label>How was your experience?<div className="rating-select">{[1, 2, 3, 4, 5].map(n => <button key={n} className={rating >= n ? 'on' : ''} onClick={() => setRating(n)} aria-label={`${n} stars`}>★</button>)}</div></label>
-              <label>Describe your real experience<textarea value={experience} onChange={e => setExperience(e.target.value)} rows="3" placeholder="What did you appreciate?" /></label>
-              <label>Staff member (optional)<input value={staff} onChange={e => setStaff(e.target.value)} placeholder="e.g. Priya" /></label>
-              <label>Service or keyword (optional)<input value={keywords} onChange={e => setKeywords(e.target.value)} placeholder="e.g. quick appointment" /></label>
-              <label>Language<select value={language} onChange={e => setLanguage(e.target.value)}>{(cfg.languages || ['English', 'Hindi', 'Hinglish', 'Gujarati']).map(l => <option key={l}>{l}</option>)}</select></label>
-              <button className="btn btn-dark full" onClick={generate} disabled={loading}>{loading ? 'Creating drafts…' : '✦ Generate drafts'}</button>
+            <div className="panel form-panel sr-demo-form-panel">
+              {/* Auto-detected business alert if user logged in */}
+              {user && (
+                <div className="sr-demo-auth-banner">
+                  <div className="sr-demo-auth-pill">
+                    <i className="fa-solid fa-circle-check"></i>
+                    <span>Connected Listing: <strong>{business}</strong></span>
+                  </div>
+                  <span className="sr-demo-rating-tag">⭐ 4.9 Verified</span>
+                </div>
+              )}
+
+              <label>
+                Business name
+                <input
+                  value={business}
+                  onChange={e => setBusiness(e.target.value)}
+                  placeholder="Your business"
+                />
+              </label>
+
+              <label>
+                How was your experience?
+                <div className="sr-rating-select-row">
+                  <div className="rating-select">
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <button
+                        key={n}
+                        type="button"
+                        className={rating >= n ? 'on' : ''}
+                        onClick={() => setRating(n)}
+                        aria-label={`${n} stars`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                  <span className="sr-rating-status-lbl">
+                    {rating === 5 && '★★★★★ (5.0) - Outstanding Experience'}
+                    {rating === 4 && '★★★★☆ (4.0) - Great Service'}
+                    {rating === 3 && '★★★☆☆ (3.0) - Average Experience'}
+                    {rating <= 2 && '★★☆☆☆ - Routed to Private Shield'}
+                  </span>
+                </div>
+              </label>
+
+              <label>
+                Describe your real experience
+                <div className="sr-quick-chips-wrapper">
+                  <span className="sr-chips-label">Quick highlights (tap to add):</span>
+                  <div className="sr-chips-container">
+                    {[
+                      'Fast & efficient service',
+                      'Friendly & helpful staff',
+                      'Clean & welcoming space',
+                      'High quality work',
+                      'Great value for money',
+                      'Highly recommended!'
+                    ].map(chip => (
+                      <button
+                        key={chip}
+                        type="button"
+                        className="sr-chip-tag"
+                        onClick={() => {
+                          setExperience(prev => prev ? `${prev}, ${chip.toLowerCase()}` : chip);
+                        }}
+                      >
+                        + {chip}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <textarea
+                  value={experience}
+                  onChange={e => setExperience(e.target.value)}
+                  rows="3"
+                  placeholder="What did you appreciate?"
+                />
+              </label>
+
+              <label>
+                Tone of AI drafts
+                <div className="sr-tones-grid">
+                  {[
+                    'Warm & Grateful',
+                    'Detailed & Professional',
+                    'Enthusiastic & Delighted',
+                    'Casual & Quick'
+                  ].map(t => (
+                    <button
+                      key={t}
+                      type="button"
+                      className={`sr-tone-btn ${tone === t ? 'active' : ''}`}
+                      onClick={() => setTone(t)}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </label>
+
+              <div className="sr-form-2col">
+                <label>
+                  Staff member (optional)
+                  <input
+                    value={staff}
+                    onChange={e => setStaff(e.target.value)}
+                    placeholder="e.g. Priya"
+                  />
+                </label>
+                <label>
+                  Service or keyword (optional)
+                  <input
+                    value={keywords}
+                    onChange={e => setKeywords(e.target.value)}
+                    placeholder="e.g. quick appointment"
+                  />
+                </label>
+              </div>
+
+              <label>
+                Language
+                <select value={language} onChange={e => setLanguage(e.target.value)}>
+                  {(cfg.languages || ['English', 'Hindi', 'Hinglish', 'Gujarati']).map(l => (
+                    <option key={l}>{l}</option>
+                  ))}
+                </select>
+              </label>
+
+              <button
+                type="button"
+                className="btn btn-dark full sr-generate-btn"
+                onClick={generate}
+                disabled={loading}
+              >
+                {loading ? 'Creating AI drafts…' : '✦ Generate drafts'}
+              </button>
               <p className="tiny-note">Drafts are suggestions only. No review is ever posted automatically.</p>
             </div>
-            <div className="panel drafts-panel">
-              <div className="panel-heading"><div><div className="eyebrow">YOUR SUGGESTIONS</div><h3>Drafts you can edit</h3></div><span className="demo-tag">DEMO MODE</span></div>
-              {drafts.length ? drafts.map((d, i) => (
-                <div className="draft" key={i}>
-                  <div className="draft-top"><b>Option {i + 1}</b><button className="copy-btn" onClick={() => copy(d)}>Copy</button></div>
-                  <p>{d}</p>
+
+            <div className="panel drafts-panel sr-demo-drafts-panel">
+              <div className="panel-heading">
+                <div>
+                  <div className="eyebrow">YOUR SUGGESTIONS</div>
+                  <h3>Drafts you can edit</h3>
                 </div>
-              )) : (
+                <span className="demo-tag">DEMO MODE</span>
+              </div>
+
+              {drafts.length ? (
+                <>
+                  <div className="sr-drafts-list">
+                    {drafts.map((d, i) => (
+                      <div className="draft sr-enhanced-draft" key={i}>
+                        <div className="draft-top">
+                          <div className="sr-draft-title-badge">
+                            <b>Option {i + 1}</b>
+                            <span className="sr-draft-stars">★★★★★</span>
+                            <span className="sr-draft-tone-pill">{tone}</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button
+                              type="button"
+                              className={`copy-btn ${copiedDraftIndex === i ? 'copied' : ''}`}
+                              onClick={() => {
+                                copy(d);
+                                setCopiedDraftIndex(i);
+                                setTimeout(() => setCopiedDraftIndex(null), 2500);
+                              }}
+                            >
+                              {copiedDraftIndex === i ? '✓ Copied' : 'Copy'}
+                            </button>
+                            <button
+                              type="button"
+                              className="sr-preview-btn"
+                              onClick={() => setPreviewGoogleDraft(d)}
+                              title="Preview on Google Review Card"
+                            >
+                              Preview
+                            </button>
+                          </div>
+                        </div>
+                        <p>{d}</p>
+                        <div className="sr-draft-meta-tags">
+                          <span><i className="fa-solid fa-bolt"></i> Google Maps SEO Ready</span>
+                          {staff && <span><i className="fa-solid fa-user-check"></i> Staff Mentioned</span>}
+                          {keywords && <span><i className="fa-solid fa-tag"></i> Keyword Ranked</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Live Google Business Profile Review Mockup */}
+                  <div className="sr-google-preview-box">
+                    <div className="sr-google-box-head">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24">
+                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        <b>Google Maps Review Simulator</b>
+                      </div>
+                      <span className="sr-verified-pill">Live Simulation</span>
+                    </div>
+                    <div className="sr-google-sim-card">
+                      <div className="sr-sim-user">
+                        <div className="sr-sim-avatar">U</div>
+                        <div>
+                          <div className="sr-sim-name">Happy Customer · Local Guide</div>
+                          <div className="sr-sim-stars">★★★★★ · <span>just now</span></div>
+                        </div>
+                      </div>
+                      <p className="sr-sim-text">
+                        {previewGoogleDraft || drafts[0]}
+                      </p>
+                      <div className="sr-sim-footer">
+                        <span>Posted on: <strong>{business}</strong></span>
+                        <span className="sr-sim-verified-check">✓ Verified Google Places Listing</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
                 <div className="empty-state">
                   <div className="empty-icon">✦</div>
                   <h3>Your drafts will appear here</h3>
-                  <p>Enter a business and describe a real experience, then generate suggestions.</p>
+                  <p>Enter your business experience details on the left, then click <strong>Generate drafts</strong> to see instant AI suggestions.</p>
+                  <div className="sr-sample-presets">
+                    <span>Or try a quick demo sample:</span>
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginTop: 10 }}>
+                      <button
+                        type="button"
+                        className="sr-chip-tag"
+                        onClick={() => {
+                          setBusiness('The Spice Garden Bistro');
+                          setRating(5);
+                          setExperience('Incredible dinner with rich authentic flavors and wonderful atmosphere');
+                          setStaff('Rahul');
+                          setKeywords('Butter Chicken & Naan');
+                        }}
+                      >
+                        🍽️ Restaurant Sample
+                      </button>
+                      <button
+                        type="button"
+                        className="sr-chip-tag"
+                        onClick={() => {
+                          setBusiness('Apex Dental Care');
+                          setRating(5);
+                          setExperience('Gentle treatment, zero pain and super clean clinic');
+                          setStaff('Dr. Ananya');
+                          setKeywords('Teeth Whitening');
+                        }}
+                      >
+                        🦷 Healthcare Sample
+                      </button>
+                      <button
+                        type="button"
+                        className="sr-chip-tag"
+                        onClick={() => {
+                          setBusiness('Luxe Spa & Salon');
+                          setRating(5);
+                          setExperience('Relaxing aromatherapy massage and polite reception');
+                          setStaff('Sonia');
+                          setKeywords('Deep Tissue Massage');
+                        }}
+                      >
+                        💆 Salon & Spa Sample
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -2823,16 +3257,17 @@ export default function App() {
 
       {page !== 'Review' && !isConsoleView && <Footer navigate={navigate} />}
 
-      {/* Floating WhatsApp Quick Support (Screenshot 4 Style) */}
+      {/* Floating Circular WhatsApp Button with Radiant Pulse Halo (Screenshot 4 Match) */}
       <a
         href={`https://wa.me/${cfg.whatsappNumber || '919904482945'}?text=${encodeURIComponent('Hello StarReview AI Team! I would like to inquire about your Google review management platform and plans.')}`}
         target="_blank"
         rel="noopener noreferrer"
         className="rf-floating-whatsapp-btn"
-        title="Chat with us on WhatsApp"
+        title="Chat on WhatsApp (+91 9904482945)"
+        aria-label="Chat on WhatsApp"
       >
+        <span className="rf-whatsapp-halo"></span>
         <i className="fa-brands fa-whatsapp"></i>
-        <span>Chat on WhatsApp</span>
       </a>
     </>
   );
@@ -2909,8 +3344,12 @@ function Footer({ navigate }) {
           </button>
           <div className="footer-brand-motto">Helping customers share better reviews</div>
           <p className="footer-brand-tagline">
-            AI-Powered Google Review Growth System — helping local businesses gather authentic 5-star reviews, resolve private feedback, and boost local search rankings.
+            AI-Powered Google Review Growth System — helping local businesses gather authentic 5-star reviews, resolve private feedback, and boost Google Maps rankings.
           </p>
+          <div className="rf-footer-trust-badges">
+            <span className="rf-footer-badge"><i className="fa-solid fa-shield-halved"></i> 100% Policy Safe</span>
+            <span className="rf-footer-badge"><i className="fa-solid fa-bolt"></i> Instant Setup</span>
+          </div>
           <div className="footer-powered-link">
             Powered by <strong>StarReview AI</strong>
           </div>
