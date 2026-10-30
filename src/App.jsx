@@ -147,12 +147,41 @@ export default function App() {
   const [page, setPage] = useState(pageFromPath);
   const [menu, setMenu] = useState(false);
   const [rating, setRating] = useState(5);
-  const [business, setBusiness] = useState('StarReview Demo Business');
-  const [experience, setExperience] = useState('friendly service and a great experience');
+  const [business, setBusiness] = useState(() => {
+    try {
+      const stored = localStorage.getItem('sr_user');
+      if (stored) {
+        const u = JSON.parse(stored);
+        return u.company || u.businessName || u.name || 'Team Maruti InfoSoft';
+      }
+    } catch {}
+    return 'Team Maruti InfoSoft';
+  });
+  const [demoEmail, setDemoEmail] = useState(() => {
+    try {
+      return localStorage.getItem('sr_email') || JSON.parse(localStorage.getItem('sr_user') || '{}')?.email || 'marutiinfosoftteam@gmail.com';
+    } catch {}
+    return 'marutiinfosoftteam@gmail.com';
+  });
+  const [experience, setExperience] = useState('Outstanding service and extremely courteous staff! Everything was handled smoothly and with great attention to detail. Highly recommended!');
   const [staff, setStaff] = useState('');
   const [keywords, setKeywords] = useState('');
   const [language, setLanguage] = useState('English');
-  const [tone, setTone] = useState('Warm & Grateful');
+  const [tone, setTone] = useState('Natural');
+
+  const ratingExperiences = {
+    5: 'Outstanding service and extremely courteous staff! Everything was handled smoothly and with great attention to detail. Highly recommended!',
+    4: 'Very good service and friendly staff. The overall experience was smooth and high quality. Will definitely come back.',
+    3: 'Average experience. The staff was polite, but there is room for improvement in service speed and turnaround time.',
+    2: 'Below average experience. Faced delays and inconsistent service. Hoping management resolves customer communication issues.',
+    1: 'Very disappointing experience. Service was unsatisfactory and did not meet expectations. Needs serious improvement.'
+  };
+
+  const handleRatingSelect = (starCount) => {
+    setRating(starCount);
+    const text = ratingExperiences[starCount] || ratingExperiences[5];
+    setExperience(text);
+  };
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [copiedDraftIndex, setCopiedDraftIndex] = useState(null);
@@ -181,15 +210,37 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [myBusiness, setMyBusiness] = useState(null);
 
-  // Auto-fill company name if user is logged in (Screenshot 3 requirement)
+  // Auto-fill company name and Gmail ID if user is logged in or saved in storage
   useEffect(() => {
+    let bName = '';
     if (myBusiness?.name) {
-      setBusiness(myBusiness.name);
+      bName = myBusiness.name;
     } else if (user?.company) {
-      setBusiness(user.company);
+      bName = user.company;
     } else if (user?.businessName) {
-      setBusiness(user.businessName);
+      bName = user.businessName;
+    } else if (user?.name) {
+      bName = user.name;
     }
+
+    let userEmail = user?.email || '';
+    if (!userEmail || !bName) {
+      try {
+        const storedEmail = localStorage.getItem('sr_email');
+        if (storedEmail && !userEmail) userEmail = storedEmail;
+        const storedUser = localStorage.getItem('sr_user');
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          if (parsed?.email && !userEmail) userEmail = parsed.email;
+          if (!bName && (parsed?.company || parsed?.businessName || parsed?.name)) {
+            bName = parsed.company || parsed.businessName || parsed.name;
+          }
+        }
+      } catch {}
+    }
+
+    if (bName) setBusiness(bName);
+    if (userEmail) setDemoEmail(userEmail);
   }, [myBusiness, user]);
   const [cfg, setCfg] = useState({ whatsappNumber: '919904482945', languages: ['English', 'Hindi', 'Hinglish', 'Gujarati'] });
   const [demoPlan, setDemoPlan] = useState('Starter');
@@ -409,6 +460,10 @@ export default function App() {
       if (r.ok) {
         setToken(r.data.token);
         setUser(r.data.user);
+        try {
+          localStorage.setItem('sr_email', emailToUse);
+          localStorage.setItem('sr_user', JSON.stringify(r.data.user));
+        } catch {}
         const bRes = await api('GET', '/api/business');
         if (bRes.ok && bRes.data && bRes.data.business) {
           setMyBusiness(bRes.data.business);
@@ -2593,25 +2648,44 @@ export default function App() {
         <PageShell title="Review assistant demo" subtitle="Use an honest experience you could genuinely share. Drafts are editable examples, not published reviews.">
           <div className="tool-layout">
             <div className="panel form-panel sr-demo-form-panel">
-              {/* Auto-detected business alert if user logged in */}
-              {user && (
-                <div className="sr-demo-auth-banner">
-                  <div className="sr-demo-auth-pill">
-                    <i className="fa-solid fa-circle-check"></i>
-                    <span>Connected Listing: <strong>{business}</strong></span>
-                  </div>
-                  <span className="sr-demo-rating-tag">⭐ 4.9 Verified</span>
+              {/* Auto-detected business alert showing Gmail ID and Business Name */}
+              <div className="sr-demo-auth-banner">
+                <div className="sr-demo-auth-pill">
+                  <i className="fa-solid fa-circle-check"></i>
+                  <span>
+                    {demoEmail ? (
+                      <>Account: <strong>{demoEmail}</strong> · Business: <strong>{business}</strong></>
+                    ) : (
+                      <>Connected Listing: <strong>{business}</strong></>
+                    )}
+                  </span>
                 </div>
-              )}
+                <span className="sr-demo-rating-tag">⭐ 4.9 Verified</span>
+              </div>
 
-              <label>
-                Business name
-                <input
-                  value={business}
-                  onChange={e => setBusiness(e.target.value)}
-                  placeholder="Your business"
-                />
-              </label>
+              {/* Business Name and Gmail ID Side-by-Side */}
+              <div className="sr-form-2col" style={{ marginBottom: 14 }}>
+                <label>
+                  Business name
+                  <input
+                    value={business}
+                    onChange={e => setBusiness(e.target.value)}
+                    placeholder="e.g. Team Maruti InfoSoft"
+                  />
+                </label>
+                <label>
+                  Connected Gmail ID
+                  <input
+                    type="email"
+                    value={demoEmail}
+                    onChange={e => {
+                      setDemoEmail(e.target.value);
+                      try { localStorage.setItem('sr_email', e.target.value); } catch {}
+                    }}
+                    placeholder="e.g. marutiinfosoftteam@gmail.com"
+                  />
+                </label>
+              </div>
 
               <label>
                 How was your experience?
@@ -2622,7 +2696,7 @@ export default function App() {
                         key={n}
                         type="button"
                         className={rating >= n ? 'on' : ''}
-                        onClick={() => setRating(n)}
+                        onClick={() => handleRatingSelect(n)}
                         aria-label={`${n} stars`}
                       >
                         ★
@@ -2639,7 +2713,7 @@ export default function App() {
               </label>
 
               <label>
-                Describe your real experience
+                Describe your real experience (Auto-typed on star click or customize)
                 <div className="sr-quick-chips-wrapper">
                   <span className="sr-chips-label">Quick highlights (tap to add):</span>
                   <div className="sr-chips-container">
@@ -2670,27 +2744,6 @@ export default function App() {
                   rows="3"
                   placeholder="What did you appreciate?"
                 />
-              </label>
-
-              <label>
-                Tone of AI drafts
-                <div className="sr-tones-grid">
-                  {[
-                    'Warm & Grateful',
-                    'Detailed & Professional',
-                    'Enthusiastic & Delighted',
-                    'Casual & Quick'
-                  ].map(t => (
-                    <button
-                      key={t}
-                      type="button"
-                      className={`sr-tone-btn ${tone === t ? 'active' : ''}`}
-                      onClick={() => setTone(t)}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
               </label>
 
               <div className="sr-form-2col">
@@ -2750,7 +2803,6 @@ export default function App() {
                           <div className="sr-draft-title-badge">
                             <b>Option {i + 1}</b>
                             <span className="sr-draft-stars">★★★★★</span>
-                            <span className="sr-draft-tone-pill">{tone}</span>
                           </div>
                           <div style={{ display: 'flex', gap: 6 }}>
                             <button
@@ -2800,9 +2852,13 @@ export default function App() {
                     </div>
                     <div className="sr-google-sim-card">
                       <div className="sr-sim-user">
-                        <div className="sr-sim-avatar">U</div>
+                        <div className="sr-sim-avatar">
+                          {demoEmail ? demoEmail[0].toUpperCase() : (business ? business[0].toUpperCase() : 'G')}
+                        </div>
                         <div>
-                          <div className="sr-sim-name">Happy Customer · Local Guide</div>
+                          <div className="sr-sim-name">
+                            {demoEmail ? demoEmail.split('@')[0] : (user?.name || 'Verified Customer')} · Local Guide
+                          </div>
                           <div className="sr-sim-stars">★★★★★ · <span>just now</span></div>
                         </div>
                       </div>
@@ -3318,7 +3374,6 @@ function Footer({ navigate }) {
       items: [
         ['Platform Features', 'Features'],
         ['AI vs Normal QR', 'AI vs QR'],
-        ['Source Code', 'Features'],
         ['AI SEO Analyzer', 'Features'],
         ['How It Works', 'How it works'],
         ['Growing Businesses', 'Features']
@@ -3331,7 +3386,7 @@ function Footer({ navigate }) {
         ['Multi-Business Plan', 'Pricing'],
         ['Apply for Agency', 'Apply for agency'],
         ['Sign In to Account', 'Account'],
-        ['Payment QR Demo', 'Demo checkout']
+        ['Payment QR Demo', 'Payment QR Demo']
       ]
     },
     {
@@ -3341,7 +3396,7 @@ function Footer({ navigate }) {
         ['Contact Support', 'Contact'],
         ['Frequently Asked Questions', 'Frequently asked questions'],
         ['HTML Sitemap', 'Sitemap'],
-        ['XML Sitemap', 'Sitemap']
+        ['Smart QR Funnels', 'QR flyer']
       ]
     },
     {
@@ -3349,8 +3404,7 @@ function Footer({ navigate }) {
       items: [
         ['Operator Sign In', 'Account'],
         ['Partner Sign In', 'Account'],
-        ['Join Partner Program (40%)', 'Contact'],
-        ['Business Onboard', 'Business onboarding'],
+                ['Business Onboard', 'Business onboarding'],
         ['Privacy Policy', 'Privacy policy'],
         ['Terms of Service', 'Terms of service'],
         ['Cookie Policy', 'Cookie policy']
