@@ -158,7 +158,7 @@ export default function BusinessConsole({
   const sub = user?.subscription;
   const isTrial = sub?.plan === 'Trial' || !sub;
   const daysLeft = sub?.expiresAt ? Math.max(0, Math.ceil((new Date(sub.expiresAt) - new Date()) / 86400000)) : 0;
-  const planName = sub?.plan || 'Free Trial';
+  const planName = sub?.plan || 'Starter Plan';
   const [analyticsData, setAnalyticsData] = useState(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
   const [recentEvents, setRecentEvents] = useState([]);
@@ -906,7 +906,7 @@ export default function BusinessConsole({
     { id: 'Add-On Services', label: 'Add-On Services', icon: 'fa-solid fa-cubes' },
 
     { section: 'ACCOUNT' },
-    { id: 'Billing & Plans', label: 'Billing & Plans', icon: 'fa-regular fa-credit-card', badge: isTrial ? 'Free Trial' : planName, badgeClass: 'bc-badge-mint' },
+    { id: 'Billing & Plans', label: 'Billing & Plans', icon: 'fa-regular fa-credit-card', badge: isTrial ? 'STARTER' : planName, badgeClass: 'bc-badge-mint' },
     { id: 'Settings', label: 'Settings', icon: 'fa-solid fa-gear' }
   ];
 
@@ -1336,7 +1336,7 @@ export default function BusinessConsole({
                   </div>
                   <div>
                     <div className="bc-trial-title">
-                      {daysLeft > 0 ? `Free Trial — ${daysLeft} days remaining` : 'Free Trial — 0 days remaining'}
+                      {daysLeft > 0 ? `Starter Plan — ${daysLeft} days remaining` : 'Starter Plan Active'}
                     </div>
                     <p className="bc-trial-desc">
                       Upgrade to unlock AI Replies, remove ads, and get priority support.
@@ -1819,7 +1819,7 @@ export default function BusinessConsole({
                 </div>
                 <div>
                   <div className="bc-trial-title">
-                    {daysLeft > 0 ? `Free Trial — ${daysLeft} days remaining` : 'Free Trial — 0 days remaining'}
+                    {daysLeft > 0 ? `Starter Plan — ${daysLeft} days remaining` : 'Starter Plan Active'}
                   </div>
                   <p className="bc-trial-desc">
                     Upgrade to unlock advanced analytics and reports.
@@ -2460,7 +2460,7 @@ export default function BusinessConsole({
                 </div>
                 <div>
                   <div className="bc-trial-title">
-                    {daysLeft > 0 ? `You are on the Free Trial plan — ${daysLeft} days remaining` : 'You are on the Free Trial plan — 0 days remaining'}
+                    {daysLeft > 0 ? `You are on the Starter Plan — ${daysLeft} days remaining` : 'You are on the Starter Plan'}
                   </div>
                   <p className="bc-trial-desc">
                     Upgrade to unlock advanced features including AI review replies and priority support.
@@ -5177,12 +5177,12 @@ export default function BusinessConsole({
                 <div className="bc-status-card">
                   <div className="bc-status-left">
                     <span style={{ background: '#fef3c7', color: '#b45309', padding: '0.2rem 0.65rem', borderRadius: 6, fontSize: '0.68rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      2-DAY FREE TRIAL
+                      STARTER PLAN
                     </span>
                     <span style={{ fontSize: '0.76rem', color: '#64748b', marginLeft: 8 }}>
                       Account: <b>Team Maruti InfoSoft</b>
                     </span>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '4px 0 0 0' }}>Free Trial</h3>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '4px 0 0 0' }}>Starter Plan</h3>
                   </div>
 
                   <div className="bc-status-stats">

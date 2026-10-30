@@ -7647,25 +7647,35 @@ footer {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
+  align-items: end;
+}
+
+.rf-form-row-2col > * {
+  min-width: 0;
 }
 
 .rf-phone-input-group {
   display: flex;
-  gap: 6px;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
 }
 
 .rf-country-code-select {
-  width: 78px;
+  width: 82px;
+  height: 42px;
+  box-sizing: border-box;
   background: #ffffff;
-  border: 1px solid #cbd5e1;
+  border: 1.5px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   color: #0f172a;
-  padding: 0 6px;
+  padding: 0 8px;
   cursor: pointer;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
 }
 
 .rf-country-code-select:focus {
@@ -7675,6 +7685,9 @@ footer {
 
 .rf-phone-input-group .rf-login-input {
   flex: 1;
+  min-width: 0;
+  height: 42px;
+  box-sizing: border-box;
 }
 
 .rf-floating-whatsapp-btn {
@@ -9559,5 +9572,338 @@ html, body {
 
   .rzp-body {
     padding: 1rem 0.85rem !important;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ABOUT US PAGE STYLES (MATCHING USER SCREENSHOTS 2, 3, 4)
+   ═══════════════════════════════════════════════════════════════ */
+.rf-about-page-wrap {
+  width: 100%;
+  background: #ffffff;
+  color: #0f172a;
+  padding-bottom: 4rem;
+}
+
+.rf-about-hero {
+  padding: 4.5rem 1.25rem 2.5rem;
+  text-align: center;
+}
+
+.rf-about-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 1.25rem;
+}
+
+.rf-about-badge-star {
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.rf-about-main-title {
+  font-size: 3.1rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  line-height: 1.18;
+  margin: 0 auto 1.35rem;
+  max-width: 860px;
+}
+
+.rf-about-green-text {
+  color: #16a34a;
+}
+
+.rf-about-main-sub {
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: #475569;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+/* Two-column Story Section */
+.rf-about-story-sec {
+  padding: 3rem 1.25rem 3.5rem;
+}
+
+.rf-about-story-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 3.5rem;
+  align-items: start;
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+.rf-about-sec-heading {
+  font-size: 2.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  margin: 0 0 1.5rem 0;
+}
+
+.rf-about-text {
+  font-size: 0.98rem;
+  line-height: 1.72;
+  color: #475569;
+  margin: 0 0 1.25rem 0;
+}
+
+.rf-about-text strong {
+  color: #0f172a;
+}
+
+/* Stat boxes */
+.rf-about-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.rf-about-stat-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.6rem 1.2rem;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02);
+}
+
+.rf-about-stat-val {
+  font-size: 2.35rem;
+  font-weight: 900;
+  color: #16a34a;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 0.4rem;
+}
+
+.rf-about-stat-lbl {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Right Column Ethics Card */
+.rf-about-ethics-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 2.4rem 2rem;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.03);
+}
+
+.rf-about-ethics-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 1.25rem 0;
+}
+
+.rf-about-ethics-p {
+  font-size: 0.95rem;
+  line-height: 1.68;
+  color: #475569;
+  margin: 0 0 1.15rem 0;
+}
+
+.rf-about-ethics-p strong {
+  color: #0f172a;
+}
+
+.rf-about-compliance-badge {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #15803d;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+}
+
+/* Trust Section & 3 Cards */
+.rf-about-trust-sec {
+  padding: 3.5rem 1.25rem 4rem;
+}
+
+.rf-about-center-header {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 3rem;
+}
+
+.rf-about-sec-heading-centered {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.65rem 0;
+}
+
+.rf-about-sec-sub-centered {
+  font-size: 1.05rem;
+  color: #64748b;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.rf-about-features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+.rf-about-feat-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 2.2rem 1.8rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rf-about-feat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.05);
+}
+
+.rf-about-feat-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #16a34a;
+  font-size: 1.3rem;
+  margin-bottom: 1.25rem;
+}
+
+.rf-about-feat-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.65rem 0;
+}
+
+.rf-about-feat-desc {
+  font-size: 0.92rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Bottom CTA Banner */
+.rf-about-cta-sec {
+  padding: 2rem 1.25rem 4rem;
+}
+
+.rf-about-cta-banner {
+  background: #14532d;
+  background: linear-gradient(135deg, #14532d 0%, #0c3e1e 100%);
+  border-radius: 24px;
+  padding: 3.5rem 2rem;
+  text-align: center;
+  max-width: 1140px;
+  margin: 0 auto;
+  color: #ffffff;
+  box-shadow: 0 14px 40px rgba(20, 83, 45, 0.25);
+}
+
+.rf-about-cta-title {
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.85rem 0;
+  color: #ffffff;
+}
+
+.rf-about-cta-sub {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #bbf7d0;
+  max-width: 680px;
+  margin: 0 auto 2.2rem;
+}
+
+.rf-about-cta-btns {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.rf-about-btn-primary {
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.85rem 1.85rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+}
+
+.rf-about-btn-primary:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+}
+
+.rf-about-btn-secondary {
+  background: #ffffff;
+  color: #0f172a;
+  border: none;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.85rem 1.85rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rf-about-btn-secondary:hover {
+  background: #f1f5f9;
+  transform: translateY(-2px);
+}
+
+/* Responsiveness for About Page */
+@media (max-width: 900px) {
+  .rf-about-story-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  .rf-about-features-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .rf-about-main-title {
+    font-size: 2.2rem;
+  }
+  .rf-about-sec-heading,
+  .rf-about-sec-heading-centered,
+  .rf-about-cta-title {
+    font-size: 1.8rem;
   }
 }

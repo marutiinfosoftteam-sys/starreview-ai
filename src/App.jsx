@@ -334,7 +334,7 @@ export default function App() {
   const navigate = (p, isRegister = false) => {
     // Dashboard is protected: unauthenticated users must sign in or register first
     if (p === 'Dashboard' && !user) {
-      notify('Sign In Required: Please sign in or start a free trial to access the dashboard.');
+      notify('Sign In Required: Please sign in or create an account to access the dashboard.');
       setRegMode(false);
       const nextPath = '/login';
       if (window.location.pathname !== nextPath) {
@@ -433,7 +433,7 @@ export default function App() {
     if (page === 'Dashboard' && !user) {
       setRegMode(false);
       setPage('Account');
-      notify('Sign In Required: Please sign in or start a free trial to access your dashboard.');
+      notify('Sign In Required: Please sign in or create an account to access your dashboard.');
       window.history.pushState({ page: 'Account' }, '', '/login');
     }
   }, [page, user]);
@@ -457,7 +457,7 @@ export default function App() {
     } catch {}
     setPassword('');
     setConfirmPassword('');
-    notify(regMode ? '🎉 3-Day Free Trial activated! Welcome to StarReview AI!' : 'Signed in successfully.');
+    notify(regMode ? '🎉 Account created successfully! Welcome to StarReview AI!' : 'Signed in successfully.');
     const bRes = await api('GET', '/api/business');
     let fetchedBiz = null;
     if (bRes.ok && bRes.data && bRes.data.business) {
@@ -527,7 +527,7 @@ export default function App() {
         email: demoEmail,
         name: fullName || 'Google Business Owner',
         role: 'business',
-        subscription: { plan: '3-Day Free Trial', status: 'active', isTrial: true },
+        subscription: { plan: 'Starter', status: 'active', isTrial: false },
         access: true
       };
       setToken(demoUser.id);
@@ -657,13 +657,13 @@ export default function App() {
       setUser(registeredUser);
       localStorage.setItem('sr_user', JSON.stringify(registeredUser));
       setSub({
-        plan: 'Multi-Business Trial',
+        plan: 'Multi-Business Standard',
         active: true,
-        expiresAt: new Date(Date.now() + 48 * 3600 * 1000).toISOString()
+        expiresAt: new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString()
       });
 
       setAgencySubmitted(true);
-      notify('Multi-Business Free Trial activated! Welcome to the Agency Console.');
+      notify('Multi-Business account activated! Welcome to the Agency Console.');
     } catch {
       const fallbackUser = {
         name: agencyForm.name,
@@ -671,13 +671,13 @@ export default function App() {
         company: agencyForm.company,
         phone: agencyForm.phone,
         role: 'agency',
-        plan: 'Multi-Business Trial',
+        plan: 'Multi-Business Standard',
         access: true
       };
       setUser(fallbackUser);
       localStorage.setItem('sr_user', JSON.stringify(fallbackUser));
       setAgencySubmitted(true);
-      notify('Multi-Business Free Trial activated!');
+      notify('Multi-Business account activated!');
     }
   };
 
@@ -2195,9 +2195,9 @@ export default function App() {
 
               {/* RIGHT: REGISTRATION / APPLICATION CARD (SCREENSHOT 1 MATCH) */}
               <div className="rf-agency-form-card">
-                <h2>Start Multi-Business Free Trial</h2>
+                <h2>Access Multi-Business Portal</h2>
                 <p className="rf-agency-card-sub">
-                  Create your account to instantly access the Multi-Business Panel with a 48-hour free trial.
+                  Create your account to instantly access the Multi-Business Console and Agency features.
                 </p>
 
                 {/* Callout Notice Box */}
@@ -2205,7 +2205,7 @@ export default function App() {
                   <div className="rf-notice-point">
                     <i className="fa-solid fa-bolt" style={{ color: '#16a34a' }}></i>
                     <p>
-                      <strong>Instant Automated Approval:</strong> Accounts are approved immediately upon registration. Enjoy full access with a 48-hour free trial — no credit card required.
+                      <strong>Instant Automated Approval:</strong> Accounts are approved immediately upon registration. Enjoy full access with centralized business management.
                     </p>
                   </div>
                   <div className="rf-notice-point" style={{ marginTop: 10 }}>
@@ -2339,7 +2339,7 @@ export default function App() {
                     </div>
 
                     <button type="submit" className="rf-btn-agency-submit">
-                      Start 48-Hour Free Trial <span className="rf-nav-arrow">→</span>
+                      Get Started Now <span className="rf-nav-arrow">→</span>
                     </button>
 
                     <div className="rf-agency-footer-links">
@@ -2407,7 +2407,7 @@ export default function App() {
 
               <div className="rf-login-badge">
                 <span className="rf-login-badge-dot"></span>
-                3-DAY FREE TRIAL • NO CREDIT CARD REQUIRED
+                OFFICIAL BUSINESS ONBOARDING • INSTANT ACCESS
               </div>
 
               <h1 className="rf-login-heading">
@@ -2453,7 +2453,7 @@ export default function App() {
               {/* Trust Strip (Screenshot 4 Match) */}
               <div className="rf-login-trust-strip">
                 <span className="rf-login-trust-item"><i className="fa-solid fa-star gold-star"></i> 4.9/5 Rating</span>
-                <span className="rf-login-trust-item">3-Day Free Trial</span>
+                <span className="rf-login-trust-item"><i className="fa-solid fa-circle-check green-icon"></i> Instant Activation</span>
                 <span className="rf-login-trust-item"><i className="fa-solid fa-lock green-icon"></i> 256-Bit SSL Encrypted</span>
               </div>
             </div>
@@ -2467,13 +2467,13 @@ export default function App() {
                 </div>
               )}
 
-              <h2 className="rf-login-card-title">{regMode ? 'Start Your 3-Day Free Trial' : 'Business Login'}</h2>
-              <p className="rf-login-card-sub">{regMode ? 'Create your business account in 30 seconds. No credit card required.' : 'Enter your credentials to access your review dashboard'}</p>
+              <h2 className="rf-login-card-title">{regMode ? 'Create Your Business Account' : 'Business Login'}</h2>
+              <p className="rf-login-card-sub">{regMode ? 'Create your business account in 30 seconds to get started.' : 'Enter your credentials to access your review dashboard'}</p>
 
               {regMode && selectedPlanForReg && (
                 <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 8, padding: '9px 12px', fontSize: '0.78rem', color: '#166534', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span><i className="fa-solid fa-crown" style={{ color: '#16a34a', marginRight: 6 }}></i>Selected: <strong>{selectedPlanForReg.name} Plan ({selectedPlanForReg.period})</strong></span>
-                  <span style={{ fontSize: '0.72rem', background: '#dcfce7', padding: '2px 7px', borderRadius: 6, fontWeight: 700 }}>3-Day Trial</span>
+                  <span style={{ fontSize: '0.72rem', background: '#dcfce7', padding: '2px 7px', borderRadius: 6, fontWeight: 700 }}>Active Plan</span>
                 </div>
               )}
 
@@ -2634,7 +2634,7 @@ export default function App() {
                 )}
 
                 <button className="rf-login-submit-btn" type="submit">
-                  {regMode ? 'Start 3-Day Free Trial ' : 'Sign In to Dashboard '}
+                  {regMode ? 'Create Account ' : 'Sign In to Dashboard '}
                   <span className="rf-nav-arrow">→</span>
                 </button>
               </form>
@@ -2664,15 +2664,15 @@ export default function App() {
                 {regMode ? (
                   <>Already have an account? <button type="button" className="rf-login-switch-btn" onClick={() => { setRegMode(false); window.history.pushState({}, '', '/login'); }}>Sign In</button></>
                 ) : (
-                  <>Don't have an account? <button type="button" className="rf-login-switch-btn" onClick={() => { setRegMode(true); window.history.pushState({}, '', '/register'); }}>Start 3-Day Free Trial</button></>
+                  <>Don't have an account? <button type="button" className="rf-login-switch-btn" onClick={() => { setRegMode(true); window.history.pushState({}, '', '/register'); }}>Create Account</button></>
                 )}
               </div>
 
               {/* Security Strip (Screenshot 2 Match) */}
               <div className="rf-login-security-footer">
-                <span>3-Day Free Trial</span>
+                <span>Instant Setup</span>
                 <span>&bull;</span>
-                <span><i className="fa-solid fa-bolt" style={{ color: '#16a34a', marginRight: 3 }}></i>Instant Setup</span>
+                <span><i className="fa-solid fa-bolt" style={{ color: '#16a34a', marginRight: 3 }}></i>Official API</span>
                 <span>&bull;</span>
                 <span><i className="fa-solid fa-lock" style={{ color: '#16a34a', marginRight: 3 }}></i>256-Bit SSL</span>
               </div>
@@ -3450,8 +3450,7 @@ function Footer({ navigate }) {
       items: [
         ['Operator Sign In', 'Account'],
         ['Partner Sign In', 'Account'],
-                ['Business Onboard', 'Business onboarding'],
-        ['Privacy Policy', 'Privacy policy'],
+        ['Business Onboard', 'Business onboarding'],
         ['Terms of Service', 'Terms of service'],
         ['Cookie Policy', 'Cookie policy']
       ]
@@ -3495,8 +3494,6 @@ function Footer({ navigate }) {
       <div className="wrap footer-bottom-bar">
         <span>© 2026 StarReview AI. All rights reserved.</span>
         <div>
-          <button onClick={() => navigate('Privacy policy')}>Privacy Policy</button>
-          <i>·</i>
           <button onClick={() => navigate('Terms of service')}>Terms of Service</button>
           <i>·</i>
           <button onClick={() => navigate('Cookie policy')}>Cookie Policy</button>

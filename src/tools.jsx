@@ -8,7 +8,7 @@ const Stars = ({ value, onChange }) => (
   </div>
 );
 const SignInPrompt = ({ navigate, text }) => (
-  <div className="panel narrow center-text"><h3>Sign in required</h3><p>{text}</p><button className="btn btn-dark" onClick={() => navigate('Account')}>Sign in or start free trial →</button></div>
+  <div className="panel narrow center-text"><h3>Sign in required</h3><p>{text}</p><button className="btn btn-dark" onClick={() => navigate('Account')}>Sign in or create account →</button></div>
 );
 export const funnelUrl = (cfg, business) => {
   const base = (cfg?.publicUrl || window.location.origin).replace(/\/$/, '');
