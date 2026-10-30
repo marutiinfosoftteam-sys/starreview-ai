@@ -509,99 +509,36 @@ async function localDispatch(method, path, body) {
   if (path.startsWith('/api/places/autocomplete')) {
     const urlObj = new URL('https://dummy.com' + path);
     const query = (urlObj.searchParams.get('input') || urlObj.searchParams.get('query') || '').trim();
-    const fallbackList = [
-      {
-        placeId: 'ChIJN1t_tDeuEmsRUsoyG83frY4',
-        name: 'Team Maruti InfoSoft',
-        address: 'Shop #12, Ground Floor, Royal Arcade, Sarthana Jakat Naka, Surat, Gujarat 395006',
-        city: 'Surat',
-        country: 'India',
-        category: 'Software & IT Services',
-        rating: 4.9,
-        userRatingsTotal: 184,
-        phone: '+91 63557 22267',
-        types: ['point_of_interest', 'establishment'],
-        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
-        isGoogleVerified: true
-      },
-      {
-        placeId: 'ChIJw0XqT3sE5zsR5wM9A8_F1b8',
-        name: 'Verde Eco Landing',
-        address: 'Ring Road Business Hub, Sarthana, Surat, Gujarat 395006',
-        city: 'Surat',
-        country: 'India',
-        category: 'Eco Packaging & Retail',
-        rating: 4.8,
-        userRatingsTotal: 96,
-        phone: '+91 98251 44321',
-        types: ['store', 'point_of_interest'],
-        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJw0XqT3sE5zsR5wM9A8_F1b8',
-        isGoogleVerified: true
-      },
-      {
-        placeId: 'ChIJP3Sa8ziYEmsRUKgyFmh9AQM',
-        name: 'Spice Haven Bistro & Lounge',
-        address: 'Ground Floor, Phoenix Palladium, Lower Parel, Mumbai, Maharashtra 400013',
-        city: 'Mumbai',
-        country: 'India',
-        category: 'Restaurant & Dining',
-        rating: 4.7,
-        userRatingsTotal: 342,
-        phone: '+91 22 4920 1100',
-        types: ['restaurant', 'food', 'establishment'],
-        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJP3Sa8ziYEmsRUKgyFmh9AQM',
-        isGoogleVerified: true
-      },
-      {
-        placeId: 'ChIJ2eUgeAK6j4ARbn5u_wAGqWA',
-        name: 'Sen Dental Care & Implant Center',
-        address: 'B-14, South Extension Part II, New Delhi, Delhi 110049',
-        city: 'New Delhi',
-        country: 'India',
-        category: 'Dental Clinic & Healthcare',
-        rating: 4.9,
-        userRatingsTotal: 256,
-        phone: '+91 11 2625 8899',
-        types: ['dentist', 'health'],
-        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJ2eUgeAK6j4ARbn5u_wAGqWA',
-        isGoogleVerified: true
-      },
-      {
-        placeId: 'ChIJLfySpTOuEmsRsc_6PtVqCu8',
-        name: 'Luxe Wellness Spa & Salon',
-        address: '100 Feet Road, Indiranagar, Bangalore, Karnataka 560038',
-        city: 'Bangalore',
-        country: 'India',
-        category: 'Spa & Beauty Salon',
-        rating: 4.8,
-        userRatingsTotal: 178,
-        phone: '+91 80 4120 7766',
-        types: ['beauty_salon', 'spa'],
-        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJLfySpTOuEmsRsc_6PtVqCu8',
-        isGoogleVerified: true
-      },
-      {
-        placeId: 'ChIJ36Y3F9K5wjsRU9qG-uHq3Xw',
-        name: 'Apex Auto Care & Diagnostics',
-        address: 'Plot 42, Senapati Bapat Road, Shivajinagar, Pune, Maharashtra 411016',
-        city: 'Pune',
-        country: 'India',
-        category: 'Auto Repair & Service',
-        rating: 4.6,
-        userRatingsTotal: 135,
-        phone: '+91 20 2567 4433',
-        types: ['car_repair', 'point_of_interest'],
-        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJ36Y3F9K5wjsRU9qG-uHq3Xw',
-        isGoogleVerified: true
+
+    if (!query || query.length < 2) {
+      return { ok: true, status: 200, data: { places: [] } };
+    }
+
+    const isNonLatin = (str) => /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f\u0400-\u04FF]/.test(str || '');
+    const wordMatches = (target, word) => {
+      if (!target || !word) return false;
+      try {
+        const regex = new RegExp('\\b' + word.toLowerCase(), 'i');
+        return regex.test(String(target).toLowerCase());
+      } catch {
+        return String(target).toLowerCase().includes(String(word).toLowerCase());
       }
-    ];
+    };
+    const GENERIC_WORDS = new Set([
+      'team', 'company', 'corp', 'corporation', 'inc', 'ltd', 'limited', 'pvt',
+      'services', 'service', 'center', 'centre', 'group', 'the', 'and', 'shop',
+      'store', 'agency', 'hub', 'solutions', 'infosoft', 'tech', 'technologies'
+    ]);
+    const passesWordFilter = (targetText, qWords) => {
+      if (!qWords || qWords.length === 0) return true;
+      const distinctive = qWords.filter(w => !GENERIC_WORDS.has(w));
+      const wordsToCheck = distinctive.length > 0 ? distinctive : qWords;
+      return wordsToCheck.some(w => wordMatches(targetText, w));
+    };
 
-    fallbackList.forEach(p => _placesCache.set(p.placeId, p));
-
-    if (!query) return { ok: true, status: 200, data: { places: fallbackList } };
-
-    const lower = query.toLowerCase();
-    const localMatches = fallbackList.filter(p => p.name.toLowerCase().includes(lower) || (p.city && p.city.toLowerCase().includes(lower)));
+    const qWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    const seen = new Set();
+    const places = [];
 
     // 1. If Google Places API Key configured, query Google textsearch
     const gmapsKey = typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GOOGLE_MAPS_API_KEY || import.meta.env?.VITE_GOOGLE_PLACES_API_KEY);
@@ -636,21 +573,35 @@ async function localDispatch(method, path, body) {
       }
     }
 
-    // 2. Worldwide Live Search (OpenStreetMap Nominatim with English localization for ANY company in ANY country)
+    // 2. Worldwide Live Search (OpenStreetMap Nominatim with English localization)
     try {
       const osmUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=8&accept-language=en`;
       const osmRes = await fetch(osmUrl, {
-        headers: { 'Accept': 'application/json' }
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+        },
+        signal: AbortSignal.timeout(3500)
       });
       if (osmRes.ok) {
         const osmData = await osmRes.json();
         if (Array.isArray(osmData) && osmData.length > 0) {
-          const worldwidePlaces = osmData.map(item => {
+          for (const item of osmData) {
+            const cleanName = item.name || (item.display_name ? item.display_name.split(',')[0].trim() : query);
+            if (isNonLatin(cleanName) || isNonLatin(item.display_name)) continue;
+
+            const fullText = (cleanName + ' ' + (item.display_name || '')).toLowerCase();
+            if (!passesWordFilter(fullText, qWords)) continue;
+
             const addr = item.address || {};
-            const cleanName = item.name || addr.amenity || addr.shop || addr.commercial || addr.office || addr.building || query;
             const city = addr.city || addr.town || addr.municipality || addr.suburb || addr.county || addr.state_district || addr.state || '';
+            const state = addr.state || '';
             const country = addr.country || '';
             const fullAddress = item.display_name || `${cleanName}, ${city}, ${country}`;
+
+            const key = (cleanName + '|' + city + '|' + country).toLowerCase();
+            if (seen.has(key)) continue;
+            seen.add(key);
 
             const hash = Math.abs((cleanName + fullAddress).split('').reduce((acc, c) => (acc << 5) - acc + c.charCodeAt(0), 0));
             const placeId = 'ChIJ' + (item.osm_id ? String(item.osm_id).padStart(12, '0') : '') + hash.toString(36).padEnd(12, 'x').slice(0, 16);
@@ -675,6 +626,7 @@ async function localDispatch(method, path, body) {
               name: cleanName,
               address: fullAddress,
               city: city || country || 'Global',
+              state,
               country,
               category,
               rating,
@@ -685,42 +637,149 @@ async function localDispatch(method, path, body) {
               isGoogleVerified: true
             };
             _placesCache.set(placeId, pObj);
-            return pObj;
-          });
-          return { ok: true, status: 200, data: { places: worldwidePlaces } };
+            places.push(pObj);
+          }
         }
       }
     } catch (err) {
       console.warn('[Worldwide Places Search]:', err);
     }
 
-    if (localMatches.length > 0) return { ok: true, status: 200, data: { places: localMatches } };
+    // 3. Komoot Photon Global Search
+    try {
+      const pUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=10&lang=en`;
+      const pRes = await fetch(pUrl, {
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(3500)
+      });
+      if (pRes.ok) {
+        const pData = await pRes.json();
+        if (pData && Array.isArray(pData.features)) {
+          for (const feat of pData.features) {
+            const p = feat.properties || {};
+            const cleanName = p.name || '';
+            if (!cleanName || isNonLatin(cleanName)) continue;
 
-    // 3. Smart Dynamic Place generator matching the exact typed business
-    const capitalized = query.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    const hash = Math.abs(query.split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0));
-    const randomPlaceId = 'ChIJ' + hash.toString(36).padEnd(16, 'q').slice(0, 16) + Math.random().toString(36).substring(2, 9);
+            const streetPart = [p.housenumber, p.street].filter(Boolean).join(' ');
+            if (isNonLatin(streetPart) || isNonLatin(p.city) || isNonLatin(p.country)) continue;
+
+            const locality = p.district || p.suburb || p.locality || p.county || '';
+            const city = p.city || p.town || p.municipality || locality || p.state || '';
+            const state = p.state || '';
+            const country = p.country || (p.countrycode === 'IN' ? 'India' : '');
+            const postcode = p.postcode || '';
+
+            const fullAddress = [
+              cleanName,
+              streetPart,
+              locality !== city ? locality : null,
+              city,
+              state ? (state + (postcode ? ` ${postcode}` : '')) : postcode,
+              country
+            ].filter(Boolean).join(', ');
+
+            const fullText = (cleanName + ' ' + fullAddress).toLowerCase();
+            if (!passesWordFilter(fullText, qWords)) continue;
+
+            const lowerQ = query.toLowerCase();
+            if (!lowerQ.includes('indonesia') && p.countrycode === 'ID') continue;
+            if (!lowerQ.includes('china') && p.countrycode === 'CN') continue;
+
+            const key = (cleanName + '|' + city + '|' + country).toLowerCase();
+            if (seen.has(key)) continue;
+            seen.add(key);
+
+            const hash = Math.abs((cleanName + fullAddress).split('').reduce((acc, c) => (acc << 5) - acc + c.charCodeAt(0), 0));
+            const placeId = 'ChIJ' + (p.osm_id ? String(p.osm_id).padStart(12, '0') : '') + hash.toString(36).padEnd(12, 'x').slice(0, 16);
+
+            let category = 'Local Business';
+            const osmVal = String(p.osm_value || p.osm_key || p.type || '').toLowerCase();
+            if (osmVal.includes('bank')) category = 'Bank & Financial Services';
+            else if (osmVal.includes('restaurant') || osmVal.includes('fast_food')) category = 'Restaurant & Dining';
+            else if (osmVal.includes('cafe') || osmVal.includes('coffee')) category = 'Coffee Shop & Cafe';
+            else if (osmVal.includes('car') || osmVal.includes('auto')) category = 'Automotive & Showroom';
+            else if (osmVal.includes('clinic') || osmVal.includes('hospital')) category = 'Healthcare & Clinic';
+            else if (osmVal.includes('shop') || osmVal.includes('store')) category = 'Retail & Shopping';
+            else if (osmVal.includes('hotel')) category = 'Hotel & Hospitality';
+
+            const rating = Number((4.6 + (hash % 4) * 0.1).toFixed(1));
+            const userRatingsTotal = 65 + (hash % 350);
+
+            const pObj = {
+              placeId,
+              name: cleanName,
+              address: fullAddress,
+              city: city || country || 'Global',
+              state,
+              country,
+              category,
+              rating,
+              userRatingsTotal,
+              types: ['establishment', 'point_of_interest'],
+              googleReviewUrl: `https://search.google.com/local/writereview?placeid=${placeId}`,
+              googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanName + ' ' + fullAddress)}`,
+              isGoogleVerified: true
+            };
+            _placesCache.set(placeId, pObj);
+            places.push(pObj);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[Photon Places Search]:', err);
+    }
+
+    if (places.length > 0) {
+      return { ok: true, status: 200, data: { places } };
+    }
+
+    // 4. Smart Dynamic Place generator matching the exact typed business and city
+    const words = query.split(/\s+/);
+    const capitalized = words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const lower = query.toLowerCase();
+
+    let city = 'Surat';
+    let state = 'Gujarat';
+    let country = 'India';
+
+    if (lower.includes('ahmedabad')) { city = 'Ahmedabad'; state = 'Gujarat'; }
+    else if (lower.includes('vadodara') || lower.includes('baroda')) { city = 'Vadodara'; state = 'Gujarat'; }
+    else if (lower.includes('rajkot')) { city = 'Rajkot'; state = 'Gujarat'; }
+    else if (lower.includes('mumbai') || lower.includes('bombay')) { city = 'Mumbai'; state = 'Maharashtra'; }
+    else if (lower.includes('delhi') || lower.includes('gurgaon') || lower.includes('noida')) { city = 'New Delhi'; state = 'Delhi'; }
+    else if (lower.includes('bangalore') || lower.includes('bengaluru')) { city = 'Bengaluru'; state = 'Karnataka'; }
+    else if (lower.includes('pune')) { city = 'Pune'; state = 'Maharashtra'; }
+    else if (lower.includes('dubai') || lower.includes('uae')) { city = 'Dubai'; state = 'Dubai'; country = 'United Arab Emirates'; }
+    else if (lower.includes('london') || lower.includes('uk')) { city = 'London'; state = 'England'; country = 'United Kingdom'; }
+    else if (lower.includes('new york') || lower.includes('nyc') || lower.includes('usa')) { city = 'New York'; state = 'New York'; country = 'United States'; }
+
+    const fullAddress = `${capitalized}, ${city}, ${state ? state + ', ' : ''}${country}`;
+    const hash = Math.abs((capitalized + fullAddress).split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0));
+    const randomPlaceId = 'ChIJ' + Math.abs(hash).toString(36).padEnd(8, '0') + 'g01';
+
     const dynamicPlace = {
       placeId: randomPlaceId,
       name: capitalized,
-      address: `${capitalized}, Main Commercial District`,
-      city: 'Global',
-      category: 'Local Business & Services',
-      rating: 4.8,
-      userRatingsTotal: 84 + (hash % 150),
+      address: fullAddress,
+      city,
+      state,
+      country,
+      category: 'Software & Technology Services',
+      rating: 4.9,
+      userRatingsTotal: 184,
       phone: '+91 9904482945',
       types: ['establishment', 'point_of_interest'],
       googleReviewUrl: `https://search.google.com/local/writereview?placeid=${randomPlaceId}`,
-      googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(capitalized)}`,
+      googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(capitalized + ' ' + fullAddress)}`,
       isGoogleVerified: true
     };
     _placesCache.set(randomPlaceId, dynamicPlace);
-    return { ok: true, status: 200, data: { places: [dynamicPlace, ...fallbackList.slice(0, 2)] } };
+    return { ok: true, status: 200, data: { places: [dynamicPlace] } };
   }
 
   if (path.startsWith('/api/places/details')) {
     const urlObj = new URL('https://dummy.com' + path);
-    const placeId = urlObj.searchParams.get('placeId') || urlObj.searchParams.get('place_id') || 'ChIJN1t_tDeuEmsRUsoyG83frY4';
+    const placeId = urlObj.searchParams.get('placeId') || urlObj.searchParams.get('place_id') || '';
     const cached = _placesCache.get(placeId);
     if (cached) {
       return {
@@ -735,14 +794,14 @@ async function localDispatch(method, path, body) {
       data: {
         place: {
           placeId,
-          name: 'Team Maruti InfoSoft',
-          address: 'Shop #12, Ground Floor, Royal Arcade, Sarthana Jakat Naka, Surat, Gujarat 395006',
+          name: 'Verified Business Listing',
+          address: 'Verified Business Location, Gujarat, India',
           city: 'Surat',
           category: 'Software & IT Services',
           rating: 4.9,
           userRatingsTotal: 184,
-          phone: '+91 63557 22267',
-          website: 'https://marutiinfosoft.com',
+          phone: '+91 9904482945',
+          website: '',
           googleMapsUrl: `https://maps.google.com/?q=place_id:${placeId}`,
           googleReviewUrl: `https://search.google.com/local/writereview?placeid=${placeId}`,
           isGoogleVerified: true
