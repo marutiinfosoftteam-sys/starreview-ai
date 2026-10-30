@@ -151,6 +151,14 @@ export default function App() {
   const reviewSlug = getReviewSlug() || 'demo';
   const [page, setPage] = useState(pageFromPath);
   const [menu, setMenu] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 1024) setMenu(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [rating, setRating] = useState(5);
   const [business, setBusiness] = useState(() => {
     try {
@@ -1101,7 +1109,9 @@ export default function App() {
               </div>
             </button>
 
-            <button className="menu-toggle rf-menu-toggle" onClick={() => setMenu(!menu)} aria-label="Toggle menu">☰</button>
+            <button className="menu-toggle rf-menu-toggle" onClick={() => setMenu(!menu)} aria-label="Toggle menu">
+              {menu ? '✕' : '☰'}
+            </button>
 
             <nav className={menu ? 'rf-nav-links open' : 'rf-nav-links'}>
               {navItems.map(item => (
@@ -1154,6 +1164,14 @@ export default function App() {
                 )}
               </div>
             </nav>
+
+            {menu && (
+              <div
+                className="rf-mobile-backdrop"
+                onClick={() => setMenu(false)}
+                aria-hidden="true"
+              />
+            )}
 
             <div className="rf-nav-actions">
               {!user ? (
