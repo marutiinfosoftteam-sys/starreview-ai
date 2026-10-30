@@ -2380,8 +2380,8 @@ export default function BusinessConsole({
                 </div>
                 <div className="bc-nmc-titles">
                   <h3>
-                    Negative Review Management
-                    <span className="bc-header-pill bc-pill-live" style={{ padding: '2px 8px', fontSize: '0.68rem' }}>
+                    <span>Negative Review Management</span>
+                    <span className="bc-header-pill bc-pill-live" style={{ padding: '2px 8px', fontSize: '0.68rem', whiteSpace: 'nowrap' }}>
                       ● {negGatingEnabled ? 'ENABLED' : 'DISABLED'}
                     </span>
                   </h3>

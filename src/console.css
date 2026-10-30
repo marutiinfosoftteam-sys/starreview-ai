@@ -6090,6 +6090,32 @@
     grid-template-columns: 1fr !important;
     gap: 1.25rem !important;
   }
+
+  /* Analytics, Reply & Negative Reviews Tablet Breakpoint */
+  .bc-analytics-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+
+  .bc-pipeline-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+
+  .bc-seo-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  .bc-reply-cols-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1.15rem !important;
+  }
+
+  .bc-four-card-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -6458,6 +6484,187 @@
   .bc-seo-scores-grid {
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
     gap: 0.65rem !important;
+  }
+
+  /* ── 1. Analytics & Pipeline Mobile Optimization (Screenshot 2) ── */
+  .bc-analytics-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .bc-analytics-stat-card {
+    padding: 0.95rem 0.85rem !important;
+    border-radius: 14px !important;
+  }
+
+  .bc-astat-top {
+    gap: 0.45rem !important;
+    margin-bottom: 0.45rem !important;
+  }
+
+  .bc-astat-icon {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.85rem !important;
+    border-radius: 8px !important;
+  }
+
+  .bc-astat-label {
+    font-size: 0.65rem !important;
+    letter-spacing: 0.03em !important;
+  }
+
+  .bc-astat-val {
+    font-size: 1.55rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .bc-astat-footer {
+    font-size: 0.68rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .bc-pipeline-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
+  }
+
+  .bc-pipeline-card {
+    padding: 1.15rem 1rem !important;
+    border-radius: 14px !important;
+  }
+
+  /* ── 2. Review & Auto-Reply Settings Mobile (Screenshot 3) ── */
+  .bc-review-settings-card {
+    padding: 1.15rem 1rem !important;
+    border-radius: 16px !important;
+  }
+
+  .bc-google-connect-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.85rem !important;
+    padding: 1rem 0.85rem !important;
+  }
+
+  .bc-gcb-left {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.45rem !important;
+  }
+
+  .bc-gcb-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .bc-gcb-actions button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.6rem 0.85rem !important;
+  }
+
+  .bc-reply-cols-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.15rem !important;
+    align-items: stretch !important;
+  }
+
+  .bc-rcol {
+    width: 100% !important;
+  }
+
+  .bc-rcol input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0.65rem 0.75rem !important;
+  }
+
+  .bc-btn-save-settings {
+    width: 100% !important;
+    margin-top: 0.5rem !important;
+    justify-content: center !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.88rem !important;
+  }
+
+  .bc-usage-strip {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.45rem !important;
+    padding: 0.85rem 1rem !important;
+    border-radius: 14px !important;
+  }
+
+  /* ── 3. Negative Review Management Mobile (Screenshot 4) ── */
+  .bc-neg-management-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1rem !important;
+    padding: 1.25rem 1rem !important;
+    border-radius: 16px !important;
+  }
+
+  .bc-nmc-left {
+    width: 100% !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+
+  .bc-nmc-titles {
+    width: 100% !important;
+  }
+
+  .bc-nmc-titles h3 {
+    flex-wrap: wrap !important;
+    font-size: 1.05rem !important;
+    gap: 0.5rem !important;
+    line-height: 1.35 !important;
+    margin-bottom: 0.35rem !important;
+  }
+
+  .bc-toggle-btn-group {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .bc-toggle-btn {
+    text-align: center !important;
+    padding: 0.6rem !important;
+    width: 100% !important;
+    font-size: 0.82rem !important;
+  }
+
+  .bc-four-card-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
+  }
+
+  .bc-four-card {
+    padding: 1.15rem 1rem !important;
+    border-radius: 14px !important;
+  }
+
+  /* ── 4. AI SEO Analyzer Mobile ── */
+  .bc-seo-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  .bc-seo-amber-banner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+
+  .bc-seo-upgrade-btn {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
   }
 }
 
