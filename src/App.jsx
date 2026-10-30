@@ -123,6 +123,13 @@ export default function App() {
     if (p === '/register' || p === '/signup') {
       return 'Account';
     }
+    const hasStoredUser = (() => {
+      try {
+        return !!localStorage.getItem('sr_user');
+      } catch {
+        return false;
+      }
+    })();
     try {
       const search = new URLSearchParams(window.location.search);
       const route = search.get('route');
@@ -131,14 +138,14 @@ export default function App() {
         return 'Account';
       }
       if (route && (route.startsWith('business') || route.includes('feedback') || route.includes('qr') || route.includes('service') || route.includes('billing') || route.includes('stand'))) {
-        return 'Dashboard';
+        return hasStoredUser ? 'Dashboard' : 'Account';
       }
       if (tab) {
-        return 'Dashboard';
+        return hasStoredUser ? 'Dashboard' : 'Account';
       }
     } catch {}
-    if (p === '/index.php' || p === '/index.html') {
-      return 'Dashboard';
+    if (p === '/index.php' || p === '/index.html' || p === '/dashboard' || p === '/console' || p === '/admin') {
+      return hasStoredUser ? 'Dashboard' : 'Account';
     }
     return routeMap[p] || 'Home';
   };
@@ -201,13 +208,19 @@ export default function App() {
     return false;
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [fullName, setFullName] = useState('John Doe');
+  const [fullName, setFullName] = useState('');
   const [mobileCode, setMobileCode] = useState('+1');
-  const [mobileNumber, setMobileNumber] = useState('9876543210');
+  const [mobileNumber, setMobileNumber] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedPlanForReg, setSelectedPlanForReg] = useState(null);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('sr_user');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return null;
+  });
   const [myBusiness, setMyBusiness] = useState(null);
 
   // Auto-fill company name and Gmail ID if user is logged in or saved in storage
@@ -320,10 +333,17 @@ export default function App() {
 
   const navigate = (p, isRegister = false) => {
     // Dashboard is protected: unauthenticated users must sign in or register first
-    if (p === 'Dashboard' && !user && !getToken()) {
-      notify('Please sign in to access your dashboard.');
+    if (p === 'Dashboard' && !user) {
+      notify('Sign In Required: Please sign in or start a free trial to access the dashboard.');
       setRegMode(false);
-      p = 'Account';
+      const nextPath = '/login';
+      if (window.location.pathname !== nextPath) {
+        window.history.pushState({ page: 'Account' }, '', nextPath);
+      }
+      setPage('Account');
+      setMenu(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
     if (p === 'Account') {
       setRegMode(!!isRegister);
@@ -349,6 +369,10 @@ export default function App() {
     setToken('');
     setUser(null);
     setMyBusiness(null);
+    try {
+      localStorage.removeItem('sr_user');
+      localStorage.removeItem('sr_token');
+    } catch {}
     notify('Signed out successfully.');
     navigate('Home');
   };
@@ -405,6 +429,15 @@ export default function App() {
   // Dashboard & Console require active authentication (user must sign in)
   const isConsoleView = page === 'Dashboard';
 
+  useEffect(() => {
+    if (page === 'Dashboard' && !user) {
+      setRegMode(false);
+      setPage('Account');
+      notify('Sign In Required: Please sign in or start a free trial to access your dashboard.');
+      window.history.pushState({ page: 'Account' }, '', '/login');
+    }
+  }, [page, user]);
+
   const submitAuth = async (e) => {
     e.preventDefault();
     if (regMode && confirmPassword && password !== confirmPassword) {
@@ -418,19 +451,16 @@ export default function App() {
     if (!r.ok) return notify(r.data.error || 'Authentication failed');
     setToken(r.data.token);
     setUser(r.data.user);
+    try {
+      localStorage.setItem('sr_email', r.data.user.email);
+      localStorage.setItem('sr_user', JSON.stringify(r.data.user));
+    } catch {}
     setPassword('');
     setConfirmPassword('');
-    notify(regMode ? 'Account created. Welcome to StarReview AI!' : 'Signed in successfully.');
+    notify(regMode ? '🎉 3-Day Free Trial activated! Welcome to StarReview AI!' : 'Signed in successfully.');
     const bRes = await api('GET', '/api/business');
     if (bRes.ok && bRes.data && bRes.data.business) {
       setMyBusiness(bRes.data.business);
-      if (regMode || !bRes.data.business.isGoogleVerified) {
-        navigate('Business onboarding');
-        return;
-      }
-    } else {
-      navigate('Business onboarding');
-      return;
     }
     navigate('Dashboard');
   };
@@ -469,14 +499,33 @@ export default function App() {
           setMyBusiness(bRes.data.business);
         }
         notify(`✓ Signed in as ${emailToUse}. Welcome to StarReview AI!`);
-        navigate('Business onboarding');
+        navigate('Dashboard');
       } else {
         loginDemoConsole();
       }
     } catch (err) {
       console.warn('[Google Auth Error]:', err.message);
-      notify('Google sign-in completed in demo mode');
-      loginDemoConsole();
+      if (err?.code === 'auth/popup-closed-by-user') {
+        notify('Google sign-in was cancelled.');
+        return;
+      }
+      const demoEmail = email.trim() || 'marutiinfosoftteam@gmail.com';
+      const demoUser = {
+        id: 'user_google_' + Date.now(),
+        email: demoEmail,
+        name: fullName || 'Google Business Owner',
+        role: 'business',
+        subscription: { plan: '3-Day Free Trial', status: 'active', isTrial: true },
+        access: true
+      };
+      setToken(demoUser.id);
+      setUser(demoUser);
+      try {
+        localStorage.setItem('sr_email', demoEmail);
+        localStorage.setItem('sr_user', JSON.stringify(demoUser));
+      } catch {}
+      notify(`✓ Signed in as ${demoEmail}. Welcome to StarReview AI!`);
+      navigate('Dashboard');
     }
   };
 
@@ -485,9 +534,13 @@ export default function App() {
     if (r.ok) {
       setToken(r.data.token);
       setUser(r.data.user);
+      try {
+        localStorage.setItem('sr_email', r.data.user.email);
+        localStorage.setItem('sr_user', JSON.stringify(r.data.user));
+      } catch {}
       const bRes = await api('GET', '/api/business');
       if (bRes.ok) setMyBusiness(bRes.data.business);
-      notify('Welcome to Business Console (Demo Mode)');
+      notify('Welcome to Business Console');
       navigate('Dashboard');
     }
   };
@@ -643,16 +696,11 @@ export default function App() {
     setDemoPlan(planName);
     setDemoPeriod(period);
     setSelectedPlanForReg({ name: planName, period, amount });
+    setRazorpayModal(false);
 
-    if (!user) {
-      setRegMode(true);
-      navigate('Account', true);
-      return;
-    }
-    setPaymentEmail(user?.email || 'customer@mybusiness.com');
-    setPaymentStep('select');
-    setPaymentTxnId('');
-    setRazorpayModal(true);
+    // Suppress Razorpay modal simulator and navigate directly to 3-Day Free Trial registration page
+    setRegMode(true);
+    navigate('Account', true);
   };
 
   const navItems = [
@@ -2300,28 +2348,23 @@ export default function App() {
           BUSINESS CONSOLE ADMIN PANEL (REVIEWFLOW AI STYLE)
           ==================================================================== */}
       {page === 'Dashboard' && (
-        <BusinessConsole
-          user={user || {
-            id: 'demo_user',
-            name: 'Demo Business Owner',
-            email: 'owner@starreview.ai',
-            role: 'business',
-            access: true,
-            plan: 'Pro'
-          }}
-          setUser={setUser}
-          business={myBusiness || {
-            name: 'StarReview Demo Business',
-            address: 'Surat, Gujarat, India',
-            rating: 4.9,
-            totalReviews: 248,
-            phone: '+91 9904482945'
-          }}
-          setBusiness={setMyBusiness}
-          navigate={navigate}
-          notify={notify}
-          choosePlan={choosePlan}
-        />
+        user ? (
+          <BusinessConsole
+            user={user}
+            setUser={setUser}
+            business={myBusiness || {
+              name: user?.company || user?.name || 'Team Maruti InfoSoft',
+              address: 'Surat, Gujarat, India',
+              rating: 4.9,
+              totalReviews: 248,
+              phone: user?.mobile || '+91 9904482945'
+            }}
+            setBusiness={setMyBusiness}
+            navigate={navigate}
+            notify={notify}
+            choosePlan={choosePlan}
+          />
+        ) : null
       )}
 
       {/* ====================================================================
@@ -2348,7 +2391,7 @@ export default function App() {
 
               <div className="rf-login-badge">
                 <span className="rf-login-badge-dot"></span>
-                AI GOOGLE REVIEW ACCELERATOR • CLIENT PORTAL
+                3-DAY FREE TRIAL • NO CREDIT CARD REQUIRED
               </div>
 
               <h1 className="rf-login-heading">
@@ -2394,7 +2437,7 @@ export default function App() {
               {/* Trust Strip (Screenshot 4 Match) */}
               <div className="rf-login-trust-strip">
                 <span className="rf-login-trust-item"><i className="fa-solid fa-star gold-star"></i> 4.9/5 Rating</span>
-                <span className="rf-login-trust-item"><i className="fa-solid fa-bolt green-icon"></i> Official Google Places Verified</span>
+                <span className="rf-login-trust-item">3-Day Free Trial</span>
                 <span className="rf-login-trust-item"><i className="fa-solid fa-lock green-icon"></i> 256-Bit SSL Encrypted</span>
               </div>
             </div>
@@ -2408,8 +2451,8 @@ export default function App() {
                 </div>
               )}
 
-              <h2 className="rf-login-card-title">{regMode ? 'Create Business Account' : 'Business Login'}</h2>
-              <p className="rf-login-card-sub">{regMode ? 'Sign up in 30 seconds to access your business reputation dashboard.' : 'Enter your credentials to access your review dashboard'}</p>
+              <h2 className="rf-login-card-title">{regMode ? 'Start Your 3-Day Free Trial' : 'Business Login'}</h2>
+              <p className="rf-login-card-sub">{regMode ? 'Create your business account in 30 seconds. No credit card required.' : 'Enter your credentials to access your review dashboard'}</p>
 
               {regMode && selectedPlanForReg && (
                 <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 8, padding: '9px 12px', fontSize: '0.78rem', color: '#166534', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -2417,21 +2460,6 @@ export default function App() {
                   <span style={{ fontSize: '0.72rem', background: '#dcfce7', padding: '2px 7px', borderRadius: 6, fontWeight: 700 }}>3-Day Trial</span>
                 </div>
               )}
-
-              {/* Instant 1-Click Demo Shortcut */}
-              <div style={{ marginBottom: 16, background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                <span style={{ fontSize: '0.78rem', color: '#475569' }}>
-                  <i className="fa-solid fa-bolt" style={{ color: '#16a34a', marginRight: 4 }}></i>
-                  Fast Preview:
-                </span>
-                <button
-                  type="button"
-                  style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, padding: '4px 10px', cursor: 'pointer' }}
-                  onClick={loginDemoConsole}
-                >
-                  ⚡ Instant Demo Console →
-                </button>
-              </div>
 
               <form onSubmit={submitAuth}>
                 {regMode ? (
@@ -2590,7 +2618,7 @@ export default function App() {
                 )}
 
                 <button className="rf-login-submit-btn" type="submit">
-                  {regMode ? 'Create Account ' : 'Sign In to Dashboard '}
+                  {regMode ? 'Start 3-Day Free Trial ' : 'Sign In to Dashboard '}
                   <span className="rf-nav-arrow">→</span>
                 </button>
               </form>
@@ -2620,17 +2648,17 @@ export default function App() {
                 {regMode ? (
                   <>Already have an account? <button type="button" className="rf-login-switch-btn" onClick={() => { setRegMode(false); window.history.pushState({}, '', '/login'); }}>Sign In</button></>
                 ) : (
-                  <>Don't have an account? <button type="button" className="rf-login-switch-btn" onClick={() => { setRegMode(true); window.history.pushState({}, '', '/register'); }}>Create an account</button></>
+                  <>Don't have an account? <button type="button" className="rf-login-switch-btn" onClick={() => { setRegMode(true); window.history.pushState({}, '', '/register'); }}>Start 3-Day Free Trial</button></>
                 )}
               </div>
 
-              {/* Security Strip (Screenshot 4 Match) */}
+              {/* Security Strip (Screenshot 2 Match) */}
               <div className="rf-login-security-footer">
-                <span>Official Google Places Verified</span>
+                <span>3-Day Free Trial</span>
                 <span>&bull;</span>
-                <span>Instant Setup</span>
+                <span><i className="fa-solid fa-bolt" style={{ color: '#16a34a', marginRight: 3 }}></i>Instant Setup</span>
                 <span>&bull;</span>
-                <span>256-Bit SSL</span>
+                <span><i className="fa-solid fa-lock" style={{ color: '#16a34a', marginRight: 3 }}></i>256-Bit SSL</span>
               </div>
             </div>
           </div>

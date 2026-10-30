@@ -246,13 +246,18 @@ function localDispatch(method, path, body) {
   // 2. Auth: Register
   if (path === '/api/auth/register' && method === 'POST') {
     const email = (body?.email || '').trim().toLowerCase();
+    const fullName = (body?.fullName || '').trim();
+    const mobile = (body?.mobile || '').trim();
     let user = db.users.find(u => u.email === email);
     if (!user) {
       const trialExpires = new Date(Date.now() + 3 * 86400000).toISOString();
       user = {
         id: 'user_' + Math.random().toString(36).substring(2, 9),
         email,
-        subscription: { plan: 'Trial', status: 'active', expiresAt: trialExpires, isTrial: true },
+        name: fullName || 'Business Owner',
+        mobile: mobile || '+91 9904482945',
+        company: fullName ? `${fullName}'s Business` : 'Team Maruti InfoSoft',
+        subscription: { plan: '3-Day Free Trial', status: 'active', expiresAt: trialExpires, isTrial: true },
         createdAt: new Date().toISOString()
       };
       db.users.push(user);
@@ -262,15 +267,15 @@ function localDispatch(method, path, body) {
       const biz = {
         id: 'biz_' + Math.random().toString(36).substring(2, 9),
         userId: user.id,
-        name: 'My Business',
+        name: fullName ? `${fullName}'s Business` : 'Team Maruti InfoSoft',
         slug: bizSlug,
         city: 'Surat',
         category: 'Services',
         googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
-        services: ['Customer Service', 'Consultation'],
+        services: ['Customer Service', 'Consultation', 'GMB Profile Optimization', 'GMB Setup & Verification'],
         staff: ['Rahul', 'Priya'],
-        keywords: ['friendly', 'fast'],
-        whatsappNumber: '919904482945',
+        keywords: ['friendly', 'fast', 'professional'],
+        whatsappNumber: mobile || '919904482945',
         brandColor: '#1d4934',
         competitors: [],
         createdAt: new Date().toISOString()
@@ -284,7 +289,7 @@ function localDispatch(method, path, body) {
       status: 200,
       data: {
         token: user.id,
-        user: { id: user.id, email: user.email, subscription: user.subscription, access: true, replyAssistant: true }
+        user: { id: user.id, email: user.email, name: user.name || fullName, mobile: user.mobile || mobile, company: user.company, subscription: user.subscription, access: true, replyAssistant: true }
       }
     };
   }
