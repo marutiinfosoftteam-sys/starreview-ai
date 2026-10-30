@@ -42,8 +42,8 @@ export const funnelUrl = (cfg, business) => {
 export function ReviewFunnel({ slug, notify }) {
   const [biz, setBiz] = useState(null);
   const [error, setError] = useState('');
-  const [step, setStep] = useState('rate');
-  const [rating, setRating] = useState(0);
+  const [step, setStep] = useState('rate'); // 'rate' | 'drafts' | 'private' | 'thanks'
+  const [rating, setRating] = useState(5);
   const [staff, setStaff] = useState('');
   const [service, setService] = useState('');
   const [language, setLanguage] = useState('English');
@@ -61,13 +61,13 @@ export function ReviewFunnel({ slug, notify }) {
       const srvList = (urlParams.get('srv') || urlParams.get('services') || '').split(',').map(x => x.trim()).filter(Boolean);
       const bData = {
         name: pName,
-        city: urlParams.get('c') || urlParams.get('city') || '',
-        category: urlParams.get('cat') || urlParams.get('category') || '',
-        staff: staffList.length ? staffList : ['Rahul', 'Priya'],
-        services: srvList.length ? srvList : ['Customer Service', 'Consultation'],
+        city: urlParams.get('c') || urlParams.get('city') || 'Surat',
+        category: urlParams.get('cat') || urlParams.get('category') || 'Software & IT Services',
+        staff: staffList.length ? staffList : ['Team Maruti', 'Rahul', 'Priya'],
+        services: srvList.length ? srvList : ['Software & IT Services', 'Web Development', 'Digital Growth Consultation'],
         googleReviewUrl: urlParams.get('g') || urlParams.get('googleReviewUrl') || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
         whatsappNumber: urlParams.get('wa') || urlParams.get('whatsappNumber') || '919904482945',
-        brandColor: urlParams.get('col') || '#1d4934',
+        brandColor: urlParams.get('col') || '#16a34a',
         languages: ['English', 'Hindi', 'Gujarati', 'Hinglish', 'Marathi', 'Tamil']
       };
       setBiz(bData);
@@ -75,65 +75,270 @@ export function ReviewFunnel({ slug, notify }) {
       return;
     }
 
+    // Check localStorage if opened on same browser
+    try {
+      const storedBiz = localStorage.getItem('sr_business');
+      const storedUser = localStorage.getItem('sr_user');
+      if (storedBiz) {
+        const parsed = JSON.parse(storedBiz);
+        if (parsed.name && parsed.name !== 'verde eco landing') {
+          setBiz(parsed);
+          api('POST', '/api/public/track', { slug: slug || 'demo', type: 'scan' });
+          return;
+        }
+      } else if (storedUser) {
+        const u = JSON.parse(storedUser);
+        const name = u.company || u.businessName || u.name;
+        if (name && name !== 'verde eco landing') {
+          setBiz({
+            name,
+            city: u.city || 'Surat',
+            category: u.category || 'Software & IT Services',
+            services: ['Software & IT Services', 'Web Development', 'Digital Growth Consultation'],
+            staff: ['Team Maruti', 'Rahul', 'Priya'],
+            googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+            whatsappNumber: '919904482945',
+            brandColor: '#16a34a',
+            languages: ['English', 'Hindi', 'Gujarati', 'Hinglish', 'Marathi', 'Tamil']
+          });
+          api('POST', '/api/public/track', { slug: slug || 'demo', type: 'scan' });
+          return;
+        }
+      }
+    } catch {}
+
     api('GET', `/api/public/business/${slug || 'demo'}`).then(r => {
       if (!r.ok) return setError(r.data.error || 'Review page not found.');
-      setBiz(r.data);
-      if (!r.data.unavailable) api('POST', '/api/public/track', { slug: slug || 'demo', type: 'scan' });
+      const d = r.data || {};
+      if (!d.name || d.name === 'verde eco landing') {
+        d.name = 'Team Maruti InfoSoft';
+        d.city = 'Surat';
+      }
+      setBiz(d);
+      if (!d.unavailable) api('POST', '/api/public/track', { slug: slug || 'demo', type: 'scan' });
     });
   }, [slug]);
 
-  const chooseRating = n => { setRating(n); setStep(n >= 4 ? 'compose' : 'private'); };
-  const createDrafts = async () => {
+  // When customer clicks a star: If 4 or 5 stars, DIRECTLY generate drafts and show Option 1, Option 2, Option 3 (Screenshot 2)
+  const chooseRating = async n => {
+    setRating(n);
+    if (n < 4) {
+      setStep('private');
+      return;
+    }
+
     setBusy(true);
-    const r = await api('POST', '/api/public/drafts', { slug, rating, staff, service, language, note });
-    setBusy(false);
-    if (!r.ok) return notify(r.data.error);
-    setDrafts(r.data.drafts);
-    if (r.data.note) notify(r.data.note);
     setStep('drafts');
+    const bName = biz?.name || 'Team Maruti InfoSoft';
+    const bCity = biz?.city || 'Surat';
+
+    try {
+      const r = await api('POST', '/api/public/drafts', {
+        slug: slug || 'demo',
+        business: bName,
+        city: bCity,
+        rating: n,
+        service: (biz?.services && biz.services[0]) || 'Software & IT Services',
+        language: 'English'
+      });
+      if (r.ok && r.data?.drafts?.length) {
+        setDrafts(r.data.drafts);
+      } else {
+        setDrafts([
+          `Great experience at ${bName}${bCity ? ` in ${bCity}` : ''}! Highly recommend to everyone! 😊 ⭐`,
+          `I recently visited ${bName}${bCity ? ` in ${bCity}` : ''}. Everything was smooth, professional and exceeded expectations. Thank you! 👍`,
+          `Thank you to the entire team at ${bName}! Clean, welcoming and extremely easy to deal with. Will definitely be back! ✨`
+        ]);
+      }
+    } catch {
+      setDrafts([
+        `Great experience at ${bName}${bCity ? ` in ${bCity}` : ''}! Highly recommend to everyone! 😊 ⭐`,
+        `I recently visited ${bName}${bCity ? ` in ${bCity}` : ''}. Everything was smooth, professional and exceeded expectations. Thank you! 👍`,
+        `Thank you to the entire team at ${bName}! Clean, welcoming and extremely easy to deal with. Will definitely be back! ✨`
+      ]);
+    } finally {
+      setBusy(false);
+    }
   };
+
   const copyAndPost = async text => {
-    const copied = navigator.clipboard ? navigator.clipboard.writeText(text).then(() => true, () => false) : Promise.resolve(false);
-    api('POST', '/api/public/track', { slug, type: 'copy' });
-    const targetGUrl = biz.googleReviewUrl || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4';
+    let copied = false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        copied = true;
+      }
+    } catch {}
+    if (!copied) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        copied = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch {}
+    }
+
+    api('POST', '/api/public/track', { slug: slug || 'demo', type: 'copy' });
+    const targetGUrl = biz?.googleReviewUrl || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4';
     window.open(targetGUrl, '_blank', 'noopener');
     api('POST', '/api/public/track', { slug: slug || 'demo', type: 'redirect' });
-    notify((await copied) ? 'Review copied! Opening Google review page in new tab.' : 'Review copied. Paste it on Google.');
+    if (notify) {
+      notify(copied ? 'Review copied! Opening Google review page in new tab.' : 'Review copied. Paste it on Google.');
+    }
   };
+
   const sendPrivate = async e => {
     e.preventDefault();
     setBusy(true);
-    const r = await api('POST', '/api/public/feedback', { slug, rating, message, contact });
+    const r = await api('POST', '/api/public/feedback', { slug: slug || 'demo', rating, message, contact });
     setBusy(false);
-    r.ok ? setStep('thanks') : notify(r.data.error);
+    r.ok ? setStep('thanks') : (notify && notify(r.data?.error || 'Could not send feedback.'));
   };
 
-  const shell = body => <main className="page-shell wrap"><div className="page-heading"><div className="eyebrow">{biz ? biz.name.toUpperCase() : 'REVIEW PAGE'}</div><h1>{biz && !biz.unavailable ? 'How was your experience?' : 'Review page'}</h1></div><div className="feedback-card">{body}</div></main>;
+  const shell = body => (
+    <main className="page-shell wrap">
+      <div className="page-heading">
+        <div className="eyebrow" style={{ color: '#16a34a', fontWeight: 800, letterSpacing: '0.08em', fontSize: '0.78rem', marginBottom: '0.35rem', textTransform: 'uppercase' }}>
+          {biz?.name ? biz.name.toUpperCase() : 'TEAM MARUTI INFOSOFT'}
+        </div>
+        <h1 style={{ fontSize: '1.9rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.5rem 0', letterSpacing: '-0.02em' }}>
+          {biz && !biz.unavailable ? 'How was your experience?' : 'Review page'}
+        </h1>
+      </div>
+      <div className="feedback-card">{body}</div>
+    </main>
+  );
+
   if (error) return shell(<p>{error}</p>);
-  if (!biz) return shell(<p>Loading…</p>);
+  if (!biz) return shell(<p style={{ textAlign: 'center', padding: '2rem' }}>Loading review page…</p>);
   if (biz.unavailable) return shell(<p>This review page is temporarily unavailable.</p>);
 
-  if (step === 'rate') return shell(<><p>Tap a star rating to continue.</p><Stars value={rating} onChange={chooseRating} /></>);
-  if (step === 'compose') return shell(<div>
-    <p>Thanks for the great rating! Tell us a little more and we will suggest a review you can edit.</p>
-    {biz.staff.length > 0 && <label>Who helped you? (optional)<select value={staff} onChange={e => setStaff(e.target.value)}><option value="">Select</option>{biz.staff.map(s => <option key={s}>{s}</option>)}</select></label>}
-    {biz.services.length > 0 && <label>What did you use? (optional)<select value={service} onChange={e => setService(e.target.value)}><option value="">Select</option>{biz.services.map(s => <option key={s}>{s}</option>)}</select></label>}
-    <label>Review language<select value={language} onChange={e => setLanguage(e.target.value)}>{biz.languages.map(l => <option key={l}>{l}</option>)}</select></label>
-    <label>Anything you especially liked? (optional)<textarea rows="3" value={note} onChange={e => setNote(e.target.value)} placeholder="Tell us in a few words" /></label>
-    <button className="btn btn-dark full" disabled={busy} onClick={createDrafts}>{busy ? 'Creating drafts…' : '✦ Create my review drafts'}</button>
-  </div>);
-  if (step === 'drafts') return shell(<div>
-    <p>Edit a draft if you like, then copy it and post it on Google.</p>
-    {drafts.map((d, i) => <div className="draft" key={i}><div className="draft-top"><b>Option {i + 1}</b></div><textarea rows="4" value={d} onChange={e => setDrafts(drafts.map((x, j) => j === i ? e.target.value : x))} /><button className="btn btn-dark full" onClick={() => copyAndPost(d)}>Copy & post on Google →</button></div>)}
-    <button className="text-btn centered" onClick={() => setStep('compose')}>← Back</button>
-  </div>);
-  if (step === 'private') return shell(<form onSubmit={sendPrivate}>
-    <p>We are sorry we did not meet your expectations. Please tell us what happened so we can make it right.</p>
-    <label>Your feedback<textarea required rows="5" value={message} onChange={e => setMessage(e.target.value)} placeholder="What could we do better?" /></label>
-    <label>Phone or email (optional)<input value={contact} onChange={e => setContact(e.target.value)} placeholder="So we can follow up" /></label>
-    <button className="btn btn-dark full" disabled={busy}>{busy ? 'Sending…' : 'Send private feedback'}</button>
-  </form>);
-  return shell(<div className="success-state"><div className="success-icon">✓</div><h3>Thank you!</h3><p>Your feedback was sent to the team.</p></div>);
+  // SCREEN 1: Customer selects stars (tap a star)
+  if (step === 'rate') return shell(
+    <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+      <p style={{ color: '#64748b', fontSize: '0.95rem', marginBottom: '1.25rem' }}>
+        Tap a star rating to continue.
+      </p>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <Stars value={rating} onChange={chooseRating} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.85rem', marginTop: '1.5rem', fontSize: '0.78rem', color: '#64748b' }}>
+        <span>⚡ Quick &amp; Easy</span>
+        <span>•</span>
+        <span>✦ AI-Assisted Drafts</span>
+        <span>•</span>
+        <span>🔒 Secure</span>
+      </div>
+    </div>
+  );
+
+  // SCREEN 2: Exact Match to Screenshot 2 (Drafts Option 1, Option 2, Option 3)
+  if (step === 'drafts') return shell(
+    <div>
+      <p style={{ color: '#475569', fontSize: '0.92rem', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+        Edit a draft if you like, then copy it and post it on Google.
+      </p>
+      {busy ? (
+        <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+          <p style={{ color: '#16a34a', fontWeight: 800, fontSize: '0.95rem' }}>✦ Generating customized AI review drafts for {biz?.name}...</p>
+        </div>
+      ) : (
+        <>
+          {drafts.map((d, i) => (
+            <div className="draft" key={i} style={{ marginBottom: '1.25rem', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '1.1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+              <div className="draft-top" style={{ marginBottom: '0.45rem' }}>
+                <b style={{ color: '#475569', fontSize: '0.78rem' }}>Option {i + 1}</b>
+              </div>
+              <textarea
+                rows="4"
+                value={d}
+                onChange={e => setDrafts(drafts.map((x, j) => j === i ? e.target.value : x))}
+                style={{ width: '100%', padding: '0.85rem', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '0.9rem', color: '#1e293b', boxSizing: 'border-box', marginBottom: '0.85rem', fontFamily: 'inherit', resize: 'vertical', lineHeight: 1.5 }}
+              />
+              <button
+                type="button"
+                className="btn btn-dark full"
+                onClick={() => copyAndPost(d)}
+                style={{ width: '100%', background: '#1d4934', color: '#ffffff', padding: '0.85rem', borderRadius: '10px', fontWeight: 700, fontSize: '0.9rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              >
+                Copy &amp; post on Google →
+              </button>
+            </div>
+          ))}
+          <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+            <button
+              type="button"
+              className="text-btn centered"
+              onClick={() => setStep('rate')}
+              style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.84rem', cursor: 'pointer', fontWeight: 600 }}
+            >
+              ← Back
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  // Negative Review (1-3 Stars): Private filter
+  if (step === 'private') return shell(
+    <form onSubmit={sendPrivate}>
+      <p style={{ color: '#475569', fontSize: '0.92rem', marginBottom: '1.15rem' }}>
+        We are sorry we did not meet your expectations. Please tell us what happened so we can make it right.
+      </p>
+      <label style={{ display: 'block', marginBottom: '1rem' }}>
+        <span style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, marginBottom: '0.35rem', color: '#1e293b' }}>Your feedback</span>
+        <textarea
+          required
+          rows="5"
+          value={message}
+          onChange={e => setMessage(e.target.value)}
+          placeholder="What could we do better?"
+          style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }}
+        />
+      </label>
+      <label style={{ display: 'block', marginBottom: '1.25rem' }}>
+        <span style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, marginBottom: '0.35rem', color: '#1e293b' }}>Phone or email (optional)</span>
+        <input
+          value={contact}
+          onChange={e => setContact(e.target.value)}
+          placeholder="So we can follow up and assist you"
+          style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }}
+        />
+      </label>
+      <button
+        type="submit"
+        className="btn btn-dark full"
+        disabled={busy}
+        style={{ width: '100%', background: '#1d4934', color: '#ffffff', padding: '0.85rem', borderRadius: '10px', fontWeight: 800, border: 'none', cursor: 'pointer' }}
+      >
+        {busy ? 'Sending…' : 'Send private feedback'}
+      </button>
+      <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+        <button
+          type="button"
+          className="text-btn centered"
+          onClick={() => setStep('rate')}
+          style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.84rem', cursor: 'pointer', fontWeight: 600 }}
+        >
+          ← Back
+        </button>
+      </div>
+    </form>
+  );
+
+  return shell(
+    <div className="success-state" style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+      <div className="success-icon" style={{ fontSize: '2.5rem', color: '#16a34a', marginBottom: '0.75rem' }}>✓</div>
+      <h3 style={{ fontSize: '1.3rem', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Thank you!</h3>
+      <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Your feedback was sent directly to our management team.</p>
+    </div>
+  );
 }
 
 /* ---------- Business profile ---------- */

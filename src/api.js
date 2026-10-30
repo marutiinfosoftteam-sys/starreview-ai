@@ -39,19 +39,19 @@ const getDefaultDb = () => ({
     {
       id: 'demo-biz-1',
       userId: 'demo-user-1',
-      name: 'verde eco landing',
-      slug: 'verde-eco-landing',
-      city: 'sarthana',
-      category: 'Other',
+      name: 'Team Maruti InfoSoft',
+      slug: 'team-maruti-infosoft',
+      city: 'Surat',
+      category: 'Software & IT Services',
       googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
-      services: ['Eco friendly Packaging', 'Same-day Dispatch', 'Custom Branding'],
-      staff: ['Aarav', 'Bhavik', 'Priya'],
-      keywords: ['best quality', 'fast response', 'eco friendly'],
+      services: ['Software & IT Services', 'Web Development', 'Digital Growth Consultation'],
+      staff: ['Team Maruti', 'Rahul', 'Priya'],
+      keywords: ['best software company', 'fast response', 'reliable support'],
       whatsappNumber: '919904482945',
-      brandColor: '#1d4934',
+      brandColor: '#16a34a',
       competitors: [
-        { name: 'Eco Pack Solutions', rating: 4.3, reviews: 52 },
-        { name: 'Green Box Surat', rating: 4.1, reviews: 39 }
+        { name: 'InfoTech Global', rating: 4.5, reviews: 64 },
+        { name: 'Apex Digital Surat', rating: 4.4, reviews: 48 }
       ],
       createdAt: new Date().toISOString()
     }
@@ -83,7 +83,15 @@ function getLocalDb() {
         localStorage.setItem(DB_KEY, JSON.stringify(def));
         return def;
       }
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (parsed.businesses && parsed.businesses[0] && parsed.businesses[0].name === 'verde eco landing') {
+        parsed.businesses[0].name = 'Team Maruti InfoSoft';
+        parsed.businesses[0].slug = 'team-maruti-infosoft';
+        parsed.businesses[0].city = 'Surat';
+        parsed.businesses[0].category = 'Software & IT Services';
+        localStorage.setItem(DB_KEY, JSON.stringify(parsed));
+      }
+      return parsed;
     }
     if (!_memStore) _memStore = getDefaultDb();
     return _memStore;
@@ -650,13 +658,14 @@ function localDispatch(method, path, body) {
     if (!b && (slug === 'demo' || db.businesses.length > 0)) {
       b = db.businesses[0];
     }
-    if (!b) {
+    if (!b || b.name === 'verde eco landing') {
       b = {
-        name: 'Demo Business',
+        name: 'Team Maruti InfoSoft',
         city: 'Surat',
-        services: ['Customer Care', 'Consultation'],
-        staff: ['Rahul', 'Priya'],
-        brandColor: '#1d4934',
+        category: 'Software & IT Services',
+        services: ['Software & IT Services', 'Web Development', 'Digital Growth Consultation'],
+        staff: ['Team Maruti', 'Rahul', 'Priya'],
+        brandColor: '#16a34a',
         googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
         whatsappNumber: '919904482945'
       };
@@ -666,10 +675,11 @@ function localDispatch(method, path, body) {
       status: 200,
       data: {
         name: b.name,
-        city: b.city || '',
-        services: b.services || [],
-        staff: b.staff || [],
-        brandColor: b.brandColor || '#1d4934',
+        city: b.city || 'Surat',
+        category: b.category || 'Software & IT Services',
+        services: b.services || ['Software & IT Services', 'Web Development'],
+        staff: b.staff || ['Team Maruti', 'Rahul', 'Priya'],
+        brandColor: b.brandColor || '#16a34a',
         googleReviewUrl: b.googleReviewUrl || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
         whatsappNumber: b.whatsappNumber || '919904482945',
         languages: LANGUAGES
@@ -689,9 +699,11 @@ function localDispatch(method, path, body) {
   // 9. Public / Client Review Drafts
   if ((path === '/api/public/drafts' || path === '/api/drafts') && method === 'POST') {
     const b = db.businesses[0];
+    const bizDefaultName = (b?.name && b.name !== 'verde eco landing') ? b.name : 'Team Maruti InfoSoft';
+    const bizDefaultCity = (b?.city && b.city !== 'sarthana') ? b.city : 'Surat';
     const drafts = generateLocalDrafts({
-      business: body?.business || b?.name || 'this business',
-      city: body?.city || b?.city || '',
+      business: body?.business || bizDefaultName,
+      city: body?.city !== undefined ? body.city : bizDefaultCity,
       rating: Number(body?.rating) || 5,
       staff: body?.staff || '',
       service: body?.service || '',

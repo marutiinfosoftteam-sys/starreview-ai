@@ -37,7 +37,7 @@ function loadImage(src) {
 export async function generateFlyerCanvas({
   theme = 'Classic',
   size = 'A6',
-  bizName = 'verde eco landing',
+  bizName = 'Team Maruti InfoSoft',
   qrDataUrl
 }) {
   const isBanner = size === 'Banner';
@@ -443,7 +443,7 @@ export async function generateFlyerCanvas({
 export async function downloadFlyerImage({
   theme = 'Classic',
   size = 'A6',
-  bizName = 'verde eco landing',
+  bizName = 'Team Maruti InfoSoft',
   qrDataUrl,
   notify
 }) {
@@ -478,7 +478,7 @@ export async function downloadFlyerImage({
 export async function downloadFlyerPdf({
   theme = 'Classic',
   size = 'A6',
-  bizName = 'verde eco landing',
+  bizName = 'Team Maruti InfoSoft',
   qrDataUrl,
   notify
 }) {
@@ -510,7 +510,7 @@ export async function downloadFlyerPdf({
  * Downloads plain raw QR code PNG
  */
 export function downloadPlainQr({
-  bizName = 'verde eco landing',
+  bizName = 'Team Maruti InfoSoft',
   qrDataUrl,
   notify
 }) {

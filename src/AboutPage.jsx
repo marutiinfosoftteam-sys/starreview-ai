@@ -3,16 +3,16 @@ import { api } from './api.js';
 
 export default function AboutPage({ user, navigate, setRegMode, notify, logout, choosePlan }) {
   // Live Demo States
-  const [demoBiz, setDemoBiz] = useState('Verde Eco Landing');
+  const [demoBiz, setDemoBiz] = useState('Team Maruti InfoSoft');
   const [demoRating, setDemoRating] = useState(5);
   const [demoExp, setDemoExp] = useState('super quick service and very friendly staff');
   const [demoStaff, setDemoStaff] = useState('Priya');
-  const [demoKeyword, setDemoKeyword] = useState('eco packaging');
+  const [demoKeyword, setDemoKeyword] = useState('software & IT service');
   const [demoLang, setDemoLang] = useState('English');
   const [demoDrafts, setDemoDrafts] = useState([
-    "Loved the eco packaging at Verde Eco Landing! Priya helped us find exactly what we needed. Highly recommend for great customer service! ★★★★★",
-    "Fantastic experience with Verde Eco Landing. Quick appointment, friendly team, and the eco packaging quality was outstanding. Thanks Priya!",
-    "Best place in town! The staff was super welcoming and attentive. Five stars all the way for exceptional service and great value."
+    "Loved the high-tech solutions at Team Maruti InfoSoft! Priya and the team helped us find exactly what we needed. Highly recommend for great customer service! ★★★★★",
+    "Fantastic experience with Team Maruti InfoSoft. Quick consultation, friendly team, and the software quality was outstanding. Thanks Priya!",
+    "Best tech partner in Surat! The team was super welcoming and attentive. Five stars all the way for exceptional service and great value."
   ]);
   const [demoLoading, setDemoLoading] = useState(false);
 
@@ -628,7 +628,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
                 type="text"
                 value={demoBiz}
                 onChange={e => setDemoBiz(e.target.value)}
-                placeholder="e.g. Verde Eco Landing"
+                placeholder="e.g. Team Maruti InfoSoft"
               />
             </div>
 

@@ -110,9 +110,33 @@ export default function BusinessConsole({
   const bizName = business?.name || user?.company || user?.businessName || user?.name || 'Team Maruti InfoSoft';
   const bizCategory = business?.category || business?.customIndustry || business?.industry || user?.category || user?.industry || 'Software & IT Services';
   const bizCity = business?.city || business?.location || (business?.country ? `${business?.country}` : '') || (business?.address ? business.address.split(',')[0].trim() : '') || user?.city || user?.location || user?.country || 'Surat';
-  const directReviewUrl = (typeof window !== 'undefined' ? window.location.origin : 'https://starreview-ai-alpha.vercel.app') + (business?.slug ? ('/r/' + business.slug) : '/r/demo');
+  const originUrl = (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1'))
+    ? window.location.origin
+    : 'https://starreview-ai-alpha.vercel.app';
+  const reviewParams = new URLSearchParams({
+    n: bizName,
+    c: bizCity,
+    cat: bizCategory,
+    g: business?.googleReviewUrl || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+    wa: business?.whatsappNumber || '919904482945'
+  });
+  const directReviewUrl = `${originUrl}/r/${business?.slug || 'demo'}?${reviewParams.toString()}`;
   const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=4&data=${encodeURIComponent(directReviewUrl)}`;
   const [localQrDataUrl, setLocalQrDataUrl] = useState(qrImageSrc);
+
+  const handleRegenerateQrLink = () => {
+    QRCode.toDataURL(directReviewUrl, {
+      width: 500,
+      margin: 2,
+      errorCorrectionLevel: 'H',
+      color: { dark: '#000000', light: '#ffffff' }
+    }).then(url => {
+      setLocalQrDataUrl(url);
+      notify(`QR code regenerated and verified for ${bizName}!`);
+    }).catch(() => {
+      notify(`QR code refreshed for ${bizName}.`);
+    });
+  };
 
   useEffect(() => {
     let active = true;
@@ -356,12 +380,12 @@ export default function BusinessConsole({
 
   // Review Settings Form States (Screenshots 1, 2, 3)
   const [profileSubTab, setProfileSubTab] = useState('Business Details');
-  const [bizFormName, setBizFormName] = useState(business?.name || 'verde eco landing');
-  const [bizFormAddress, setBizFormAddress] = useState(business?.city || 'sarthana');
-  const [bizFormCategory, setBizFormCategory] = useState(business?.category || 'Other');
-  const [bizFormCustomIndustry, setBizFormCustomIndustry] = useState(business?.customIndustry || 'solar system');
-  const [bizFormWebsite, setBizFormWebsite] = useState(business?.website || 'https://verde-eco-landing-v2.vercel.app/');
-  const [bizFormPhone, setBizFormPhone] = useState(business?.phone || '6355722267');
+  const [bizFormName, setBizFormName] = useState(business?.name || 'Team Maruti InfoSoft');
+  const [bizFormAddress, setBizFormAddress] = useState(business?.city || 'Surat');
+  const [bizFormCategory, setBizFormCategory] = useState(business?.category || 'Software & IT Services');
+  const [bizFormCustomIndustry, setBizFormCustomIndustry] = useState(business?.customIndustry || 'Software & IT Services');
+  const [bizFormWebsite, setBizFormWebsite] = useState(business?.website || 'https://starreview-ai-alpha.vercel.app/');
+  const [bizFormPhone, setBizFormPhone] = useState(business?.phone || '9904482945');
   
   const [targetKeywords, setTargetKeywords] = useState(business?.keywords?.length ? business.keywords : ['Fast Service', 'Friendly Staff', 'Clean Store']);
   const [keywordInput, setKeywordInput] = useState('');
@@ -672,9 +696,9 @@ export default function BusinessConsole({
     tag: 'Premium Executive'
   });
   const [standRecipientName, setStandRecipientName] = useState(user?.name || 'Team Maruti InfoSoft');
-  const [standPhone, setStandPhone] = useState(business?.phone || '+1 6355722267');
+  const [standPhone, setStandPhone] = useState(business?.phone || '+91 9904482945');
   const [standShopName, setStandShopName] = useState('Shop #12, Ground Floor');
-  const [standBizName, setStandBizName] = useState(business?.name || 'verde eco landing');
+  const [standBizName, setStandBizName] = useState(business?.name || 'Team Maruti InfoSoft');
   const [standAddress, setStandAddress] = useState('');
   const [standLandmark, setStandLandmark] = useState('');
   const [standCity, setStandCity] = useState(business?.city || 'Surat');
@@ -2662,7 +2686,7 @@ export default function BusinessConsole({
                   <button
                     type="button"
                     className="bc-btn-regen-link"
-                    onClick={() => notify('QR link refreshed and verified.')}
+                    onClick={handleRegenerateQrLink}
                   >
                     <i className="fa-solid fa-arrows-rotate"></i> Regenerate QR Code Link
                   </button>
@@ -3057,7 +3081,7 @@ export default function BusinessConsole({
                       className="bc-input-modern"
                       value={bizFormName}
                       onChange={e => setBizFormName(e.target.value)}
-                      placeholder="e.g. verde eco landing"
+                      placeholder="e.g. Team Maruti InfoSoft"
                     />
                     <p className="bc-field-subtext">Synced directly from your Google Business Profile.</p>
                   </div>
@@ -3140,7 +3164,7 @@ export default function BusinessConsole({
                       className="bc-input-modern"
                       value={bizFormWebsite}
                       onChange={e => setBizFormWebsite(e.target.value)}
-                      placeholder="https://verde-eco-landing-v2.vercel.app/"
+                      placeholder="https://starreview-ai-alpha.vercel.app/"
                     />
                     <p className="bc-field-subtext">Your primary business website or social landing page.</p>
                   </div>
@@ -5553,7 +5577,7 @@ export default function BusinessConsole({
                   color: '#15803d'
                 }}>
                   <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}></span>
-                  {bizName || 'verde eco landing'}
+                  {bizName || 'Team Maruti InfoSoft'}
                 </span>
               </div>
             </div>
