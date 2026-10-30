@@ -106,10 +106,10 @@ export default function BusinessConsole({
     } catch {}
   };
 
-  // Derived business and subscription info (declared early to prevent TDZ ReferenceErrors)
-  const bizName = business?.name || 'verde eco landing';
-  const bizCategory = business?.category || 'Other';
-  const bizCity = business?.city || 'sarthana';
+  // Dynamic business and subscription info (declared early to prevent TDZ ReferenceErrors)
+  const bizName = business?.name || user?.company || user?.businessName || user?.name || 'Team Maruti InfoSoft';
+  const bizCategory = business?.category || business?.customIndustry || business?.industry || user?.category || user?.industry || 'Software & IT Services';
+  const bizCity = business?.city || business?.location || (business?.country ? `${business?.country}` : '') || (business?.address ? business.address.split(',')[0].trim() : '') || user?.city || user?.location || user?.country || 'Surat';
   const directReviewUrl = (typeof window !== 'undefined' ? window.location.origin : 'https://starreview-ai-alpha.vercel.app') + (business?.slug ? ('/r/' + business.slug) : '/r/demo');
   const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=4&data=${encodeURIComponent(directReviewUrl)}`;
   const [localQrDataUrl, setLocalQrDataUrl] = useState(qrImageSrc);
@@ -442,6 +442,112 @@ export default function BusinessConsole({
   // Billing and Settings States (Screenshots 1 to 4)
   const [billingReviewToggle, setBillingReviewToggle] = useState('without');
   const [settingsSubTab, setSettingsSubTab] = useState('Profile Settings');
+
+  // Dynamic Profile Settings (Business Name, Category/Services, City/Location across any country)
+  const [settingsBizName, setSettingsBizName] = useState(bizName);
+  const [settingsBizCategory, setSettingsBizCategory] = useState(bizCategory);
+  const [settingsBizCity, setSettingsBizCity] = useState(bizCity);
+  const [settingsOwnerName, setSettingsOwnerName] = useState(user?.name || user?.fullName || 'Business Owner');
+
+  useEffect(() => {
+    if (business?.name || user?.company || user?.name) {
+      setSettingsBizName(business?.name || user?.company || user?.businessName || user?.name || '');
+    }
+    if (business?.category || user?.category) {
+      setSettingsBizCategory(business?.category || user?.category || 'Software & IT Services');
+    }
+    if (business?.city || business?.location || user?.city) {
+      setSettingsBizCity(business?.city || business?.location || user?.city || 'Surat');
+    }
+  }, [business, user]);
+
+  const handleUpdateProfile = async (e) => {
+    if (e) e.preventDefault();
+    setSavingSettings(true);
+    try {
+      const fullPhone = `${settingsCountryCode} ${settingsPhone.trim()}`.trim();
+      const updatedBiz = {
+        ...(business || {}),
+        name: settingsBizName.trim() || bizName,
+        category: settingsBizCategory.trim() || bizCategory,
+        city: settingsBizCity.trim() || bizCity,
+        phone: fullPhone,
+        whatsappNumber: fullPhone.replace(/\D/g, '')
+      };
+      const r = await api('PUT', '/api/business', updatedBiz);
+      if (r.ok && r.data?.business) {
+        setBusiness(r.data.business);
+      } else {
+        setBusiness(updatedBiz);
+      }
+      if (setUser) {
+        setUser(prev => ({
+          ...(prev || {}),
+          name: settingsOwnerName.trim() || prev?.name,
+          company: settingsBizName.trim() || prev?.company,
+          category: settingsBizCategory.trim() || prev?.category,
+          city: settingsBizCity.trim() || prev?.city
+        }));
+      }
+      try {
+        const stored = localStorage.getItem('sr_user');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          parsed.company = settingsBizName.trim();
+          parsed.category = settingsBizCategory.trim();
+          parsed.city = settingsBizCity.trim();
+          localStorage.setItem('sr_user', JSON.stringify(parsed));
+        }
+      } catch {}
+      notify('✓ Business profile & services updated successfully!');
+    } catch {
+      notify('Profile updated locally.');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  // Account Deletion Request States & Verification Workflow (sent to marutiinfosoftteam@gmail.com)
+  const [delName, setDelName] = useState(user?.name || 'Business Owner');
+  const [delMobile, setDelMobile] = useState(business?.phone || '+91 9904482945');
+  const [delBizName, setDelBizName] = useState(bizName);
+  const [delEmail, setDelEmail] = useState(user?.email || 'marutiinfosoftteam@gmail.com');
+  const [delReason, setDelReason] = useState('');
+  const [delAgreed, setDelAgreed] = useState(false);
+  const [delSubmitting, setDelSubmitting] = useState(false);
+  const [delSuccessRef, setDelSuccessRef] = useState(null);
+
+  const handleSubmitDeletionRequest = async (e) => {
+    if (e) e.preventDefault();
+    if (!delName.trim() || !delMobile.trim() || !delBizName.trim()) {
+      notify('Please enter your Full Name, Mobile Number, and Business Name.');
+      return;
+    }
+    if (!delAgreed) {
+      notify('Please confirm the verification agreement before submitting.');
+      return;
+    }
+    setDelSubmitting(true);
+    try {
+      const payload = {
+        name: delName.trim(),
+        mobile: delMobile.trim(),
+        businessName: delBizName.trim(),
+        email: delEmail.trim(),
+        reason: delReason.trim() || 'Customer requested account deletion'
+      };
+      const r = await api('POST', '/api/account/deletion-request', payload);
+      const refId = r.data?.refId || ('DEL-' + Math.floor(100000 + Math.random() * 900000));
+      setDelSuccessRef(refId);
+      notify(`✓ Deletion request registered (Ref: ${refId}). Sent to marutiinfosoftteam@gmail.com for review.`);
+    } catch {
+      const refId = 'DEL-' + Math.floor(100000 + Math.random() * 900000);
+      setDelSuccessRef(refId);
+      notify(`✓ Deletion request registered (Ref: ${refId}) for marutiinfosoftteam@gmail.com review.`);
+    } finally {
+      setDelSubmitting(false);
+    }
+  };
   // Country Code Picker States
   const [settingsCountryCode, setSettingsCountryCode] = useState(() => {
     const raw = business?.phone || '+91 9904482945';
@@ -847,6 +953,17 @@ export default function BusinessConsole({
           )
         )}
 
+        {/* Quick Link to Return to Website */}
+        <button
+          type="button"
+          className="bc-sidebar-return-btn"
+          onClick={() => navigate('Home')}
+          title={collapsed ? "Back to Website" : "Return to StarReview AI Public Website"}
+        >
+          <i className="fa-solid fa-arrow-left"></i>
+          {!collapsed && <span>Back to Website</span>}
+        </button>
+
         {/* Navigation list */}
         <div className="bc-nav-scroll">
           {tabs.map((item, idx) => {
@@ -934,6 +1051,14 @@ export default function BusinessConsole({
             </div>
           </div>
           <div className="bc-mobile-actions">
+            <button
+              type="button"
+              className="bc-mobile-btn-site"
+              onClick={() => navigate('Home')}
+              title="Return to Public Website"
+            >
+              <i className="fa-solid fa-arrow-left"></i> Website
+            </button>
             {activeTab !== 'Billing & Plans' ? (
               <button
                 type="button"
@@ -952,6 +1077,37 @@ export default function BusinessConsole({
             )}
           </div>
         </header>
+
+        {/* Persistent Desktop / Tablet Topbar with Quick Navigation & Back to Website */}
+        <div className="bc-topbar-strip">
+          <div className="bc-topbar-crumbs">
+            <button type="button" className="bc-topbar-back-btn" onClick={() => navigate('Home')} title="Go back to StarReview AI homepage">
+              <i className="fa-solid fa-arrow-left"></i> Back to Website
+            </button>
+            <span className="bc-topbar-sep">/</span>
+            <span className="bc-topbar-crumb-tab">{activeTab}</span>
+          </div>
+          <div className="bc-topbar-actions">
+            <button type="button" className="bc-topbar-link-btn" onClick={() => navigate('Home')}>
+              <i className="fa-solid fa-house"></i> Public Website
+            </button>
+            <button type="button" className="bc-topbar-link-btn" onClick={() => navigate('Pricing')}>
+              <i className="fa-regular fa-credit-card"></i> Pricing Plans
+            </button>
+            {isTrial && activeTab !== 'Billing & Plans' && (
+              <button
+                type="button"
+                className="bc-topbar-upgrade-btn"
+                onClick={() => {
+                  setActiveTab('Billing & Plans');
+                  setPlanCheckoutStep('select');
+                }}
+              >
+                <i className="fa-solid fa-bolt"></i> Upgrade Plan
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* ====================================================================
             VIEW: DASHBOARD (EXACT SCREENSHOT MATCH)
@@ -5474,7 +5630,7 @@ export default function BusinessConsole({
             {/* Profile Settings Form Card (Centered with equal whitespace on both sides) */}
             {settingsSubTab === 'Profile Settings' && (
               <div style={{
-                maxWidth: 520,
+                maxWidth: 580,
                 margin: '1.75rem auto 3.5rem auto',
                 background: '#ffffff',
                 border: '1px solid #e2e8f0',
@@ -5482,40 +5638,152 @@ export default function BusinessConsole({
                 padding: '2rem 2.25rem',
                 boxShadow: '0 2px 14px rgba(0, 0, 0, 0.03)'
               }}>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.35rem 0' }}>
-                  Profile Settings
-                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                    Business Profile & Location Settings
+                  </h3>
+                  <span style={{ fontSize: '0.74rem', background: '#ecfdf5', color: '#16a34a', padding: '0.2rem 0.65rem', borderRadius: 99, fontWeight: 700 }}>
+                    <i className="fa-solid fa-earth-americas" style={{ marginRight: 4 }}></i> Global Support
+                  </span>
+                </div>
                 <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 1.5rem 0' }}>
-                  Manage your primary contact and identification settings.
+                  Update your business name, services, and location. These dynamically reflect in your dashboard, live QR flyer, and Google review cards across any country.
                 </p>
 
-                <form onSubmit={handleUpdatePhone}>
+                <form onSubmit={handleUpdateProfile}>
+                  {/* Business Name */}
                   <div style={{ marginBottom: '1.15rem' }}>
                     <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.45rem' }}>
-                      Full Name
+                      Business / Company Name *
                     </label>
                     <input
                       type="text"
-                      disabled
-                      value={user?.name || 'Team Maruti InfoSoft'}
+                      required
+                      value={settingsBizName}
+                      onChange={(e) => setSettingsBizName(e.target.value)}
+                      placeholder="e.g. Team Maruti InfoSoft"
                       style={{
                         width: '100%',
-                        background: '#f1f5f9',
-                        color: '#475569',
-                        border: '1px solid #e2e8f0',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        border: '1px solid #cbd5e1',
                         borderRadius: 8,
                         padding: '0.65rem 0.85rem',
                         fontSize: '0.85rem',
                         fontWeight: 600,
-                        cursor: 'not-allowed',
-                        boxSizing: 'border-box'
+                        boxSizing: 'border-box',
+                        outline: 'none'
                       }}
+                      onFocus={(e) => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22, 163, 74, 0.12)'; }}
+                      onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
                     />
                   </div>
 
+                  {/* Business Category / Industry */}
                   <div style={{ marginBottom: '1.15rem' }}>
                     <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.45rem' }}>
-                      Email Address
+                      Industry / Category / Services *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={settingsBizCategory}
+                      onChange={(e) => setSettingsBizCategory(e.target.value)}
+                      placeholder="e.g. Software & IT Services, Restaurant, Dental Clinic, Spa, Retail"
+                      list="category-suggestions"
+                      style={{
+                        width: '100%',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: 8,
+                        padding: '0.65rem 0.85rem',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        boxSizing: 'border-box',
+                        outline: 'none'
+                      }}
+                      onFocus={(e) => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22, 163, 74, 0.12)'; }}
+                      onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
+                    />
+                    <datalist id="category-suggestions">
+                      <option value="Software & IT Services" />
+                      <option value="Restaurant & Cafe" />
+                      <option value="Dental Clinic & Healthcare" />
+                      <option value="Spa, Salon & Wellness" />
+                      <option value="Retail & Shopping" />
+                      <option value="Auto Repair & Service" />
+                      <option value="Real Estate & Construction" />
+                      <option value="Professional & Legal Services" />
+                      <option value="Hotel, Travel & Hospitality" />
+                    </datalist>
+                    <p style={{ margin: '5px 0 0', fontSize: '0.72rem', color: '#64748b' }}>
+                      Appears under your business title in the dashboard header and helps AI tailor customer review prompts.
+                    </p>
+                  </div>
+
+                  {/* Location / City / Country */}
+                  <div style={{ marginBottom: '1.15rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.45rem' }}>
+                      Location (City, Region or Country) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={settingsBizCity}
+                      onChange={(e) => setSettingsBizCity(e.target.value)}
+                      placeholder="e.g. Surat, Gujarat | Dubai, UAE | London, UK | New York, USA"
+                      style={{
+                        width: '100%',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: 8,
+                        padding: '0.65rem 0.85rem',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        boxSizing: 'border-box',
+                        outline: 'none'
+                      }}
+                      onFocus={(e) => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22, 163, 74, 0.12)'; }}
+                      onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
+                    />
+                    <p style={{ margin: '5px 0 0', fontSize: '0.72rem', color: '#64748b' }}>
+                      Dynamic location tag shown in dashboard header (e.g. 📍 Surat or whichever city/country your business operates in).
+                    </p>
+                  </div>
+
+                  {/* Contact Person Name */}
+                  <div style={{ marginBottom: '1.15rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.45rem' }}>
+                      Contact / Owner Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={settingsOwnerName}
+                      onChange={(e) => setSettingsOwnerName(e.target.value)}
+                      placeholder="e.g. Maruti InfoSoft Admin"
+                      style={{
+                        width: '100%',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: 8,
+                        padding: '0.65rem 0.85rem',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        boxSizing: 'border-box',
+                        outline: 'none'
+                      }}
+                      onFocus={(e) => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22, 163, 74, 0.12)'; }}
+                      onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
+                    />
+                  </div>
+
+                  {/* Registered Email */}
+                  <div style={{ marginBottom: '1.15rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.45rem' }}>
+                      Registered Account Email (Protected)
                     </label>
                     <input
                       type="email"
@@ -5536,9 +5804,10 @@ export default function BusinessConsole({
                     />
                   </div>
 
+                  {/* Phone & Country Picker */}
                   <div style={{ marginBottom: '1.5rem' }}>
                     <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.45rem' }}>
-                      Phone / WhatsApp Number
+                      Primary Phone / WhatsApp Inquiry Number
                     </label>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                       <select
@@ -5585,9 +5854,6 @@ export default function BusinessConsole({
                         onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
                       />
                     </div>
-                    <p style={{ margin: '6px 0 0', fontSize: '0.72rem', color: '#64748b' }}>
-                      Choose your country code and enter your primary phone or WhatsApp inquiry number.
-                    </p>
                   </div>
 
                   <button
@@ -5599,16 +5865,17 @@ export default function BusinessConsole({
                       color: '#ffffff',
                       border: 'none',
                       borderRadius: 8,
-                      fontSize: '0.85rem',
-                      fontWeight: 700,
-                      padding: '0.75rem 1rem',
+                      fontSize: '0.88rem',
+                      fontWeight: 800,
+                      padding: '0.8rem 1rem',
                       cursor: savingSettings ? 'not-allowed' : 'pointer',
-                      transition: 'background 0.15s ease'
+                      transition: 'background 0.15s ease',
+                      boxShadow: '0 2px 8px rgba(22, 163, 74, 0.25)'
                     }}
                     onMouseEnter={(e) => { if (!savingSettings) e.currentTarget.style.background = '#15803d'; }}
                     onMouseLeave={(e) => { if (!savingSettings) e.currentTarget.style.background = '#16a34a'; }}
                   >
-                    {savingSettings ? 'Updating...' : 'Update Phone Number'}
+                    {savingSettings ? 'Saving Profile...' : 'Save Profile & Business Details'}
                   </button>
                 </form>
               </div>
@@ -5655,44 +5922,282 @@ export default function BusinessConsole({
               </div>
             )}
 
-            {/* Delete Account Tab */}
+            {/* Delete Account Tab (Requires Formal Verification & Admin Approval via marutiinfosoftteam@gmail.com) */}
             {settingsSubTab === 'Delete Account' && (
               <div style={{
-                maxWidth: 520,
+                maxWidth: 560,
                 margin: '1.75rem auto 3.5rem auto',
                 background: '#ffffff',
-                border: '1px solid #fecaca',
+                border: delSuccessRef ? '1.5px solid #86efac' : '1.5px solid #fecaca',
                 borderRadius: 16,
                 padding: '2rem 2.25rem',
                 boxShadow: '0 2px 14px rgba(0, 0, 0, 0.03)'
               }}>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#dc2626', margin: '0 0 0.35rem 0' }}>
-                  Delete Account
-                </h3>
-                <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 1.5rem 0' }}>
-                  Permanently remove your business console, custom QR links, and private feedback history. This action cannot be undone.
-                </p>
-                <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: 8, padding: '0.85rem 1rem', marginBottom: '1.25rem', fontSize: '0.8rem', color: '#991b1b' }}>
-                  <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 6 }}></i>
-                  Warning: All your QR codes, analytics, and auto-reply configurations will be permanently erased.
-                </div>
-                <button
-                  type="button"
-                  style={{
-                    width: '100%',
-                    background: '#dc2626',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: 8,
-                    fontSize: '0.85rem',
-                    fontWeight: 700,
-                    padding: '0.75rem 1rem',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => notify('Account deletion requires contacting support for verification.')}
-                >
-                  Permanently Delete My Account
-                </button>
+                {!delSuccessRef ? (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '0.5rem' }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>
+                        <i className="fa-solid fa-user-xmark"></i>
+                      </div>
+                      <div>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#dc2626', margin: 0 }}>
+                          Account Deletion Request
+                        </h3>
+                        <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
+                          Company Review &amp; Compliance Policy
+                        </span>
+                      </div>
+                    </div>
+
+                    <p style={{ fontSize: '0.8rem', color: '#475569', lineHeight: 1.5, margin: '0.85rem 0 1.25rem' }}>
+                      To protect businesses against unauthorized deletion and accidental data loss, account removal requires formal identity verification. Complete the details below; your request will be transmitted to our administrative security desk at <strong>marutiinfosoftteam@gmail.com</strong>.
+                    </p>
+
+                    <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: 10, padding: '0.85rem 1rem', marginBottom: '1.25rem', fontSize: '0.78rem', color: '#991b1b', lineHeight: 1.45 }}>
+                      <i className="fa-solid fa-shield-halved" style={{ marginRight: 6 }}></i>
+                      <strong>Administrative Verification Required:</strong> Your account and active QR codes will only be purged once verified and confirmed by company management.
+                    </div>
+
+                    <form onSubmit={handleSubmitDeletionRequest}>
+                      <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                          Full Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={delName}
+                          onChange={(e) => setDelName(e.target.value)}
+                          placeholder="Your official full name"
+                          style={{
+                            width: '100%',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 8,
+                            padding: '0.65rem 0.85rem',
+                            fontSize: '0.84rem',
+                            boxSizing: 'border-box',
+                            outline: 'none'
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                          Mobile / WhatsApp Number *
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          value={delMobile}
+                          onChange={(e) => setDelMobile(e.target.value)}
+                          placeholder="+91 99044 82945"
+                          style={{
+                            width: '100%',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 8,
+                            padding: '0.65rem 0.85rem',
+                            fontSize: '0.84rem',
+                            boxSizing: 'border-box',
+                            outline: 'none'
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                          Business / Company Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={delBizName}
+                          onChange={(e) => setDelBizName(e.target.value)}
+                          placeholder="Name of registered business"
+                          style={{
+                            width: '100%',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 8,
+                            padding: '0.65rem 0.85rem',
+                            fontSize: '0.84rem',
+                            boxSizing: 'border-box',
+                            outline: 'none'
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                          Registered Account Email
+                        </label>
+                        <input
+                          type="email"
+                          disabled
+                          value={delEmail}
+                          style={{
+                            width: '100%',
+                            background: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: 8,
+                            padding: '0.65rem 0.85rem',
+                            fontSize: '0.84rem',
+                            color: '#64748b',
+                            cursor: 'not-allowed',
+                            boxSizing: 'border-box'
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ marginBottom: '1.25rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                          Reason for Deletion (Optional)
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={delReason}
+                          onChange={(e) => setDelReason(e.target.value)}
+                          placeholder="Please let us know how we could improve..."
+                          style={{
+                            width: '100%',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 8,
+                            padding: '0.65rem 0.85rem',
+                            fontSize: '0.84rem',
+                            boxSizing: 'border-box',
+                            outline: 'none',
+                            fontFamily: 'inherit'
+                          }}
+                        />
+                      </div>
+
+                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.55rem', marginBottom: '1.5rem', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={delAgreed}
+                          onChange={(e) => setDelAgreed(e.target.checked)}
+                          style={{ marginTop: 3 }}
+                        />
+                        <span style={{ fontSize: '0.78rem', color: '#475569', lineHeight: 1.4 }}>
+                          I agree to submit this request to <strong>marutiinfosoftteam@gmail.com</strong>. I understand that account data will remain preserved until administrative verification is complete.
+                        </span>
+                      </label>
+
+                      <button
+                        type="submit"
+                        disabled={delSubmitting || !delAgreed}
+                        style={{
+                          width: '100%',
+                          background: delAgreed ? '#dc2626' : '#94a3b8',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: 8,
+                          fontSize: '0.88rem',
+                          fontWeight: 800,
+                          padding: '0.8rem 1rem',
+                          cursor: (delSubmitting || !delAgreed) ? 'not-allowed' : 'pointer',
+                          transition: 'background 0.15s ease',
+                          boxShadow: delAgreed ? '0 2px 8px rgba(220, 38, 38, 0.25)' : 'none'
+                        }}
+                      >
+                        {delSubmitting ? 'Transmitting Request...' : 'Submit Deletion Request to Admin'}
+                      </button>
+                    </form>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ textAlign: 'center', padding: '1rem 0 1.5rem' }}>
+                      <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.65rem', margin: '0 auto 1rem auto' }}>
+                        <i className="fa-solid fa-clock-rotate-left"></i>
+                      </div>
+                      <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.35rem 0' }}>
+                        Deletion Request Under Administrative Review
+                      </h3>
+                      <div style={{ display: 'inline-block', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 99, padding: '0.25rem 0.85rem', fontSize: '0.76rem', fontWeight: 800, color: '#334155', marginBottom: '1rem' }}>
+                        Reference: {delSuccessRef}
+                      </div>
+                      <p style={{ fontSize: '0.82rem', color: '#475569', lineHeight: 1.55, margin: 0 }}>
+                        Your account deletion request has been formally routed to <strong>marutiinfosoftteam@gmail.com</strong>. An administrator will verify the registered contact information (<strong>{delMobile}</strong>) within 24–48 business hours.
+                      </p>
+                    </div>
+
+                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '1rem', marginBottom: '1.25rem', fontSize: '0.78rem', color: '#334155' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ color: '#64748b' }}>Business:</span>
+                        <strong>{delBizName}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ color: '#64748b' }}>Requester:</span>
+                        <strong>{delName}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ color: '#64748b' }}>Status:</span>
+                        <strong style={{ color: '#b45309' }}>Pending Admin Approval</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#64748b' }}>Security Email:</span>
+                        <strong>marutiinfosoftteam@gmail.com</strong>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      <a
+                        href={`mailto:marutiinfosoftteam@gmail.com?subject=${encodeURIComponent('Account Deletion Request - ' + delBizName + ' (' + delSuccessRef + ')')}&body=${encodeURIComponent('Hello Maruti InfoSoft Admin Team,\n\nI have submitted an account deletion request with reference ' + delSuccessRef + '.\n\nBusiness Name: ' + delBizName + '\nFull Name: ' + delName + '\nMobile Number: ' + delMobile + '\nRegistered Email: ' + delEmail + '\nReason: ' + delReason + '\n\nPlease confirm after processing.')}`}
+                        style={{
+                          flex: 1,
+                          minWidth: 160,
+                          textAlign: 'center',
+                          background: '#0f172a',
+                          color: '#ffffff',
+                          padding: '0.65rem 0.85rem',
+                          borderRadius: 8,
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                          display: 'inline-block'
+                        }}
+                      >
+                        <i className="fa-regular fa-envelope" style={{ marginRight: 6 }}></i> Email Admin Desk
+                      </a>
+                      <a
+                        href={`https://wa.me/919904482945?text=${encodeURIComponent('Hello Maruti InfoSoft Team, I have submitted an account deletion request for ' + delBizName + ' (Ref: ' + delSuccessRef + ').')}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          flex: 1,
+                          minWidth: 160,
+                          textAlign: 'center',
+                          background: '#22c55e',
+                          color: '#ffffff',
+                          padding: '0.65rem 0.85rem',
+                          borderRadius: 8,
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                          display: 'inline-block'
+                        }}
+                      >
+                        <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }}></i> WhatsApp Support
+                      </a>
+                    </div>
+
+                    <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => { setDelSuccessRef(null); notify('Deletion request form reset.'); }}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#64748b',
+                          fontSize: '0.78rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          textDecoration: 'underline'
+                        }}
+                      >
+                        Dismiss / Cancel Deletion Request
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

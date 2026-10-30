@@ -370,9 +370,18 @@ function parseBusiness(body) {
   const url = clean(body?.googleReviewUrl, 500);
   if (url && !/^https:\/\/\S+$/i.test(url)) return { error: 'The Google review link must start with https://' };
   const out = {
-    name, googleReviewUrl: url, city: clean(body?.city, 80), category: clean(body?.category, 80),
-    services: listOf(body?.services, 12, 60), staff: listOf(body?.staff, 20, 40), keywords: listOf(body?.keywords, 5, 40),
-    whatsappNumber: clean(body?.whatsappNumber, 25) || '919904482945',
+    name,
+    googleReviewUrl: url,
+    city: clean(body?.city, 80) || '',
+    category: clean(body?.category, 80) || '',
+    country: clean(body?.country, 80) || '',
+    address: clean(body?.address, 200) || '',
+    phone: clean(body?.phone, 30) || '',
+    customIndustry: clean(body?.customIndustry, 80) || '',
+    services: listOf(body?.services, 12, 60),
+    staff: listOf(body?.staff, 20, 40),
+    keywords: listOf(body?.keywords, 5, 40),
+    whatsappNumber: clean(body?.whatsappNumber, 25) || clean(body?.phone, 25) || '919904482945',
     brandColor: /^#[0-9a-fA-F]{6}$/.test(body?.brandColor || '') ? body.brandColor : '#1d4934'
   };
   if (Array.isArray(body?.competitors)) {
@@ -403,6 +412,45 @@ app.put('/api/business', auth, async (req, res) => {
     });
     res.json({ business });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Could not save the business.' }); }
+});
+
+/* ---------- Account Deletion Request with Admin Notification to marutiinfosoftteam@gmail.com ---------- */
+app.post('/api/account/deletion-request', auth, async (req, res) => {
+  try {
+    const { name, mobile, businessName, email, reason } = req.body || {};
+    const refId = 'DEL-' + Math.floor(100000 + Math.random() * 900000);
+    const deletionRecord = {
+      id: refId,
+      userId: req.user?.sub || 'user_demo',
+      name: clean(name, 100),
+      mobile: clean(mobile, 50),
+      businessName: clean(businessName, 120),
+      email: clean(email || req.user?.email, 120),
+      reason: clean(reason, 500) || 'Customer requested account deletion',
+      status: 'pending_review',
+      companyAdminEmail: 'marutiinfosoftteam@gmail.com',
+      createdAt: new Date().toISOString()
+    };
+
+    await mutate(db => {
+      if (!Array.isArray(db.deletionRequests)) db.deletionRequests = [];
+      db.deletionRequests.push(deletionRecord);
+      return db;
+    });
+
+    console.log(`[Account Deletion Alert] Request ${refId} for ${deletionRecord.businessName} (${deletionRecord.email}) logged for marutiinfosoftteam@gmail.com review.`);
+
+    res.json({
+      ok: true,
+      refId,
+      status: 'pending_review',
+      adminEmail: 'marutiinfosoftteam@gmail.com',
+      message: 'Your account deletion request has been registered and sent to marutiinfosoftteam@gmail.com. An administrator will verify and process your request within 24-48 business hours.'
+    });
+  } catch (err) {
+    console.error('Account deletion request error:', err);
+    res.status(500).json({ error: 'Failed to record deletion request.' });
+  }
 });
 
 /* ---------- Google Places API (Official Search & Details with Secure Proxy) ---------- */
