@@ -311,7 +311,7 @@ export async function generateFlyerCanvas({
     const qrBoxY = 330;
 
     const qrBoxBg = theme === 'Vibrant' ? '#faf5ff' : (theme === 'Minimalist' ? '#f8fafc' : (theme === 'Plain QR' ? '#ffffff' : '#f0fdf4'));
-    const qrBoxBorder = theme === 'Vibrant' ? '#c084fc' : (theme === 'Minimalist' ? '#0f172a' : (theme === 'Plain QR' ? '#e2e8f0' : '#bbf7d0'));
+    const qrBoxBorder = theme === 'Vibrant' ? '#a855f7' : (theme === 'Minimalist' ? '#0f172a' : (theme === 'Plain QR' ? '#e2e8f0' : '#86efac'));
 
     roundRect(ctx, qrBoxX, qrBoxY, qrBoxW, qrBoxH, 28);
     ctx.fillStyle = qrBoxBg;
@@ -320,40 +320,18 @@ export async function generateFlyerCanvas({
     ctx.strokeStyle = qrBoxBorder;
     ctx.stroke();
 
-    // Floating pill badges on sides of QR
-    if (theme !== 'Plain QR') {
-      const badgeBg = theme === 'Vibrant' ? '#faf5ff' : (theme === 'Minimalist' ? '#0f172a' : '#f0fdf4');
-      const badgeBorder = theme === 'Vibrant' ? '#e9d5ff' : (theme === 'Minimalist' ? '#334155' : '#86efac');
-      const badgeColor = theme === 'Vibrant' ? '#7e22ce' : (theme === 'Minimalist' ? '#ffffff' : '#15803d');
+    // Inner White Card Box for QR (crisp dedicated white card)
+    const innerPad = 26;
+    roundRect(ctx, qrBoxX + innerPad, qrBoxY + innerPad, qrBoxW - innerPad * 2, qrBoxH - innerPad * 2, 20);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+    ctx.stroke();
 
-      // Left Badge: Amazing! 😍
-      roundRect(ctx, qrBoxX - 70, qrBoxY + 45, 150, 42, 21);
-      ctx.fillStyle = badgeBg;
-      ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = badgeBorder;
-      ctx.stroke();
-      ctx.font = 'bold 16px "Plus Jakarta Sans", system-ui, sans-serif';
-      ctx.fillStyle = badgeColor;
-      ctx.textAlign = 'center';
-      ctx.fillText('Amazing! 😍', qrBoxX - 70 + 75, qrBoxY + 71);
-
-      // Right Badge: Best ever! 🤩
-      roundRect(ctx, qrBoxX + qrBoxW - 80, qrBoxY + 45, 150, 42, 21);
-      ctx.fillStyle = badgeBg;
-      ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = badgeBorder;
-      ctx.stroke();
-      ctx.font = 'bold 16px "Plus Jakarta Sans", system-ui, sans-serif';
-      ctx.fillStyle = badgeColor;
-      ctx.textAlign = 'center';
-      ctx.fillText('Best ever! 🤩', qrBoxX + qrBoxW - 80 + 75, qrBoxY + 71);
-    }
-
-    // QR Image
+    // QR Image drawn INSIDE white card
     if (qrImg) {
-      const qrInnerPad = 40;
+      const qrInnerPad = 44;
       ctx.drawImage(qrImg, qrBoxX + qrInnerPad, qrBoxY + qrInnerPad, qrBoxW - qrInnerPad * 2, qrBoxH - qrInnerPad * 2);
     }
 
@@ -368,6 +346,37 @@ export async function generateFlyerCanvas({
       ctx.strokeStyle = '#e2e8f0';
       ctx.stroke();
       ctx.drawImage(googleImg, cx - 20, cy - 20, 40, 40);
+    }
+
+    // Floating pill badges on sides of QR (Drawn on top of QR card so they never get sliced or covered)
+    if (theme !== 'Plain QR') {
+      const badgeBg = theme === 'Vibrant' ? '#9333ea' : (theme === 'Minimalist' ? '#0f172a' : '#ffffff');
+      const badgeBorder = theme === 'Vibrant' ? '#c084fc' : (theme === 'Minimalist' ? '#334155' : '#86efac');
+      const badgeColor = theme === 'Vibrant' ? '#ffffff' : (theme === 'Minimalist' ? '#ffffff' : '#15803d');
+
+      // Left Badge: Amazing! 😍 (Top-left floating pill)
+      roundRect(ctx, qrBoxX - 45, qrBoxY + 50, 150, 44, 22);
+      ctx.fillStyle = badgeBg;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = badgeBorder;
+      ctx.stroke();
+      ctx.font = 'bold 16px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillStyle = badgeColor;
+      ctx.textAlign = 'center';
+      ctx.fillText('Amazing! 😍', qrBoxX - 45 + 75, qrBoxY + 78);
+
+      // Right Badge: Best ever! 🤩 (Bottom-right floating pill)
+      roundRect(ctx, qrBoxX + qrBoxW - 105, qrBoxY + qrBoxH - 95, 150, 44, 22);
+      ctx.fillStyle = badgeBg;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = badgeBorder;
+      ctx.stroke();
+      ctx.font = 'bold 16px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillStyle = badgeColor;
+      ctx.textAlign = 'center';
+      ctx.fillText('Best ever! 🤩', qrBoxX + qrBoxW - 105 + 75, qrBoxY + qrBoxH - 67);
     }
 
     // Time Badge: ⚡ Takes less than 30 seconds !

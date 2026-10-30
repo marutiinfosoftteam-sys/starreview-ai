@@ -168,8 +168,8 @@ export default function BusinessConsole({
       pillBorder: '#bbf7d0',
       pillText: '#15803d',
       bannerGradient: 'linear-gradient(145deg, #ecfdf5 0%, #10b981 100%)',
-      badgeBg: '#f0fdf4',
-      badgeBorder: '#bbf7d0',
+      badgeBg: '#ffffff',
+      badgeBorder: '#86efac',
       badgeColor: '#15803d'
     },
     'Minimalist': {
@@ -2887,31 +2887,11 @@ export default function BusinessConsole({
                             position: 'relative'
                           }}
                         >
-                          {qrTheme !== 'Plain QR' && (
-                            <>
-                              <span
-                                className="bc-flyer-badge-left"
-                                style={{
-                                  background: curTheme.badgeBg,
-                                  color: curTheme.badgeColor,
-                                  borderColor: curTheme.badgeBorder
-                                }}
-                              >Amazing! 😍</span>
-                              <span
-                                className="bc-flyer-badge-right"
-                                style={{
-                                  background: curTheme.badgeBg,
-                                  color: curTheme.badgeColor,
-                                  borderColor: curTheme.badgeBorder
-                                }}
-                              >Best ever! 🤩</span>
-                            </>
-                          )}
-                          <div style={{ position: 'relative', display: 'inline-block' }}>
+                          <div className="bc-flyer-qr-inner">
                             <img
                               src={activeQrUrl}
                               alt="Review QR Code"
-                              style={{ width: 150, height: 150, display: 'block', borderRadius: 8 }}
+                              style={{ width: 144, height: 144, display: 'block', borderRadius: 10 }}
                             />
                             {qrTheme !== 'Plain QR' && (
                               <div className="qr-center-logo">
@@ -2924,6 +2904,28 @@ export default function BusinessConsole({
                               </div>
                             )}
                           </div>
+                          {qrTheme !== 'Plain QR' && (
+                            <>
+                              <span
+                                className="bc-flyer-badge-left"
+                                style={{
+                                  background: curTheme.badgeBg,
+                                  color: curTheme.badgeColor,
+                                  borderColor: curTheme.badgeBorder,
+                                  zIndex: 20
+                                }}
+                              >Amazing! 😍</span>
+                              <span
+                                className="bc-flyer-badge-right"
+                                style={{
+                                  background: curTheme.badgeBg,
+                                  color: curTheme.badgeColor,
+                                  borderColor: curTheme.badgeBorder,
+                                  zIndex: 20
+                                }}
+                              >Best ever! 🤩</span>
+                            </>
+                          )}
                         </div>
 
                         <div
@@ -3649,28 +3651,38 @@ export default function BusinessConsole({
                   Enter your primary target keyword and local area below. Our AI will perform a real-time audit of 20+ search checkpoints to verify your GBP health and discover SEO opportunities.
                 </p>
 
-                <div className="bc-form-group">
-                  <label className="bc-label">Target Keyword *</label>
+                <div className="bc-form-group" style={{ marginBottom: '1.25rem' }}>
+                  <label className="bc-label" style={{ display: 'block', marginBottom: '0.45rem', fontSize: '0.82rem', fontWeight: 800, color: '#1e293b' }}>
+                    Target Keyword *
+                  </label>
                   <input
                     type="text"
                     className="bc-input"
                     placeholder="e.g. Best Pizza NYC, Coffee Shop Boston"
                     value={seoKeyword}
                     onChange={(e) => setSeoKeyword(e.target.value)}
+                    style={{ width: '100%', boxSizing: 'border-box' }}
                   />
-                  <span className="bc-form-helper">What keyword do you want to rank for?</span>
+                  <span className="bc-form-helper" style={{ display: 'block', marginTop: '0.45rem', fontSize: '0.72rem', color: '#64748b' }}>
+                    What keyword do you want to rank for?
+                  </span>
                 </div>
 
-                <div className="bc-form-group">
-                  <label className="bc-label">Target City / Area</label>
+                <div className="bc-form-group" style={{ marginBottom: '1.25rem' }}>
+                  <label className="bc-label" style={{ display: 'block', marginBottom: '0.45rem', fontSize: '0.82rem', fontWeight: 800, color: '#1e293b' }}>
+                    Target City / Area
+                  </label>
                   <input
                     type="text"
                     className="bc-input"
                     placeholder="e.g. Brooklyn, Manhattan, Austin"
                     value={seoCity}
                     onChange={(e) => setSeoCity(e.target.value)}
+                    style={{ width: '100%', boxSizing: 'border-box' }}
                   />
-                  <span className="bc-form-helper">Which specific city or neighborhood should we analyze?</span>
+                  <span className="bc-form-helper" style={{ display: 'block', marginTop: '0.45rem', fontSize: '0.72rem', color: '#64748b' }}>
+                    Which specific city or neighborhood should we analyze?
+                  </span>
                 </div>
 
                 <button
