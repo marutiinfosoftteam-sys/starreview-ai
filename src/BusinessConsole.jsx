@@ -3946,14 +3946,14 @@ export default function BusinessConsole({
                   <div className="bc-scf-icon">
                     <i className="fa-solid fa-star"></i>
                   </div>
-                  <div>
+                  <div className="bc-scf-titles">
                     <span className="bc-scf-badge">SERVICE 01</span>
                     <h3>GMB Profile Optimization</h3>
                     <p>Transform your Google listing into a high-ranking customer acquisition engine</p>
                   </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ background: 'rgba(255,255,255,0.2)', padding: '0.35rem 0.85rem', borderRadius: 99, fontSize: '0.74rem', fontWeight: 800 }}>
+                <div className="bc-scf-right">
+                  <span className="bc-scf-type-badge">
                     One-Time Service
                   </span>
                 </div>
@@ -4045,14 +4045,14 @@ export default function BusinessConsole({
                   <div className="bc-scf-icon">
                     <i className="fa-solid fa-shield-halved"></i>
                   </div>
-                  <div>
+                  <div className="bc-scf-titles">
                     <span className="bc-scf-badge">SERVICE 02</span>
                     <h3>GMB Setup & Verification</h3>
                     <p>Official registration, category verification and Google Maps live listing</p>
                   </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ background: 'rgba(255,255,255,0.2)', padding: '0.35rem 0.85rem', borderRadius: 99, fontSize: '0.74rem', fontWeight: 800 }}>
+                <div className="bc-scf-right">
+                  <span className="bc-scf-type-badge">
                     One-Time Service
                   </span>
                 </div>
@@ -4144,14 +4144,14 @@ export default function BusinessConsole({
                   <div className="bc-scf-icon">
                     <i className="fa-solid fa-magnifying-glass-location"></i>
                   </div>
-                  <div>
+                  <div className="bc-scf-titles">
                     <span className="bc-scf-badge">SERVICE 03</span>
                     <h3>Local SEO Services</h3>
                     <p>Dominate the Local 3-Pack rankings and outrank nearby competitors</p>
                   </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ background: 'rgba(255,255,255,0.2)', padding: '0.35rem 0.85rem', borderRadius: 99, fontSize: '0.74rem', fontWeight: 800 }}>
+                <div className="bc-scf-right">
+                  <span className="bc-scf-type-badge">
                     Monthly / Ongoing Growth
                   </span>
                 </div>
@@ -4243,14 +4243,14 @@ export default function BusinessConsole({
                   <div className="bc-scf-icon">
                     <i className="fa-solid fa-location-dot"></i>
                   </div>
-                  <div>
+                  <div className="bc-scf-titles">
                     <span className="bc-scf-badge">SERVICE 04</span>
                     <h3>Google Maps Ranking</h3>
                     <p>Focus specifically on improving your presence across Google Maps and local pack search results.</p>
                   </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ background: 'rgba(255,255,255,0.2)', padding: '0.35rem 0.85rem', borderRadius: 99, fontSize: '0.74rem', fontWeight: 800 }}>
+                <div className="bc-scf-right">
+                  <span className="bc-scf-type-badge">
                     Targeted Pack Growth
                   </span>
                 </div>
@@ -4316,7 +4316,7 @@ export default function BusinessConsole({
                   Not sure if this is the right fit? Send us your current situation on WhatsApp and we'll help you understand whether this service matches your business need.
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.25rem', fontSize: '0.76rem', fontWeight: 700, color: '#334155' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem 1.25rem', marginBottom: '1.25rem', fontSize: '0.76rem', fontWeight: 700, color: '#334155' }}>
                   <span><i className="fa-solid fa-circle-check" style={{ color: '#16a34a', marginRight: 5 }}></i> Clear Scope</span>
                   <span><i className="fa-solid fa-circle-check" style={{ color: '#16a34a', marginRight: 5 }}></i> Direct Discussion</span>
                   <span><i className="fa-solid fa-arrow-right" style={{ color: '#16a34a', marginRight: 5 }}></i> Simple Process</span>
@@ -4353,14 +4353,14 @@ export default function BusinessConsole({
                   <div className="bc-scf-icon">
                     <i className="fa-solid fa-calendar-days"></i>
                   </div>
-                  <div>
+                  <div className="bc-scf-titles">
                     <span className="bc-scf-badge">SERVICE 05</span>
                     <h3>Google Posts Management</h3>
                     <p>Keep your Google Business Profile active with regular posts, offers, announcements, and updates.</p>
                   </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ background: 'rgba(255,255,255,0.2)', padding: '0.35rem 0.85rem', borderRadius: 99, fontSize: '0.74rem', fontWeight: 800 }}>
+                <div className="bc-scf-right">
+                  <span className="bc-scf-type-badge">
                     Ongoing Activity
                   </span>
                 </div>
@@ -4426,7 +4426,7 @@ export default function BusinessConsole({
                   Not sure if this is the right fit? Send us your current situation on WhatsApp and we'll help you understand whether this service matches your business need.
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.25rem', fontSize: '0.76rem', fontWeight: 700, color: '#334155' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem 1.25rem', marginBottom: '1.25rem', fontSize: '0.76rem', fontWeight: 700, color: '#334155' }}>
                   <span><i className="fa-solid fa-circle-check" style={{ color: '#16a34a', marginRight: 5 }}></i> Clear Scope</span>
                   <span><i className="fa-solid fa-circle-check" style={{ color: '#16a34a', marginRight: 5 }}></i> Direct Discussion</span>
                   <span><i className="fa-solid fa-arrow-right" style={{ color: '#16a34a', marginRight: 5 }}></i> Simple Process</span>
@@ -4463,14 +4463,14 @@ export default function BusinessConsole({
                   <div className="bc-scf-icon">
                     <i className="fa-solid fa-laptop"></i>
                   </div>
-                  <div>
+                  <div className="bc-scf-titles">
                     <span className="bc-scf-badge">SERVICE 06</span>
                     <h3>Website Design & Redesign</h3>
                     <p>Create a professional business website designed to turn visitors into enquiries and customers.</p>
                   </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ background: 'rgba(255,255,255,0.2)', padding: '0.35rem 0.85rem', borderRadius: 99, fontSize: '0.74rem', fontWeight: 800 }}>
+                <div className="bc-scf-right">
+                  <span className="bc-scf-type-badge">
                     Design & Dev
                   </span>
                 </div>
