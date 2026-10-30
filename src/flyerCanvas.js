@@ -354,8 +354,8 @@ export async function generateFlyerCanvas({
       const badgeBorder = theme === 'Vibrant' ? '#c084fc' : (theme === 'Minimalist' ? '#334155' : '#86efac');
       const badgeColor = theme === 'Vibrant' ? '#ffffff' : (theme === 'Minimalist' ? '#ffffff' : '#15803d');
 
-      // Left Badge: Amazing! 😍 (Top-left floating pill)
-      roundRect(ctx, qrBoxX - 45, qrBoxY + 50, 150, 44, 22);
+      // Left Badge: Amazing! 😍 (Top border floating pill completely outside QR code)
+      roundRect(ctx, qrBoxX + 28, qrBoxY - 22, 150, 44, 22);
       ctx.fillStyle = badgeBg;
       ctx.fill();
       ctx.lineWidth = 2;
@@ -364,10 +364,10 @@ export async function generateFlyerCanvas({
       ctx.font = 'bold 16px "Plus Jakarta Sans", system-ui, sans-serif';
       ctx.fillStyle = badgeColor;
       ctx.textAlign = 'center';
-      ctx.fillText('Amazing! 😍', qrBoxX - 45 + 75, qrBoxY + 78);
+      ctx.fillText('Amazing! 😍', qrBoxX + 28 + 75, qrBoxY - 22 + 28);
 
-      // Right Badge: Best ever! 🤩 (Bottom-right floating pill)
-      roundRect(ctx, qrBoxX + qrBoxW - 105, qrBoxY + qrBoxH - 95, 150, 44, 22);
+      // Right Badge: Best ever! 🤩 (Bottom border floating pill completely outside QR code)
+      roundRect(ctx, qrBoxX + qrBoxW - 178, qrBoxY + qrBoxH - 22, 150, 44, 22);
       ctx.fillStyle = badgeBg;
       ctx.fill();
       ctx.lineWidth = 2;
@@ -376,7 +376,7 @@ export async function generateFlyerCanvas({
       ctx.font = 'bold 16px "Plus Jakarta Sans", system-ui, sans-serif';
       ctx.fillStyle = badgeColor;
       ctx.textAlign = 'center';
-      ctx.fillText('Best ever! 🤩', qrBoxX + qrBoxW - 105 + 75, qrBoxY + qrBoxH - 67);
+      ctx.fillText('Best ever! 🤩', qrBoxX + qrBoxW - 178 + 75, qrBoxY + qrBoxH - 22 + 28);
     }
 
     // Time Badge: ⚡ Takes less than 30 seconds !
