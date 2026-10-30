@@ -6916,16 +6916,6 @@ export default function BusinessConsole({
         >
           <i className="fa-brands fa-whatsapp"></i>
         </a>
-        {/* Floating WhatsApp Widget */}
-        <a
-          href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%20Support"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bc-floating-whatsapp"
-          title="Chat on WhatsApp"
-        >
-          <i className="fa-brands fa-whatsapp"></i>
-        </a>
       </div>
       </main>
     </div>

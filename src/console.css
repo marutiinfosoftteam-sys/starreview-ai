@@ -5900,6 +5900,10 @@
   }
 
   /* Sticky Topbar for Tablet & Mobile */
+  .bc-topbar-strip {
+    display: none !important;
+  }
+
   .bc-mobile-topbar {
     display: flex !important;
     align-items: center !important;
@@ -6094,7 +6098,7 @@
    ────────────────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .bc-main {
-    padding: 0.75rem 0.75rem 3.5rem !important;
+    padding: 0.75rem 0.75rem 100px !important;
   }
 
   .bc-scf-deliverables-grid {
@@ -6250,14 +6254,44 @@
     -webkit-overflow-scrolling: touch !important;
     display: block !important;
     width: 100% !important;
-    margin-top: 0.85rem !important;
+    max-width: 100% !important;
+    margin-top: 0.75rem !important;
+  }
+
+  .bc-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
   }
 
   .bc-table th,
   .bc-table td {
-    padding: 0.65rem 0.85rem !important;
-    font-size: 0.72rem !important;
-    white-space: nowrap !important;
+    padding: 0.55rem 0.2rem !important;
+    font-size: 0.68rem !important;
+    text-align: center !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.2 !important;
+  }
+
+  .bc-table th:first-child,
+  .bc-table td:first-child {
+    text-align: left !important;
+    padding-left: 0.4rem !important;
+    width: 25% !important;
+  }
+  .bc-table th:nth-child(2), .bc-table td:nth-child(2) { width: 18% !important; }
+  .bc-table th:nth-child(3), .bc-table td:nth-child(3) { width: 19% !important; }
+  .bc-table th:nth-child(4), .bc-table td:nth-child(4) { width: 20% !important; }
+  .bc-table th:nth-child(5), .bc-table td:nth-child(5) { width: 18% !important; }
+
+  .bc-whatsapp-fab {
+    bottom: 16px !important;
+    right: 16px !important;
+    width: 46px !important;
+    height: 46px !important;
+    font-size: 1.45rem !important;
+    box-shadow: 0 4px 16px rgba(37, 211, 102, 0.45) !important;
   }
 
   /* Checkout Page (Step 2) */

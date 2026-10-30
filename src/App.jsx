@@ -3338,18 +3338,20 @@ export default function App() {
 
       {page !== 'Review' && !isConsoleView && <Footer navigate={navigate} />}
 
-      {/* Floating Circular WhatsApp Button with Radiant Pulse Halo (Screenshot 4 Match) */}
-      <a
-        href={`https://wa.me/${cfg.whatsappNumber || '919904482945'}?text=${encodeURIComponent('Hello StarReview AI Team! I would like to inquire about your Google review management platform and plans.')}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="rf-floating-whatsapp-btn"
-        title="Chat on WhatsApp (+91 9904482945)"
-        aria-label="Chat on WhatsApp"
-      >
-        <span className="rf-whatsapp-halo"></span>
-        <i className="fa-brands fa-whatsapp"></i>
-      </a>
+      {/* Floating Circular WhatsApp Button for Public Website */}
+      {!isConsoleView && page !== 'Review' && (
+        <a
+          href={`https://wa.me/${cfg.whatsappNumber || '919904482945'}?text=${encodeURIComponent('Hello StarReview AI Team! I would like to inquire about your Google review management platform and plans.')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rf-floating-whatsapp-btn"
+          title="Chat on WhatsApp (+91 9904482945)"
+          aria-label="Chat on WhatsApp"
+        >
+          <span className="rf-whatsapp-halo"></span>
+          <i className="fa-brands fa-whatsapp"></i>
+        </a>
+      )}
     </>
   );
 }

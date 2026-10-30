@@ -9111,9 +9111,7 @@ html, body {
 .rf-about-page-wrapper,
 .rf-pricing-page-shell,
 .rf-vs-wrapper,
-.rf-login-viewport,
-.hero,
-.wrap {
+.rf-login-viewport {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;

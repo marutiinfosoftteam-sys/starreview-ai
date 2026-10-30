@@ -1088,18 +1088,6 @@ export default function AboutPage({ user, navigate, setRegMode, notify, logout, 
         </div>
       </section>
 
-      {/* ====================================================================
-          FLOATING WHATSAPP BUTTON (SCREENSHOTS 1, 2, 3, 4, 5)
-          ==================================================================== */}
-      <a
-        href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%20Team!%20I%20want%20to%20learn%20more%20about%20the%20Google%20Magic%20Review%20QR."
-        target="_blank"
-        rel="noreferrer"
-        className="rf-floating-whatsapp-btn"
-        title="Chat on WhatsApp"
-      >
-        <i className="fa-brands fa-whatsapp"></i>
-      </a>
     </div>
   );
 }
