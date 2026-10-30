@@ -4,6 +4,7 @@ import { ReviewFunnel, BusinessSetup, ReplyAssistant, SeoAnalyzer, Dashboard, Qr
 import BusinessConsole from './BusinessConsole.jsx';
 import BusinessOnboarding from './BusinessOnboarding.jsx';
 import AboutPage from './AboutPage.jsx';
+import PartnerProgramPage from './PartnerProgramPage.jsx';
 
 const features = [
   ['fa-solid fa-wand-magic-sparkles', 'AI review assistant', 'Help customers express their genuine experience with three editable draft suggestions in 24 languages.'],
@@ -90,6 +91,8 @@ export default function App() {
       '/multi-business': 'Multi-business plan',
     '/agency': 'Apply for agency',
     '/partner': 'Partner program',
+    '/referral-program': 'Partner program',
+    '/referral': 'Partner program',
     '/business-onboard': 'Business onboarding',
     '/privacy': 'Privacy policy',
     '/terms': 'Terms of service',
@@ -3087,7 +3090,15 @@ export default function App() {
         />
       )}
 
-      {['Frequently asked questions', 'Multi-business plan', 'Partner program', 'Privacy policy', 'Terms of service', 'Cookie policy', 'Sitemap'].includes(page) && (
+      {page === 'Partner program' && (
+        <PartnerProgramPage
+          user={user}
+          navigate={navigate}
+          notify={notify}
+        />
+      )}
+
+      {['Frequently asked questions', 'Multi-business plan', 'Privacy policy', 'Terms of service', 'Cookie policy', 'Sitemap'].includes(page) && (
         <PageShell
           title={({ 'Frequently asked questions': 'Frequently asked questions', 'Source code': 'Source code and commercial licensing', 'Multi-business plan': 'Manage multiple business locations', 'Apply for agency': 'Agency partnerships', 'Partner program': 'Partner program', 'Privacy policy': 'Privacy policy', 'Terms of service': 'Terms of service', 'Cookie policy': 'Cookie policy', 'Sitemap': 'Website sitemap' })[page]}
           subtitle={({ 'Frequently asked questions': 'Helpful answers about trials, plans, reviews, and payments.', 'Source code': 'Ask our team about source-code access and commercial licensing.', 'Multi-business plan': 'A scalable workflow for teams managing more than one location.', 'Apply for agency': 'Tell us about your agency and the businesses you support.', 'Partner program': 'Contact us to learn about partner eligibility and commission terms.', 'Privacy policy': 'We aim to collect only the information needed to provide the service.', 'Terms of service': 'Use the platform responsibly.', 'Cookie policy': 'Cookies and local storage may be used to support sign-in and core site functionality.', 'Sitemap': 'Browse the main sections of StarReview AI.' })[page]}
@@ -3442,6 +3453,7 @@ function Footer({ navigate }) {
         ['About Us', 'About us'],
         ['Contact Support', 'Contact'],
         ['Frequently Asked Questions', 'Frequently asked questions'],
+        ['Partner Program', 'Partner program', '40%'],
         ['HTML Sitemap', 'Sitemap'],
         ['Smart QR Funnels', 'QR flyer']
       ]
@@ -3450,7 +3462,8 @@ function Footer({ navigate }) {
       title: 'Access',
       items: [
         ['Operator Sign In', 'Account'],
-        ['Partner Sign In', 'Account'],
+        ['Partner Portal Sign In', 'Partner program'],
+        ['Join Partner Program', 'Partner program'],
         ['Business Onboard', 'Business onboarding'],
         ['Terms of Service', 'Terms of service'],
         ['Cookie Policy', 'Cookie policy']
@@ -3484,8 +3497,11 @@ function Footer({ navigate }) {
         {groups.map(col => (
           <div className="footer-nav-col" key={col.title}>
             <h4>{col.title}</h4>
-            {col.items.map(([label, target]) => (
-              <button key={label} onClick={() => navigate(target)}>{label}</button>
+            {col.items.map(([label, target, badge]) => (
+              <button key={label} onClick={() => navigate(target)}>
+                {label}
+                {badge && <span className="rf-footer-col-badge">{badge}</span>}
+              </button>
             ))}
           </div>
         ))}
