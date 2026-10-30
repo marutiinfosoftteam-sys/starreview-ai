@@ -9093,3 +9093,400 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   MASTER RESPONSIVE OPTIMIZATIONS (ABOUT PAGE & PUBLIC WEBSITE)
+   100% Mobile (Android / iOS), Tablet (iPad), and Desktop Adaptive Design
+   ========================================================================== */
+
+/* 1. Global Viewport & Container Bounds */
+html, body {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  -webkit-text-size-adjust: 100%;
+}
+
+.rf-landing-page,
+.rf-about-page-wrapper,
+.rf-pricing-page-shell,
+.rf-vs-wrapper,
+.rf-login-viewport,
+.hero,
+.wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+}
+
+/* 2. Tablet & Medium Breakpoint (max-width: 1024px) */
+@media (max-width: 1024px) {
+  .wrap {
+    width: calc(100% - 32px) !important;
+    margin-inline: auto !important;
+  }
+
+  .rf-demo-box-card {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  .rf-six-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.25rem !important;
+  }
+
+  .rf-autopilot-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.75rem !important;
+  }
+
+  .rf-funnel-steps-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.25rem !important;
+  }
+
+  .rf-comparison-grid {
+    grid-template-columns: 1fr !important;
+    max-width: 600px !important;
+    margin-inline: auto !important;
+    gap: 1.5rem !important;
+  }
+
+  .rf-standees-grid,
+  .rf-pricing-grid,
+  .rf-testimonials-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+    max-width: 100% !important;
+    gap: 1.5rem !important;
+  }
+
+  .rf-agency-layout-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
+
+  .footer-container {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 2rem !important;
+  }
+}
+
+/* 3. Mobile Phones & Small Tablets (max-width: 820px) */
+@media (max-width: 820px) {
+  /* Top Navigation Bar */
+  .rf-top-header {
+    height: 64px !important;
+    padding: 0 16px !important;
+  }
+
+  .rf-top-header-inner {
+    gap: 10px !important;
+  }
+
+  .rf-nav-brand-icon {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 14px !important;
+  }
+
+  .rf-nav-brand-title {
+    font-size: 17px !important;
+  }
+
+  .rf-nav-brand-sub {
+    display: none !important;
+  }
+
+  .rf-nav-actions {
+    gap: 8px !important;
+  }
+
+  .rf-nav-actions .rf-btn-signin {
+    padding: 6px 12px !important;
+    font-size: 12.5px !important;
+  }
+
+  .rf-nav-actions .rf-btn-startfree {
+    padding: 6px 14px !important;
+    font-size: 12.5px !important;
+  }
+
+  .rf-menu-toggle {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    padding: 0 !important;
+  }
+
+  .rf-nav-links {
+    top: 64px !important;
+    padding: 16px !important;
+  }
+
+  /* Hero Section */
+  .rf-hero-container {
+    padding: 2.5rem 1rem 2rem !important;
+  }
+
+  .rf-hero-heading {
+    font-size: clamp(1.85rem, 6.5vw, 2.75rem) !important;
+    line-height: 1.18 !important;
+    word-break: break-word !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .rf-hero-subtitle {
+    font-size: 0.95rem !important;
+    line-height: 1.55 !important;
+    padding: 0 0.25rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .rf-hero-cta-group {
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 360px !important;
+    margin: 0 auto 1.5rem !important;
+    gap: 10px !important;
+  }
+
+  .rf-hero-cta-group button,
+  .rf-hero-cta-group a {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 0.85rem 1rem !important;
+    font-size: 0.92rem !important;
+  }
+
+  .rf-floating-chips-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    max-width: 340px !important;
+    margin: 0 auto 2rem !important;
+    gap: 10px !important;
+  }
+
+  .rf-review-chip {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    padding: 8px 12px !important;
+    animation: none !important;
+    transform: none !important;
+  }
+
+  /* Video / Showcase Banner */
+  .rf-video-showcase-wrap {
+    width: 100% !important;
+  }
+
+  .rf-video-banner-art {
+    grid-template-columns: 1fr !important;
+    padding: 1.5rem 1.15rem !important;
+    text-align: center !important;
+    gap: 1.25rem !important;
+  }
+
+  .rf-vba-perks {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  /* Sub-bar Pills Row */
+  .rf-pills-scroll-row {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 8px !important;
+    justify-content: flex-start !important;
+  }
+
+  /* 6 Features Grid */
+  .rf-six-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .rf-card-six {
+    padding: 1.35rem 1.15rem !important;
+    border-radius: 16px !important;
+  }
+
+  /* Autopilot Section */
+  .rf-autopilot-container {
+    padding: 1.75rem 1rem !important;
+    border-radius: 18px !important;
+  }
+
+  .rf-autopilot-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  .rf-autopilot-mock {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Working Process Steps */
+  .rf-funnel-steps-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .rf-funnel-step-card {
+    padding: 1.5rem 1.15rem !important;
+    border-radius: 16px !important;
+  }
+
+  /* Comparison Section */
+  .rf-comparison-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  .rf-comp-card {
+    padding: 1.5rem 1.15rem !important;
+    border-radius: 18px !important;
+  }
+
+  /* Interactive Demo Section */
+  .rf-demo-box-card {
+    grid-template-columns: 1fr !important;
+    padding: 1.25rem 0.85rem !important;
+    border-radius: 16px !important;
+    gap: 1.25rem !important;
+  }
+
+  .rf-demo-row-2 {
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
+  }
+
+  .rf-demo-stars-select {
+    justify-content: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .rf-demo-drafts-side {
+    padding: 1.15rem 0.85rem !important;
+    border-radius: 14px !important;
+  }
+
+  /* Standees & Pricing */
+  .rf-standees-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  .rf-pricing-grid {
+    grid-template-columns: 1fr !important;
+    max-width: 440px !important;
+    margin-inline: auto !important;
+    gap: 1.5rem !important;
+  }
+
+  .rf-pricing-card {
+    padding: 1.75rem 1.25rem !important;
+    border-radius: 18px !important;
+  }
+
+  .rf-pricing-toggle-wrap {
+    margin-bottom: 2rem !important;
+  }
+
+  .rf-pricing-toggle-pill {
+    max-width: 100% !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+
+  /* Testimonials & Final CTA */
+  .rf-testimonials-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .rf-final-cta-box {
+    padding: 2.25rem 1.15rem !important;
+    border-radius: 18px !important;
+  }
+
+  .rf-final-cta-actions {
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 340px !important;
+    margin: 0 auto !important;
+    gap: 10px !important;
+  }
+
+  .rf-final-cta-actions button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Footer */
+  .footer-container {
+    grid-template-columns: 1fr !important;
+    gap: 1.75rem !important;
+  }
+}
+
+/* 4. Small Mobile Phones (max-width: 480px - Android & iPhone Mini/SE) */
+@media (max-width: 480px) {
+  .wrap {
+    width: calc(100% - 20px) !important;
+  }
+
+  .rf-top-header {
+    padding: 0 12px !important;
+  }
+
+  .rf-nav-actions .rf-nav-whatsapp-btn,
+  .rf-nav-actions .rf-btn-signin {
+    display: none !important;
+  }
+
+  .rf-hero-heading {
+    font-size: 1.75rem !important;
+  }
+
+  .rf-hero-container {
+    padding: 2rem 0.5rem 1.5rem !important;
+  }
+
+  .rf-pricing-grid {
+    max-width: 100% !important;
+  }
+
+  .rf-demo-box-card {
+    padding: 1rem 0.65rem !important;
+  }
+
+  /* Razorpay Checkout Modal Simulator */
+  .rzp-overlay {
+    padding: 0.5rem !important;
+  }
+
+  .rzp-modal {
+    width: 100% !important;
+    max-height: 94vh !important;
+    border-radius: 16px !important;
+  }
+
+  .rzp-header {
+    padding: 1rem 0.85rem !important;
+  }
+
+  .rzp-body {
+    padding: 1rem 0.85rem !important;
+  }
+}

@@ -5606,7 +5606,7 @@ export default function BusinessConsole({
             </div>
 
             {/* Sub-Tabs: Profile Settings | Deactivate Account | Delete Account */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 onClick={() => setSettingsSubTab('Profile Settings')}
@@ -5665,15 +5665,18 @@ export default function BusinessConsole({
 
             {/* Profile Settings Form Card (Centered with equal whitespace on both sides) */}
             {settingsSubTab === 'Profile Settings' && (
-              <div style={{
-                maxWidth: 580,
-                margin: '1.75rem auto 3.5rem auto',
-                background: '#ffffff',
-                border: '1px solid #e2e8f0',
-                borderRadius: 16,
-                padding: '2rem 2.25rem',
-                boxShadow: '0 2px 14px rgba(0, 0, 0, 0.03)'
-              }}>
+              <div
+                className="bc-profile-card"
+                style={{
+                  maxWidth: 580,
+                  margin: '1.75rem auto 3.5rem auto',
+                  background: '#ffffff',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: 16,
+                  padding: '2rem 2.25rem',
+                  boxShadow: '0 2px 14px rgba(0, 0, 0, 0.03)'
+                }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
                   <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
                     Business Profile & Location Settings
@@ -5960,15 +5963,18 @@ export default function BusinessConsole({
 
             {/* Delete Account Tab (Requires Formal Verification & Admin Approval via marutiinfosoftteam@gmail.com) */}
             {settingsSubTab === 'Delete Account' && (
-              <div style={{
-                maxWidth: 560,
-                margin: '1.75rem auto 3.5rem auto',
-                background: '#ffffff',
-                border: delSuccessRef ? '1.5px solid #86efac' : '1.5px solid #fecaca',
-                borderRadius: 16,
-                padding: '2rem 2.25rem',
-                boxShadow: '0 2px 14px rgba(0, 0, 0, 0.03)'
-              }}>
+              <div
+                className="bc-del-card"
+                style={{
+                  maxWidth: 560,
+                  margin: '1.75rem auto 3.5rem auto',
+                  background: '#ffffff',
+                  border: delSuccessRef ? '1.5px solid #86efac' : '1.5px solid #fecaca',
+                  borderRadius: 16,
+                  padding: '2rem 2.25rem',
+                  boxShadow: '0 2px 14px rgba(0, 0, 0, 0.03)'
+                }}
+              >
                 {!delSuccessRef ? (
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '0.5rem' }}>

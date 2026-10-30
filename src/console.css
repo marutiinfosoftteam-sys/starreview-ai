@@ -6039,6 +6039,53 @@
   .bc-scf-deliverables-grid {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
   }
+
+  /* Core Layout Grids Stacking on Tablet */
+  .bc-qr-main-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  .bc-seo-layout {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  .bc-reply-main-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  .bc-settings-layout {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  .bc-services-hero {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+    padding: 1.5rem 1.25rem !important;
+  }
+
+  .bc-pricing-grid-3 {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+    gap: 1.25rem !important;
+  }
+
+  .bc-analytics-funnel-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .bc-qr-types-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+    gap: 1rem !important;
+  }
+
+  .bc-del-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -6241,6 +6288,143 @@
     padding: 0.55rem 0.75rem !important;
     font-size: 0.74rem !important;
   }
+
+  /* Magic Review QR & Standee Flyer Mobile Optimization */
+  .bc-preview-container {
+    padding: 1rem 0.75rem !important;
+    border-radius: 16px !important;
+  }
+
+  .bc-canvas-bg {
+    padding: 1.25rem 0.5rem !important;
+    display: flex !important;
+    justify-content: center !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .bc-theme-select-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .bc-display-size-row {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+
+  .bc-btn-pair {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+
+  .bc-a6-flyer {
+    width: 100% !important;
+    max-width: 320px !important;
+    margin: 0 auto !important;
+    padding: 1.35rem 1rem 1.15rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .bc-flyer-qr-wrap {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .bc-counter-banner {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+    border-radius: 16px !important;
+  }
+
+  .bc-banner-left,
+  .bc-banner-right {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 1.25rem 1rem !important;
+  }
+
+  .bc-banner-qr-box img {
+    max-width: 120px !important;
+    height: auto !important;
+  }
+
+  .bc-direct-url-box {
+    display: flex !important;
+    width: 100% !important;
+    gap: 6px !important;
+  }
+
+  .bc-direct-url-box input {
+    min-width: 0 !important;
+    flex: 1 !important;
+    font-size: 0.76rem !important;
+  }
+
+  .bc-direct-url-box button {
+    flex-shrink: 0 !important;
+  }
+
+  /* Business Card & Overview Mobile Optimization */
+  .bc-business-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 1.15rem 1rem !important;
+    gap: 1rem !important;
+  }
+
+  .bc-biz-left {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 0.85rem !important;
+  }
+
+  .bc-biz-right {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+
+  .bc-funnel-status-box {
+    width: 100% !important;
+    text-align: left !important;
+    box-sizing: border-box !important;
+  }
+
+  .bc-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .bc-bottom-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .bc-form-grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
+  }
+
+  .bc-checkout-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
+  }
+
+  .bc-profile-card,
+  .bc-del-card {
+    padding: 1.25rem 1rem !important;
+    margin: 1rem auto 2.5rem !important;
+    border-radius: 14px !important;
+  }
+
+  .bc-seo-scores-grid {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+    gap: 0.65rem !important;
+  }
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -6282,6 +6466,37 @@
 
   .bc-scf-deliverables-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  .bc-stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .bc-btn-pair {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+
+  .bc-pricing-grid-3 {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  .bc-seo-scores-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.5rem !important;
+  }
+
+  .bc-pill-selector {
+    grid-template-columns: 1fr !important;
+  }
+
+  .bc-mobile-tab-tag {
+    max-width: 100px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
   }
 }
 
