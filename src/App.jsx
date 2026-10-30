@@ -4,7 +4,6 @@ import { ReviewFunnel, BusinessSetup, ReplyAssistant, SeoAnalyzer, Dashboard, Qr
 import BusinessConsole from './BusinessConsole.jsx';
 import BusinessOnboarding from './BusinessOnboarding.jsx';
 import AboutPage from './AboutPage.jsx';
-import PartnerProgramPage from './PartnerProgramPage.jsx';
 
 const features = [
   ['fa-solid fa-wand-magic-sparkles', 'AI review assistant', 'Help customers express their genuine experience with three editable draft suggestions in 24 languages.'],
@@ -90,14 +89,10 @@ export default function App() {
     '/faq': 'Frequently asked questions',
       '/multi-business': 'Multi-business plan',
     '/agency': 'Apply for agency',
-    '/partner': 'Partner program',
-    '/referral-program': 'Partner program',
-    '/referral': 'Partner program',
     '/business-onboard': 'Business onboarding',
     '/privacy': 'Privacy policy',
     '/terms': 'Terms of service',
     '/cookies': 'Cookie policy',
-    '/sitemap': 'Sitemap',
     '/index.php': 'Dashboard',
     '/console': 'Dashboard',
     '/admin': 'Dashboard'
@@ -3090,18 +3085,10 @@ export default function App() {
         />
       )}
 
-      {page === 'Partner program' && (
-        <PartnerProgramPage
-          user={user}
-          navigate={navigate}
-          notify={notify}
-        />
-      )}
-
-      {['Frequently asked questions', 'Multi-business plan', 'Privacy policy', 'Terms of service', 'Cookie policy', 'Sitemap'].includes(page) && (
+      {['Frequently asked questions', 'Multi-business plan', 'Privacy policy', 'Terms of service', 'Cookie policy'].includes(page) && (
         <PageShell
-          title={({ 'Frequently asked questions': 'Frequently asked questions', 'Source code': 'Source code and commercial licensing', 'Multi-business plan': 'Manage multiple business locations', 'Apply for agency': 'Agency partnerships', 'Partner program': 'Partner program', 'Privacy policy': 'Privacy policy', 'Terms of service': 'Terms of service', 'Cookie policy': 'Cookie policy', 'Sitemap': 'Website sitemap' })[page]}
-          subtitle={({ 'Frequently asked questions': 'Helpful answers about trials, plans, reviews, and payments.', 'Source code': 'Ask our team about source-code access and commercial licensing.', 'Multi-business plan': 'A scalable workflow for teams managing more than one location.', 'Apply for agency': 'Tell us about your agency and the businesses you support.', 'Partner program': 'Contact us to learn about partner eligibility and commission terms.', 'Privacy policy': 'We aim to collect only the information needed to provide the service.', 'Terms of service': 'Use the platform responsibly.', 'Cookie policy': 'Cookies and local storage may be used to support sign-in and core site functionality.', 'Sitemap': 'Browse the main sections of StarReview AI.' })[page]}
+          title={({ 'Frequently asked questions': 'Frequently asked questions', 'Source code': 'Source code and commercial licensing', 'Multi-business plan': 'Manage multiple business locations', 'Apply for agency': 'Agency partnerships', 'Privacy policy': 'Privacy policy', 'Terms of service': 'Terms of service', 'Cookie policy': 'Cookie policy' })[page]}
+          subtitle={({ 'Frequently asked questions': 'Helpful answers about trials, plans, reviews, and payments.', 'Source code': 'Ask our team about source-code access and commercial licensing.', 'Multi-business plan': 'A scalable workflow for teams managing more than one location.', 'Apply for agency': 'Tell us about your agency and the businesses you support.', 'Privacy policy': 'We aim to collect only the information needed to provide the service.', 'Terms of service': 'Use the platform responsibly.', 'Cookie policy': 'Cookies and local storage may be used to support sign-in and core site functionality.' })[page]}
         >
           <div className="legal-content">
             {page === 'Frequently asked questions' ? (
@@ -3116,12 +3103,6 @@ export default function App() {
                   <details key={q}><summary>{q}</summary><p>{a}</p></details>
                 ))}
               </>
-            ) : page === 'Sitemap' ? (
-              <div className="sitemap-links">
-                {[['Home', 'Home'], ['Features', 'Features'], ['How it works', 'How it works'], ['AI vs Normal QR', 'AI vs QR'], ['Pricing', 'Pricing'], ['AI review assistant', 'Try the demo'], ['QR flyer builder', 'QR flyer'], ['Dashboard', 'Dashboard'], ['Contact support', 'Contact'], ['Feedback', 'Feedback'], ['Privacy policy', 'Privacy policy'], ['Terms of service', 'Terms of service'], ['Cookie policy', 'Cookie policy']].map(([label, target]) => (
-                  <button className="learn-link" key={label} onClick={() => navigate(target)}>{label} →</button>
-                ))}
-              </div>
             ) : (
               <>
                 <p>StarReview AI helps local businesses create a clear customer feedback workflow, prepare editable review drafts, and understand feedback trends.</p>
@@ -3453,17 +3434,12 @@ function Footer({ navigate }) {
         ['About Us', 'About us'],
         ['Contact Support', 'Contact'],
         ['Frequently Asked Questions', 'Frequently asked questions'],
-        ['Partner Program', 'Partner program', '40%'],
-        ['HTML Sitemap', 'Sitemap'],
         ['Smart QR Funnels', 'QR flyer']
       ]
     },
     {
       title: 'Access',
       items: [
-        ['Operator Sign In', 'Account'],
-        ['Partner Portal Sign In', 'Partner program'],
-        ['Join Partner Program', 'Partner program'],
         ['Business Onboard', 'Business onboarding'],
         ['Terms of Service', 'Terms of service'],
         ['Cookie Policy', 'Cookie policy']
@@ -3514,8 +3490,6 @@ function Footer({ navigate }) {
           <button onClick={() => navigate('Terms of service')}>Terms of Service</button>
           <i>·</i>
           <button onClick={() => navigate('Cookie policy')}>Cookie Policy</button>
-          <i>·</i>
-          <button onClick={() => navigate('Sitemap')}>Sitemap</button>
         </div>
       </div>
     </footer>
