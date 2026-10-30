@@ -459,10 +459,16 @@ export default function App() {
     setConfirmPassword('');
     notify(regMode ? '🎉 3-Day Free Trial activated! Welcome to StarReview AI!' : 'Signed in successfully.');
     const bRes = await api('GET', '/api/business');
+    let fetchedBiz = null;
     if (bRes.ok && bRes.data && bRes.data.business) {
       setMyBusiness(bRes.data.business);
+      fetchedBiz = bRes.data.business;
     }
-    navigate('Dashboard');
+    if (regMode || !fetchedBiz?.isGoogleVerified) {
+      navigate('Business onboarding');
+    } else {
+      navigate('Dashboard');
+    }
   };
 
   const handleGoogleAuth = async () => {
@@ -495,11 +501,17 @@ export default function App() {
           localStorage.setItem('sr_user', JSON.stringify(r.data.user));
         } catch {}
         const bRes = await api('GET', '/api/business');
+        let fetchedBiz = null;
         if (bRes.ok && bRes.data && bRes.data.business) {
           setMyBusiness(bRes.data.business);
+          fetchedBiz = bRes.data.business;
         }
         notify(`✓ Signed in as ${emailToUse}. Welcome to StarReview AI!`);
-        navigate('Dashboard');
+        if (regMode || !fetchedBiz?.isGoogleVerified) {
+          navigate('Business onboarding');
+        } else {
+          navigate('Dashboard');
+        }
       } else {
         loginDemoConsole();
       }
@@ -525,7 +537,11 @@ export default function App() {
         localStorage.setItem('sr_user', JSON.stringify(demoUser));
       } catch {}
       notify(`✓ Signed in as ${demoEmail}. Welcome to StarReview AI!`);
-      navigate('Dashboard');
+      if (regMode || !myBusiness?.isGoogleVerified) {
+        navigate('Business onboarding');
+      } else {
+        navigate('Dashboard');
+      }
     }
   };
 

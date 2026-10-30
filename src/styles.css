@@ -3545,6 +3545,14 @@ th.trial-col {
   position: relative;
   display: flex;
   align-items: center;
+  gap: 10px;
+}
+
+.rf-search-field-inner {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
 }
 
 .rf-search-icon {
@@ -3553,6 +3561,7 @@ th.trial-col {
   color: #94a3b8;
   font-size: 1.1rem;
   pointer-events: none;
+  z-index: 2;
 }
 
 .rf-search-input {
@@ -3578,6 +3587,7 @@ th.trial-col {
   right: 1.15rem;
   color: #3b82f6;
   font-size: 1.1rem;
+  z-index: 2;
 }
 
 .rf-search-clear {
@@ -3590,11 +3600,47 @@ th.trial-col {
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 6px;
+  z-index: 2;
 }
 
 .rf-search-clear:hover {
   background: #f1f5f9;
   color: #0f172a;
+}
+
+.rf-btn-search-go {
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  font-size: 0.92rem;
+  font-weight: 700;
+  padding: 0.95rem 1.4rem;
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+  transition: all 0.2s ease;
+}
+
+.rf-btn-search-go:hover {
+  background: #15803d;
+  box-shadow: 0 6px 16px rgba(22, 163, 74, 0.35);
+}
+
+.rf-place-city-pill {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  padding: 2px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .rf-search-hint {
