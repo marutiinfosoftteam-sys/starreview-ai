@@ -7646,48 +7646,113 @@ footer {
 .rf-form-row-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  align-items: end;
+  gap: 12px;
+  align-items: start;
 }
 
 .rf-form-row-2col > * {
   min-width: 0;
 }
 
-.rf-phone-input-group {
+.rf-login-form-group {
   display: flex;
-  gap: 8px;
-  align-items: center;
-  width: 100%;
+  flex-direction: column;
 }
 
-.rf-country-code-select {
-  width: 82px;
+.rf-login-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #475569;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  height: 16px;
+  line-height: 16px;
+}
+
+.rf-login-input {
+  width: 100%;
+  height: 42px;
+  box-sizing: border-box;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 14px;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  line-height: 40px;
+}
+
+.rf-login-input:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+}
+
+/* Phone input group as a single unified container */
+.rf-phone-input-group {
+  display: flex;
+  align-items: center;
+  width: 100%;
   height: 42px;
   box-sizing: border-box;
   background: #ffffff;
   border: 1.5px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #0f172a;
-  padding: 0 8px;
-  cursor: pointer;
-  outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
-  flex-shrink: 0;
+  overflow: hidden;
 }
 
-.rf-country-code-select:focus {
+.rf-phone-input-group:focus-within {
   border-color: #16a34a;
   box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
 }
 
-.rf-phone-input-group .rf-login-input {
+.rf-country-code-select {
+  width: 52px;
+  height: 100%;
+  border: none !important;
+  background: transparent !important;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  padding: 0 0 0 8px;
+  cursor: pointer;
+  outline: none !important;
+  box-shadow: none !important;
+  flex-shrink: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.rf-country-code-select:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.rf-phone-divider {
+  width: 1px;
+  height: 22px;
+  background: #cbd5e1;
+  flex-shrink: 0;
+  margin: 0 4px;
+}
+
+.rf-phone-number-input {
   flex: 1;
   min-width: 0;
-  height: 42px;
+  height: 100%;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 8px;
+  font-size: 13.5px;
+  color: #0f172a;
+  outline: none !important;
+  box-shadow: none !important;
   box-sizing: border-box;
+  margin: 0;
+  line-height: normal;
 }
 
 .rf-floating-whatsapp-btn {
@@ -9905,5 +9970,204 @@ html, body {
   .rf-about-sec-heading-centered,
   .rf-about-cta-title {
     font-size: 1.8rem;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SMART QR FUNNEL & FLYER GENERATOR (RESPONSIVE & OVERFLOW FIX)
+   ═══════════════════════════════════════════════════════════════ */
+.rf-flyer-tool-wrap {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 0 0 3rem;
+}
+
+.tool-layout,
+.rf-tool-layout-responsive {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr) !important;
+  gap: 28px !important;
+  align-items: start !important;
+  width: 100% !important;
+  max-width: 1140px !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+}
+
+.tool-layout > *,
+.rf-tool-layout-responsive > * {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.form-panel {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 18px !important;
+  padding: 28px 24px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  width: 100% !important;
+}
+
+.form-panel label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 18px;
+  margin-bottom: 6px;
+}
+
+.form-panel label:first-child {
+  margin-top: 0;
+}
+
+.form-panel input:not([type="color"]),
+.form-panel textarea,
+.form-panel select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-panel input:focus,
+.form-panel textarea:focus,
+.form-panel select:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+}
+
+.qr-panel {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 18px !important;
+  padding: 24px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+.flyer-preview {
+  width: 100% !important;
+  max-width: 320px !important;
+  margin: 0 auto !important;
+  border: 2px solid #1d4934;
+  border-radius: 16px;
+  padding: 24px 18px;
+  background: #ffffff;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+}
+
+.flyer-preview img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 12px auto;
+  display: block;
+}
+
+.flyer-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+  margin: 20px auto 0;
+  justify-content: center;
+}
+
+.flyer-actions button {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.rf-flyer-url-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 12px 0 16px;
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+}
+
+.rf-flyer-url-lbl {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.rf-flyer-url-val {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.rf-flyer-url-val a {
+  color: #16a34a;
+  text-decoration: underline;
+}
+
+.rf-color-picker-label {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.rf-color-picker-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rf-color-input {
+  width: 44px !important;
+  height: 38px !important;
+  padding: 2px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  cursor: pointer;
+  background: #ffffff;
+}
+
+.rf-color-hex {
+  font-family: monospace;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #334155;
+  background: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+@media (max-width: 960px) {
+  .tool-layout,
+  .rf-tool-layout-responsive {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
   }
 }

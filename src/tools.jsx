@@ -597,32 +597,52 @@ export function QrFlyer({ business, cfg, notify, navigate, initialMode }) {
   };
   const tab = (id, label) => <button type="button" className={mode === id ? 'selected' : ''} onClick={() => { setMode(id); setQr(''); }}>{label}</button>;
   return (
-    <div className="tool-layout">
-      <div className="panel form-panel">
-        <label>What should the QR open?<div className="pricing-toggle">{tab('funnel', 'Review page')}{tab('whatsapp', 'WhatsApp')}{tab('url', 'Custom link')}{tab('paymentDemo', 'Payment demo')}</div></label>
-        {mode === 'funnel' && !business && <p className="tiny-note">Set up your business first. <button type="button" className="text-btn" onClick={() => navigate('My business')}>Open business profile →</button></p>}
-        {mode === 'funnel' && business && <p className="tiny-note">Opens your customer review page: {resolvedQrTarget || funnelUrl(cfg, business)}</p>}
-        {mode === 'whatsapp' && <><label>WhatsApp number with country code<input value={wa} onChange={e => setWa(e.target.value)} placeholder="919876543210" /></label><label>Pre-filled message<textarea rows="2" value={waMsg} onChange={e => setWaMsg(e.target.value)} /></label></>}
-        {mode === 'url' && <label>Link<input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://your-link.com" /></label>}
-        {mode === 'paymentDemo' && <div className="notice"><strong>Payment flow demo — no real money</strong><p>This QR opens the built-in demo checkout where you can select a plan and simulate success or failure. No Razorpay transaction is created.</p><small>On the same Wi-Fi, the generator tries to use your computer’s local network IP for phone scanning. For testing outside your Wi-Fi, deploy the site to an HTTPS URL.</small></div>}
-        <label>Headline<input value={headline} onChange={e => setHeadline(e.target.value)} /></label>
-        <label>Sub text<textarea rows="2" value={sub} onChange={e => setSub(e.target.value)} /></label>
-        <label>Flyer color<input type="color" value={color} onChange={e => setColor(e.target.value)} /></label>
-        <button className="btn btn-dark full" onClick={makeQr}>Generate QR code</button>
-        <p className="tiny-note">For phone scanning, keep the phone and computer on the same Wi-Fi. For scans from anywhere, deploy the site and set PUBLIC_URL to its HTTPS address.</p>
-      </div>
-      <div className="panel qr-panel">
-        <div className="flyer-preview" style={{ borderColor: color }}>
-          <span className="brand-mark" style={{ background: color }}>✦</span>
-          <h3 style={{ color }}>{headline}</h3>
-          <p>{sub}</p>
-          {qr ? <img src={qr} alt="Generated QR code" /> : <div className="qr-placeholder">▦<small>QR PREVIEW</small></div>}
-          <b>{mode === 'paymentDemo' ? 'Scan to view payment plans' : 'Scan to leave a review'}</b>
-          <small>{name}</small>
+    <div className="rf-flyer-tool-wrap">
+      <div className="tool-layout rf-tool-layout-responsive">
+        <div className="panel form-panel">
+          <label>What should the QR open?<div className="pricing-toggle">{tab('funnel', 'Review page')}{tab('whatsapp', 'WhatsApp')}{tab('url', 'Custom link')}{tab('paymentDemo', 'Payment demo')}</div></label>
+          {mode === 'funnel' && !business && <p className="tiny-note">Set up your business first. <button type="button" className="text-btn" onClick={() => navigate('My business')}>Open business profile →</button></p>}
+          {mode === 'funnel' && business && (
+            <div className="rf-flyer-url-box">
+              <div className="rf-flyer-url-lbl">
+                <i className="fa-solid fa-link" style={{ color: '#16a34a', marginRight: 5 }}></i>
+                Target Review Funnel URL:
+              </div>
+              <div className="rf-flyer-url-val">
+                <a href={resolvedQrTarget || funnelUrl(cfg, business)} target="_blank" rel="noreferrer">
+                  {resolvedQrTarget || funnelUrl(cfg, business)}
+                </a>
+              </div>
+            </div>
+          )}
+          {mode === 'whatsapp' && <><label>WhatsApp number with country code<input value={wa} onChange={e => setWa(e.target.value)} placeholder="919876543210" /></label><label>Pre-filled message<textarea rows="2" value={waMsg} onChange={e => setWaMsg(e.target.value)} /></label></>}
+          {mode === 'url' && <label>Link<input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://your-link.com" /></label>}
+          {mode === 'paymentDemo' && <div className="notice"><strong>Payment flow demo — no real money</strong><p>This QR opens the built-in demo checkout where you can select a plan and simulate success or failure. No Razorpay transaction is created.</p><small>On the same Wi-Fi, the generator tries to use your computer’s local network IP for phone scanning. For testing outside your Wi-Fi, deploy the site to an HTTPS URL.</small></div>}
+          <label>Headline<input value={headline} onChange={e => setHeadline(e.target.value)} /></label>
+          <label>Sub text<textarea rows="2" value={sub} onChange={e => setSub(e.target.value)} /></label>
+          <label className="rf-color-picker-label">
+            <span>Flyer color</span>
+            <div className="rf-color-picker-row">
+              <input type="color" className="rf-color-input" value={color} onChange={e => setColor(e.target.value)} />
+              <span className="rf-color-hex">{color}</span>
+            </div>
+          </label>
+          <button className="btn btn-dark full" onClick={makeQr}>Generate QR code</button>
+          <p className="tiny-note">For phone scanning, keep the phone and computer on the same Wi-Fi. For scans from anywhere, deploy the site and set PUBLIC_URL to its HTTPS address.</p>
         </div>
-        <div className="flyer-actions">
-          <button className="btn btn-light" onClick={() => { const a = document.createElement('a'); if (!qr) return makeQr(); a.href = qr; a.download = mode === 'paymentDemo' ? 'razorpay-demo-payment-qr.png' : 'qr-code.png'; a.click(); }}>QR only ↓</button>
-          <button className="btn btn-dark" onClick={download}>Download A6 flyer ↓</button>
+        <div className="panel qr-panel">
+          <div className="flyer-preview" style={{ borderColor: color }}>
+            <span className="brand-mark" style={{ background: color }}>✦</span>
+            <h3 style={{ color }}>{headline}</h3>
+            <p>{sub}</p>
+            {qr ? <img src={qr} alt="Generated QR code" /> : <div className="qr-placeholder">▦<small>QR PREVIEW</small></div>}
+            <b>{mode === 'paymentDemo' ? 'Scan to view payment plans' : 'Scan to leave a review'}</b>
+            <small>{name}</small>
+          </div>
+          <div className="flyer-actions">
+            <button className="btn btn-light" onClick={() => { const a = document.createElement('a'); if (!qr) return makeQr(); a.href = qr; a.download = mode === 'paymentDemo' ? 'razorpay-demo-payment-qr.png' : 'qr-code.png'; a.click(); }}>QR only ↓</button>
+            <button className="btn btn-dark" onClick={download}>Download A6 flyer ↓</button>
+          </div>
         </div>
       </div>
     </div>

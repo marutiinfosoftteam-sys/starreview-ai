@@ -2508,8 +2508,9 @@ export default function App() {
                             <option value="+971">+971</option>
                             <option value="+65">+65</option>
                           </select>
+                          <span className="rf-phone-divider"></span>
                           <input
-                            className="rf-login-input"
+                            className="rf-phone-number-input"
                             type="tel"
                             placeholder="9876543210"
                             value={mobileNumber}
