@@ -3048,19 +3048,27 @@ export default function App() {
               </div>
 
               {/* Business Name and Gmail ID Side-by-Side */}
-              <div className="sr-form-2col" style={{ marginBottom: 14 }}>
-                <label>
-                  Business name
+              <div className="sr-demo-inputs-row">
+                <div className="sr-demo-field-group">
+                  <label htmlFor="sr-demo-biz-name" className="sr-demo-field-label">
+                    <span>Business name</span>
+                  </label>
                   <input
+                    id="sr-demo-biz-name"
+                    className="sr-demo-field-input"
                     value={business}
                     onChange={e => setBusiness(e.target.value)}
                     placeholder="e.g. Team Maruti InfoSoft"
                   />
-                </label>
-                <label>
-                  Connected Gmail ID
+                </div>
+                <div className="sr-demo-field-group">
+                  <label htmlFor="sr-demo-email" className="sr-demo-field-label">
+                    <span>Connected Gmail ID</span>
+                  </label>
                   <input
+                    id="sr-demo-email"
                     type="email"
+                    className="sr-demo-field-input"
                     value={demoEmail}
                     onChange={e => {
                       setDemoEmail(e.target.value);
@@ -3068,7 +3076,7 @@ export default function App() {
                     }}
                     placeholder="e.g. marutiinfosoftteam@gmail.com"
                   />
-                </label>
+                </div>
               </div>
 
               <label>
@@ -3779,7 +3787,6 @@ function Footer({ navigate }) {
       title: 'Plans & Scale',
       items: [
           ['Pricing & Plans', 'Pricing'],
-        ['Multi-Business Plan', 'Pricing'],
         ['Apply for Agency', 'Apply for agency'],
         ['Sign In to Account', 'Account'],
         ['Payment QR Demo', 'Payment QR Demo']

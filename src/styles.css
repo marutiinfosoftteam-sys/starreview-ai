@@ -10774,7 +10774,6 @@ a.rf-nav-link,
 a.rf-btn-signin,
 a.rf-btn-startfree,
 a.rf-btn-whatsapp-nav,
-a.btn,
 a.rf-footer-link,
 a.rf-btn-back-home {
   text-decoration: none !important;
@@ -11318,5 +11317,135 @@ a.rf-btn-back-home {
   .rf-floating-badge {
     left: 5px;
     transform: scale(0.8);
+  }
+}
+
+
+/* ====================================================================
+   BUTTON HIGH-CONTRAST VISIBILITY FIXES (SCREENSHOT 3 & 4)
+   ==================================================================== */
+
+.btn-dark,
+a.btn-dark,
+a.btn.btn-dark,
+button.btn-dark,
+button.btn.btn-dark {
+  background: #143e2a !important;
+  color: #ffffff !important;
+  border-color: #143e2a !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+  box-shadow: 0 8px 20px rgba(20, 62, 42, 0.25) !important;
+}
+
+.btn-dark *,
+a.btn-dark *,
+a.btn.btn-dark *,
+button.btn-dark *,
+button.btn.btn-dark * {
+  color: #ffffff !important;
+}
+
+.btn-dark:hover,
+a.btn-dark:hover,
+a.btn.btn-dark:hover,
+button.btn-dark:hover,
+button.btn.btn-dark:hover {
+  background: #1b5238 !important;
+  color: #ffffff !important;
+  border-color: #1b5238 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 12px 28px rgba(20, 62, 42, 0.35) !important;
+}
+
+.btn-light,
+a.btn-light,
+a.btn.btn-light,
+button.btn-light,
+button.btn.btn-light {
+  background: #ffffff !important;
+  color: #1e293b !important;
+  border: 1.5px solid #cbd5e1 !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+}
+
+.btn-light *,
+a.btn-light *,
+a.btn.btn-light *,
+button.btn-light *,
+button.btn.btn-light * {
+  color: #1e293b !important;
+}
+
+.btn-light:hover,
+a.btn-light:hover,
+a.btn.btn-light:hover,
+button.btn-light:hover,
+button.btn.btn-light:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
+}
+
+/* ====================================================================
+   REVIEW DEMO FORM BOX ALIGNMENT FIXES (SCREENSHOT 2)
+   ==================================================================== */
+
+.sr-demo-inputs-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 16px !important;
+  margin-bottom: 18px !important;
+  width: 100% !important;
+  align-items: flex-start !important;
+}
+
+.sr-demo-field-group {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.sr-demo-field-label {
+  display: block !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+  margin: 0 0 7px 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+  line-height: 1.4 !important;
+  text-transform: none !important;
+}
+
+.sr-demo-field-input {
+  display: block !important;
+  width: 100% !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  margin: 0 !important;
+  padding: 10px 14px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.sr-demo-field-input:focus {
+  border-color: #16a34a !important;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15) !important;
+}
+
+@media (max-width: 680px) {
+  .sr-demo-inputs-row {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
   }
 }
