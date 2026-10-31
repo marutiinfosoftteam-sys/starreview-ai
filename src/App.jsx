@@ -456,24 +456,51 @@ export default function App() {
     });
   }, [user?.id]);
 
-  useEffect(() => {
-    const onPopState = (e) => {
+    useEffect(() => {
+    // 1. Ensure initial page has explicit history state so back button knows where to return
+    try {
       const p = window.location.pathname.replace(/\/$/, '') || '/';
-      if (p === '/login' || p === '/signin') {
-        setRegMode(false);
-        setPage('Account');
-      } else if (p === '/register' || p === '/signup') {
-        setRegMode(true);
-        setPage('Account');
-      } else {
-        const targetPage = (e.state && e.state.page) ? e.state.page : pageFromPath();
-        setPage(targetPage);
+      const initialPage = routeMap[p] || pageFromPath();
+      if (!window.history.state || !window.history.state.page) {
+        window.history.replaceState({ page: initialPage, path: p }, '', window.location.pathname + window.location.search);
       }
-      setMenu(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (_) {}
+
+    // 2. Comprehensive back handler for WebKit / Safari iOS & all mobile browsers
+    const handlePop = (e) => {
+      // 15ms timeout allows WebKit / iOS Safari to complete location pathname transition
+      setTimeout(() => {
+        const p = window.location.pathname.replace(/\/$/, '') || '/';
+        let target = '';
+        if (e && e.state && e.state.page) {
+          target = e.state.page;
+        } else {
+          target = routeMap[p] || 'Home';
+        }
+
+        if (p === '/login' || p === '/signin') {
+          setRegMode(false);
+          setPage('Account');
+        } else if (p === '/register' || p === '/signup') {
+          setRegMode(true);
+          setPage('Account');
+        } else {
+          setPage(target);
+        }
+        setMenu(false);
+        window.scrollTo(0, 0);
+      }, 15);
     };
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
+
+    window.addEventListener('popstate', handlePop);
+    window.addEventListener('pageshow', handlePop);
+    window.addEventListener('hashchange', handlePop);
+
+    return () => {
+      window.removeEventListener('popstate', handlePop);
+      window.removeEventListener('pageshow', handlePop);
+      window.removeEventListener('hashchange', handlePop);
+    };
   }, []);
 
   // Dashboard & Console require active authentication (user must sign in)

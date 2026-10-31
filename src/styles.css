@@ -11563,33 +11563,156 @@ button.btn.btn-light:hover {
   }
 }
 
-@media (max-width: 580px) {
+/* ====================================================================
+   MOBILE HEADER BACK BUTTON STYLING
+   ==================================================================== */
+.rf-header-right-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rf-mobile-back-btn {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  line-height: 1;
+}
+
+.rf-mobile-back-btn:active {
+  transform: scale(0.96);
+  background: #dcfce7;
+}
+
+@media (max-width: 1024px) {
+  .rf-mobile-back-btn {
+    display: inline-flex;
+  }
+}
+
+/* ====================================================================
+   COMPACT & HORIZONTAL RESPONSIVE FOOTER (NANU & ADU SARTHU LINE MA)
+   ==================================================================== */
+
+@media (max-width: 768px) {
   .footer {
-    padding: 3rem 0 1.5rem !important;
+    padding: 1.6rem 0 1rem !important;
   }
+
   .footer-container {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 1.85rem !important;
-    padding-bottom: 2rem !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px 14px !important;
+    padding-bottom: 1rem !important;
   }
+
+  .footer-brand-box {
+    grid-column: 1 / -1 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .footer-brand-box .brand {
+    font-size: 18px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .footer-brand-motto {
+    font-size: 11.5px !important;
+    margin: 2px 0 6px !important;
+    color: #a7f3d0 !important;
+  }
+
+  .footer-brand-tagline {
+    display: none !important; /* Hide long bulky text on mobile so footer remains compact */
+  }
+
+  .rf-footer-trust-badges {
+    display: flex !important;
+    gap: 6px !important;
+    margin: 4px 0 6px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .rf-footer-badge {
+    font-size: 10px !important;
+    padding: 3px 8px !important;
+  }
+
+  .footer-powered-link {
+    font-size: 10.5px !important;
+    margin-top: 2px !important;
+    color: #6ee7b7 !important;
+  }
+
+  /* 4 Columns in 2x2 horizontal side-by-side grid (adu sarkhu line ma) */
   .footer-nav-col {
     width: 100% !important;
+    padding: 0 !important;
   }
+
   .footer-nav-col h4 {
-    margin-bottom: 8px !important;
-    font-size: 13.5px !important;
-    color: #82c99b !important;
+    margin: 0 0 5px 0 !important;
+    font-size: 11.5px !important;
+    font-weight: 800 !important;
+    color: #86efac !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
   }
+
   .footer-nav-col a,
   .footer-nav-col button {
-    padding: 6px 0 !important;
-    font-size: 13px !important;
-    line-height: 1.5 !important;
+    display: block !important;
+    padding: 2.5px 0 !important;
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    color: rgba(255, 255, 255, 0.82) !important;
+    text-decoration: none !important;
   }
+
+  .footer-nav-col a:hover,
+  .footer-nav-col button:hover {
+    color: #ffffff !important;
+  }
+
+  /* Bottom Bar - neat horizontal row */
   .footer-bottom-bar {
-    flex-direction: column !important;
-    gap: 10px !important;
-    text-align: center !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding-top: 10px !important;
+    margin-top: 10px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+    font-size: 11px !important;
+  }
+
+  .footer-bottom-bar span {
+    font-size: 10.5px !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+
+  .footer-bottom-bar div {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .footer-bottom-bar a {
+    font-size: 11px !important;
+    color: rgba(255, 255, 255, 0.75) !important;
   }
 }
