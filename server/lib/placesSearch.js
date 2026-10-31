@@ -102,7 +102,8 @@ export async function searchNominatimPlaces(query) {
           const city = addr.city || addr.town || addr.municipality || addr.suburb || addr.county || addr.state_district || addr.state || '';
           const state = addr.state || '';
           const country = addr.country || '';
-          const fullAddress = item.display_name || `${cleanName}, ${city}, ${country}`;
+          const postcode = addr.postcode || '';
+          const fullAddress = item.display_name || `${cleanName}, ${city}, ${state} ${postcode}, ${country}`.replace(/\s+,/g, ',');
 
           const key = (cleanName + '|' + city + '|' + country).toLowerCase();
           if (seen.has(key)) continue;
@@ -118,6 +119,7 @@ export async function searchNominatimPlaces(query) {
             city,
             state,
             country,
+            postcode,
             category: (item.type || item.class || 'Local Business').replace(/_/g, ' '),
             rating: Number((4.6 + (hash % 4) * 0.1).toFixed(1)),
             userRatingsTotal: 80 + (hash % 300),
@@ -167,10 +169,24 @@ export async function searchPhotonPlaces(query) {
           const cleanName = p.name || '';
           if (!cleanName || isNonLatin(cleanName)) continue;
 
+          // Discard unexpected foreign countries if not searched
+          const lowerQ = qClean.toLowerCase();
+          if (!lowerQ.includes('indonesia') && p.countrycode === 'ID') continue;
+          if (!lowerQ.includes('china') && p.countrycode === 'CN') continue;
+
+          const streetPart = [p.housenumber, p.street].filter(Boolean).join(' ');
+          if (isNonLatin(streetPart) || isNonLatin(p.city) || isNonLatin(p.country)) continue;
+
+          const locality = p.district || p.suburb || p.locality || p.county || '';
+          const city = p.city || p.town || p.municipality || locality || p.state || '';
+          const state = p.state || '';
+          const country = p.country || (p.countrycode === 'IN' ? 'India' : '');
+          const postcode = p.postcode || '';
+
           const fullAddress = [
             cleanName,
             streetPart,
-            locality !== city ? locality : null,
+            locality && locality !== city ? locality : null,
             city,
             state ? (state + (postcode ? ` ${postcode}` : '')) : postcode,
             country
@@ -178,11 +194,6 @@ export async function searchPhotonPlaces(query) {
 
           const fullPhotonText = (cleanName + ' ' + fullAddress).toLowerCase();
           if (!passesWordFilter(fullPhotonText, qWords)) continue;
-
-          // Discard unexpected foreign countries if not searched
-          const lowerQ = qClean.toLowerCase();
-          if (!lowerQ.includes('indonesia') && p.countrycode === 'ID') continue;
-          if (!lowerQ.includes('china') && p.countrycode === 'CN') continue;
 
           const key = (cleanName + '|' + city + '|' + country).toLowerCase();
           if (seen.has(key)) continue;
@@ -208,6 +219,7 @@ export async function searchPhotonPlaces(query) {
             city,
             state,
             country,
+            postcode,
             category,
             rating: Number((4.6 + (hash % 4) * 0.1).toFixed(1)),
             userRatingsTotal: 65 + (hash % 380),

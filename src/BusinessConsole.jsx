@@ -986,15 +986,20 @@ export default function BusinessConsole({
         )}
 
         {/* Quick Link to Return to Website */}
-        <button
-          type="button"
+        <a
+          href="/"
           className="bc-sidebar-return-btn"
-          onClick={() => navigate('Home')}
+          onClick={(e) => {
+            if (!e.metaKey && !e.ctrlKey && !e.shiftKey && e.button !== 1) {
+              e.preventDefault();
+              navigate('Home');
+            }
+          }}
           title={collapsed ? "Back to Website" : "Return to StarReview AI Public Website"}
         >
           <i className="fa-solid fa-arrow-left"></i>
           {!collapsed && <span>Back to Website</span>}
-        </button>
+        </a>
 
         {/* Navigation list */}
         <div className="bc-nav-scroll">
@@ -1113,19 +1118,47 @@ export default function BusinessConsole({
         {/* Persistent Desktop / Tablet Topbar with Quick Navigation & Back to Website */}
         <div className="bc-topbar-strip">
           <div className="bc-topbar-crumbs">
-            <button type="button" className="bc-topbar-back-btn" onClick={() => navigate('Home')} title="Go back to StarReview AI homepage">
+            <a
+              href="/"
+              className="bc-topbar-back-btn"
+              onClick={(e) => {
+                if (!e.metaKey && !e.ctrlKey && !e.shiftKey && e.button !== 1) {
+                  e.preventDefault();
+                  navigate('Home');
+                }
+              }}
+              title="Go back to StarReview AI homepage"
+            >
               <i className="fa-solid fa-arrow-left"></i> Back to Website
-            </button>
+            </a>
             <span className="bc-topbar-sep">/</span>
             <span className="bc-topbar-crumb-tab">{activeTab}</span>
           </div>
           <div className="bc-topbar-actions">
-            <button type="button" className="bc-topbar-link-btn" onClick={() => navigate('Home')}>
+            <a
+              href="/"
+              className="bc-topbar-link-btn"
+              onClick={(e) => {
+                if (!e.metaKey && !e.ctrlKey && !e.shiftKey && e.button !== 1) {
+                  e.preventDefault();
+                  navigate('Home');
+                }
+              }}
+            >
               <i className="fa-solid fa-house"></i> Public Website
-            </button>
-            <button type="button" className="bc-topbar-link-btn" onClick={() => navigate('Pricing')}>
+            </a>
+            <a
+              href="/pricing"
+              className="bc-topbar-link-btn"
+              onClick={(e) => {
+                if (!e.metaKey && !e.ctrlKey && !e.shiftKey && e.button !== 1) {
+                  e.preventDefault();
+                  navigate('Pricing');
+                }
+              }}
+            >
               <i className="fa-regular fa-credit-card"></i> Pricing Plans
-            </button>
+            </a>
             {isTrial && activeTab !== 'Billing & Plans' && (
               <button
                 type="button"

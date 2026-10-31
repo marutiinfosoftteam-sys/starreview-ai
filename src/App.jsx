@@ -63,42 +63,43 @@ const testimonials = [
   }
 ];
 
-export default function App() {
-  const routeMap = {
-    '/': 'Home',
-    '/features': 'Features',
-    '/how-it-works': 'How it works',
-    '/ai-vs-qr': 'AI vs QR',
-    '/pricing': 'Pricing',
-    '/try-demo': 'Try the demo',
-    '/qr-flyer': 'QR flyer',
-    '/payment-qr-demo': 'Payment QR Demo',
-    '/demo-checkout': 'Demo checkout',
-    '/dashboard': 'Dashboard',
-    '/account': 'Account',
-    '/login': 'Account',
-    '/signin': 'Account',
-    '/register': 'Account',
-    '/signup': 'Account',
-    '/contact': 'Contact',
-    '/feedback': 'Feedback',
-    '/business': 'My business',
-    '/reply-assistant': 'Reply assistant',
-    '/seo-analyzer': 'SEO analyzer',
-    '/about': 'About us',
-    '/faq': 'Frequently asked questions',
-      '/multi-business': 'Multi-business plan',
-    '/agency': 'Apply for agency',
-    '/business-onboard': 'Business onboarding',
-    '/privacy': 'Privacy policy',
-    '/terms': 'Terms of service',
-    '/cookies': 'Cookie policy',
-    '/index.php': 'Dashboard',
-    '/console': 'Dashboard',
-    '/admin': 'Dashboard'
-  };
+export const routeMap = {
+  '/': 'Home',
+  '/features': 'Features',
+  '/how-it-works': 'How it works',
+  '/ai-vs-qr': 'AI vs QR',
+  '/pricing': 'Pricing',
+  '/try-demo': 'Try the demo',
+  '/qr-flyer': 'QR flyer',
+  '/payment-qr-demo': 'Payment QR Demo',
+  '/demo-checkout': 'Demo checkout',
+  '/dashboard': 'Dashboard',
+  '/account': 'Account',
+  '/login': 'Account',
+  '/signin': 'Account',
+  '/register': 'Account',
+  '/signup': 'Account',
+  '/contact': 'Contact',
+  '/feedback': 'Feedback',
+  '/business': 'My business',
+  '/reply-assistant': 'Reply assistant',
+  '/seo-analyzer': 'SEO analyzer',
+  '/about': 'About us',
+  '/faq': 'Frequently asked questions',
+  '/multi-business': 'Multi-business plan',
+  '/agency': 'Apply for agency',
+  '/business-onboard': 'Business onboarding',
+  '/privacy': 'Privacy policy',
+  '/terms': 'Terms of service',
+  '/cookies': 'Cookie policy',
+  '/index.php': 'Dashboard',
+  '/console': 'Dashboard',
+  '/admin': 'Dashboard'
+};
 
-  const slugMap = Object.fromEntries(Object.entries(routeMap).map(([path, name]) => [name, path]));
+export const slugMap = Object.fromEntries(Object.entries(routeMap).map(([path, name]) => [name, path]));
+
+export default function App() {
   const getReviewSlug = () => {
     const p = window.location.pathname.replace(/\/$/, '') || '';
     if (p.startsWith('/r/')) {
@@ -371,6 +372,37 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleNavClick = (e, p, isRegister = false) => {
+    // If middle click (mouse wheel), Ctrl-click, Cmd-click, or Shift-click -> browser naturally opens new tab!
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) {
+      return;
+    }
+    e.preventDefault();
+    navigate(p, isRegister);
+  };
+
+  // Carousel states for Home Hero section
+  const [heroSlide, setHeroSlide] = useState(0);
+  const [heroSlidePaused, setHeroSlidePaused] = useState(false);
+  const [heroLangTab, setHeroLangTab] = useState('gu'); // 'gu', 'hi', 'en'
+
+  useEffect(() => {
+    if (heroSlidePaused) return;
+    const timer = setInterval(() => {
+      setHeroSlide(prev => (prev + 1) % 5);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, [heroSlidePaused]);
+
+  // Ensure browser back button navigates within website without exiting
+  useEffect(() => {
+    const curPath = window.location.pathname.replace(/\/$/, '') || '/';
+    const initPage = pageFromPath();
+    if (!window.history.state || !window.history.state.page) {
+      window.history.replaceState({ page: initPage }, '', curPath);
+    }
+  }, []);
+
   const logout = () => {
     setToken('');
     setUser(null);
@@ -414,7 +446,7 @@ export default function App() {
   }, [user?.id]);
 
   useEffect(() => {
-    const onPopState = () => {
+    const onPopState = (e) => {
       const p = window.location.pathname.replace(/\/$/, '') || '/';
       if (p === '/login' || p === '/signin') {
         setRegMode(false);
@@ -423,7 +455,8 @@ export default function App() {
         setRegMode(true);
         setPage('Account');
       } else {
-        setPage(pageFromPath());
+        const targetPage = (e.state && e.state.page) ? e.state.page : pageFromPath();
+        setPage(targetPage);
       }
       setMenu(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1099,7 +1132,7 @@ export default function App() {
       {page !== 'Review' && !isConsoleView && page !== 'Account' && (
         <header className="rf-top-header">
           <div className="rf-top-header-inner">
-            <button className="rf-nav-brand" onClick={() => navigate('Home')} title="StarReview AI">
+            <a href="/" className="rf-nav-brand" onClick={(e) => handleNavClick(e, 'Home')} title="StarReview AI">
               <div className="rf-nav-brand-icon">
                 <i className="fa-solid fa-star"></i>
               </div>
@@ -1107,7 +1140,7 @@ export default function App() {
                 <span className="rf-nav-brand-title">StarReview <span>AI</span></span>
                 <span className="rf-nav-brand-sub">Helping customers share better reviews</span>
               </div>
-            </button>
+            </a>
 
             <button className="menu-toggle rf-menu-toggle" onClick={() => setMenu(!menu)} aria-label="Toggle menu">
               {menu ? '✕' : '☰'}
@@ -1115,13 +1148,14 @@ export default function App() {
 
             <nav className={menu ? 'rf-nav-links open' : 'rf-nav-links'}>
               {navItems.map(item => (
-                <button
+                <a
                   key={item.page}
+                  href={slugMap[item.page] || '/'}
                   className={`rf-nav-link ${page === item.page ? 'active' : ''}`}
-                  onClick={() => { navigate(item.page); setMenu(false); }}
+                  onClick={(e) => { handleNavClick(e, item.page); setMenu(false); }}
                 >
                   {item.label}
-                </button>
+                </a>
               ))}
 
               <div className="rf-mobile-drawer-actions">
@@ -1136,23 +1170,23 @@ export default function App() {
                     >
                       <i className="fa-brands fa-whatsapp"></i> WhatsApp Inquiry
                     </a>
-                    <button
-                      type="button"
+                    <a
+                      href="/login"
                       className="rf-btn-startfree full"
-                      onClick={() => { setRegMode(false); navigate('Account', false); setMenu(false); }}
+                      onClick={(e) => { setRegMode(false); handleNavClick(e, 'Account', false); setMenu(false); }}
                     >
                       Sign In <span className="rf-nav-arrow">→</span>
-                    </button>
+                    </a>
                   </>
                 ) : (
                   <>
-                    <button
-                      type="button"
+                    <a
+                      href="/dashboard"
                       className="rf-btn-startfree full"
-                      onClick={() => { navigate('Dashboard'); setMenu(false); }}
+                      onClick={(e) => { handleNavClick(e, 'Dashboard'); setMenu(false); }}
                     >
                       Dashboard →
-                    </button>
+                    </a>
                     <button
                       type="button"
                       className="rf-btn-signin full"
@@ -1185,29 +1219,29 @@ export default function App() {
                   >
                     <i className="fa-brands fa-whatsapp"></i> WhatsApp Inquiry
                   </a>
-                  <button
-                    type="button"
+                  <a
+                    href="/login"
                     className="rf-btn-signin"
-                    onClick={() => {
+                    onClick={(e) => {
                       setRegMode(false);
-                      navigate('Account', false);
+                      handleNavClick(e, 'Account', false);
                     }}
                     title="Sign In to Dashboard"
                   >
                     Sign In <span className="rf-nav-arrow">→</span>
-                  </button>
+                  </a>
                 </>
               ) : (
                 <>
-                  <button
-                    type="button"
+                  <a
+                    href="/dashboard"
                     className="rf-btn-startfree"
                     style={{ padding: '7px 14px' }}
-                    onClick={() => navigate('Dashboard')}
+                    onClick={(e) => handleNavClick(e, 'Dashboard')}
                     title="Open Business Dashboard"
                   >
                     <span className="rf-online-dot"></span> Dashboard
-                  </button>
+                  </a>
                   <button
                     type="button"
                     className="rf-btn-signin"
@@ -1246,9 +1280,13 @@ export default function App() {
                     <i className="fa-brands fa-whatsapp" style={{ fontSize: 18, marginRight: 6 }}></i>
                     <span>Inquire on WhatsApp</span>
                   </a>
-                  <button className="btn btn-light" onClick={() => navigate('How it works')}>
+                  <a
+                    href="/how-it-works"
+                    className="btn btn-light"
+                    onClick={(e) => handleNavClick(e, 'How it works')}
+                  >
                     Explore how it works <span>▶</span>
-                  </button>
+                  </a>
                 </div>
                 <div className="hero-note">
                   <span><i className="fa-solid fa-check" style={{ color: '#16a34a', marginRight: 5 }}></i>Instant 60-Second Setup</span>
@@ -1256,26 +1294,226 @@ export default function App() {
                   <span><i className="fa-solid fa-check" style={{ color: '#16a34a', marginRight: 5 }}></i>Your customers stay in control</span>
                 </div>
               </div>
-              <div className="hero-art">
+
+              {/* ROTATING FEATURE SHOWCASE CAROUSEL (SCREENSHOT 4 ENHANCEMENT) */}
+              <div
+                className="hero-art rf-hero-carousel-container"
+                onMouseEnter={() => setHeroSlidePaused(true)}
+                onMouseLeave={() => setHeroSlidePaused(false)}
+              >
                 <div className="art-glow"></div>
-                <div className="float-pill pill-top">✦ AI-powered drafts <span className="pill-dot"></span></div>
-                <div className="review-card">
-                  <div className="review-card-top">
-                    <div className="avatar">SR</div>
-                    <div><b>Customer experience</b><small>Just now · Example preview</small></div>
-                    <span className="dots">•••</span>
+
+                {/* Left/Right Arrow Controls */}
+                <button
+                  type="button"
+                  className="rf-carousel-nav-btn rf-carousel-prev"
+                  onClick={() => setHeroSlide(prev => (prev - 1 + 5) % 5)}
+                  aria-label="Previous slide"
+                  title="Previous slide"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  className="rf-carousel-nav-btn rf-carousel-next"
+                  onClick={() => setHeroSlide(prev => (prev + 1) % 5)}
+                  aria-label="Next slide"
+                  title="Next slide"
+                >
+                  ›
+                </button>
+
+                <div className="rf-carousel-viewport">
+                  {/* SLIDE 0: 5-STAR REVIEW & AI RESPONSE DRAFT */}
+                  <div className={`rf-carousel-slide ${heroSlide === 0 ? 'active' : ''}`}>
+                    <div className="rf-carousel-badge-top">✦ AI-Powered Review Drafts</div>
+                    <div className="review-card">
+                      <div className="review-card-top">
+                        <div className="avatar">SR</div>
+                        <div><b>Customer experience</b><small>Just now · Example preview</small></div>
+                        <span className="dots">•••</span>
+                      </div>
+                      <div className="stars">★★★★★</div>
+                      <h3>“Such a lovely experience!”</h3>
+                      <p>The team was welcoming, attentive, and made everything feel effortless. I’ll definitely be back.</p>
+                      <div className="card-divider"></div>
+                      <div className="ai-label">✦ Suggested response</div>
+                      <p className="reply">Thank you for your kind words! We’re so glad you had a great experience and look forward to welcoming you again.</p>
+                      <button className="copy-demo" onClick={() => copy('Thank you for your kind words! We’re so glad you had a great experience and look forward to welcoming you again.')}>Copy response</button>
+                    </div>
+                    <div className="rf-carousel-badge-bottom"><span className="green-check">✓</span> Feedback made simple</div>
                   </div>
-                  <div className="stars">★★★★★</div>
-                  <h3>“Such a lovely experience!”</h3>
-                  <p>The team was welcoming, attentive, and made everything feel effortless. I’ll definitely be back.</p>
-                  <div className="card-divider"></div>
-                  <div className="ai-label">✦ Suggested response</div>
-                  <p className="reply">Thank you for your kind words! We’re so glad you had a great experience and look forward to welcoming you again.</p>
-                  <button className="copy-demo" onClick={() => copy('Thank you for your kind words! We’re so glad you had a great experience and look forward to welcoming you again.')}>Copy response</button>
+
+                  {/* SLIDE 1: PRINT-READY SMART QR FLYER & STANDEE */}
+                  <div className={`rf-carousel-slide ${heroSlide === 1 ? 'active' : ''}`}>
+                    <div className="rf-carousel-badge-top">📱 Instant Camera Scan</div>
+                    <div className="rf-slide-card rf-slide-standee">
+                      <div className="rf-standee-header">
+                        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                        <span>Official Google Review Standee</span>
+                      </div>
+                      <div className="rf-standee-qr-frame">
+                        <svg viewBox="0 0 100 100" width="100%" height="100%">
+                          <rect x="5" y="5" width="28" height="28" fill="#166534" rx="4"/>
+                          <rect x="9" y="9" width="20" height="20" fill="#ffffff" rx="2"/>
+                          <rect x="13" y="13" width="12" height="12" fill="#166534" rx="2"/>
+                          <rect x="67" y="5" width="28" height="28" fill="#166534" rx="4"/>
+                          <rect x="71" y="9" width="20" height="20" fill="#ffffff" rx="2"/>
+                          <rect x="75" y="13" width="12" height="12" fill="#166534" rx="2"/>
+                          <rect x="5" y="67" width="28" height="28" fill="#166534" rx="4"/>
+                          <rect x="9" y="71" width="20" height="20" fill="#ffffff" rx="2"/>
+                          <rect x="13" y="75" width="12" height="12" fill="#166534" rx="2"/>
+                          <rect x="38" y="12" width="6" height="6" fill="#166534"/>
+                          <rect x="48" y="8" width="8" height="8" fill="#166534"/>
+                          <rect x="40" y="24" width="8" height="6" fill="#166534"/>
+                          <rect x="12" y="42" width="8" height="8" fill="#166534"/>
+                          <rect x="25" y="45" width="8" height="8" fill="#166534"/>
+                          <rect x="68" y="42" width="8" height="6" fill="#166534"/>
+                          <rect x="80" y="46" width="8" height="8" fill="#166534"/>
+                          <rect x="42" y="42" width="16" height="16" fill="#16a34a" rx="4"/>
+                          <text x="50" y="54" fontSize="11" fill="#ffffff" textAnchor="middle" fontWeight="bold">★</text>
+                          <rect x="40" y="68" width="6" height="12" fill="#166534"/>
+                          <rect x="52" y="72" width="10" height="8" fill="#166534"/>
+                          <rect x="68" y="68" width="8" height="8" fill="#166534"/>
+                          <rect x="80" y="75" width="8" height="12" fill="#166534"/>
+                        </svg>
+                      </div>
+                      <h4 className="rf-standee-title">Review Us in 15 Seconds</h4>
+                      <p className="rf-standee-sub">Scan camera → tap 5 stars → AI writes tailored review without typing!</p>
+                      <div className="rf-standee-pills">
+                        <span className="rf-standee-pill"><i className="fa-solid fa-file-pdf"></i> Print-Ready A6</span>
+                        <span className="rf-standee-pill"><i className="fa-solid fa-bolt"></i> No App Required</span>
+                        <span className="rf-standee-pill"><i className="fa-solid fa-store"></i> Acrylic Standee</span>
+                      </div>
+                    </div>
+                    <div className="rf-carousel-badge-bottom">✓ Acrylic Counter Standees</div>
+                  </div>
+
+                  {/* SLIDE 2: MULTI-LOCATION LIVE ANALYTICS CONSOLE */}
+                  <div className={`rf-carousel-slide ${heroSlide === 2 ? 'active' : ''}`}>
+                    <div className="rf-carousel-badge-top">📊 Live Google Maps Sync</div>
+                    <div className="rf-slide-card rf-slide-analytics">
+                      <div className="rf-analytics-head">
+                        <h4>Multi-Location Analytics</h4>
+                        <span className="rf-analytics-live-tag"><span className="pulse"></span> LIVE SYNC</span>
+                      </div>
+                      <div className="rf-analytics-grid">
+                        <div className="rf-stat-card">
+                          <div className="rf-stat-val">1,480</div>
+                          <div className="rf-stat-lbl">Reviews</div>
+                          <div className="rf-stat-growth">▲ +284%</div>
+                        </div>
+                        <div className="rf-stat-card">
+                          <div className="rf-stat-val">4.9 ★</div>
+                          <div className="rf-stat-lbl">Rating</div>
+                          <div className="rf-stat-growth">Top 1%</div>
+                        </div>
+                        <div className="rf-stat-card">
+                          <div className="rf-stat-val">98.4%</div>
+                          <div className="rf-stat-lbl">CSAT</div>
+                          <div className="rf-stat-growth">Verified</div>
+                        </div>
+                      </div>
+                      <div className="rf-analytics-bars">
+                        <div className="rf-bar-row">
+                          <span style={{ width: 44, fontWeight: 700, color: '#15803d' }}>5 Star</span>
+                          <div className="rf-bar-track"><div className="rf-bar-fill" style={{ width: '92%', background: '#16a34a' }}></div></div>
+                          <span style={{ width: 34, textAlign: 'right', fontWeight: 700 }}>92%</span>
+                        </div>
+                        <div className="rf-bar-row">
+                          <span style={{ width: 44, fontWeight: 600, color: '#475569' }}>4 Star</span>
+                          <div className="rf-bar-track"><div className="rf-bar-fill" style={{ width: '6%', background: '#86efac' }}></div></div>
+                          <span style={{ width: 34, textAlign: 'right', fontWeight: 600 }}>6%</span>
+                        </div>
+                        <div className="rf-bar-row">
+                          <span style={{ width: 44, fontWeight: 600, color: '#c2410c' }}>1-3 Star</span>
+                          <div className="rf-bar-track"><div className="rf-bar-fill" style={{ width: '2%', background: '#fed7aa' }}></div></div>
+                          <span style={{ width: 34, textAlign: 'right', fontWeight: 600, color: '#ea580c' }}>0%*</span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 10, color: '#64748b', marginTop: 10, textAlign: 'center' }}>
+                        *Negative feedback routed privately — 0 public 1-stars!
+                      </div>
+                    </div>
+                    <div className="rf-carousel-badge-bottom">✓ Multi-Location Performance</div>
+                  </div>
+
+                  {/* SLIDE 3: 100% PRIVATE NEGATIVE FEEDBACK SHIELD */}
+                  <div className={`rf-carousel-slide ${heroSlide === 3 ? 'active' : ''}`}>
+                    <div className="rf-carousel-badge-top">🛡️ Zero Public 1-Star Damage</div>
+                    <div className="rf-slide-card rf-slide-shield">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: '#0f172a' }}>Negative Feedback Filter</span>
+                        <span style={{ color: '#ea580c', fontSize: 14 }}>★★☆☆☆</span>
+                      </div>
+                      <div className="rf-shield-banner">
+                        <div className="rf-shield-banner-title">
+                          <i className="fa-solid fa-shield-halved"></i> 100% Private Shield Triggered
+                        </div>
+                        <p className="rf-shield-banner-desc">
+                          1 & 2-star reviews are instantly intercepted away from public Google Maps into private owner WhatsApp & dashboard!
+                        </p>
+                      </div>
+                      <div className="rf-shield-steps">
+                        <div className="rf-shield-step-item">
+                          <div className="rf-shield-step-icon" style={{ background: '#dcfce7', color: '#15803d' }}>✓</div>
+                          <span>Google Maps public 5-star rating 100% protected</span>
+                        </div>
+                        <div className="rf-shield-step-item">
+                          <div className="rf-shield-step-icon" style={{ background: '#ffedd5', color: '#c2410c' }}>🔔</div>
+                          <span>Owner alerted instantly via private WhatsApp</span>
+                        </div>
+                        <div className="rf-shield-step-item">
+                          <div className="rf-shield-step-icon" style={{ background: '#e0f2fe', color: '#0369a1' }}>🤝</div>
+                          <span>Issue solved directly with customer in 10 minutes</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="rf-carousel-badge-bottom">✓ Turn Angry Customers into Fans</div>
+                  </div>
+
+                  {/* SLIDE 4: MULTI-LANGUAGE DRAFTS GENERATOR */}
+                  <div className={`rf-carousel-slide ${heroSlide === 4 ? 'active' : ''}`}>
+                    <div className="rf-carousel-badge-top">🌐 24+ Languages Supported</div>
+                    <div className="rf-slide-card rf-slide-lang">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                        <h4 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#0f172a' }}>Instant AI Review in Any Language</h4>
+                        <span style={{ fontSize: 10, background: '#f0fdf4', color: '#15803d', fontWeight: 800, padding: '2px 8px', borderRadius: 999 }}>AUTO-DETECT</span>
+                      </div>
+                      <div className="rf-lang-selector-row">
+                        <button type="button" className={`rf-lang-btn ${heroLangTab === 'gu' ? 'active' : ''}`} onClick={() => setHeroLangTab('gu')}>ગુજરાતી</button>
+                        <button type="button" className={`rf-lang-btn ${heroLangTab === 'hi' ? 'active' : ''}`} onClick={() => setHeroLangTab('hi')}>हिंदी</button>
+                        <button type="button" className={`rf-lang-btn ${heroLangTab === 'en' ? 'active' : ''}`} onClick={() => setHeroLangTab('en')}>English</button>
+                      </div>
+                      <div className="rf-lang-quote-box">
+                        <p className="rf-lang-quote-text">
+                          {heroLangTab === 'gu' && '“ખૂબ જ ઉત્કૃષ્ટ સર્વિસ અને સ્ટાફ ખૂબ સહાયક હતો! બધું જ સમયસર પત્યું અને વાતાવરણ ખૂબ સરસ હતું.”'}
+                          {heroLangTab === 'hi' && '“शानदार अनुभव और बहुत ही बढ़िया सर्विस! स्टाफ का व्यवहार बहुत विनम्र और मददगार था।”'}
+                          {heroLangTab === 'en' && '“Outstanding customer service and extremely courteous staff! Everything was handled smoothly.”'}
+                        </p>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: '#64748b' }}>
+                        <span><i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> 1-Tap Copy & Post</span>
+                        <span style={{ color: '#16a34a', fontWeight: 700 }}>5.0 ★ Google Ready</span>
+                      </div>
+                    </div>
+                    <div className="rf-carousel-badge-bottom">✓ Solves Writer's Block Instantly</div>
+                  </div>
                 </div>
-                <div className="float-pill pill-bottom"><span className="green-check">✓</span> Feedback made simple</div>
-                <div className="sparkle s1">✳</div>
-                <div className="sparkle s2">✦</div>
+
+                {/* Dot Indicators */}
+                <div className="rf-carousel-indicators">
+                  {[0, 1, 2, 3, 4].map(idx => (
+                    <button
+                      key={idx}
+                      type="button"
+                      className={`rf-carousel-dot ${heroSlide === idx ? 'active' : ''}`}
+                      onClick={() => setHeroSlide(idx)}
+                      aria-label={`Go to slide ${idx + 1}`}
+                      title={`Slide ${idx + 1} of 5`}
+                    />
+                  ))}
+                </div>
               </div>
             </section>
 
@@ -1348,7 +1586,7 @@ export default function App() {
                   <div className="eyebrow">TRY THE LIVE DEMO</div>
                   <h2>Make it easy to say<br /><em>something wonderful.</em></h2>
                   <p>Explore a sample customer flow. Choose a rating, describe a real experience, and see editable draft suggestions.</p>
-                  <button className="btn btn-dark" onClick={() => navigate('Try the demo')}>Try review assistant →</button>
+                  <a href="/try-demo" className="btn btn-dark" onClick={(e) => handleNavClick(e, 'Try the demo')}>Try review assistant →</a>
                 </div>
                 <div className="mini-dashboard">
                   <div className="mini-top">
@@ -1382,8 +1620,8 @@ export default function App() {
                     <li className="sr-reply-bullet"><i className="fa-solid fa-circle-check"></i> <div><strong>Local SEO Keyword Injections:</strong> Mentions your top services and city naturally to boost rankings.</div></li>
                   </ul>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <button className="btn btn-white" onClick={() => navigate('Account')}>Activate Autopilot Replies →</button>
-                    <button className="btn btn-light" onClick={() => navigate('Reply assistant')}>Try Reply Assistant</button>
+                    <a href="/register" className="btn btn-white" onClick={(e) => handleNavClick(e, 'Account', true)}>Activate Autopilot Replies →</a>
+                    <a href="/reply-assistant" className="btn btn-light" onClick={(e) => handleNavClick(e, 'Reply assistant')}>Try Reply Assistant</a>
                   </div>
                 </div>
                 <div className="sr-reply-mock">
@@ -1495,7 +1733,7 @@ export default function App() {
                       <li><i className="fa-solid fa-circle-check"></i> Boosts Google Maps 3-Pack local ranking with authentic keyword velocity</li>
                     </ul>
                     <div style={{ marginTop: 20 }}>
-                      <button className="btn btn-dark btn-sm" onClick={() => navigate('How it works')}>Explore full roadmap &amp; comparison →</button>
+                      <a href="/how-it-works" className="btn btn-dark btn-sm" onClick={(e) => handleNavClick(e, 'How it works')}>Explore full roadmap &amp; comparison →</a>
                     </div>
                   </div>
                   <div className="sr-step-preview">
@@ -1870,7 +2108,7 @@ export default function App() {
                   >
                     <i className="fa-brands fa-whatsapp"></i> Inquire on WhatsApp
                   </a>
-                <button className="rf-btn-signin" onClick={() => navigate('Try the demo')}>Try live demo →</button>
+                <a href="/try-demo" className="rf-btn-signin" onClick={(e) => handleNavClick(e, 'Try the demo')}>Try live demo →</a>
               </div>
             </div>
           </div>
@@ -2360,13 +2598,13 @@ export default function App() {
 
                     <div className="rf-agency-footer-links">
                       <span>Looking for a single business plan? </span>
-                      <button type="button" onClick={() => navigate('Pricing')} className="rf-sub-link">
+                      <a href="/pricing" onClick={(e) => handleNavClick(e, 'Pricing')} className="rf-sub-link">
                         View Standard Plans
-                      </button>
+                      </a>
                       <span> · </span>
-                      <button type="button" onClick={() => navigate('Account')} className="rf-sub-link">
+                      <a href="/login" onClick={(e) => handleNavClick(e, 'Account', false)} className="rf-sub-link">
                         Sign In
-                      </button>
+                      </a>
                     </div>
                   </form>
                 )}
@@ -2407,11 +2645,11 @@ export default function App() {
           <div className="rf-login-container">
             {/* ═══════ LEFT COLUMN: LANDING SHOWCASE & TRUST (SCREENSHOT 4 MATCH) ═══════ */}
             <div className="rf-login-showcase">
-              <button type="button" className="rf-login-back-btn" onClick={() => navigate('Home')}>
+              <a href="/" className="rf-login-back-btn" onClick={(e) => handleNavClick(e, 'Home')}>
                 <i className="fa-solid fa-arrow-left"></i> Back to Homepage
-              </button>
+              </a>
 
-              <div className="rf-login-brand-row" onClick={() => navigate('Home')} style={{ cursor: 'pointer' }} title="Return to Homepage">
+              <a href="/" className="rf-login-brand-row" onClick={(e) => handleNavClick(e, 'Home')} title="Return to Homepage">
                 <div className="rf-login-brand-icon">
                   <i className="fa-solid fa-star"></i>
                 </div>
@@ -2419,7 +2657,7 @@ export default function App() {
                   <div className="rf-login-brand-name">StarReview <span>AI</span></div>
                   <div className="rf-login-brand-motto">Helping customers share better reviews</div>
                 </div>
-              </div>
+              </a>
 
               <div className="rf-login-badge">
                 <span className="rf-login-badge-dot"></span>
@@ -2785,18 +3023,34 @@ export default function App() {
                       'High quality work',
                       'Great value for money',
                       'Highly recommended!'
-                    ].map(chip => (
-                      <button
-                        key={chip}
-                        type="button"
-                        className="sr-chip-tag"
-                        onClick={() => {
-                          setExperience(prev => prev ? `${prev}, ${chip.toLowerCase()}` : chip);
-                        }}
-                      >
-                        + {chip}
-                      </button>
-                    ))}
+                    ].map(chip => {
+                      const cleanCore = chip.toLowerCase().replace(/[!.]/g, '').trim();
+                      const isAdded = experience.toLowerCase().includes(cleanCore);
+                      return (
+                        <button
+                          key={chip}
+                          type="button"
+                          className={`sr-chip-tag ${isAdded ? 'active added' : ''}`}
+                          onClick={() => {
+                            if (isAdded) {
+                              notify(`"${chip}" is already added to review.`);
+                              return;
+                            }
+                            setExperience(prev => {
+                              const trimmed = (prev || '').trim();
+                              if (!trimmed) return `${chip}.`;
+                              if (trimmed.endsWith('.') || trimmed.endsWith('!')) {
+                                return `${trimmed} ${chip}.`;
+                              }
+                              return `${trimmed}, ${chip.toLowerCase()}.`;
+                            });
+                          }}
+                          title={isAdded ? 'Already added to review' : `Tap to add "${chip}"`}
+                        >
+                          {isAdded ? `✓ ${chip}` : `+ ${chip}`}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
                 <textarea
@@ -3124,7 +3378,7 @@ export default function App() {
             ) : (
               <>
                 <p>StarReview AI helps local businesses create a clear customer feedback workflow, prepare editable review drafts, and understand feedback trends.</p>
-                <button className="btn btn-dark" onClick={() => navigate('Contact')}>Contact support →</button>
+                <a href="/contact" className="btn btn-dark" onClick={(e) => handleNavClick(e, 'Contact')}>Contact support →</a>
               </>
             )}
           </div>
@@ -3470,10 +3724,21 @@ function Footer({ navigate }) {
       <div className="wrap footer-container">
         {/* Brand Column */}
         <div className="footer-brand-box">
-          <button className="brand" onClick={() => navigate('Home')} style={{ textAlign: 'left', padding: 0 }}>
+          <a
+            href="/"
+            className="brand"
+            onClick={(e) => {
+              if (!e.metaKey && !e.ctrlKey && !e.shiftKey && e.button !== 1) {
+                e.preventDefault();
+                navigate('Home');
+              }
+            }}
+            style={{ textAlign: 'left', padding: 0 }}
+            title="StarReview AI Homepage"
+          >
             <span className="brand-mark">✦</span>
             <span>StarReview <b>AI</b></span>
-          </button>
+          </a>
           <div className="footer-brand-motto">Helping customers share better reviews</div>
           <p className="footer-brand-tagline">
             AI-Powered Google Review Growth System — helping local businesses gather authentic 5-star reviews, resolve private feedback, and boost Google Maps rankings.
@@ -3492,10 +3757,19 @@ function Footer({ navigate }) {
           <div className="footer-nav-col" key={col.title}>
             <h4>{col.title}</h4>
             {col.items.map(([label, target, badge]) => (
-              <button key={label} onClick={() => navigate(target)}>
+              <a
+                key={label}
+                href={slugMap[target] || '/'}
+                onClick={(e) => {
+                  if (!e.metaKey && !e.ctrlKey && !e.shiftKey && e.button !== 1) {
+                    e.preventDefault();
+                    navigate(target);
+                  }
+                }}
+              >
                 {label}
                 {badge && <span className="rf-footer-col-badge">{badge}</span>}
-              </button>
+              </a>
             ))}
           </div>
         ))}
@@ -3505,9 +3779,29 @@ function Footer({ navigate }) {
       <div className="wrap footer-bottom-bar">
         <span>© 2026 StarReview AI. All rights reserved.</span>
         <div>
-          <button onClick={() => navigate('Terms of service')}>Terms of Service</button>
+          <a
+            href="/terms"
+            onClick={(e) => {
+              if (!e.metaKey && !e.ctrlKey && !e.shiftKey && e.button !== 1) {
+                e.preventDefault();
+                navigate('Terms of service');
+              }
+            }}
+          >
+            Terms of Service
+          </a>
           <i>·</i>
-          <button onClick={() => navigate('Cookie policy')}>Cookie Policy</button>
+          <a
+            href="/cookies"
+            onClick={(e) => {
+              if (!e.metaKey && !e.ctrlKey && !e.shiftKey && e.button !== 1) {
+                e.preventDefault();
+                navigate('Cookie policy');
+              }
+            }}
+          >
+            Cookie Policy
+          </a>
         </div>
       </div>
     </footer>

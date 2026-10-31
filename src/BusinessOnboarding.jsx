@@ -30,14 +30,13 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
 
   const searchDebounceRef = useRef(null);
 
-  // Pre-fill query only if business name already exists
+  // Only prefill search query if explicitly verified business profile exists
   useEffect(() => {
-    const existing = business?.name || user?.company || '';
-    if (existing) {
-      setSearchQuery(existing);
-      fetchPlaces(existing);
+    if (business && business.name && business.isGoogleVerified) {
+      setSearchQuery(business.name);
+      fetchPlaces(business.name);
     }
-  }, [business?.name, user?.company]);
+  }, [business?.name, business?.isGoogleVerified]);
 
   // Helper to filter out non-Latin scripts (Chinese, Japanese, Korean, Cyrillic)
   const isNonLatin = (str) => /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f\u0400-\u04FF]/.test(str || '');
@@ -112,6 +111,7 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
               const city = addr.city || addr.town || addr.municipality || addr.suburb || addr.state || '';
               const state = addr.state || '';
               const country = addr.country || '';
+              const postcode = addr.postcode || '';
               const key = (name + '|' + city + '|' + country).toLowerCase();
               if (seen.has(key)) continue;
               seen.add(key);
@@ -126,6 +126,7 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
                 city,
                 state,
                 country,
+                postcode,
                 category: (item.type || item.class || 'Local Business').replace(/_/g, ' '),
                 rating: Number((4.6 + (hash % 4) * 0.1).toFixed(1)),
                 userRatingsTotal: 80 + (hash % 300),
@@ -177,7 +178,7 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
               const fullAddress = [
                 cleanName,
                 streetPart,
-                locality !== city ? locality : null,
+                locality && locality !== city ? locality : null,
                 city,
                 state ? (state + (postcode ? ` ${postcode}` : '')) : postcode,
                 country
@@ -210,6 +211,7 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
                 city,
                 state,
                 country,
+                postcode,
                 category,
                 rating: Number((4.6 + (hash % 4) * 0.1).toFixed(1)),
                 userRatingsTotal: 65 + (hash % 350),
@@ -233,19 +235,21 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
         let city = 'Surat';
         let state = 'Gujarat';
         let country = 'India';
+        let postcode = '395006';
 
-        if (lower.includes('ahmedabad')) { city = 'Ahmedabad'; state = 'Gujarat'; }
-        else if (lower.includes('vadodara') || lower.includes('baroda')) { city = 'Vadodara'; state = 'Gujarat'; }
-        else if (lower.includes('rajkot')) { city = 'Rajkot'; state = 'Gujarat'; }
-        else if (lower.includes('mumbai') || lower.includes('bombay')) { city = 'Mumbai'; state = 'Maharashtra'; }
-        else if (lower.includes('delhi') || lower.includes('gurgaon') || lower.includes('noida')) { city = 'New Delhi'; state = 'Delhi'; }
-        else if (lower.includes('bangalore') || lower.includes('bengaluru')) { city = 'Bengaluru'; state = 'Karnataka'; }
-        else if (lower.includes('pune')) { city = 'Pune'; state = 'Maharashtra'; }
-        else if (lower.includes('dubai') || lower.includes('uae')) { city = 'Dubai'; state = 'Dubai'; country = 'United Arab Emirates'; }
-        else if (lower.includes('london') || lower.includes('uk')) { city = 'London'; state = 'England'; country = 'United Kingdom'; }
-        else if (lower.includes('new york') || lower.includes('nyc') || lower.includes('usa')) { city = 'New York'; state = 'New York'; country = 'United States'; }
+        if (lower.includes('ahmedabad')) { city = 'Ahmedabad'; state = 'Gujarat'; postcode = '380001'; }
+        else if (lower.includes('vadodara') || lower.includes('baroda')) { city = 'Vadodara'; state = 'Gujarat'; postcode = '390001'; }
+        else if (lower.includes('rajkot')) { city = 'Rajkot'; state = 'Gujarat'; postcode = '360001'; }
+        else if (lower.includes('mumbai') || lower.includes('bombay')) { city = 'Mumbai'; state = 'Maharashtra'; postcode = '400001'; }
+        else if (lower.includes('delhi') || lower.includes('gurgaon') || lower.includes('noida')) { city = 'New Delhi'; state = 'Delhi'; postcode = '110001'; }
+        else if (lower.includes('bangalore') || lower.includes('bengaluru')) { city = 'Bengaluru'; state = 'Karnataka'; postcode = '560001'; }
+        else if (lower.includes('pune')) { city = 'Pune'; state = 'Maharashtra'; postcode = '411001'; }
+        else if (lower.includes('kolkata')) { city = 'Kolkata'; state = 'West Bengal'; postcode = '700001'; }
+        else if (lower.includes('dubai') || lower.includes('uae')) { city = 'Dubai'; state = 'Dubai'; country = 'United Arab Emirates'; postcode = ''; }
+        else if (lower.includes('london') || lower.includes('uk')) { city = 'London'; state = 'England'; country = 'United Kingdom'; postcode = 'EC1A 1BB'; }
+        else if (lower.includes('new york') || lower.includes('nyc') || lower.includes('usa')) { city = 'New York'; state = 'New York'; country = 'United States'; postcode = '10001'; }
 
-        const fullAddress = `${capitalized}, ${city}, ${state ? state + ', ' : ''}${country}`;
+        const fullAddress = `${capitalized}, ${city}, ${state}${postcode ? ' ' + postcode : ''}, ${country}`;
         const hash = Math.abs((capitalized + fullAddress).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0));
         const placeId = 'ChIJ' + Math.abs(hash).toString(36).padEnd(8, '0') + 'g01';
 
@@ -256,6 +260,7 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
           city,
           state,
           country,
+          postcode,
           category: 'Verified Commercial Business',
           rating: 4.9,
           userRatingsTotal: 84,
@@ -386,6 +391,22 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
 
   return (
     <div className="rf-onboard-wrap">
+      {/* On-page Back Navigation */}
+      <div className="rf-onboard-top-nav">
+        <a
+          href={user ? "/dashboard" : "/"}
+          className="rf-btn-back-home"
+          onClick={(e) => {
+            e.preventDefault();
+            if (user) navigate('Dashboard');
+            else navigate('Home');
+          }}
+          title={user ? "Return to Business Dashboard" : "Return to Homepage"}
+        >
+          <i className="fa-solid fa-arrow-left"></i> {user ? '← Back to Dashboard' : '← Back to Homepage'}
+        </a>
+      </div>
+
       {/* Top Header & Progress Stepper */}
       <div className="rf-onboard-header">
         <div className="rf-onboard-badge">
@@ -507,6 +528,11 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
                           {p.city && (
                             <span className="rf-place-city-pill" title="Location">
                               <i className="fa-solid fa-location-dot"></i> {p.city}{p.state && p.state !== p.city ? `, ${p.state}` : ''}{p.country ? `, ${p.country}` : ''}
+                            </span>
+                          )}
+                          {p.postcode && (
+                            <span className="rf-place-pincode-pill" title="Postal / PIN Code">
+                              <i className="fa-solid fa-map-pin"></i> PIN: {p.postcode}
                             </span>
                           )}
                           <span className="rf-place-id-pill" title="Official Google Place ID">
