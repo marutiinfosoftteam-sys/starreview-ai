@@ -553,11 +553,16 @@ export function QrFlyer({ business, cfg, notify, navigate, initialMode }) {
   const [wa, setWa] = useState(cfg?.whatsappNumber || '');
   const [waMsg, setWaMsg] = useState('Hi! I would like to share my feedback.');
   const [color, setColor] = useState(business?.brandColor || '#1d4934');
-  const [headline, setHeadline] = useState('Enjoyed your visit?');
-  const [sub, setSub] = useState('Scan the code and share your experience in 30 seconds.');
+  const [headline, setHeadline] = useState(initialMode === 'paymentDemo' ? 'Scan to Pay or View Plans' : 'Enjoyed your visit?');
+  const [sub, setSub] = useState(initialMode === 'paymentDemo' ? 'Scan with any UPI or payment app to test simulated checkout.' : 'Scan the code and share your experience in 30 seconds.');
   const [qr, setQr] = useState('');
   const name = business?.name || 'Your business';
   useEffect(() => { if (cfg?.whatsappNumber && !wa) setWa(cfg.whatsappNumber); }, [cfg]);
+
+  // Auto-generate QR on mount or mode switch
+  useEffect(() => {
+    makeQr();
+  }, [mode]);
 
   const target = async () => {
     let t = '';
@@ -595,7 +600,28 @@ export function QrFlyer({ business, cfg, notify, navigate, initialMode }) {
     a.href = URL.createObjectURL(blob); a.download = mode === 'paymentDemo' ? 'razorpay-demo-payment-flyer-a6.png' : 'review-flyer-a6.png'; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   };
-  const tab = (id, label) => <button type="button" className={mode === id ? 'selected' : ''} onClick={() => { setMode(id); setQr(''); }}>{label}</button>;
+  const tab = (id, label) => (
+    <button
+      type="button"
+      className={mode === id ? 'selected' : ''}
+      onClick={() => {
+        setMode(id);
+        setQr('');
+        if (id === 'paymentDemo') {
+          setHeadline('Scan to Pay or View Plans');
+          setSub('Scan with any UPI or payment app to test simulated checkout.');
+        } else if (id === 'whatsapp') {
+          setHeadline('Need Quick Help?');
+          setSub('Scan to chat with our team directly on WhatsApp.');
+        } else {
+          setHeadline('Enjoyed your visit?');
+          setSub('Scan the code and share your experience in 30 seconds.');
+        }
+      }}
+    >
+      {label}
+    </button>
+  );
   return (
     <div className="rf-flyer-tool-wrap">
       <div className="tool-layout rf-tool-layout-responsive">
@@ -617,7 +643,28 @@ export function QrFlyer({ business, cfg, notify, navigate, initialMode }) {
           )}
           {mode === 'whatsapp' && <><label>WhatsApp number with country code<input value={wa} onChange={e => setWa(e.target.value)} placeholder="919876543210" /></label><label>Pre-filled message<textarea rows="2" value={waMsg} onChange={e => setWaMsg(e.target.value)} /></label></>}
           {mode === 'url' && <label>Link<input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://your-link.com" /></label>}
-          {mode === 'paymentDemo' && <div className="notice"><strong>Payment flow demo — no real money</strong><p>This QR opens the built-in demo checkout where you can select a plan and simulate success or failure. No Razorpay transaction is created.</p><small>On the same Wi-Fi, the generator tries to use your computer’s local network IP for phone scanning. For testing outside your Wi-Fi, deploy the site to an HTTPS URL.</small></div>}
+          {mode === 'paymentDemo' && (
+            <div className="notice" style={{ background: '#f0fdf4', borderColor: '#bbf7d0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <i className="fa-solid fa-credit-card" style={{ color: '#16a34a' }}></i>
+                <strong style={{ color: '#166534' }}>Razorpay Payment Flow Simulator</strong>
+              </div>
+              <p style={{ color: '#15803d', margin: '4px 0 10px', fontSize: 13, lineHeight: 1.5 }}>
+                This QR opens the live safe demo checkout. Customers can select a plan and test the Razorpay payment modal with zero real money charged.
+              </p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn btn-dark"
+                  style={{ fontSize: 12, padding: '7px 14px' }}
+                  onClick={() => navigate('Demo checkout')}
+                >
+                  <i className="fa-solid fa-arrow-up-right-from-square" style={{ marginRight: 6 }}></i>
+                  Test Demo Checkout Page Now
+                </button>
+              </div>
+            </div>
+          )}
           <label>Headline<input value={headline} onChange={e => setHeadline(e.target.value)} /></label>
           <label>Sub text<textarea rows="2" value={sub} onChange={e => setSub(e.target.value)} /></label>
           <label className="rf-color-picker-label">

@@ -89,6 +89,8 @@ export const routeMap = {
   '/multi-business': 'Multi-business plan',
   '/agency': 'Apply for agency',
   '/business-onboard': 'Business onboarding',
+  '/business-onboarding': 'Business onboarding',
+  '/payment-demo': 'Payment QR Demo',
   '/privacy': 'Privacy policy',
   '/terms': 'Terms of service',
   '/cookies': 'Cookie policy',
@@ -97,7 +99,13 @@ export const routeMap = {
   '/admin': 'Dashboard'
 };
 
-export const slugMap = Object.fromEntries(Object.entries(routeMap).map(([path, name]) => [name, path]));
+export const slugMap = {
+  ...Object.fromEntries(Object.entries(routeMap).map(([path, name]) => [name, path])),
+  'Business Onboard': '/business-onboard',
+  'Business onboarding': '/business-onboard',
+  'Payment demo': '/payment-demo',
+  'Demo checkout': '/demo-checkout'
+};
 
 export default function App() {
   const getReviewSlug = () => {
@@ -146,6 +154,9 @@ export default function App() {
     if (p === '/index.php' || p === '/index.html' || p === '/dashboard' || p === '/console' || p === '/admin') {
       return hasStoredUser ? 'Dashboard' : 'Account';
     }
+    if (p === '/business-onboard' || p === '/business-onboarding') return 'Business onboarding';
+    if (p === '/payment-demo') return 'Payment QR Demo';
+    if (p === '/demo-checkout') return 'Demo checkout';
     return routeMap[p] || 'Home';
   };
 
@@ -3342,6 +3353,72 @@ export default function App() {
         </PageShell>
       )}
 
+            {page === 'Demo checkout' && (
+        <PageShell
+          title="Safe Demo Payment Checkout"
+          subtitle="Test the live Razorpay payment simulator. No real money or bank deduction is made."
+        >
+          <div className="account-card" style={{ maxWidth: 540 }}>
+            <div className="large-mark" style={{ background: '#dcfce7', color: '#15803d' }}>
+              <i className="fa-solid fa-credit-card"></i>
+            </div>
+            <h3>Razorpay Payment Simulator</h3>
+            <p>
+              Experience the seamless checkout flow that customers see when scanning your payment flyer or choosing a subscription plan.
+            </p>
+
+            <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '18px 20px', marginBottom: 22, textAlign: 'left' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <span style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>Recipient Business:</span>
+                <strong style={{ fontSize: 14, color: '#0f172a' }}>{business || 'Team Maruti InfoSoft'}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <span style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>Selected Service / Plan:</span>
+                <span style={{ background: '#dcfce7', color: '#166534', fontWeight: 700, fontSize: 12, padding: '3px 9px', borderRadius: 6 }}>
+                  StarReview Starter Plan
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, borderTop: '1px solid #e2e8f0' }}>
+                <span style={{ fontSize: 14, color: '#0f172a', fontWeight: 700 }}>Total Demo Amount:</span>
+                <strong style={{ fontSize: 20, color: '#15803d', fontWeight: 800 }}>₹999</strong>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 12, flexDirection: 'column' }}>
+              <button
+                type="button"
+                className="btn btn-dark full"
+                style={{ padding: '14px 20px', fontSize: 15 }}
+                onClick={() => {
+                  setPaymentPlan({ name: 'Starter Plan (Monthly Demo)', price: '₹999', cycle: 'month', id: 'starter' });
+                  setPaymentStep('select');
+                  setRazorpayModal(true);
+                }}
+              >
+                <i className="fa-solid fa-lock" style={{ marginRight: 8 }}></i>
+                Open Razorpay Payment Simulator →
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-light full"
+                onClick={() => navigate('QR flyer')}
+              >
+                ← Back to QR Generator
+              </button>
+            </div>
+
+            <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, color: '#94a3b8', fontSize: 11 }}>
+              <span><i className="fa-solid fa-shield-halved" style={{ color: '#16a34a', marginRight: 4 }}></i>100% Test Sandbox</span>
+              <span>•</span>
+              <span><i className="fa-solid fa-bolt" style={{ color: '#16a34a', marginRight: 4 }}></i>Simulated Razorpay Modal</span>
+              <span>•</span>
+              <span>No Real Money Required</span>
+            </div>
+          </div>
+        </PageShell>
+      )}
+
       {page === 'Payment QR Demo' && (
         <PageShell title="Razorpay demo payment QR" subtitle="Generate a QR code customers can scan to open the safe demo checkout. No Razorpay connection or real payment is used.">
           <QrFlyer key={'payment-demo'} initialMode="paymentDemo" business={myBusiness} cfg={cfg} notify={notify} navigate={navigate} />
@@ -3429,7 +3506,7 @@ export default function App() {
         </PageShell>
       )}
 
-      {page === 'Business onboarding' && (
+      {(page === 'Business onboarding' || page === 'Business Onboard') && (
         <BusinessOnboarding
           user={user}
           business={myBusiness}

@@ -11449,3 +11449,147 @@ button.btn.btn-light:hover {
     gap: 12px !important;
   }
 }
+
+
+/* ====================================================================
+   RESPONSIVE FIXES: SIDE-BY-SIDE CAPABILITIES MOBILE CARDS (SCREENSHOT 3)
+   ==================================================================== */
+
+@media (max-width: 880px) {
+  .vs-table,
+  .vs-table thead,
+  .vs-table tbody,
+  .vs-table th,
+  .vs-table td,
+  .vs-table tr {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .vs-table thead {
+    display: none !important; /* Hide wide table headers on mobile */
+  }
+
+  .vs-table-wrapper {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  .vs-table tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+  }
+
+  .vs-table tr {
+    background: #ffffff !important;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    padding: 16px 14px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .vs-table td {
+    padding: 6px 0 !important;
+    border: none !important;
+  }
+
+  .feature-title-cell {
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    padding-bottom: 10px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    margin-bottom: 10px !important;
+  }
+
+  .feature-title-cell small {
+    display: block !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    margin-top: 4px !important;
+    line-height: 1.4 !important;
+  }
+
+  .vs-table td:nth-child(2) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 6px !important;
+  }
+
+  .vs-table td:nth-child(2)::before {
+    content: 'Basic QR Code:' !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #94a3b8 !important;
+  }
+
+  .vs-table td.rf-col {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: #f0fdf4 !important;
+    border-radius: 10px !important;
+    padding: 8px 10px !important;
+    margin-top: 4px !important;
+    border: 1px solid #bbf7d0 !important;
+  }
+
+  .vs-table td.rf-col::before {
+    content: 'StarReview AI:' !important;
+    font-size: 11.5px !important;
+    font-weight: 800 !important;
+    color: #166534 !important;
+  }
+}
+
+/* ====================================================================
+   RESPONSIVE FIXES: FOOTER ADAPTIVE DESIGN ACROSS ALL PAGES
+   ==================================================================== */
+
+@media (max-width: 900px) {
+  .footer-container {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 2rem !important;
+  }
+  .footer-brand-box {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 580px) {
+  .footer {
+    padding: 3rem 0 1.5rem !important;
+  }
+  .footer-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.85rem !important;
+    padding-bottom: 2rem !important;
+  }
+  .footer-nav-col {
+    width: 100% !important;
+  }
+  .footer-nav-col h4 {
+    margin-bottom: 8px !important;
+    font-size: 13.5px !important;
+    color: #82c99b !important;
+  }
+  .footer-nav-col a,
+  .footer-nav-col button {
+    padding: 6px 0 !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+  }
+  .footer-bottom-bar {
+    flex-direction: column !important;
+    gap: 10px !important;
+    text-align: center !important;
+  }
+}

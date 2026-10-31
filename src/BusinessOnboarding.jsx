@@ -3,9 +3,38 @@ import { api } from './api.js';
 import { resolveRealSuratAndGujaratPlaces } from './suratPlacesResolver.js';
 
 export default function BusinessOnboarding({ user, business, setBusiness, notify, navigate }) {
+  const [step, setStep] = useState(1); // 1: Search, 2: Confirm, 3: Success
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [placesList, setPlacesList] = useState([]);
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [manualMode, setManualMode] = useState(false);
+  const [copiedPlaceId, setCopiedPlaceId] = useState(false);
+
+  // Safely extract business string or object properties
+  const initialBizName = typeof business === 'string' ? business : (business?.name || '');
+  const [manualName, setManualName] = useState(initialBizName);
+  const [manualCategory, setManualCategory] = useState(business?.category || 'Retail Store');
+  const [manualCity, setManualCity] = useState(business?.city || 'Surat');
+  const [manualAddress, setManualAddress] = useState(business?.address || '');
+  const [manualReviewUrl, setManualReviewUrl] = useState(business?.googleReviewUrl || '');
+  const [manualPhone, setManualPhone] = useState(business?.phone || '');
+  const [manualWebsite, setManualWebsite] = useState(business?.website || '');
+
+  const searchDebounceRef = useRef(null);
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      fetchPlaces(val);
+    }, 280);
+  };
+
   // Step history management for browser back button support
   useEffect(() => {
-    /* rf-onboard-step-popstate */
     const handlePop = (e) => {
       if (e.state && e.state.step) {
         setStep(e.state.step);
@@ -19,38 +48,14 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
     return () => window.removeEventListener('popstate', handlePop);
   }, []);
 
-
-  
-
-  const [step, setStep] = useState(1); // 1: Search, 2: Confirm, 3: Success
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [placesList, setPlacesList] = useState([]);
-  const [selectedPlace, setSelectedPlace] = useState(null);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [manualMode, setManualMode] = useState(false);
-  const [copiedPlaceId, setCopiedPlaceId] = useState(false);
-
-  // Manual Form States
-  const [manualName, setManualName] = useState(business?.name || '');
-  const [manualCategory, setManualCategory] = useState(business?.category || 'Retail Store');
-  const [manualCity, setManualCity] = useState(business?.city || 'Surat');
-  const [manualAddress, setManualAddress] = useState(business?.address || '');
-  const [manualReviewUrl, setManualReviewUrl] = useState(business?.googleReviewUrl || '');
-  const [manualPhone, setManualPhone] = useState(business?.phone || '');
-  const [manualWebsite, setManualWebsite] = useState(business?.website || '');
-
-  const searchDebounceRef = useRef(null);
-
   // Only prefill search query if explicitly verified business profile exists
   useEffect(() => {
-    if (business && business.name && business.isGoogleVerified) {
+    if (business && typeof business === 'object' && business.name && business.isGoogleVerified) {
       setSearchQuery(business.name);
       fetchPlaces(business.name);
     }
   }, [business?.name, business?.isGoogleVerified]);
 
-  // Helper to filter out non-Latin scripts (Chinese, Japanese, Korean, Cyrillic)
   const isNonLatin = (str) => /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f\u0400-\u04FF]/.test(str || '');
 
   const wordMatches = (target, word) => {
@@ -168,6 +173,7 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
       console.error('Error fetching place details:', err);
       setSelectedPlace(p);
       setStep(2);
+    try { window.history.pushState({ page: 'Business onboarding', step: 2 }, '', '/business-onboard?step=2'); } catch (_) {}
     } finally {
       setIsSearching(false);
     }
@@ -194,15 +200,15 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
       if (r.ok && r.data && r.data.business) {
         if (setBusiness) setBusiness(r.data.business);
         notify('✓ Successfully connected to official Google Places API!');
-        setStep(3);
+        setStep(3); try { window.history.pushState({ page: 'Business onboarding', step: 3 }, '', '/business-onboard?step=3'); } catch (_) {}
       } else {
         notify('Connected Google listing successfully.');
-        setStep(3);
+        setStep(3); try { window.history.pushState({ page: 'Business onboarding', step: 3 }, '', '/business-onboard?step=3'); } catch (_) {}
       }
     } catch (err) {
       console.error('Connect error:', err);
       notify('Business connected.');
-      setStep(3);
+      setStep(3); try { window.history.pushState({ page: 'Business onboarding', step: 3 }, '', '/business-onboard?step=3'); } catch (_) {}
     } finally {
       setIsConnecting(false);
     }
@@ -235,11 +241,11 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
         if (setBusiness) setBusiness(r.data.business);
       }
       notify('✓ Business profile saved successfully!');
-      setStep(3);
+      setStep(3); try { window.history.pushState({ page: 'Business onboarding', step: 3 }, '', '/business-onboard?step=3'); } catch (_) {}
     } catch (err) {
       console.error('Manual save error:', err);
       notify('Profile saved.');
-      setStep(3);
+      setStep(3); try { window.history.pushState({ page: 'Business onboarding', step: 3 }, '', '/business-onboard?step=3'); } catch (_) {}
     } finally {
       setIsConnecting(false);
     }
@@ -555,7 +561,7 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
             <button
               type="button"
               className="btn btn-light"
-              onClick={() => { setStep(1); try { window.history.pushState({ page: 'Business Onboard', step: 1 }, '', '/business-onboard'); } catch (_) {} }}
+              onClick={() => { setStep(1); try { window.history.pushState({ page: 'Business onboarding', step: 1 }, '', '/business-onboard'); } catch (_) {} }}
             >
               ← Search Different Business
             </button>
