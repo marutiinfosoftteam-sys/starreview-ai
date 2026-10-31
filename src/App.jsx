@@ -162,6 +162,15 @@ export default function App() {
 
   const reviewSlug = getReviewSlug() || 'demo';
   const [page, setPage] = useState(pageFromPath);
+  const [lastPublicPage, setLastPublicPage] = useState(() => {
+    const p = pageFromPath();
+    return (p !== 'Dashboard' && p !== 'Account') ? p : 'Home';
+  });
+
+  const goBackToWebsite = () => {
+    const target = lastPublicPage && lastPublicPage !== 'Dashboard' ? lastPublicPage : 'Home';
+    navigate(target);
+  };
   const [menu, setMenu] = useState(false);
 
   useEffect(() => {
@@ -350,6 +359,7 @@ export default function App() {
   };
 
   const navigate = (p, isRegister = false) => {
+    if (p !== 'Dashboard' && p !== 'Account') setLastPublicPage(p);
     // Dashboard is protected: unauthenticated users must sign in or register first
     if (p === 'Dashboard' && !user) {
       notify('Sign In Required: Please sign in or create an account to access the dashboard.');
@@ -2756,6 +2766,8 @@ export default function App() {
             navigate={navigate}
             notify={notify}
             choosePlan={choosePlan}
+            lastPublicPage={lastPublicPage}
+            goBackToWebsite={goBackToWebsite}
           />
         ) : null
       )}

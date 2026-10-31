@@ -32,7 +32,9 @@ export default function BusinessConsole({
   navigate,
   notify,
   choosePlan,
-  initialTab = 'Dashboard'
+  initialTab = 'Dashboard',
+  lastPublicPage = 'Home',
+  goBackToWebsite
 }) {
   const getInitialTabFromUrl = () => {
   
@@ -103,7 +105,7 @@ export default function BusinessConsole({
       const slug = tabMap[tabId];
       const targetUrl = slug ? `/dashboard?tab=${slug}` : '/dashboard';
       if (window.location.pathname + window.location.search !== targetUrl) {
-        window.history.pushState({ tab: tabId }, '', targetUrl);
+        window.history.replaceState({ page: 'Dashboard', tab: tabId }, '', targetUrl);
       }
     } catch {}
   };
@@ -554,25 +556,42 @@ export default function BusinessConsole({
       return;
     }
     setDelSubmitting(true);
+    const refId = 'DEL-' + Math.floor(100000 + Math.random() * 900000);
     try {
       const payload = {
         name: delName.trim(),
         mobile: delMobile.trim(),
         businessName: delBizName.trim(),
         email: delEmail.trim(),
-        reason: delReason.trim() || 'Customer requested account deletion'
+        reason: delReason.trim() || 'Customer requested account deletion',
+        refId
       };
-      const r = await api('POST', '/api/account/deletion-request', payload);
-      const refId = r.data?.refId || ('DEL-' + Math.floor(100000 + Math.random() * 900000));
-      setDelSuccessRef(refId);
-      notify(`✓ Deletion request registered (Ref: ${refId}). Sent to marutiinfosoftteam@gmail.com for review.`);
-    } catch {
-      const refId = 'DEL-' + Math.floor(100000 + Math.random() * 900000);
-      setDelSuccessRef(refId);
-      notify(`✓ Deletion request registered (Ref: ${refId}) for marutiinfosoftteam@gmail.com review.`);
-    } finally {
-      setDelSubmitting(false);
-    }
+      await api('POST', '/api/account/deletion-request', payload);
+    } catch (_) {}
+
+    setDelSuccessRef(refId);
+    notify(`✓ Deletion request registered (Ref: ${refId}). Sent to marutiinfosoftteam@gmail.com.`);
+
+    // Auto-open mail client with full details to marutiinfosoftteam@gmail.com
+    const mailSubject = encodeURIComponent(`Account Deletion Request - ${delBizName.trim()} (${refId})`);
+    const mailBody = encodeURIComponent(
+      `Hello Maruti InfoSoft Admin Team,\n\nI have officially requested account deletion for my StarReview AI account.\n\n` +
+      `Reference ID: ${refId}\n` +
+      `Business Name: ${delBizName.trim()}\n` +
+      `Account Owner: ${delName.trim()}\n` +
+      `Client Mobile: ${delMobile.trim()}\n` +
+      `Registered Email: ${delEmail.trim()}\n` +
+      `Reason for Deletion: ${delReason.trim() || 'None specified'}\n` +
+      `Submitted At: ${new Date().toLocaleString()}\n\n` +
+      `Please process this account deletion request.\nCompany Support: +91 9904482945`
+    );
+    try {
+      const mailtoUrl = `mailto:marutiinfosoftteam@gmail.com?subject=${mailSubject}&body=${mailBody}`;
+      const w = window.open(mailtoUrl, '_blank');
+      if (!w) window.location.href = mailtoUrl;
+    } catch (_) {}
+
+    setDelSubmitting(false);
   };
   // Country Code Picker States
   const [settingsCountryCode, setSettingsCountryCode] = useState(() => {
@@ -986,7 +1005,8 @@ export default function BusinessConsole({
           onClick={(e) => {
             if (!e.metaKey && !e.ctrlKey && !e.shiftKey && e.button !== 1) {
               e.preventDefault();
-              navigate('Home');
+              if (goBackToWebsite) goBackToWebsite();
+              else navigate(lastPublicPage && lastPublicPage !== 'Dashboard' ? lastPublicPage : 'Home');
             }
           }}
           title={collapsed ? "Back to Website" : "Return to StarReview AI Public Website"}
@@ -1118,10 +1138,11 @@ export default function BusinessConsole({
               onClick={(e) => {
                 if (!e.metaKey && !e.ctrlKey && !e.shiftKey && e.button !== 1) {
                   e.preventDefault();
-                  navigate('Home');
+                  if (goBackToWebsite) goBackToWebsite();
+                  else navigate(lastPublicPage && lastPublicPage !== 'Dashboard' ? lastPublicPage : 'Home');
                 }
               }}
-              title="Go back to StarReview AI homepage"
+              title="Go back to website page"
             >
               <i className="fa-solid fa-arrow-left"></i> Back to Website
             </a>
@@ -6192,7 +6213,7 @@ export default function BusinessConsole({
                         Reference: {delSuccessRef}
                       </div>
                       <p style={{ fontSize: '0.82rem', color: '#475569', lineHeight: 1.55, margin: 0 }}>
-                        Your account deletion request has been formally routed to <strong>marutiinfosoftteam@gmail.com</strong>. An administrator will verify the registered contact information (<strong>{delMobile}</strong>) within 24–48 business hours.
+                        Your account deletion request has been formally routed to <strong>marutiinfosoftteam@gmail.com</strong>. Company management will verify the request with our official support line (<strong>+91 9904482945</strong>) within 24–48 business hours.
                       </p>
                     </div>
 
@@ -6215,63 +6236,30 @@ export default function BusinessConsole({
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem' }}>
                       <a
-                        href={`mailto:marutiinfosoftteam@gmail.com?subject=${encodeURIComponent('Account Deletion Request - ' + delBizName + ' (' + delSuccessRef + ')')}&body=${encodeURIComponent('Hello Maruti InfoSoft Admin Team,\n\nI have submitted an account deletion request with reference ' + delSuccessRef + '.\n\nBusiness Name: ' + delBizName + '\nFull Name: ' + delName + '\nMobile Number: ' + delMobile + '\nRegistered Email: ' + delEmail + '\nReason: ' + delReason + '\n\nPlease confirm after processing.')}`}
-                        style={{
-                          flex: 1,
-                          minWidth: 160,
-                          textAlign: 'center',
-                          background: '#0f172a',
-                          color: '#ffffff',
-                          padding: '0.65rem 0.85rem',
-                          borderRadius: 8,
-                          fontSize: '0.8rem',
-                          fontWeight: 700,
-                          textDecoration: 'none',
-                          display: 'inline-block'
-                        }}
-                      >
-                        <i className="fa-regular fa-envelope" style={{ marginRight: 6 }}></i> Email Admin Desk
-                      </a>
-                      <a
-                        href={`https://wa.me/919904482945?text=${encodeURIComponent('Hello Maruti InfoSoft Team, I have submitted an account deletion request for ' + delBizName + ' (Ref: ' + delSuccessRef + ').')}`}
+                        href={`https://wa.me/919904482945?text=${encodeURIComponent('Hello Maruti InfoSoft Team, I have officially submitted an account deletion request for ' + delBizName + ' (Ref: ' + delSuccessRef + '). Registered Email: ' + delEmail + '. Please confirm verification.')}`}
                         target="_blank"
                         rel="noreferrer"
                         style={{
-                          flex: 1,
-                          minWidth: 160,
+                          width: '100%',
                           textAlign: 'center',
                           background: '#22c55e',
                           color: '#ffffff',
-                          padding: '0.65rem 0.85rem',
+                          padding: '0.85rem 1.25rem',
                           borderRadius: 8,
-                          fontSize: '0.8rem',
+                          fontSize: '0.88rem',
                           fontWeight: 700,
                           textDecoration: 'none',
-                          display: 'inline-block'
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 8,
+                          boxShadow: '0 2px 8px rgba(34, 197, 94, 0.25)'
                         }}
                       >
-                        <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }}></i> WhatsApp Support
+                        <i className="fa-brands fa-whatsapp" style={{ fontSize: '1.2rem' }}></i> WhatsApp Support (+91 9904482945)
                       </a>
-                    </div>
-
-                    <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                      <button
-                        type="button"
-                        onClick={() => { setDelSuccessRef(null); notify('Deletion request form reset.'); }}
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          color: '#64748b',
-                          fontSize: '0.78rem',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          textDecoration: 'underline'
-                        }}
-                      >
-                        Dismiss / Cancel Deletion Request
-                      </button>
                     </div>
                   </div>
                 )}

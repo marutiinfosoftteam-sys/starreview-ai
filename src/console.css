@@ -6761,3 +6761,40 @@
     flex-direction: column !important;
   }
 }
+
+
+/* ====================================================================
+   FIX: COLLAPSED SIDEBAR LOGO & TOGGLE BUTTON OVERLAP (SCREENSHOT 2)
+   ==================================================================== */
+.bc-sidebar.collapsed .bc-sidebar-header {
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  padding: 14px 6px 12px !important;
+  overflow: visible !important;
+}
+
+.bc-sidebar.collapsed .bc-brand-group {
+  margin: 0 auto !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
+
+.bc-sidebar.collapsed .bc-brand-icon {
+  width: 38px !important;
+  height: 38px !important;
+  margin: 0 auto !important;
+  flex-shrink: 0 !important;
+}
+
+.bc-sidebar.collapsed .bc-collapse-btn {
+  margin: 0 auto !important;
+  width: 26px !important;
+  height: 26px !important;
+  flex-shrink: 0 !important;
+}
+
+.bc-sidebar.collapsed .bc-mobile-close-btn {
+  display: none !important;
+}
