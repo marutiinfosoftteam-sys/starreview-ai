@@ -777,7 +777,7 @@ export default function App() {
       {/* 4. PRICING CARDS GRID */}
       <div className="pricing-cards-section">
         {pricingTab === 'without-reply' ? (
-          <div className="pricing-grid-modern">
+          <div className="pricing-grid-modern animate-marquee">
             {/* Standard Monthly Plan */}
             <article className="pricing-card">
               <div className="plan-topline">

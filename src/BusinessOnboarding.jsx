@@ -2,6 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { api } from './api.js';
 
 export default function BusinessOnboarding({ user, business, setBusiness, notify, navigate }) {
+  useEffect(() => {
+    const handleContextMenu = (e) => e.preventDefault();
+    document.addEventListener('contextmenu', handleContextMenu);
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, []);
+
   const [step, setStep] = useState(1); // 1: Search, 2: Confirm, 3: Success
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
