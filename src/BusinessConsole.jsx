@@ -35,13 +35,7 @@ export default function BusinessConsole({
   initialTab = 'Dashboard'
 }) {
   const getInitialTabFromUrl = () => {
-  useEffect(() => {
-    const handleContextMenu = (e) => e.preventDefault();
-    document.addEventListener('contextmenu', handleContextMenu);
-    return () => {
-      document.removeEventListener('contextmenu', handleContextMenu);
-    };
-  }, []);
+  
 
     try {
       const search = new URLSearchParams(window.location.search);

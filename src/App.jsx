@@ -1262,6 +1262,65 @@ export default function App() {
           ==================================================================== */}
       {page === 'Home' && (
         <>
+          {/* Animated Background Review Mockups & Floating Ambient Layer (Homepage Enhancement) */}
+          <div className="rf-home-animated-bg-layer" aria-hidden="true">
+            <div className="rf-bg-glow-orb rf-bg-orb-1"></div>
+            <div className="rf-bg-glow-orb rf-bg-orb-2"></div>
+            <div className="rf-bg-glow-orb rf-bg-orb-3"></div>
+
+            {/* Floating Review Card Mockup 1 (Top Left) */}
+            <div className="rf-floating-card rf-float-1">
+              <div className="rf-float-top">
+                <span className="rf-float-avatar" style={{ background: '#e0f2fe', color: '#0369a1' }}>RK</span>
+                <div>
+                  <div className="rf-float-author">Rahul K. <span className="rf-float-badge">Verified Visit</span></div>
+                  <div className="rf-float-stars">★★★★★ <span className="rf-float-score">5.0</span></div>
+                </div>
+                <i className="fa-brands fa-google rf-float-google-icon"></i>
+              </div>
+              <p className="rf-float-text">"Google rating jumped from 4.2 to 4.9 in just 18 days! The smart QR standees make reviewing effortless."</p>
+              <div className="rf-float-tag">⚡ Autopilot Google Review Flow</div>
+            </div>
+
+            {/* Floating Acrylic QR Standee Mockup (Top Right Behind Carousel) */}
+            <div className="rf-floating-standee rf-float-2">
+              <div className="rf-standee-acrylic">
+                <div className="rf-standee-header">
+                  <i className="fa-solid fa-star" style={{ color: '#f59e0b' }}></i>
+                  <span>Review Us On Google</span>
+                </div>
+                <div className="rf-standee-qr-frame">
+                  <i className="fa-solid fa-qrcode rf-standee-qr-icon"></i>
+                </div>
+                <div className="rf-standee-footer">
+                  <span>★★★★★ Tap or Scan</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating Negative Review Shield Badge (Middle Left) */}
+            <div className="rf-floating-badge rf-float-3">
+              <div className="rf-float-shield-icon">
+                <i className="fa-solid fa-shield-halved"></i>
+              </div>
+              <div>
+                <div className="rf-float-shield-title">100% Private Shield</div>
+                <div className="rf-float-shield-sub">1-3 Star Feedback Handled Privately</div>
+              </div>
+            </div>
+
+            {/* Floating AI Autopilot Reply Notification (Bottom Right) */}
+            <div className="rf-floating-card rf-float-4">
+              <div className="rf-float-top">
+                <span className="rf-float-avatar" style={{ background: '#dcfce7', color: '#15803d' }}>AI</span>
+                <div>
+                  <div className="rf-float-author">Google Maps Auto-Reply <span className="rf-float-badge" style={{ background: '#dcfce7', color: '#166534' }}>Live</span></div>
+                  <div className="rf-float-stars" style={{ color: '#16a34a' }}>⚡ Response time: 14s</div>
+                </div>
+              </div>
+              <p className="rf-float-text">"Thank you for visiting! We're thrilled you loved our service in Surat. See you again soon!"</p>
+            </div>
+          </div>
           <main>
             {/* 1. ORIGINAL HERO SECTION */}
             <section className="hero wrap">
@@ -1595,12 +1654,24 @@ export default function App() {
                     <span className="live-tag">DEMO</span>
                   </div>
                   <div className="mini-question">How was your experience?</div>
-                  <div className="mini-stars">★★★★★</div>
-                  <div className="mini-line"></div>
-                  <div className="mini-line short"></div>
+                  <div className="mini-customer-preview">
+                    <div className="mini-avatar">PJ</div>
+                    <div className="mini-meta">
+                      <div className="mini-name">Priya Joshi <span className="mini-verified-badge"><i className="fa-solid fa-circle-check"></i> Verified</span></div>
+                      <div className="mini-stars">★★★★★ <span className="mini-rating-num">5.0</span></div>
+                    </div>
+                  </div>
+                  <div className="mini-review-text">
+                    "Such a wonderful experience! The team was super attentive, welcoming, and everything felt fast and effortless."
+                  </div>
+                  <div className="mini-quick-chips">
+                    <span className="mini-chip"><i className="fa-solid fa-check"></i> Friendly staff</span>
+                    <span className="mini-chip"><i className="fa-solid fa-check"></i> Clean space</span>
+                    <span className="mini-chip"><i className="fa-solid fa-check"></i> Fast service</span>
+                  </div>
                   <div className="mini-suggestion">
                     <span>✦</span>
-                    <div><b>Ready to draft</b><small>Personalized suggestions in seconds</small></div>
+                    <div><b>Ready to draft</b><small>Personalized 5-star Google review generated</small></div>
                     <span>→</span>
                   </div>
                 </div>
@@ -1619,9 +1690,23 @@ export default function App() {
                     <li className="sr-reply-bullet"><i className="fa-solid fa-circle-check"></i> <div><strong>Sentiment-Aware Intelligence:</strong> Gratitude for 5-star reviews, empathetic resolution for low ratings.</div></li>
                     <li className="sr-reply-bullet"><i className="fa-solid fa-circle-check"></i> <div><strong>Local SEO Keyword Injections:</strong> Mentions your top services and city naturally to boost rankings.</div></li>
                   </ul>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <a href="/register" className="btn btn-white" onClick={(e) => handleNavClick(e, 'Account', true)}>Activate Autopilot Replies →</a>
-                    <a href="/reply-assistant" className="btn btn-light" onClick={(e) => handleNavClick(e, 'Reply assistant')}>Try Reply Assistant</a>
+                  <div className="sr-reply-cta-group" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
+                    <a
+                      href="/register"
+                      className="sr-showcase-btn-primary"
+                      onClick={(e) => handleNavClick(e, 'Account', true)}
+                    >
+                      <span>Activate Autopilot Replies</span>
+                      <i className="fa-solid fa-arrow-right"></i>
+                    </a>
+                    <a
+                      href="/reply-assistant"
+                      className="sr-showcase-btn-secondary"
+                      onClick={(e) => handleNavClick(e, 'Reply assistant')}
+                    >
+                      <i className="fa-solid fa-wand-magic-sparkles"></i>
+                      <span>Try Reply Assistant</span>
+                    </a>
                   </div>
                 </div>
                 <div className="sr-reply-mock">

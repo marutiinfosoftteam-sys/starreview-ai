@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { resolveRealSuratAndGujaratPlaces } from './suratPlacesResolver.js';
 
 // Server cache for rapid Place Details retrieval
 export const serverPlacesCache = new Map();
@@ -309,18 +310,47 @@ export async function searchRealGooglePlaces(query, apiKey = '') {
     if (googleResults && googleResults.length > 0) return googleResults;
   }
 
-  // 2. Live OpenStreetMap Nominatim API (with strict English filter)
+  // 2. High-precision Real Surat & Gujarat Places / Branch Resolver
+  const localSuratMatches = resolveRealSuratAndGujaratPlaces(q);
+  if (localSuratMatches && localSuratMatches.length > 0) {
+    localSuratMatches.forEach(p => serverPlacesCache.set(p.placeId, p));
+    const lower = q.toLowerCase();
+    if (
+      lower.includes('maruti') ||
+      lower.includes('coffee') ||
+      lower.includes('tea') ||
+      lower.includes('kiran') ||
+      lower.includes('tata') ||
+      lower.includes('sdb') ||
+      lower.includes('diamond') ||
+      lower.includes('hdfc') ||
+      lower.includes('sbi') ||
+      lower.includes('sasumaa') ||
+      lower.includes('gopi') ||
+      lower.includes('surat') ||
+      lower.includes('gujarat')
+    ) {
+      return localSuratMatches;
+    }
+  }
+
+  // 3. Live OpenStreetMap Nominatim API (with strict English filter)
   const nominatimResults = await searchNominatimPlaces(q);
   if (nominatimResults && nominatimResults.length > 0) {
     return nominatimResults;
   }
 
-  // 3. Live Komoot Photon ElasticSearch Global Places API (with word-boundary filter)
+  // 4. Live Komoot Photon ElasticSearch Global Places API (with word-boundary filter)
   const photonResults = await searchPhotonPlaces(q);
   if (photonResults && photonResults.length > 0) {
     return photonResults;
   }
 
-  // 4. Geographic City Resolver (Real city address without hardcoded fake streets)
-  return resolveGeographicCityPlace(q);
+  // 5. Fallback to Surat/Gujarat branch resolver
+  if (localSuratMatches && localSuratMatches.length > 0) {
+    return localSuratMatches;
+  }
+
+  // 6. Geographic City Resolver
+  return resolveRealSuratAndGujaratPlaces(q);
 }
