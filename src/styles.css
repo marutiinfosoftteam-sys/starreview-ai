@@ -10278,3 +10278,23 @@ html, body {
     gap: 20px !important;
   }
 }
+
+
+/* Added by AI: Responsive Overrides */
+@media screen and (max-width: 768px) {
+  * {
+    max-width: 100vw !important;
+    box-sizing: border-box;
+  }
+  body, html {
+    overflow-x: hidden;
+  }
+  .container, .main-container, .App, main, section {
+    width: 100% !important;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+  }
+  .grid, .flex {
+    flex-direction: column !important;
+  }
+}

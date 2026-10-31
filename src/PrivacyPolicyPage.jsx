@@ -173,7 +173,7 @@ export default function PrivacyPolicyPage({ navigate }) {
                 <strong>Platform:</strong> StarReview AI
               </div>
               <div>
-                <strong>Direct Phone:</strong> <a href="tel:+919904482945">+91 9904482945</a>
+                <strong>Direct Phone:</strong> <a href="tel:+919904482945" target="_blank" rel="noopener noreferrer">+91 9904482945</a>
               </div>
               <div>
                 <strong>WhatsApp Support:</strong> <a href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20have%20a%20privacy%20inquiry." target="_blank" rel="noopener noreferrer">+91 9904482945</a>
