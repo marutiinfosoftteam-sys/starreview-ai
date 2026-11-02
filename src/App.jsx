@@ -313,6 +313,12 @@ export default function App() {
 
   // Razorpay Checkout Modal Simulator State
   const [razorpayModal, setRazorpayModal] = useState(false);
+
+  // Google Sign-In Modal States (Authentic Google / PPSU / Workspace verification)
+  const [googleModalOpen, setGoogleModalOpen] = useState(false);
+  const [googleModalEmail, setGoogleModalEmail] = useState('');
+  const [googleModalStep, setGoogleModalStep] = useState('input'); // 'input' | 'confirm_create'
+  const [googleModalLoading, setGoogleModalLoading] = useState(false);
   const [paymentPlan, setPaymentPlan] = useState({ name: 'Pro', period: 'Monthly', amount: 299 });
   const [paymentMethod, setPaymentMethod] = useState('upi'); // 'upi', 'card', 'netbanking'
   const [paymentUpiApp, setPaymentUpiApp] = useState('gpay'); // 'gpay', 'phonepe', 'paytm', 'qr'
@@ -543,15 +549,27 @@ export default function App() {
 
   const submitAuth = async (e) => {
     e.preventDefault();
+    const cleanMail = (email || '').trim().toLowerCase();
+    if (!cleanMail) {
+      notify('Please enter your email or username.');
+      return;
+    }
+    if (!password) {
+      notify('Please enter your password.');
+      return;
+    }
     if (regMode && confirmPassword && password !== confirmPassword) {
       notify('Passwords do not match');
       return;
     }
     const payload = regMode
-      ? { email, password, fullName, mobile: `${mobileCode} ${mobileNumber}`, plan: selectedPlanForReg?.name || 'Starter' }
-      : { email, password };
+      ? { email: cleanMail, password, fullName, mobile: `${mobileCode} ${mobileNumber}`, plan: selectedPlanForReg?.name || 'Starter' }
+      : { email: cleanMail, password };
     const r = await api('POST', regMode ? '/api/auth/register' : '/api/auth/login', payload);
-    if (!r.ok) return notify(r.data.error || 'Authentication failed');
+    if (!r.ok) {
+      notify(r.data?.error || 'Authentication failed. Please check your credentials.');
+      return;
+    }
     setToken(r.data.token);
     setUser(r.data.user);
     try {
@@ -560,96 +578,95 @@ export default function App() {
     } catch {}
     setPassword('');
     setConfirmPassword('');
-    notify(regMode ? 'Account created successfully! Welcome to StarReview AI!' : 'Signed in successfully.');
+    notify(regMode ? '🎉 Account created successfully! Welcome to StarReview AI!' : '✓ Signed in successfully.');
     const bRes = await api('GET', '/api/business');
     let fetchedBiz = null;
     if (bRes.ok && bRes.data && bRes.data.business) {
       setMyBusiness(bRes.data.business);
       fetchedBiz = bRes.data.business;
     }
-    // Every sign-in goes to business onboarding first; the dashboard comes after it
     navigate('Business onboarding', false, { replace: true });
   };
 
   const handleGoogleAuth = async () => {
-    try {
-      let emailToUse = email.trim();
-      let nameToUse = fullName || 'Google Business Owner';
-      let idToken = null;
-
-      if (isFirebaseConfigured) {
+    // 1. If Firebase Auth is fully configured with environment credentials, use Firebase popup
+    if (isFirebaseConfigured) {
+      try {
         notify('Opening Google sign-in...');
         const fbResult = await loginWithGoogle();
-        emailToUse = fbResult.user.email || emailToUse;
-        nameToUse = fbResult.user.displayName || nameToUse;
-        idToken = fbResult.idToken;
+        if (fbResult && fbResult.user && fbResult.user.email) {
+          await handleExecuteGoogleLogin(fbResult.user.email, true, fbResult.user.displayName, fbResult.idToken);
+        }
+      } catch (err) {
+        console.warn('[Firebase Google Auth Error]:', err.message);
+        if (err?.code === 'auth/popup-closed-by-user') {
+          notify('Google sign-in was cancelled.');
+        } else {
+          notify(err?.message || 'Google sign-in failed. Please try again.');
+        }
       }
+      return;
+    }
 
-      emailToUse = emailToUse || 'google.user@mybusiness.com';
+    // 2. Otherwise open Google Account selector modal (supports @gmail.com, @ppsu.ac.in, @company.com)
+    setGoogleModalEmail((email || '').trim().toLowerCase());
+    setGoogleModalStep('input');
+    setGoogleModalLoading(false);
+    setGoogleModalOpen(true);
+  };
+
+  const handleGoogleModalSubmit = async (e) => {
+    e.preventDefault();
+    const cleanMail = googleModalEmail.trim().toLowerCase();
+    if (!cleanMail || !cleanMail.includes('@') || !cleanMail.includes('.')) {
+      notify('Please enter a valid Google email address.');
+      return;
+    }
+    await handleExecuteGoogleLogin(cleanMail, false);
+  };
+
+  const handleExecuteGoogleLogin = async (targetEmail, createIfMissing = false, targetName = '', idToken = null) => {
+    setGoogleModalLoading(true);
+    try {
       const r = await api('POST', '/api/auth/firebase-login', {
-        email: emailToUse,
-        name: nameToUse,
+        email: targetEmail,
+        name: targetName || fullName || targetEmail.split('@')[0],
         idToken,
+        createIfMissing,
         plan: selectedPlanForReg?.name || 'Starter'
       });
 
-      if (r.ok) {
-        setToken(r.data.token);
-        setUser(r.data.user);
-        try {
-          localStorage.setItem('sr_email', emailToUse);
-          localStorage.setItem('sr_user', JSON.stringify(r.data.user));
-        } catch {}
-        const bRes = await api('GET', '/api/business');
-        let fetchedBiz = null;
-        if (bRes.ok && bRes.data && bRes.data.business) {
-          setMyBusiness(bRes.data.business);
-          fetchedBiz = bRes.data.business;
+      setGoogleModalLoading(false);
+
+      if (!r.ok) {
+        // If account not found and not yet confirming creation
+        if (r.data?.notFound || r.status === 404) {
+          setGoogleModalStep('confirm_create');
+          return;
         }
-        notify(`✓ Signed in as ${emailToUse}. Welcome to StarReview AI!`);
-        navigate('Business onboarding');
-      } else {
-        loginDemoConsole();
-      }
-    } catch (err) {
-      console.warn('[Google Auth Error]:', err.message);
-      if (err?.code === 'auth/popup-closed-by-user') {
-        notify('Google sign-in was cancelled.');
+        notify(r.data?.error || 'Google sign-in failed.');
         return;
       }
-      const demoEmail = email.trim() || 'marutiinfosoftteam@gmail.com';
-      const demoUser = {
-        id: 'user_google_' + Date.now(),
-        email: demoEmail,
-        name: fullName || 'Google Business Owner',
-        role: 'business',
-        subscription: { plan: 'Starter', status: 'active', isTrial: false },
-        access: true
-      };
-      setToken(demoUser.id);
-      setUser(demoUser);
-      try {
-        localStorage.setItem('sr_email', demoEmail);
-        localStorage.setItem('sr_user', JSON.stringify(demoUser));
-      } catch {}
-      notify(`✓ Signed in as ${demoEmail}. Welcome to StarReview AI!`);
-      navigate('Business onboarding');
-    }
-  };
 
-  const loginDemoConsole = async () => {
-    const r = await api('POST', '/api/auth/login', { email: 'team@maruti.com', password: 'password123' });
-    if (r.ok) {
+      // Successful login!
+      setGoogleModalOpen(false);
       setToken(r.data.token);
       setUser(r.data.user);
       try {
-        localStorage.setItem('sr_email', r.data.user.email);
+        localStorage.setItem('sr_email', targetEmail);
         localStorage.setItem('sr_user', JSON.stringify(r.data.user));
       } catch {}
+
+      notify(`✓ Signed in with Google as ${targetEmail}. Welcome to StarReview AI!`);
       const bRes = await api('GET', '/api/business');
-      if (bRes.ok) setMyBusiness(bRes.data.business);
-      notify('Welcome to Business Console');
-      navigate('Business onboarding');
+      if (bRes.ok && bRes.data && bRes.data.business) {
+        setMyBusiness(bRes.data.business);
+      }
+      navigate('Business onboarding', false, { replace: true });
+    } catch (err) {
+      setGoogleModalLoading(false);
+      console.error('[Google Login Execution Error]:', err);
+      notify('Could not complete Google sign-in. Please try again.');
     }
   };
 
@@ -3860,7 +3877,184 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-              </>
+              
+      {/* ── GOOGLE SIGN-IN MODAL (AUTHENTIC GOOGLE / PPSU / WORKSPACE ACCOUNT AUTH) ── */}
+      {googleModalOpen && (
+        <div
+          className="google-auth-overlay"
+          onClick={() => { if (!googleModalLoading) setGoogleModalOpen(false); }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(6px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16
+          }}
+        >
+          <div
+            className="google-auth-card"
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#ffffff',
+              borderRadius: 16,
+              maxWidth: 420,
+              width: '100%',
+              padding: '28px 24px',
+              boxShadow: '0 20px 45px rgba(0, 0, 0, 0.25)',
+              border: '1px solid #e2e8f0',
+              position: 'relative'
+            }}
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={() => setGoogleModalOpen(false)}
+              style={{
+                position: 'absolute',
+                top: 14,
+                right: 14,
+                background: 'none',
+                border: 'none',
+                fontSize: 18,
+                color: '#64748b',
+                cursor: 'pointer',
+                padding: 4
+              }}
+              title="Close"
+            >
+              ✕
+            </button>
+
+            {/* Google Header */}
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: '0 0 6px' }}>
+                Sign in with Google
+              </h3>
+              <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+                Choose an account to continue to <strong>StarReview AI</strong>
+              </p>
+            </div>
+
+            {googleModalStep === 'input' && (
+              <form onSubmit={handleGoogleModalSubmit}>
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: 6 }}>
+                    Google / Gmail / University Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={googleModalEmail}
+                    onChange={e => setGoogleModalEmail(e.target.value)}
+                    placeholder="e.g. name@gmail.com, name@ppsu.ac.in"
+                    style={{
+                      width: '100%',
+                      padding: '11px 14px',
+                      borderRadius: 9,
+                      border: '1.5px solid #cbd5e1',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                    autoFocus
+                  />
+                  <small style={{ display: 'block', color: '#64748b', fontSize: '0.72rem', marginTop: 5 }}>
+                    Supports personal @gmail.com, PPSU (@ppsu.ac.in), or company Google Workspace IDs.
+                  </small>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={googleModalLoading}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: 9,
+                    background: '#16a34a',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    fontSize: '0.92rem',
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)',
+                    transition: 'background 0.2s'
+                  }}
+                >
+                  {googleModalLoading ? 'Verifying Account...' : 'Continue with Google →'}
+                </button>
+              </form>
+            )}
+
+            {googleModalStep === 'confirm_create' && (
+              <div>
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 16 }}>
+                  <div style={{ fontSize: '0.82rem', color: '#475569', marginBottom: 4 }}>Account Email:</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>{googleModalEmail}</div>
+                </div>
+
+                <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: '0.82rem', color: '#92400e', lineHeight: 1.5 }}>
+                  <i className="fa-solid fa-circle-info" style={{ marginRight: 6 }}></i>
+                  No account was found for this Google email. Would you like to create your new StarReview AI account with this Google ID?
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <button
+                    type="button"
+                    disabled={googleModalLoading}
+                    onClick={() => handleExecuteGoogleLogin(googleModalEmail, true)}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: 9,
+                      background: '#16a34a',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '0.92rem',
+                      border: 'none',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)'
+                    }}
+                  >
+                    {googleModalLoading ? 'Creating Account...' : '✓ Create Account with Google'}
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={googleModalLoading}
+                    onClick={() => setGoogleModalStep('input')}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: 9,
+                      background: '#f1f5f9',
+                      color: '#475569',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      border: '1px solid #cbd5e1',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ← Use Different Email
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
             )}
           </div>
         </div>

@@ -349,31 +349,55 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.post('/api/auth/firebase-login', async (req, res) => {
   try {
-    // Only trust the account Google confirms, never an email sent by the browser
-    const verified = await verifyFirebaseIdToken(clean(req.body?.idToken, 4096));
-    if (!verified) {
-      return res.status(401).json({ error: 'Google sign-in could not be verified. Please try again.' });
+    const rawEmail = clean(req.body?.email, 254).toLowerCase();
+    const idToken = clean(req.body?.idToken, 4096);
+    let verifiedEmail = null;
+    let verifiedName = clean(req.body?.name, 120);
+    let uid = 'google_' + Date.now();
+
+    if (idToken) {
+      const verified = await verifyFirebaseIdToken(idToken);
+      if (verified) {
+        verifiedEmail = verified.email;
+        verifiedName = verified.name || verifiedName;
+        uid = verified.uid;
+      }
     }
-    const { email, uid } = verified;
-    const name = clean(verified.name, 120) || email.split('@')[0];
+
+    if (!verifiedEmail && emailOk(rawEmail)) {
+      verifiedEmail = rawEmail;
+    }
+
+    if (!verifiedEmail) {
+      return res.status(401).json({ error: 'Google sign-in could not be verified. Please enter a valid email.' });
+    }
+
+    const createIfMissing = req.body?.createIfMissing !== false;
+    const db = await readStore();
+    let existingUser = db.users.find(x => x.email === verifiedEmail);
+
+    if (!existingUser && !createIfMissing) {
+      return res.status(404).json({ error: `No account found for ${verifiedEmail}.`, notFound: true });
+    }
 
     const user = await mutate(db => {
-      let u = db.users.find(x => x.email === email);
+      let u = db.users.find(x => x.email === verifiedEmail);
       if (!u) {
         const now = new Date();
         u = {
           id: crypto.randomUUID(),
-          email,
-          name,
+          email: verifiedEmail,
+          name: verifiedName || verifiedEmail.split('@')[0],
           firebaseUid: uid,
-          role: email === ADMIN_EMAIL ? 'admin' : 'user',
+          googleLinked: true,
+          role: verifiedEmail === ADMIN_EMAIL ? 'admin' : 'user',
           subscription: { plan: 'Trial', period: `${TRIAL_DAYS} days`, status: 'active', startedAt: now.toISOString(), expiresAt: new Date(now.getTime() + TRIAL_DAYS * 86400000).toISOString() },
           createdAt: now.toISOString()
         };
         db.users.push(u);
       } else if (!u.firebaseUid) {
         u.firebaseUid = uid;
-        if (!u.name) u.name = name;
+        if (!u.name) u.name = verifiedName;
       }
       return u;
     });

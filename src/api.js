@@ -31,7 +31,21 @@ const getDefaultDb = () => ({
     {
       id: 'demo-user-1',
       email: 'team@maruti.com',
-      subscription: { plan: 'Trial', status: 'active', expiresAt: new Date(Date.now() + 2 * 86400000).toISOString(), isTrial: true },
+      password: 'password123',
+      name: 'Team Maruti InfoSoft',
+      mobile: '+91 99044 82945',
+      company: 'Team Maruti InfoSoft',
+      subscription: { plan: 'Trial', status: 'active', expiresAt: new Date(Date.now() + 30 * 86400000).toISOString(), isTrial: true },
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'demo-user-2',
+      email: 'marutiinfosoftteam@gmail.com',
+      password: 'password123',
+      name: 'Maruti InfoSoft Support',
+      mobile: '+91 99044 82945',
+      company: 'Maruti InfoSoft',
+      subscription: { plan: 'Agency', status: 'active', expiresAt: new Date(Date.now() + 365 * 86400000).toISOString(), isTrial: false },
       createdAt: new Date().toISOString()
     }
   ],
@@ -277,68 +291,99 @@ async function localDispatch(method, path, body) {
     };
   }
 
-  // 2. Auth: Register
+  // 2. Auth: Register (strict registration with password)
   if (path === '/api/auth/register' && method === 'POST') {
     const email = (body?.email || '').trim().toLowerCase();
     const fullName = (body?.fullName || '').trim();
     const mobile = (body?.mobile || '').trim();
-    let user = db.users.find(u => u.email === email);
-    if (!user) {
-      const trialExpires = new Date(Date.now() + 3 * 86400000).toISOString();
-      user = {
-        id: 'user_' + Math.random().toString(36).substring(2, 9),
-        email,
-        name: fullName || 'Business Owner',
-        mobile: mobile || '+91 9904482945',
-        company: fullName ? `${fullName}'s Business` : 'Team Maruti InfoSoft',
-        subscription: { plan: '3-Day Free Trial', status: 'active', expiresAt: trialExpires, isTrial: true },
-        createdAt: new Date().toISOString()
-      };
-      db.users.push(user);
+    const password = typeof body?.password === 'string' ? body.password.trim() : '';
 
-      // Create initial business for new user
-      const bizSlug = email.split('@')[0].replace(/[^a-z0-9]/g, '-') || 'my-business';
-      const biz = {
-        id: 'biz_' + Math.random().toString(36).substring(2, 9),
-        userId: user.id,
-        name: fullName ? `${fullName}'s Business` : 'Team Maruti InfoSoft',
-        slug: bizSlug,
-        city: 'Surat',
-        category: 'Services',
-        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
-        services: ['Customer Service', 'Consultation', 'GMB Profile Optimization', 'GMB Setup & Verification'],
-        staff: ['Rahul', 'Priya'],
-        keywords: ['friendly', 'fast', 'professional'],
-        whatsappNumber: mobile || '919904482945',
-        brandColor: '#1d4934',
-        competitors: [],
-        createdAt: new Date().toISOString()
-      };
-      db.businesses.push(biz);
-      saveLocalDb(db);
+    if (!email || !email.includes('@')) {
+      return { ok: false, status: 400, data: { error: 'Please enter a valid email address.' } };
     }
+    if (password.length < 6) {
+      return { ok: false, status: 400, data: { error: 'Password must be at least 6 characters.' } };
+    }
+
+    const existing = db.users.find(u => u.email === email);
+    if (existing) {
+      return { ok: false, status: 400, data: { error: 'An account already exists with this email. Please sign in instead.' } };
+    }
+
+    const trialExpires = new Date(Date.now() + 30 * 86400000).toISOString();
+    const user = {
+      id: 'user_' + Math.random().toString(36).substring(2, 9),
+      email,
+      password,
+      name: fullName || email.split('@')[0],
+      mobile: mobile || '+91 9904482945',
+      company: fullName ? `${fullName}'s Business` : 'My Business',
+      subscription: { plan: body?.plan || '30-Day Free Trial', status: 'active', expiresAt: trialExpires, isTrial: true },
+      createdAt: new Date().toISOString()
+    };
+    db.users.push(user);
+
+    // Create initial business for new user
+    const bizSlug = email.split('@')[0].replace(/[^a-z0-9]/g, '-') || 'my-business';
+    const biz = {
+      id: 'biz_' + Math.random().toString(36).substring(2, 9),
+      userId: user.id,
+      name: fullName ? `${fullName}'s Business` : 'My Business',
+      slug: bizSlug,
+      city: 'Surat',
+      category: 'Services',
+      googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+      services: ['Customer Service', 'Consultation', 'GMB Profile Optimization', 'GMB Setup & Verification'],
+      staff: ['Team Member'],
+      keywords: ['friendly', 'fast', 'professional'],
+      whatsappNumber: mobile || '919904482945',
+      brandColor: '#1d4934',
+      competitors: [],
+      createdAt: new Date().toISOString()
+    };
+    db.businesses.push(biz);
+    saveLocalDb(db);
+
     setToken(user.id);
     return {
       ok: true,
       status: 200,
       data: {
         token: user.id,
-        user: { id: user.id, email: user.email, name: user.name || fullName, mobile: user.mobile || mobile, company: user.company, subscription: user.subscription, access: true, replyAssistant: true }
+        user: { id: user.id, email: user.email, name: user.name, mobile: user.mobile, company: user.company, subscription: user.subscription, access: true, replyAssistant: true }
       }
     };
   }
 
-  // 3c. Auth: Firebase Login (Google Sign-In)
+  // 3c. Auth: Firebase Login (Google Sign-In with Account Verification)
   if (path === '/api/auth/firebase-login' && method === 'POST') {
-    const email = (body?.email || 'google.user@mybusiness.com').trim().toLowerCase();
-    const name = body?.name || 'Google Business Owner';
+    const email = (body?.email || '').trim().toLowerCase();
+    const name = body?.name || email.split('@')[0] || 'Google User';
+    const createIfMissing = body?.createIfMissing !== false;
+
+    if (!email || !email.includes('@')) {
+      return { ok: false, status: 400, data: { error: 'Valid Google email is required.' } };
+    }
+
     let user = db.users.find(u => u.email === email);
     if (!user) {
+      if (!createIfMissing) {
+        return {
+          ok: false,
+          status: 404,
+          data: {
+            error: `No account found for ${email}.`,
+            notFound: true
+          }
+        };
+      }
+
       const expires = new Date(Date.now() + 365 * 86400000).toISOString();
       user = {
         id: 'user_' + Math.random().toString(36).substring(2, 9),
         email,
         name,
+        googleLinked: true,
         subscription: { plan: body?.plan || 'Starter', status: 'active', expiresAt: expires, isTrial: false },
         createdAt: new Date().toISOString()
       };
@@ -365,6 +410,7 @@ async function localDispatch(method, path, body) {
       db.businesses.push(biz);
       saveLocalDb(db);
     }
+
     setToken(user.id);
     return {
       ok: true,
@@ -425,48 +471,62 @@ async function localDispatch(method, path, body) {
     };
   }
 
-  // 3. Auth: Login (Strict user isolation & auto account creation for testing)
+  // 3. Auth: Login (Strict verification: NO random credentials allowed)
   if (path === '/api/auth/login' && method === 'POST') {
     const email = (body?.email || '').trim().toLowerCase();
-    let user = db.users.find(u => u.email === email);
-    if (!user) {
-      const trialExpires = new Date(Date.now() + 3 * 86400000).toISOString();
-      user = {
-        id: 'user_' + Math.random().toString(36).substring(2, 9),
-        email: email || 'user@example.com',
-        subscription: { plan: 'Trial', status: 'active', expiresAt: trialExpires, isTrial: true },
-        createdAt: new Date().toISOString()
-      };
-      db.users.push(user);
+    const password = typeof body?.password === 'string' ? body.password.trim() : '';
 
-      const prefix = email ? email.split('@')[0] : 'my';
-      const cleanName = prefix.charAt(0).toUpperCase() + prefix.slice(1) + ' Business';
-      const biz = {
-        id: 'biz_' + Math.random().toString(36).substring(2, 9),
-        userId: user.id,
-        name: cleanName,
-        slug: prefix.replace(/[^a-z0-9]/g, '-') + '-' + Math.random().toString(36).substring(2, 5),
-        city: 'Surat',
-        category: 'Services',
-        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
-        services: ['Customer Service', 'Consultation'],
-        staff: ['Staff Member'],
-        keywords: ['friendly', 'fast response'],
-        whatsappNumber: '919904482945',
-        brandColor: '#1d4934',
-        competitors: [],
-        createdAt: new Date().toISOString()
-      };
-      db.businesses.push(biz);
-      saveLocalDb(db);
+    if (!email || !password) {
+      return { ok: false, status: 400, data: { error: 'Please enter both your email and password.' } };
     }
+
+    const user = db.users.find(u => u.email === email);
+    if (!user) {
+      return {
+        ok: false,
+        status: 401,
+        data: {
+          error: 'No account found with this email. Please click "Create Account" below to register first, or Sign in with Google.'
+        }
+      };
+    }
+
+    if (user.googleLinked && !user.password) {
+      return {
+        ok: false,
+        status: 401,
+        data: {
+          error: 'This account was registered with Google. Please click "Sign in with Google" below.'
+        }
+      };
+    }
+
+    if (user.password && user.password !== password) {
+      return {
+        ok: false,
+        status: 401,
+        data: {
+          error: 'Incorrect password. Please enter the correct password for your account.'
+        }
+      };
+    }
+
     setToken(user.id);
     return {
       ok: true,
       status: 200,
       data: {
         token: user.id,
-        user: { id: user.id, email: user.email, name: user.name, mobile: user.mobile, company: user.company, subscription: user.subscription, access: true, replyAssistant: true }
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          mobile: user.mobile,
+          company: user.company,
+          subscription: user.subscription,
+          access: true,
+          replyAssistant: true
+        }
       }
     };
   }
@@ -829,8 +889,8 @@ export async function api(method, url, body) {
     let data = {};
     try { data = text ? JSON.parse(text) : {}; } catch { /* non-json */ }
 
-    // If route succeeded or was handled by server
-    if (r.ok || (r.status === 400 && data.error)) {
+    // If route succeeded or was handled by server with an explicit error (400, 401, 403, 404, etc.)
+    if (r.ok || (r.status >= 400 && r.status < 500 && data && (data.error || data.message || data.notFound))) {
       return { ok: r.ok, status: r.status, data };
     }
 
