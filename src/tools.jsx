@@ -253,20 +253,23 @@ export function ReviewFunnel({ slug, notify }) {
     }, 50);
   };
 
-  const copyAndPost = () => {
+  const copyAndPost = (withAccountChooser = false) => {
     const text = finalReview.trim();
     if (!text) return;
     const copied = copyText(text);
     const target = biz?.googleReviewUrl;
     if (target) {
-      const win = window.open(target, '_blank', 'noopener');
+      const finalUrl = withAccountChooser
+        ? `https://accounts.google.com/AccountChooser?continue=${encodeURIComponent(target)}`
+        : target;
+      const win = window.open(finalUrl, '_blank', 'noopener');
       // Popup blocked (some in-app browsers): open Google in this tab instead
-      if (!win) window.location.href = target;
+      if (!win) window.location.href = finalUrl;
     }
     setPosted(true);
     api('POST', '/api/public/track', { slug: slug || 'demo', type: 'copy' });
     if (target) api('POST', '/api/public/track', { slug: slug || 'demo', type: 'redirect' });
-    if (notify) notify(copied ? 'Review copied. Paste it in the Google review box.' : 'Select the review text and copy it, then paste it on Google.');
+    if (notify) notify(copied ? 'Review copied to clipboard!' : 'Select the review text and copy it, then paste it on Google.');
   };
 
   const sendPrivate = async e => {
@@ -362,11 +365,34 @@ export function ReviewFunnel({ slug, notify }) {
           <button
             type="button"
             className="btn btn-dark full rf-review-post"
-            onClick={copyAndPost}
+            onClick={() => copyAndPost(false)}
             disabled={!finalReview.trim()}
           >
             {biz?.googleReviewUrl ? `Copy review & post ${rating}★ on Google` : 'Copy review'}
           </button>
+          {biz?.googleReviewUrl && (
+            <div style={{ marginTop: '0.65rem', textAlign: 'center' }}>
+              <button
+                type="button"
+                onClick={() => copyAndPost(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#2563eb',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  textDecoration: 'underline',
+                  padding: '4px 8px'
+                }}
+              >
+                <span>🔄</span> Switch Google Account / Post from another account
+              </button>
+            </div>
+          )}
           {biz?.googleReviewUrl && !posted && (
             <p className="rf-review-next-hint">
               Google opens next — tap <b className="rf-review-hint-stars">{'★'.repeat(rating)}</b> ({rating} stars), paste your review and tap <b>Post</b>.
@@ -375,15 +401,32 @@ export function ReviewFunnel({ slug, notify }) {
 
           {posted && (
             <div className="rf-review-paste-help" role="status">
-              <strong>✓ Review copied — 2 taps left on Google</strong>
-              <ol>
+              <strong>✓ Review copied to clipboard!</strong>
+              <p style={{ margin: '4px 0 8px', fontSize: '0.85rem' }}>Only 2 quick taps left on Google:</p>
+              <ol style={{ margin: '0 0 10px', paddingLeft: '1.2rem' }}>
                 <li>Tap <b className="rf-review-hint-stars">{'★'.repeat(rating)}</b> — {rating} star{rating > 1 ? 's' : ''}, same as you chose here.</li>
-                <li>Tap the review box, <b>long-press → Paste</b> (computer: Ctrl+V / ⌘V), then tap <b>Post</b>.</li>
+                <li>Tap the box, <b>long-press → Paste</b>, then tap <b>Post</b>.</li>
               </ol>
-              <button type="button" className="rf-review-copy-again" onClick={() => { copyText(finalReview.trim()); notify && notify('Review copied again.'); }}>Copy review again</button>
-              {biz?.googleReviewUrl && (
-                <a href={biz.googleReviewUrl} target="_blank" rel="noopener noreferrer">Open Google review page again</a>
-              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+                <button type="button" className="rf-review-copy-again" onClick={() => { copyText(finalReview.trim()); notify && notify('Review copied again.'); }}>
+                  📋 Copy review again
+                </button>
+                {biz?.googleReviewUrl && (
+                  <>
+                    <a href={biz.googleReviewUrl} target="_blank" rel="noopener noreferrer">
+                      Open Google review page again
+                    </a>
+                    <a
+                      href={`https://accounts.google.com/AccountChooser?continue=${encodeURIComponent(biz.googleReviewUrl)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#2563eb', fontSize: '0.82rem', fontWeight: 600, textDecoration: 'underline' }}
+                    >
+                      🔄 Switch to another Google Account
+                    </a>
+                  </>
+                )}
+              </div>
             </div>
           )}
 
