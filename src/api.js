@@ -56,7 +56,7 @@ const getDefaultDb = () => ({
       name: 'Team Maruti InfoSoft',
       slug: 'team-maruti-infosoft',
       city: 'Surat',
-      category: 'Software & IT Services',
+      category: 'Local Business & Services',
       googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
       services: ['Software & IT Services', 'Web Development', 'Digital Growth Consultation'],
       staff: ['Team Maruti', 'Rahul', 'Priya'],
@@ -102,7 +102,7 @@ function getLocalDb() {
         parsed.businesses[0].name = 'Team Maruti InfoSoft';
         parsed.businesses[0].slug = 'team-maruti-infosoft';
         parsed.businesses[0].city = 'Surat';
-        parsed.businesses[0].category = 'Software & IT Services';
+        parsed.businesses[0].category = 'Local Business & Services';
         localStorage.setItem(DB_KEY, JSON.stringify(parsed));
       }
       return parsed;
@@ -725,7 +725,7 @@ async function localDispatch(method, path, body) {
       b = {
         name: 'Team Maruti InfoSoft',
         city: 'Surat',
-        category: 'Software & IT Services',
+        category: 'Local Business & Services',
         services: ['Software & IT Services', 'Web Development', 'Digital Growth Consultation'],
         staff: ['Team Maruti', 'Rahul', 'Priya'],
         brandColor: '#16a34a',
@@ -739,7 +739,7 @@ async function localDispatch(method, path, body) {
       data: {
         name: b.name,
         city: b.city || 'Surat',
-        category: b.category || 'Software & IT Services',
+        category: b.category || 'Local Business & Services',
         services: b.services || ['Software & IT Services', 'Web Development'],
         staff: b.staff || ['Team Maruti', 'Rahul', 'Priya'],
         brandColor: b.brandColor || '#16a34a',

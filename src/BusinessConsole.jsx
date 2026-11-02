@@ -40,7 +40,7 @@ const GROWTH_SERVICES = [
       ['Domain, hosting & SSL', 'We set up your .com / .in domain, secure hosting and business email.'],
       ['Maintenance & updates', 'Monthly backups, security updates and content changes.']
     ],
-    meta: [['Delivery', '7–21 days'], ['Includes', 'Mobile + WhatsApp button'], ['Quote', 'Free']]
+    meta: [['Delivery', '7–21 days'], ['Includes', 'Domain, Fast Hosting & SSL'], ['Quote', 'Free']]
   },
   {
     id: 'marketing',
@@ -74,22 +74,26 @@ const GROWTH_SERVICES = [
   }
 ];
 
-// Industry / Category / Services choices in Profile Settings ("Other" lets a client type their own)
-const CATEGORY_GROUPS = [
-  ['Website & IT services', [
-    'Website Development', 'Website Design', 'E-commerce Website Development', 'WordPress Development',
-    'Shopify Store Development', 'Landing Page Design', 'UI / UX Design', 'Web Application Development',
-    'Mobile App Development', 'Software & IT Services', 'Custom Software Development', 'Web Hosting & Domain Services',
-    'Website Maintenance & Support', 'SEO Services', 'Digital Marketing Agency', 'Social Media Marketing',
-    'Google Ads / PPC Management', 'Graphic Design & Branding', 'Content Writing & Copywriting', 'IT Consulting'
-  ]],
-  ['Other businesses', [
-    'Restaurant & Cafe', 'Dental Clinic & Healthcare', 'Spa, Salon & Wellness', 'Retail & Shopping',
-    'Auto Repair & Service', 'Real Estate & Construction', 'Professional & Legal Services',
-    'Hotel, Travel & Hospitality', 'Education & Coaching', 'Gym & Fitness'
-  ]]
+// Industry / Category / Services choices across Profile Settings, Review Settings & Onboarding
+const CATEGORY_OPTIONS = [
+  'Restaurant & Cafe',
+  'Dental Clinic & Healthcare',
+  'Spa, Salon & Wellness',
+  'Retail & Shopping',
+  'Auto Repair & Service',
+  'Real Estate & Construction',
+  'Hotel, Travel & Hospitality',
+  'Education & Coaching',
+  'Gym & Fitness',
+  'Professional & Legal Services',
+  'Solar Rooftop & Clean Energy',
+  'Home Services & Renovation',
+  'Jewellery & Fashion',
+  'Pharmacy & Medical Store',
+  'Manufacturing & Fabrication',
+  'Local Business & Services'
 ];
-const ALL_CATEGORY_OPTIONS = CATEGORY_GROUPS.flatMap(([, list]) => list);
+const ALL_CATEGORY_OPTIONS = CATEGORY_OPTIONS;
 
 // URL slug for every dashboard tab (/dashboard?tab=<slug>)
 const TAB_SLUGS = {
@@ -571,7 +575,7 @@ export default function BusinessConsole({
       setSettingsBizName(business?.name || user?.company || user?.businessName || user?.name || '');
     }
     if (business?.category || user?.category) {
-      setSettingsBizCategory(business?.category || user?.category || 'Software & IT Services');
+      setSettingsBizCategory(business?.category || user?.category || 'Local Business & Services');
     }
     if (business?.city || business?.location || user?.city) {
       setSettingsBizCity(business?.city || business?.location || user?.city || '');
@@ -3391,13 +3395,19 @@ export default function BusinessConsole({
                   <div className="bc-field-label-row">
                     <span className="bc-field-label">Business Type / Industry Category</span>
                   </div>
-                  <input
-                    type="text"
+                  <select
                     className="bc-input-modern"
-                    value={bizFormCategory}
+                    value={bizFormCategory || ''}
                     onChange={e => setBizFormCategory(e.target.value)}
-                    placeholder="e.g. Other, Restaurant, Salon, Retail, Healthcare"
-                  />
+                  >
+                    <option value="" disabled>Select your industry or service</option>
+                    {CATEGORY_OPTIONS.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                    {bizFormCategory && !CATEGORY_OPTIONS.includes(bizFormCategory) && (
+                      <option value={bizFormCategory}>{bizFormCategory}</option>
+                    )}
+                  </select>
                   <p className="bc-field-subtext">Determines the industry vocabulary, tone, and context used by the AI review generator.</p>
                 </div>
 
@@ -5270,46 +5280,39 @@ export default function BusinessConsole({
 
                   {/* Business Category / Industry */}
                   <div style={{ marginBottom: '1.15rem' }}>
-                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.45rem' }}>
+                    <label htmlFor="settings-category" style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.45rem' }}>
                       Industry / Category / Services *
                     </label>
                     <select
                       id="settings-category"
                       className="bc-settings-select"
                       required
-                      value={settingsCatOther || (settingsBizCategory && !ALL_CATEGORY_OPTIONS.includes(settingsBizCategory)) ? '__other' : settingsBizCategory}
-                      onChange={(e) => {
-                        if (e.target.value === '__other') {
-                          setSettingsCatOther(true);
-                          if (ALL_CATEGORY_OPTIONS.includes(settingsBizCategory)) setSettingsBizCategory('');
-                        } else {
-                          setSettingsCatOther(false);
-                          setSettingsBizCategory(e.target.value);
-                        }
+                      value={settingsBizCategory || ''}
+                      onChange={(e) => setSettingsBizCategory(e.target.value)}
+                      style={{
+                        width: '100%',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: 8,
+                        padding: '0.65rem 0.85rem',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        boxSizing: 'border-box',
+                        outline: 'none',
+                        cursor: 'pointer'
                       }}
+                      onFocus={(e) => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22, 163, 74, 0.12)'; }}
+                      onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
                     >
                       <option value="" disabled>Select your industry or service</option>
-                      {CATEGORY_GROUPS.map(([group, list]) => (
-                        <optgroup key={group} label={group}>
-                          {list.map(c => <option key={c} value={c}>{c}</option>)}
-                        </optgroup>
+                      {CATEGORY_OPTIONS.map(c => (
+                        <option key={c} value={c}>{c}</option>
                       ))}
-                      <option value="__other">Other (type your own service)</option>
+                      {settingsBizCategory && !CATEGORY_OPTIONS.includes(settingsBizCategory) && (
+                        <option value={settingsBizCategory}>{settingsBizCategory}</option>
+                      )}
                     </select>
-                    {(settingsCatOther || (settingsBizCategory && !ALL_CATEGORY_OPTIONS.includes(settingsBizCategory))) && (
-                      <input
-                        type="text"
-                        required
-                        autoFocus={settingsCatOther}
-                        className="bc-settings-select"
-                        style={{ marginTop: 8 }}
-                        value={settingsBizCategory}
-                        onChange={(e) => setSettingsBizCategory(e.target.value)}
-                        placeholder="Type your own service, e.g. Shopify Store Setup, CRM Development"
-                        maxLength={80}
-                        aria-label="Your own service or industry"
-                      />
-                    )}
                     <p style={{ margin: '5px 0 0', fontSize: '0.72rem', color: '#64748b' }}>
                       Appears under your business title in the dashboard header and helps AI tailor customer review prompts.
                     </p>
@@ -5689,14 +5692,64 @@ export default function BusinessConsole({
                         />
                       </div>
 
-                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.55rem', marginBottom: '1.5rem', cursor: 'pointer' }}>
+                      <label
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '0.65rem',
+                          marginBottom: '1.5rem',
+                          cursor: 'pointer',
+                          userSelect: 'none'
+                        }}
+                      >
+                        <span
+                          role="checkbox"
+                          aria-checked={delAgreed}
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === ' ' || e.key === 'Enter') {
+                              e.preventDefault();
+                              setDelAgreed(!delAgreed);
+                            }
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setDelAgreed(!delAgreed);
+                          }}
+                          style={{
+                            width: 20,
+                            height: 20,
+                            minWidth: 20,
+                            borderRadius: 4,
+                            border: delAgreed ? '2px solid #dc2626' : '2px solid #94a3b8',
+                            background: delAgreed ? '#dc2626' : '#ffffff',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            marginTop: 1,
+                            flexShrink: 0,
+                            transition: 'all 0.15s ease',
+                            boxShadow: delAgreed ? '0 1px 4px rgba(220, 38, 38, 0.3)' : '0 1px 2px rgba(0, 0, 0, 0.05)'
+                          }}
+                        >
+                          {delAgreed && (
+                            <i className="fa-solid fa-check" style={{ color: '#ffffff', fontSize: 12, fontWeight: 900 }} />
+                          )}
+                        </span>
                         <input
                           type="checkbox"
                           checked={delAgreed}
                           onChange={(e) => setDelAgreed(e.target.checked)}
-                          style={{ marginTop: 3 }}
+                          style={{
+                            position: 'absolute',
+                            opacity: 0,
+                            pointerEvents: 'none',
+                            width: 0,
+                            height: 0
+                          }}
                         />
-                        <span style={{ fontSize: '0.78rem', color: '#475569', lineHeight: 1.4 }}>
+                        <span style={{ fontSize: '0.8rem', color: '#334155', lineHeight: 1.45, fontWeight: 500 }}>
                           I agree to submit this request to <strong>marutiinfosoftteam@gmail.com</strong>. I understand that account data will remain preserved until administrative verification is complete.
                         </span>
                       </label>

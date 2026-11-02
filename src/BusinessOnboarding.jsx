@@ -3,17 +3,21 @@ import { api } from './api.js';
 
 const CATEGORY_OPTIONS = [
   'Restaurant & Cafe',
-  'Salon & Spa',
-  'Clinic & Healthcare',
-  'Dental Clinic',
-  'Retail Store',
-  'Hotel & Hospitality',
-  'Gym & Fitness',
-  'Auto Service & Garage',
-  'Real Estate',
-  'Software & IT Services',
+  'Dental Clinic & Healthcare',
+  'Spa, Salon & Wellness',
+  'Retail & Shopping',
+  'Auto Repair & Service',
+  'Real Estate & Construction',
+  'Hotel, Travel & Hospitality',
   'Education & Coaching',
-  'Other'
+  'Gym & Fitness',
+  'Professional & Legal Services',
+  'Solar Rooftop & Clean Energy',
+  'Home Services & Renovation',
+  'Jewellery & Fashion',
+  'Pharmacy & Medical Store',
+  'Manufacturing & Fabrication',
+  'Local Business & Services'
 ];
 
 const pushStep = (step) => {
