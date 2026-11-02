@@ -91,7 +91,6 @@ const CATEGORY_OPTIONS = [
   'Jewellery & Fashion',
   'Pharmacy & Medical Store',
   'Manufacturing & Fabrication',
-  'Local Business & Services',
   'Other'
 ];
 const ALL_CATEGORY_OPTIONS = CATEGORY_OPTIONS;
@@ -185,7 +184,8 @@ export default function BusinessConsole({
 
   // Dynamic business and subscription info (declared early to prevent TDZ ReferenceErrors)
   const bizName = business?.name || user?.company || user?.businessName || user?.name || 'Your business';
-  const bizCategory = business?.category || business?.customIndustry || business?.industry || user?.category || user?.industry || '';
+  const rawBizCat = business?.category || business?.customIndustry || business?.industry || user?.category || user?.industry || '';
+  const bizCategory = rawBizCat === 'Local Business & Services' ? '' : rawBizCat;
   const bizCity = business?.city || business?.location || (business?.country ? `${business?.country}` : '') || (business?.address ? business.address.split(',')[0].trim() : '') || user?.city || user?.location || user?.country || '';
   const originUrl = (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1'))
     ? window.location.origin
@@ -616,9 +616,8 @@ export default function BusinessConsole({
     if (business?.name || user?.company || user?.name) {
       setSettingsBizName(business?.name || user?.company || user?.businessName || user?.name || '');
     }
-    if (business?.category || user?.category) {
-      setSettingsBizCategory(business?.category || user?.category || 'Local Business & Services');
-    }
+    const catVal = business?.category || user?.category || '';
+    setSettingsBizCategory(catVal === 'Local Business & Services' ? '' : catVal);
     if (business?.city || business?.location || user?.city) {
       setSettingsBizCity(business?.city || business?.location || user?.city || '');
     }
@@ -1354,15 +1353,7 @@ export default function BusinessConsole({
             </div>
           </div>
           <div className="bc-mobile-actions">
-            <a
-              href="/"
-              className="bc-mobile-btn-site"
-              onClick={(e) => { if (!isPlainClick(e)) return; e.preventDefault(); navigate('Home'); }}
-              title="Return to Public Website"
-              aria-label="Return to Public Website"
-            >
-              <i className="fa-solid fa-arrow-left"></i> <span>Website</span>
-            </a>
+            
             {activeTab !== 'Billing & Plans' ? (
               <a
                 href={tabHref('Billing & Plans')}
@@ -1387,21 +1378,6 @@ export default function BusinessConsole({
         {/* Persistent Desktop / Tablet Topbar with Quick Navigation & Back to Website */}
         <div className="bc-topbar-strip">
           <div className="bc-topbar-crumbs">
-            <a
-              href="/"
-              className="bc-topbar-back-btn"
-              onClick={(e) => {
-                if (!e.metaKey && !e.ctrlKey && !e.shiftKey && e.button !== 1) {
-                  e.preventDefault();
-                  if (goBackToWebsite) goBackToWebsite();
-                  else navigate(lastPublicPage && lastPublicPage !== 'Dashboard' ? lastPublicPage : 'Home');
-                }
-              }}
-              title="Go back to website page"
-            >
-              <i className="fa-solid fa-arrow-left"></i> Back to Website
-            </a>
-            <span className="bc-topbar-sep">/</span>
             <span className="bc-topbar-crumb-tab">{activeTab}</span>
           </div>
           <div className="bc-topbar-actions">

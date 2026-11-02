@@ -17,7 +17,6 @@ const CATEGORY_OPTIONS = [
   'Jewellery & Fashion',
   'Pharmacy & Medical Store',
   'Manufacturing & Fabrication',
-  'Local Business & Services',
   'Other'
 ];
 
@@ -447,8 +446,18 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
                 <label htmlFor="mb-category">Category</label>
                 <select id="mb-category" value={manualCategory} onChange={e => setManualCategory(e.target.value)}>
                   <option value="">Select a category</option>
-                  {CATEGORY_OPTIONS.map(c => <option key={c}>{c}</option>)}
+                  {CATEGORY_OPTIONS.map(c => <option key={c} value={c}>{c === 'Other' ? 'Other (type your own)' : c}</option>)}
                 </select>
+                {manualCategory === 'Other' && (
+                  <input
+                    type="text"
+                    required
+                    style={{ marginTop: 8 }}
+                    placeholder="Type your business category..."
+                    value={customManualCategory}
+                    onChange={e => setCustomManualCategory(e.target.value)}
+                  />
+                )}
               </div>
 
               <div className="rf-form-group rf-form-group-wide">
