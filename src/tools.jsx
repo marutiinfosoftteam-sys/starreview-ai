@@ -2,11 +2,56 @@ import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { api } from './api.js';
 
-const Stars = ({ value, onChange }) => (
-  <div className="rating-select">
-    {[1, 2, 3, 4, 5].map(n => <button type="button" key={n} className={value >= n ? 'on' : ''} onClick={() => onChange(n)} aria-label={`${n} stars`}>★</button>)}
-  </div>
-);
+const Stars = ({ value, onChange }) => {
+  const [hoverVal, setHoverVal] = useState(0);
+  const activeVal = hoverVal || value || 0;
+
+  return (
+    <div
+      className="rating-select"
+      style={{
+        display: 'flex',
+        gap: '12px',
+        justifyContent: 'center',
+        marginTop: '12px',
+        userSelect: 'none'
+      }}
+    >
+      {[1, 2, 3, 4, 5].map(n => {
+        const isLit = activeVal >= n;
+        return (
+          <button
+            type="button"
+            key={n}
+            onMouseEnter={() => setHoverVal(n)}
+            onMouseLeave={() => setHoverVal(0)}
+            onClick={() => onChange(n)}
+            aria-label={`${n} stars`}
+            style={{
+              width: 54,
+              height: 54,
+              borderRadius: 14,
+              border: isLit ? '2.5px solid #f59e0b' : '2px solid #e2e8f0',
+              background: isLit ? '#fffbeb' : '#ffffff',
+              color: isLit ? '#f59e0b' : '#cbd5e1',
+              fontSize: '34px',
+              lineHeight: 1,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: isLit ? '0 6px 16px rgba(245, 158, 11, 0.25)' : '0 2px 5px rgba(0,0,0,0.03)',
+              transform: isLit ? 'scale(1.08)' : 'scale(1)'
+            }}
+          >
+            ★
+          </button>
+        );
+      })}
+    </div>
+  );
+};
 const SignInPrompt = ({ navigate, text }) => (
   <div className="panel narrow center-text"><h3>Sign in required</h3><p>{text}</p><button className="btn btn-dark" onClick={() => navigate('Account')}>Sign in or create account →</button></div>
 );
@@ -43,7 +88,7 @@ export function ReviewFunnel({ slug, notify }) {
   const [biz, setBiz] = useState(null);
   const [error, setError] = useState('');
   const [step, setStep] = useState('rate'); // 'rate' | 'drafts' | 'private' | 'thanks'
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState(0);
   const [staff, setStaff] = useState('');
   const [service, setService] = useState('');
   const [language, setLanguage] = useState('English');
