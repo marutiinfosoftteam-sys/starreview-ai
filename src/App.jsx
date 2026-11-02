@@ -1225,10 +1225,10 @@ export default function App() {
                     </a>
                     <a
                       href="/login"
-                      className="rf-btn-startfree full"
+                      className="rf-btn-signin full"
                       onClick={(e) => { setRegMode(false); handleNavClick(e, 'Account', false); setMenu(false); }}
                     >
-                      Sign In <span className="rf-nav-arrow">→</span>
+                      Sign In
                     </a>
                   </>
                 ) : (
@@ -1281,7 +1281,7 @@ export default function App() {
                     }}
                     title="Sign In to Dashboard"
                   >
-                    Sign In <span className="rf-nav-arrow">→</span>
+                    Sign In
                   </a>
                 </>
               ) : (

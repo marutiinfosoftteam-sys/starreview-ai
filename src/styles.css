@@ -1567,7 +1567,7 @@
   max-width: 1160px;
   margin: 0 auto 3rem;
   display: grid;
-  grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1.55fr 1fr 1fr 1fr 1fr;
   gap: 2.2rem;
   position: relative;
   z-index: 1;
