@@ -4833,6 +4833,14 @@ export default function BusinessConsole({
                 <span>NEED HELP CHOOSING?</span>
                 <h3>Not Sure Which Service Is Right for Your Business?</h3>
                 <p>Tell us what you want to improve and we will help you understand which available service best matches your goal.</p>
+                <div className="bc-services-direct-contact">
+                  <a href={`mailto:${COMPANY.email}`} title="Email Support">
+                    <i className="fa-solid fa-envelope"></i> {COMPANY.email}
+                  </a>
+                  <a href={COMPANY.phoneHref} title="Call Support">
+                    <i className="fa-solid fa-phone"></i> {COMPANY.phone}
+                  </a>
+                </div>
               </div>
 
               <div className="bc-services-cta-buttons">
