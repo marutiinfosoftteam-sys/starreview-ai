@@ -91,7 +91,8 @@ const CATEGORY_OPTIONS = [
   'Jewellery & Fashion',
   'Pharmacy & Medical Store',
   'Manufacturing & Fabrication',
-  'Local Business & Services'
+  'Local Business & Services',
+  'Other'
 ];
 const ALL_CATEGORY_OPTIONS = CATEGORY_OPTIONS;
 
@@ -1162,53 +1163,6 @@ export default function BusinessConsole({
           </div>
         </div>
 
-        {/* Plan Status Card in Sidebar */}
-        {!collapsed && (
-          (daysLeft === 0 && sub?.status === 'expired') ? (
-            <div className="bc-sidebar-alert">
-              <div className="alert-title">
-                <i className="fa-solid fa-triangle-exclamation"></i>
-                PLAN EXPIRED
-              </div>
-              <p>Features locked.</p>
-              <button
-                className="bc-sidebar-alert-btn"
-                onClick={() => {
-                  setActiveTab('Billing & Plans');
-                  setPlanCheckoutStep('select');
-                }}
-              >
-                Upgrade Plan
-              </button>
-            </div>
-          ) : (
-            <div className="bc-sidebar-alert" style={{ background: 'rgba(34, 197, 94, 0.15)', borderColor: 'rgba(34, 197, 94, 0.4)' }}>
-              <div className="alert-title" style={{ color: '#86efac' }}>
-                <i className="fa-solid fa-circle-check"></i>
-                {isTrial ? '30-Day Free Trial' : `${planName}`} Active
-              </div>
-              <p style={{ color: '#bbf7d0' }}>{daysLeft > 0 ? `${daysLeft} days remaining` : 'All tools unlocked'}</p>
-            </div>
-          )
-        )}
-
-        {/* Quick Link to Return to Website */}
-        <a
-          href="/"
-          className="bc-sidebar-return-btn"
-          onClick={(e) => {
-            if (!e.metaKey && !e.ctrlKey && !e.shiftKey && e.button !== 1) {
-              e.preventDefault();
-              if (goBackToWebsite) goBackToWebsite();
-              else navigate(lastPublicPage && lastPublicPage !== 'Dashboard' ? lastPublicPage : 'Home');
-            }
-          }}
-          title={collapsed ? "Back to Website" : "Return to StarReview AI Public Website"}
-        >
-          <i className="fa-solid fa-arrow-left"></i>
-          {!collapsed && <span>Back to Website</span>}
-        </a>
-
         {/* Navigation list */}
         <div className="bc-nav-scroll">
           {tabs.map((item, idx) => {
@@ -1351,18 +1305,6 @@ export default function BusinessConsole({
             <span className="bc-topbar-crumb-tab">{activeTab}</span>
           </div>
           <div className="bc-topbar-actions">
-            <a
-              href="/"
-              className="bc-topbar-link-btn"
-              onClick={(e) => {
-                if (!e.metaKey && !e.ctrlKey && !e.shiftKey && e.button !== 1) {
-                  e.preventDefault();
-                  navigate('Home');
-                }
-              }}
-            >
-              <i className="fa-solid fa-house"></i> Public Website
-            </a>
             <a
               href="/pricing"
               className="bc-topbar-link-btn"
@@ -1587,47 +1529,6 @@ export default function BusinessConsole({
                 </div>
               </div>
             </div>
-
-            {/* 2. TRIAL ALERT BANNER */}
-            {isTrial ? (
-              <div className="bc-trial-banner">
-                <div className="bc-trial-content">
-                  <div className="bc-trial-icon">
-                    <i className="fa-solid fa-triangle-exclamation"></i>
-                  </div>
-                  <div>
-                    <div className="bc-trial-title">
-                      {daysLeft > 0 ? `Starter Plan — ${daysLeft} days remaining` : 'Starter Plan Active'}
-                    </div>
-                    <p className="bc-trial-desc">
-                      Upgrade to unlock AI Replies, remove ads, and get priority support.
-                    </p>
-                  </div>
-                </div>
-                <button className="bc-btn-upgrade" onClick={() => startPlanCheckout('Starter', 'Yearly', 999)}>
-                  Upgrade Plan
-                </button>
-              </div>
-            ) : (
-              <div className="bc-trial-banner" style={{ background: '#f0fdf4', borderColor: '#bbf7d0' }}>
-                <div className="bc-trial-content">
-                  <div className="bc-trial-icon" style={{ background: '#dcfce7', color: '#16a34a' }}>
-                    <i className="fa-solid fa-circle-check"></i>
-                  </div>
-                  <div>
-                    <div className="bc-trial-title" style={{ color: '#166534' }}>
-                      {planName} Plan Active · Full Access Unlocked
-                    </div>
-                    <p className="bc-trial-desc" style={{ color: '#15803d' }}>
-                      AI review drafting, unlimited QR scans, Google sync, and private feedback routing are active.
-                    </p>
-                  </div>
-                </div>
-                <button className="bc-btn-upgrade" style={{ background: '#166534' }} onClick={() => startPlanCheckout('Starter', 'Yearly', 999)}>
-                  Manage Plan
-                </button>
-              </div>
-            )}
 
             {/* 3. GROWTH STRATEGY CARD ("Slow & Steady Wins the Review Game") */}
             <div className="bc-growth-card">
@@ -2070,32 +1971,6 @@ export default function BusinessConsole({
                   <i className="fa-regular fa-calendar" style={{ fontSize: '0.75rem', color: '#16a34a' }}></i> {analyticsTimeframe}
                 </span>
               </div>
-            </div>
-
-            {/* Trial Banner */}
-            <div className="bc-trial-banner">
-              <div className="bc-trial-content">
-                <div className="bc-trial-icon">
-                  <i className="fa-solid fa-triangle-exclamation"></i>
-                </div>
-                <div>
-                  <div className="bc-trial-title">
-                    {daysLeft > 0 ? `Starter Plan — ${daysLeft} days remaining` : 'Starter Plan Active'}
-                  </div>
-                  <p className="bc-trial-desc">
-                    Upgrade to unlock advanced analytics and reports.
-                  </p>
-                </div>
-              </div>
-              <button
-                className="bc-btn-upgrade"
-                onClick={() => {
-                  setActiveTab('Billing & Plans');
-                  setPlanCheckoutStep('select');
-                }}
-              >
-                Upgrade Plan
-              </button>
             </div>
 
             {/* Timeframe Filter Tabs */}
@@ -2711,32 +2586,6 @@ export default function BusinessConsole({
                 </div>
                 <p>Disabling this feature does not delete or alter feedback that has already been collected.</p>
               </div>
-            </div>
-
-            {/* Trial Banner */}
-            <div className="bc-trial-banner">
-              <div className="bc-trial-content">
-                <div className="bc-trial-icon">
-                  <i className="fa-solid fa-triangle-exclamation"></i>
-                </div>
-                <div>
-                  <div className="bc-trial-title">
-                    {daysLeft > 0 ? `You are on the Starter Plan — ${daysLeft} days remaining` : 'You are on the Starter Plan'}
-                  </div>
-                  <p className="bc-trial-desc">
-                    Upgrade to unlock advanced features including AI review replies and priority support.
-                  </p>
-                </div>
-              </div>
-              <button
-                className="bc-btn-upgrade"
-                onClick={() => {
-                  setActiveTab('Billing & Plans');
-                  setPlanCheckoutStep('select');
-                }}
-              >
-                <i className="fa-regular fa-star" style={{ marginRight: 4 }}></i> Upgrade Plan
-              </button>
             </div>
 
             {/* Tab Filter: Active / Archived */}
@@ -4263,12 +4112,9 @@ export default function BusinessConsole({
                       <div className="bc-form-group">
                         <label className="bc-label" htmlFor="gs-service">Service *</label>
                         <select id="gs-service" className="bc-input" value={selectedService} onChange={(e) => setSelectedService(e.target.value)}>
-                          {GROWTH_SERVICES.map(g => (
-                            <optgroup key={g.id} label={g.title}>
-                              <option value={g.title}>{g.title} (full package)</option>
-                              {g.items.map(([name]) => <option key={name} value={`${g.title} — ${name}`}>{name}</option>)}
-                            </optgroup>
-                          ))}
+                          <option value="Website Development">Website Development</option>
+                          <option value="Digital Marketing">Digital Marketing</option>
+                          <option value="SEO Services">SEO Services</option>
                         </select>
                       </div>
                       <div className="bc-form-grid-2">
@@ -4307,12 +4153,21 @@ export default function BusinessConsole({
                         <label className="bc-label" htmlFor="gs-notes">What do you need?</label>
                         <textarea id="gs-notes" className="bc-input" rows="3" placeholder="e.g. 5-page website with WhatsApp button, or more leads from Instagram…" value={serviceInquiryNotes} onChange={(e) => setServiceInquiryNotes(e.target.value)} />
                       </div>
-                      <div className="gs-modal-actions">
-                        <button type="button" className="gs-btn-wa" onClick={() => handleServiceWhatsApp(selectedService, true)}>
-                          <i className="fa-brands fa-whatsapp"></i> Send on WhatsApp
-                        </button>
-                        <button type="submit" className="gs-btn-form" disabled={submittingInquiry}>
-                          {submittingInquiry ? 'Sending…' : 'Submit inquiry →'}
+                      <div className="gs-modal-actions" style={{ display: 'flex', justifyContent: 'center' }}>
+                        <button
+                          type="button"
+                          className="gs-btn-wa"
+                          onClick={() => handleServiceWhatsApp(selectedService, true)}
+                          style={{
+                            width: '100%',
+                            justifyContent: 'center',
+                            padding: '0.85rem 1.25rem',
+                            fontSize: '0.95rem',
+                            fontWeight: 800,
+                            borderRadius: 10
+                          }}
+                        >
+                          <i className="fa-brands fa-whatsapp" style={{ fontSize: '1.2rem' }}></i> Send on WhatsApp
                         </button>
                       </div>
                       <p className="gs-modal-note">Our WhatsApp: <a href={`https://wa.me/${COMPANY.whatsapp}`} target="_blank" rel="noopener noreferrer">{COMPANY.phone}</a></p>
@@ -6082,14 +5937,6 @@ export default function BusinessConsole({
                       </div>
                     </div>
                   )}
-                </div>
-
-                {/* Footer Security Badges */}
-                <div style={{ background: '#f8fafc', borderTop: '1px solid #f1f5f9', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#166534', fontWeight: 700 }}>
-                    <i className="fa-solid fa-lock"></i> 256-Bit Encrypted OAuth 2.0
-                  </div>
-                  <div>Official Google API Access</div>
                 </div>
               </div>
             </div>

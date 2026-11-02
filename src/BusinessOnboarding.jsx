@@ -17,7 +17,8 @@ const CATEGORY_OPTIONS = [
   'Jewellery & Fashion',
   'Pharmacy & Medical Store',
   'Manufacturing & Fabrication',
-  'Local Business & Services'
+  'Local Business & Services',
+  'Other'
 ];
 
 const pushStep = (step) => {
