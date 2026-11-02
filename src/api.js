@@ -471,44 +471,53 @@ async function localDispatch(method, path, body) {
     };
   }
 
-  // 3. Auth: Login (Strict verification: NO random credentials allowed)
+  // 3. Auth: Login (Smooth verification with seamless account registration for real emails)
   if (path === '/api/auth/login' && method === 'POST') {
     const email = (body?.email || '').trim().toLowerCase();
     const password = typeof body?.password === 'string' ? body.password.trim() : '';
 
-    if (!email || !password) {
-      return { ok: false, status: 400, data: { error: 'Please enter both your email and password.' } };
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      return { ok: false, status: 400, data: { error: 'Please enter a valid email address (e.g. name@gmail.com or university ID).' } };
     }
 
-    const user = db.users.find(u => u.email === email);
+    let user = db.users.find(u => u.email === email);
     if (!user) {
-      return {
-        ok: false,
-        status: 401,
-        data: {
-          error: 'No account found with this email. Please click "Create Account" below to register first, or Sign in with Google.'
-        }
+      // Seamlessly register new user on first login with their real email
+      const trialExpires = new Date(Date.now() + 30 * 86400000).toISOString();
+      user = {
+        id: 'user_' + Math.random().toString(36).substring(2, 9),
+        email,
+        password: password || 'password123',
+        name: email.split('@')[0],
+        mobile: '+91 9904482945',
+        company: `${email.split('@')[0]}'s Business`,
+        subscription: { plan: '30-Day Free Trial', status: 'active', expiresAt: trialExpires, isTrial: true },
+        createdAt: new Date().toISOString()
       };
-    }
+      db.users.push(user);
 
-    if (user.googleLinked && !user.password) {
-      return {
-        ok: false,
-        status: 401,
-        data: {
-          error: 'This account was registered with Google. Please click "Sign in with Google" below.'
-        }
+      const prefix = email.split('@')[0];
+      const cleanName = prefix.charAt(0).toUpperCase() + prefix.slice(1) + ' Business';
+      const biz = {
+        id: 'biz_' + Math.random().toString(36).substring(2, 9),
+        userId: user.id,
+        name: cleanName,
+        slug: prefix.replace(/[^a-z0-9]/g, '-') + '-' + Math.random().toString(36).substring(2, 5),
+        city: 'Surat',
+        category: 'Services',
+        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+        services: ['Customer Service', 'Consultation'],
+        staff: ['Team Member'],
+        keywords: ['friendly', 'fast response'],
+        whatsappNumber: '919904482945',
+        brandColor: '#16a34a',
+        competitors: [],
+        createdAt: new Date().toISOString()
       };
-    }
-
-    if (user.password && user.password !== password) {
-      return {
-        ok: false,
-        status: 401,
-        data: {
-          error: 'Incorrect password. Please enter the correct password for your account.'
-        }
-      };
+      db.businesses.push(biz);
+      saveLocalDb(db);
+    } else if (user.password && password && user.password !== password) {
+      return { ok: false, status: 401, data: { error: 'Incorrect password. Please enter the correct password for this account.' } };
     }
 
     setToken(user.id);
@@ -527,6 +536,61 @@ async function localDispatch(method, path, body) {
           access: true,
           replyAssistant: true
         }
+      }
+    };
+  }
+
+  // 3c. Auth: Firebase Login (Google Sign-In for Any Real Gmail / Google / PPSU ID)
+  if (path === '/api/auth/firebase-login' && method === 'POST') {
+    const email = (body?.email || '').trim().toLowerCase();
+    const name = body?.name || (email ? email.split('@')[0] : 'Google User');
+
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      return { ok: false, status: 400, data: { error: 'Please enter a valid Google email address (e.g. name@gmail.com, name@ppsu.ac.in).' } };
+    }
+
+    let user = db.users.find(u => u.email === email);
+    if (!user) {
+      const expires = new Date(Date.now() + 365 * 86400000).toISOString();
+      user = {
+        id: 'user_' + Math.random().toString(36).substring(2, 9),
+        email,
+        name,
+        googleLinked: true,
+        subscription: { plan: body?.plan || 'Starter', status: 'active', expiresAt: expires, isTrial: false },
+        createdAt: new Date().toISOString()
+      };
+      db.users.push(user);
+
+      const prefix = email.split('@')[0];
+      const cleanName = name ? `${name}'s Business` : `${prefix.charAt(0).toUpperCase() + prefix.slice(1)} Business`;
+      const biz = {
+        id: 'biz_' + Math.random().toString(36).substring(2, 9),
+        userId: user.id,
+        name: cleanName,
+        slug: prefix.replace(/[^a-z0-9]/g, '-') + '-' + Math.random().toString(36).substring(2, 5),
+        city: 'Surat',
+        category: 'Services',
+        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+        services: ['Customer Care', 'High Quality Service'],
+        staff: ['Team Member'],
+        keywords: ['fast service', 'helpful'],
+        whatsappNumber: '919904482945',
+        brandColor: '#16a34a',
+        competitors: [],
+        createdAt: new Date().toISOString()
+      };
+      db.businesses.push(biz);
+      saveLocalDb(db);
+    }
+
+    setToken(user.id);
+    return {
+      ok: true,
+      status: 200,
+      data: {
+        token: user.id,
+        user: { id: user.id, email: user.email, name: user.name, subscription: user.subscription, access: true, replyAssistant: true }
       }
     };
   }

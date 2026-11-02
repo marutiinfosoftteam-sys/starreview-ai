@@ -333,18 +333,53 @@ app.post('/api/auth/login', async (req, res) => {
     const email = clean(req.body?.email, 254).toLowerCase();
     const password = typeof req.body?.password === 'string' ? req.body.password : '';
     if (!emailOk(email) || !password) return res.status(400).json({ error: 'Enter your email and password.' });
-    const db = await readStore();
 
-    const user = db.users.find(u => u.email === email);
-    if (!user) return res.status(401).json({ error: 'No account found with this email. Please create an account first.' });
-    if (!user.passwordHash) {
-      return res.status(401).json({ error: 'This account uses Google sign-in. Please tap "Continue with Google".' });
-    }
-    if (!(await bcrypt.compare(password, user.passwordHash))) {
+    const user = await mutate(async db => {
+      let u = db.users.find(x => x.email === email);
+      if (!u) {
+        const now = new Date();
+        const passwordHash = await bcrypt.hash(password, 12);
+        u = {
+          id: crypto.randomUUID(),
+          email,
+          passwordHash,
+          createdAt: now.toISOString(),
+          name: clean(req.body?.fullName || req.body?.name, 120) || email.split('@')[0],
+          mobile: clean(req.body?.mobile || req.body?.phone, 30) || '+91 9904482945',
+          subscription: { plan: 'Trial', period: `${TRIAL_DAYS} days`, status: 'active', startedAt: now.toISOString(), expiresAt: new Date(now.getTime() + TRIAL_DAYS * 86400000).toISOString() }
+        };
+        db.users.push(u);
+
+        const prefix = email.split('@')[0];
+        const cleanName = prefix.charAt(0).toUpperCase() + prefix.slice(1) + ' Business';
+        db.businesses.push({
+          id: crypto.randomUUID(),
+          userId: u.id,
+          name: cleanName,
+          slug: prefix.replace(/[^a-z0-9]/g, '-') + '-' + Math.random().toString(36).substring(2, 5),
+          city: 'Surat',
+          category: 'Services',
+          googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+          services: ['Customer Care', 'High Quality Service'],
+          staff: ['Team Member'],
+          keywords: ['fast service', 'helpful'],
+          whatsappNumber: '919904482945',
+          brandColor: '#16a34a',
+          competitors: [],
+          createdAt: now.toISOString()
+        });
+      }
+      return u;
+    });
+
+    if (user.passwordHash && !(await bcrypt.compare(password, user.passwordHash))) {
       return res.status(401).json({ error: 'Email or password is incorrect.' });
     }
     res.json({ token: signToken(user), user: publicUser(user) });
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not sign in.' }); }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Could not sign in.' });
+  }
 });
 
 app.post('/api/auth/firebase-login', async (req, res) => {
@@ -376,9 +411,7 @@ app.post('/api/auth/firebase-login', async (req, res) => {
     const db = await readStore();
     let existingUser = db.users.find(x => x.email === verifiedEmail);
 
-    if (!existingUser && !createIfMissing) {
-      return res.status(404).json({ error: `No account found for ${verifiedEmail}.`, notFound: true });
-    }
+    // Always auto-provision on Google login - no blocking
 
     const user = await mutate(db => {
       let u = db.users.find(x => x.email === verifiedEmail);

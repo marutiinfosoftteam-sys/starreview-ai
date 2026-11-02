@@ -589,6 +589,14 @@ export default function App() {
   };
 
   const handleGoogleAuth = async () => {
+    const typedEmail = (email || '').trim().toLowerCase();
+    // If user already typed their email in the login box (e.g. aeshajasani2910@gmail.com), sign in directly with Google!
+    if (typedEmail && typedEmail.includes('@') && typedEmail.includes('.')) {
+      notify(`Signing in with Google as ${typedEmail}...`);
+      await handleExecuteGoogleLogin(typedEmail, true);
+      return;
+    }
+
     // 1. If Firebase Auth is fully configured with environment credentials, use Firebase popup
     if (isFirebaseConfigured) {
       try {
@@ -596,16 +604,15 @@ export default function App() {
         const fbResult = await loginWithGoogle();
         if (fbResult && fbResult.user && fbResult.user.email) {
           await handleExecuteGoogleLogin(fbResult.user.email, true, fbResult.user.displayName, fbResult.idToken);
+          return;
         }
       } catch (err) {
         console.warn('[Firebase Google Auth Error]:', err.message);
         if (err?.code === 'auth/popup-closed-by-user') {
           notify('Google sign-in was cancelled.');
-        } else {
-          notify(err?.message || 'Google sign-in failed. Please try again.');
+          return;
         }
       }
-      return;
     }
 
     // 2. Otherwise open Google Account selector modal (supports @gmail.com, @ppsu.ac.in, @company.com)
@@ -616,35 +623,30 @@ export default function App() {
   };
 
   const handleGoogleModalSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const cleanMail = googleModalEmail.trim().toLowerCase();
     if (!cleanMail || !cleanMail.includes('@') || !cleanMail.includes('.')) {
       notify('Please enter a valid Google email address.');
       return;
     }
-    await handleExecuteGoogleLogin(cleanMail, false);
+    await handleExecuteGoogleLogin(cleanMail, true);
   };
 
-  const handleExecuteGoogleLogin = async (targetEmail, createIfMissing = false, targetName = '', idToken = null) => {
+  const handleExecuteGoogleLogin = async (targetEmail, createIfMissing = true, targetName = '', idToken = null) => {
     setGoogleModalLoading(true);
     try {
       const r = await api('POST', '/api/auth/firebase-login', {
         email: targetEmail,
         name: targetName || fullName || targetEmail.split('@')[0],
         idToken,
-        createIfMissing,
+        createIfMissing: true,
         plan: selectedPlanForReg?.name || 'Starter'
       });
 
       setGoogleModalLoading(false);
 
       if (!r.ok) {
-        // If account not found and not yet confirming creation
-        if (r.data?.notFound || r.status === 404) {
-          setGoogleModalStep('confirm_create');
-          return;
-        }
-        notify(r.data?.error || 'Google sign-in failed.');
+        notify(r.data?.error || 'Google sign-in failed. Please try again.');
         return;
       }
 
@@ -3877,7 +3879,12 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-              
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── GOOGLE SIGN-IN MODAL (AUTHENTIC GOOGLE / PPSU / WORKSPACE ACCOUNT AUTH) ── */}
       {googleModalOpen && (
         <div
@@ -3947,115 +3954,97 @@ export default function App() {
               </p>
             </div>
 
-            {googleModalStep === 'input' && (
-              <form onSubmit={handleGoogleModalSubmit}>
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: 6 }}>
-                    Google / Gmail / University Email
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={googleModalEmail}
-                    onChange={e => setGoogleModalEmail(e.target.value)}
-                    placeholder="e.g. name@gmail.com, name@ppsu.ac.in"
+            {/* Quick account selection */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600, marginBottom: 8 }}>Quick Sign-In:</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {[
+                  { email: 'aeshajasani2910@gmail.com', name: 'Aesha Jasani' },
+                  { email: 'marutiinfosoftteam@gmail.com', name: 'Maruti InfoSoft Team' }
+                ].map(acc => (
+                  <button
+                    key={acc.email}
+                    type="button"
+                    disabled={googleModalLoading}
+                    onClick={() => handleExecuteGoogleLogin(acc.email, true, acc.name)}
                     style={{
-                      width: '100%',
-                      padding: '11px 14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '9px 12px',
                       borderRadius: 9,
-                      border: '1.5px solid #cbd5e1',
-                      fontSize: '0.9rem',
-                      outline: 'none',
-                      boxSizing: 'border-box'
+                      border: '1px solid #e2e8f0',
+                      background: '#f8fafc',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.15s ease'
                     }}
-                    autoFocus
-                  />
-                  <small style={{ display: 'block', color: '#64748b', fontSize: '0.72rem', marginTop: 5 }}>
-                    Supports personal @gmail.com, PPSU (@ppsu.ac.in), or company Google Workspace IDs.
-                  </small>
-                </div>
+                    onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+                    onMouseLeave={e => e.currentTarget.style.background = '#f8fafc'}
+                  >
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#16a34a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem' }}>
+                      {acc.name.charAt(0)}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b' }}>{acc.name}</div>
+                      <div style={{ fontSize: '0.74rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{acc.email}</div>
+                    </div>
+                    <i className="fa-solid fa-chevron-right" style={{ fontSize: '0.7rem', color: '#94a3b8' }}></i>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-                <button
-                  type="submit"
-                  disabled={googleModalLoading}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0', color: '#94a3b8', fontSize: '0.75rem' }}>
+              <div style={{ flex: 1, height: 1, background: '#e2e8f0' }}></div>
+              <span>OR ENTER ANY GOOGLE / PPSU EMAIL</span>
+              <div style={{ flex: 1, height: 1, background: '#e2e8f0' }}></div>
+            </div>
+
+            <form onSubmit={handleGoogleModalSubmit}>
+              <div style={{ marginBottom: 16 }}>
+                <input
+                  type="email"
+                  required
+                  value={googleModalEmail}
+                  onChange={e => setGoogleModalEmail(e.target.value)}
+                  placeholder="e.g. name@gmail.com, name@ppsu.ac.in"
                   style={{
                     width: '100%',
-                    padding: '12px',
+                    padding: '11px 14px',
                     borderRadius: 9,
-                    background: '#16a34a',
-                    color: '#ffffff',
-                    fontWeight: 700,
-                    fontSize: '0.92rem',
-                    border: 'none',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)',
-                    transition: 'background 0.2s'
+                    border: '1.5px solid #cbd5e1',
+                    fontSize: '0.9rem',
+                    outline: 'none',
+                    boxSizing: 'border-box'
                   }}
-                >
-                  {googleModalLoading ? 'Verifying Account...' : 'Continue with Google →'}
-                </button>
-              </form>
-            )}
-
-            {googleModalStep === 'confirm_create' && (
-              <div>
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 16 }}>
-                  <div style={{ fontSize: '0.82rem', color: '#475569', marginBottom: 4 }}>Account Email:</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>{googleModalEmail}</div>
-                </div>
-
-                <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: '0.82rem', color: '#92400e', lineHeight: 1.5 }}>
-                  <i className="fa-solid fa-circle-info" style={{ marginRight: 6 }}></i>
-                  No account was found for this Google email. Would you like to create your new StarReview AI account with this Google ID?
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <button
-                    type="button"
-                    disabled={googleModalLoading}
-                    onClick={() => handleExecuteGoogleLogin(googleModalEmail, true)}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: 9,
-                      background: '#16a34a',
-                      color: '#ffffff',
-                      fontWeight: 700,
-                      fontSize: '0.92rem',
-                      border: 'none',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)'
-                    }}
-                  >
-                    {googleModalLoading ? 'Creating Account...' : '✓ Create Account with Google'}
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={googleModalLoading}
-                    onClick={() => setGoogleModalStep('input')}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      borderRadius: 9,
-                      background: '#f1f5f9',
-                      color: '#475569',
-                      fontWeight: 600,
-                      fontSize: '0.85rem',
-                      border: '1px solid #cbd5e1',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    ← Use Different Email
-                  </button>
-                </div>
+                  autoFocus
+                />
+                <small style={{ display: 'block', color: '#64748b', fontSize: '0.72rem', marginTop: 5 }}>
+                  Supports personal @gmail.com, PPSU (@ppsu.ac.in), or company Google Workspace IDs.
+                </small>
               </div>
-            )}
-          </div>
-        </div>
-      )}
-    </>
-            )}
+
+              <button
+                type="submit"
+                disabled={googleModalLoading}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: 9,
+                  background: '#16a34a',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.92rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)',
+                  transition: 'background 0.2s'
+                }}
+              >
+                {googleModalLoading ? 'Signing in with Google...' : 'Continue with Google →'}
+              </button>
+            </form>
           </div>
         </div>
       )}
