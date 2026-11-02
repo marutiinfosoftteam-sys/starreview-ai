@@ -4140,7 +4140,6 @@ export default function BusinessConsole({
             <div className="bc-seo-grid">
               {/* Left Column: live check of the client's real website or Google listing */}
               <div className="bc-seo-scan-card">
-                <span className="bc-seo-scan-tag">LIVE WEBSITE & GOOGLE CHECK</span>
                 <h3 className="bc-seo-scan-title">AI Search Visibility Scan</h3>
                 <p className="bc-seo-scan-sub">
                   Enter your real website address or your business name as it appears on Google. We first verify that it really exists, then test it live.
