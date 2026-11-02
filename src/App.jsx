@@ -4,6 +4,9 @@ import { ReviewFunnel, BusinessSetup, ReplyAssistant, SeoAnalyzer, Dashboard, Qr
 import BusinessConsole from './BusinessConsole.jsx';
 import BusinessOnboarding from './BusinessOnboarding.jsx';
 import AboutPage from './AboutPage.jsx';
+import PrivacyPolicyPage from './PrivacyPolicyPage.jsx';
+import { COMPANY } from './company.js';
+import { isFirebaseConfigured, loginWithGoogle } from './firebase.js';
 
 const features = [
   ['fa-solid fa-wand-magic-sparkles', 'AI review assistant', 'Help customers express their genuine experience with three editable draft suggestions in 24 languages.'],
@@ -101,11 +104,16 @@ export const routeMap = {
 
 export const slugMap = {
   ...Object.fromEntries(Object.entries(routeMap).map(([path, name]) => [name, path])),
+  // Several paths map to the same page; pick the canonical URL for these
+  'Dashboard': '/dashboard',
+  'Account': '/login',
   'Business Onboard': '/business-onboard',
   'Business onboarding': '/business-onboard',
   'Payment demo': '/payment-demo',
   'Demo checkout': '/demo-checkout'
 };
+
+// A business counts as set up once it is linked to Google Maps or has a name and city entered manually
 
 export default function App() {
   const getReviewSlug = () => {
@@ -350,7 +358,7 @@ export default function App() {
 
     setUser(updatedUser);
     setPaymentStep('success');
-    notify(`🎉 Payment Successful! ${planToActivate} (${periodToActivate}) plan is now active.`);
+    notify(`Payment Successful! ${planToActivate} (${periodToActivate}) plan is now active.`);
   };
 
   const notify = (msg) => {
@@ -358,10 +366,13 @@ export default function App() {
     setTimeout(() => setToast(''), 3800);
   };
 
-  const navigate = (p, isRegister = false) => {
+  // opts.replace: swap the current history entry instead of adding one (used after
+  // signing in, so Back skips the login form and returns to the page before it)
+  const navigate = (p, isRegister = false, opts = {}) => {
     if (p !== 'Dashboard' && p !== 'Account') setLastPublicPage(p);
     // Dashboard is protected: unauthenticated users must sign in or register first
-    if (p === 'Dashboard' && !user) {
+    // Right after sign-in `user` in this closure can still be the old value; the token is already set
+    if (p === 'Dashboard' && !user && !getToken()) {
       notify('Sign In Required: Please sign in or create an account to access the dashboard.');
       setRegMode(false);
       const nextPath = '/login';
@@ -385,7 +396,9 @@ export default function App() {
       return;
     }
     const nextPath = slugMap[p] || '/';
-    if (window.location.pathname !== nextPath) {
+    if (opts.replace) {
+      window.history.replaceState({ page: p }, '', nextPath);
+    } else if (window.location.pathname !== nextPath) {
       window.history.pushState({ page: p }, '', nextPath);
     }
     setPage(p);
@@ -420,7 +433,8 @@ export default function App() {
     const curPath = window.location.pathname.replace(/\/$/, '') || '/';
     const initPage = pageFromPath();
     if (!window.history.state || !window.history.state.page) {
-      window.history.replaceState({ page: initPage }, '', curPath);
+      // Keep the query string: QR review links carry the business details in it
+      window.history.replaceState({ page: initPage }, '', curPath + window.location.search + window.location.hash);
     }
   }, []);
 
@@ -485,7 +499,8 @@ export default function App() {
         if (e && e.state && e.state.page) {
           target = e.state.page;
         } else {
-          target = routeMap[p] || 'Home';
+          // Also covers /r/<slug> review pages, which are not in routeMap
+          target = routeMap[p] || pageFromPath();
         }
 
         if (p === '/login' || p === '/signin') {
@@ -521,7 +536,8 @@ export default function App() {
       setRegMode(false);
       setPage('Account');
       notify('Sign In Required: Please sign in or create an account to access your dashboard.');
-      window.history.pushState({ page: 'Account' }, '', '/login');
+      // Replace (not push) so Back skips the protected URL instead of bouncing to /login again
+      window.history.replaceState({ page: 'Account' }, '', '/login');
     }
   }, [page, user]);
 
@@ -544,18 +560,15 @@ export default function App() {
     } catch {}
     setPassword('');
     setConfirmPassword('');
-    notify(regMode ? '🎉 Account created successfully! Welcome to StarReview AI!' : 'Signed in successfully.');
+    notify(regMode ? 'Account created successfully! Welcome to StarReview AI!' : 'Signed in successfully.');
     const bRes = await api('GET', '/api/business');
     let fetchedBiz = null;
     if (bRes.ok && bRes.data && bRes.data.business) {
       setMyBusiness(bRes.data.business);
       fetchedBiz = bRes.data.business;
     }
-    if (regMode || !fetchedBiz?.isGoogleVerified) {
-      navigate('Business onboarding');
-    } else {
-      navigate('Dashboard');
-    }
+    // Every sign-in goes to business onboarding first; the dashboard comes after it
+    navigate('Business onboarding', false, { replace: true });
   };
 
   const handleGoogleAuth = async () => {
@@ -594,11 +607,7 @@ export default function App() {
           fetchedBiz = bRes.data.business;
         }
         notify(`✓ Signed in as ${emailToUse}. Welcome to StarReview AI!`);
-        if (regMode || !fetchedBiz?.isGoogleVerified) {
-          navigate('Business onboarding');
-        } else {
-          navigate('Dashboard');
-        }
+        navigate('Business onboarding');
       } else {
         loginDemoConsole();
       }
@@ -624,11 +633,7 @@ export default function App() {
         localStorage.setItem('sr_user', JSON.stringify(demoUser));
       } catch {}
       notify(`✓ Signed in as ${demoEmail}. Welcome to StarReview AI!`);
-      if (regMode || !myBusiness?.isGoogleVerified) {
-        navigate('Business onboarding');
-      } else {
-        navigate('Dashboard');
-      }
+      navigate('Business onboarding');
     }
   };
 
@@ -644,7 +649,7 @@ export default function App() {
       const bRes = await api('GET', '/api/business');
       if (bRes.ok) setMyBusiness(bRes.data.business);
       notify('Welcome to Business Console');
-      navigate('Dashboard');
+      navigate('Business onboarding');
     }
   };
 
@@ -813,7 +818,7 @@ export default function App() {
     { label: 'Apply for Agency', page: 'Apply for agency' }
   ];
 
-  // Exact Pricing Section from User Screenshot (in StarReview Design Theme)
+  // Exact Pricing Section (in StarReview Design Theme)
   const renderPricingSection = () => (
     <section className="section wrap" id="pricing-plans" style={{ paddingTop: 20 }}>
       {/* 1. HERO */}
@@ -1170,7 +1175,7 @@ export default function App() {
 
   return (
     <>
-      {/* Background Animated Ambient Mesh (Screenshot 4 Style) */}
+      {/* Background Animated Ambient Mesh */}
       <div className="rf-global-ambient-glow" aria-hidden="true">
         <div className="rf-ambient-blob rf-blob-1"></div>
         <div className="rf-ambient-blob rf-blob-2"></div>
@@ -1402,7 +1407,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* ROTATING FEATURE SHOWCASE CAROUSEL (SCREENSHOT 4 ENHANCEMENT) */}
+              {/* ROTATING FEATURE SHOWCASE CAROUSEL */}
               <div
                 className="hero-art rf-hero-carousel-container"
                 onMouseEnter={() => setHeroSlidePaused(true)}
@@ -1624,7 +1629,7 @@ export default function App() {
               </div>
             </section>
 
-            {/* 2. FULL-WIDTH EDGE-TO-EDGE CONTINUOUS TICKER / SLIDER (SCREENSHOT 5 FIX) */}
+            {/* 2. FULL-WIDTH EDGE-TO-EDGE CONTINUOUS TICKER / SLIDER */}
             <section className="rf-full-marquee-section">
               <div className="rf-marquee-header-pill">
                 <span className="rf-tag-pulse"></span>
@@ -1936,17 +1941,17 @@ export default function App() {
                   <div className="sr-rank-card highlight">
                     <div className="sr-rank-badge official">
                       <i className="fa-solid fa-circle-check"></i>
-                      <span>CERTIFIED</span>
+                      <span>BUILT IN</span>
                     </div>
-                    <div className="sr-stat-val">Official</div>
-                    <div className="sr-stat-lbl">Google Places API</div>
-                    <div className="sr-stat-sub">100% compliant direct Google Maps review flow</div>
+                    <div className="sr-stat-val">Direct</div>
+                    <div className="sr-stat-lbl">Google review link</div>
+                    <div className="sr-stat-sub">Customers post on your own Google listing</div>
                   </div>
                 </div>
               </div>
             </section>
 
-            {/* 9. EXACT PRICING SECTION (FROM USER SCREENSHOT) */}
+            {/* 9. EXACT PRICING SECTION */}
             {renderPricingSection()}
 
             {/* 10. TESTIMONIALS (FROM REVIEWFLOW IN STARREVIEW PALETTE) */}
@@ -2041,7 +2046,13 @@ export default function App() {
                 <div className="feature-icon"><i className={f[0]}></i></div>
                 <h3>{f[1]}</h3>
                 <p>{f[2]}</p>
-                <button className="learn-link" onClick={() => navigate(toolTarget[f[1]] || 'Dashboard')}>Open tool <i className="fa-solid fa-arrow-right" style={{ fontSize: 11, marginLeft: 4 }}></i></button>
+                <a
+                  className="learn-link"
+                  href={slugMap[toolTarget[f[1]] || 'Dashboard'] || '/dashboard'}
+                  onClick={(e) => handleNavClick(e, toolTarget[f[1]] || 'Dashboard')}
+                >
+                  Open tool <i className="fa-solid fa-arrow-right" style={{ fontSize: 11, marginLeft: 4 }}></i>
+                </a>
               </article>
             ))}
           </div>
@@ -2580,7 +2591,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* RIGHT: REGISTRATION / APPLICATION CARD (SCREENSHOT 1 MATCH) */}
+              {/* RIGHT: REGISTRATION / APPLICATION CARD */}
               <div className="rf-agency-form-card">
                 <h2>Access Multi-Business Portal</h2>
                 <p className="rf-agency-card-sub">
@@ -2756,11 +2767,8 @@ export default function App() {
             user={user}
             setUser={setUser}
             business={myBusiness || {
-              name: user?.company || user?.name || 'Team Maruti InfoSoft',
-              address: 'Surat, Gujarat, India',
-              rating: 4.9,
-              totalReviews: 248,
-              phone: user?.mobile || '+91 9904482945'
+              name: user?.company || user?.name || '',
+              phone: user?.mobile || ''
             }}
             setBusiness={setMyBusiness}
             navigate={navigate}
@@ -2778,7 +2786,7 @@ export default function App() {
       {page === 'Account' && (
         <div className="rf-login-viewport">
           <div className="rf-login-container">
-            {/* ═══════ LEFT COLUMN: LANDING SHOWCASE & TRUST (SCREENSHOT 4 MATCH) ═══════ */}
+            {/* ═══════ LEFT COLUMN: LANDING SHOWCASE & TRUST ═══════ */}
             <div className="rf-login-showcase">
               <a href="/" className="rf-login-back-btn" onClick={(e) => handleNavClick(e, 'Home')}>
                 <i className="fa-solid fa-arrow-left"></i> Back to Homepage
@@ -2807,7 +2815,7 @@ export default function App() {
                 Turn everyday walk-in and online customers into glowing 5-star Google reviews. Boost your local search ranking and attract more paying customers effortlessly.
               </p>
 
-              {/* 4 Key Perks (Screenshot 4 Match) */}
+              {/* 4 Key Perks */}
               <div className="rf-login-perks-grid">
                 <div className="rf-perk-card-box">
                   <div className="rf-perk-icon-wrap"><i className="fa-solid fa-bolt"></i></div>
@@ -2839,7 +2847,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Trust Strip (Screenshot 4 Match) */}
+              {/* Trust Strip */}
               <div className="rf-login-trust-strip">
                 <span className="rf-login-trust-item"><i className="fa-solid fa-star gold-star"></i> 4.9/5 Rating</span>
                 <span className="rf-login-trust-item"><i className="fa-solid fa-circle-check green-icon"></i> Instant Activation</span>
@@ -2847,7 +2855,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* ═══════ RIGHT COLUMN: AUTH CARD (SCREENSHOT 4 MATCH) ═══════ */}
+            {/* ═══════ RIGHT COLUMN: AUTH CARD ═══════ */}
             <div className="rf-login-card">
               {page === 'Dashboard' && !user && (
                 <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '10px 12px', fontSize: '0.8rem', color: '#92400e', marginBottom: 16, lineHeight: 1.4 }}>
@@ -2869,7 +2877,7 @@ export default function App() {
               <form onSubmit={submitAuth}>
                 {regMode ? (
                   <>
-                    {/* Row 1: Full Name & Mobile Number (Screenshot 4) */}
+                    {/* Row 1: Full Name & Mobile Number */}
                     <div className="rf-form-row-2col">
                       <div className="rf-login-form-group">
                         <label className="rf-login-label">FULL NAME</label>
@@ -2922,7 +2930,7 @@ export default function App() {
                       />
                     </div>
 
-                    {/* Row 3: Password & Confirm Password (Screenshot 4) */}
+                    {/* Row 3: Password & Confirm Password */}
                     <div className="rf-form-row-2col">
                       <div className="rf-login-form-group">
                         <label className="rf-login-label">PASSWORD</label>
@@ -3058,7 +3066,7 @@ export default function App() {
                 )}
               </div>
 
-              {/* Security Strip (Screenshot 2 Match) */}
+              {/* Security Strip */}
               <div className="rf-login-security-footer">
                 <span>Instant Setup</span>
                 <span>&bull;</span>
@@ -3508,6 +3516,10 @@ export default function App() {
               notify(r.data.error || 'Could not send inquiry.');
             }
           }}>
+            <div className="contact-direct">
+              <a href={`mailto:${COMPANY.email}`}><i className="fa-solid fa-envelope"></i> {COMPANY.email}</a>
+              <a href={COMPANY.phoneHref}><i className="fa-solid fa-phone"></i> {COMPANY.phone}</a>
+            </div>
             <label>Your name<input required placeholder="Full name" /></label>
             <label>Work email<input type="email" required placeholder="you@company.com" /></label>
             <label>What can we help with?<select><option>Product demo</option><option>Agency / multiple locations</option><option>Technical integrations</option><option>General question</option></select></label>
@@ -3575,7 +3587,7 @@ export default function App() {
             {page === 'Frequently asked questions' ? (
               <>
                 {[
-                  ['How do I get started?', 'Simply sign in or message us on WhatsApp at +91 9904482945 to activate your business review kit in minutes.'],
+                  ['How do I get started?', 'Simply sign in or message us on WhatsApp at +91 99044 82945 to activate your business review kit in minutes.'],
                   ['How do paid plans work?', 'Starter and Pro are available monthly or yearly. Payments are processed through Razorpay when live keys are configured.'],
                   ['Does StarReview AI post reviews automatically?', 'No. Customers remain in control and must review, edit, and post their own feedback.'],
                   ['Can I manage multiple locations?', 'Contact us about the multi-business and agency options.'],
@@ -3863,7 +3875,7 @@ export default function App() {
           target="_blank"
           rel="noopener noreferrer"
           className="rf-floating-whatsapp-btn"
-          title="Chat on WhatsApp (+91 9904482945)"
+          title="Chat on WhatsApp (+91 99044 82945)"
           aria-label="Chat on WhatsApp"
         >
           <span className="rf-whatsapp-halo"></span>
@@ -3951,6 +3963,10 @@ function Footer({ navigate }) {
           <p className="footer-brand-tagline">
             AI-Powered Google Review Growth System — helping local businesses gather authentic 5-star reviews, resolve private feedback, and boost Google Maps rankings.
           </p>
+          <div className="footer-contact">
+            <a href={`mailto:${COMPANY.email}`}><i className="fa-solid fa-envelope"></i> {COMPANY.email}</a>
+            <a href={COMPANY.phoneHref}><i className="fa-solid fa-phone"></i> {COMPANY.phone}</a>
+          </div>
           <div className="rf-footer-trust-badges">
             <span className="rf-footer-badge"><i className="fa-solid fa-shield-halved"></i> 100% Policy Safe</span>
             <span className="rf-footer-badge"><i className="fa-solid fa-bolt"></i> Instant Setup</span>

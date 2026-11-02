@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import { api, getToken, setToken } from './api.js';
+import { COMPANY } from './company.js';
 import { QrFlyer, BusinessSetup, ReplyAssistant, SeoAnalyzer, funnelUrl } from './tools.jsx';
 import { downloadFlyerImage, downloadFlyerPdf, downloadPlainQr } from './flyerCanvas.js';
 import './console.css';
@@ -24,6 +25,29 @@ export const countryDialOptions = [
   { code: '+27', name: 'South Africa', flag: '🇿🇦' }
 ];
 
+// URL slug for every dashboard tab (/dashboard?tab=<slug>)
+const TAB_SLUGS = {
+  'Dashboard': 'dashboard',
+  'Analytics': 'analytics',
+  'Review Reply': 'reply',
+  'Negative Reviews': 'feedback',
+  'Magic Review QR': 'qr',
+  'Review Settings': 'settings',
+  'AI SEO Analyzer': 'seo',
+  'Add-On Services': 'services',
+  'Billing & Plans': 'billing',
+  'Settings': 'account'
+};
+// Sections with their own inner tabs; each inner tab gets a history entry too
+const SETTINGS_SUBTABS = { 'profile': 'Profile Settings', 'deactivate': 'Deactivate Account', 'delete': 'Delete Account' };
+const SETTINGS_SUB_SLUG = Object.fromEntries(Object.entries(SETTINGS_SUBTABS).map(([slug, name]) => [name, slug]));
+const SLUG_TO_TAB = Object.fromEntries(Object.entries(TAB_SLUGS).map(([tab, slug]) => [slug, tab]));
+const tabHref = (tab) => `/dashboard?tab=${TAB_SLUGS[tab] || 'dashboard'}`;
+// Ctrl/Cmd/Shift/middle clicks open links in a new tab; only plain clicks stay in-app
+const isPlainClick = (e) => !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1);
+// The console can briefly stay mounted while the app switches pages; only touch dashboard URLs
+const onDashboardUrl = () => ['/dashboard', '/console', '/admin', '/index.php'].includes(window.location.pathname.replace(/\/$/, ''));
+
 export default function BusinessConsole({
   user,
   setUser,
@@ -42,48 +66,37 @@ export default function BusinessConsole({
     try {
       const search = new URLSearchParams(window.location.search);
       const tab = (search.get('tab') || '').toLowerCase();
+      if (SLUG_TO_TAB[tab]) return SLUG_TO_TAB[tab];
       if (tab === 'feedback' || tab === 'negative' || tab === 'negative-reviews' || tab === 'reviews') return 'Negative Reviews';
       if (tab === 'billing' || tab === 'plans') return 'Billing & Plans';
       if (tab === 'stand' || tab === 'standee' || tab === 'qr') return 'Magic Review QR';
       if (tab === 'seo' || tab === 'analyzer') return 'AI SEO Analyzer';
-      if (tab === 'services' || tab === 'growth') return 'Growth Services';
-      if (tab === 'auto-reply' || tab === 'reply') return 'Auto AI Reply';
-      if (tab === 'business') return 'Business Setup';
-      if (tab === 'flyer' || tab === 'qr-flyer') return 'QR Code & Flyer';
+      if (tab === 'growth') return 'Add-On Services';
+      if (tab === 'auto-reply') return 'Review Reply';
+      if (tab === 'business') return 'Review Settings';
+      if (tab === 'flyer' || tab === 'qr-flyer') return 'Magic Review QR';
     } catch {}
     return initialTab;
   };
 
   const [activeTab, setActiveTab] = useState(getInitialTabFromUrl);
+  const [settingsSubTab, setSettingsSubTab] = useState(() => {
+    try { return SETTINGS_SUBTABS[new URLSearchParams(window.location.search).get('sub')] || 'Profile Settings'; } catch { return 'Profile Settings'; }
+  });
+  const [planCheckoutStep, setPlanCheckoutStep] = useState('select'); // 'select' | 'checkout'
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Sync tab with URL search params dynamically
+  // Back/forward inside the dashboard: show the tab named in the URL
   useEffect(() => {
     const handleUrlTab = () => {
-      try {
-        const search = new URLSearchParams(window.location.search);
-        const tab = (search.get('tab') || '').toLowerCase();
-        if (tab === 'feedback' || tab === 'negative' || tab === 'negative-reviews') {
-          setActiveTab('Negative Reviews');
-        } else if (tab === 'billing' || tab === 'plans') {
-          setActiveTab('Billing & Plans');
-        } else if (tab === 'stand' || tab === 'standee' || tab === 'qr') {
-          setActiveTab('Magic Review QR');
-        } else if (tab === 'seo' || tab === 'analyzer') {
-          setActiveTab('AI SEO Analyzer');
-        } else if (tab === 'services' || tab === 'growth') {
-          setActiveTab('Growth Services');
-        } else if (tab === 'auto-reply' || tab === 'reply') {
-          setActiveTab('Auto AI Reply');
-        } else if (tab === 'business') {
-          setActiveTab('Business Setup');
-        } else if (tab === 'flyer' || tab === 'qr-flyer') {
-          setActiveTab('QR Code & Flyer');
-        }
-      } catch {}
+      if (!onDashboardUrl()) return;
+      const params = new URLSearchParams(window.location.search);
+      const slug = (params.get('tab') || 'dashboard').toLowerCase();
+      if (SLUG_TO_TAB[slug]) setActiveTab(SLUG_TO_TAB[slug]);
+      if (SLUG_TO_TAB[slug] === 'Settings') setSettingsSubTab(SETTINGS_SUBTABS[params.get('sub')] || 'Profile Settings');
+      if (SLUG_TO_TAB[slug] === 'Billing & Plans') setPlanCheckoutStep(params.get('sub') === 'checkout' ? 'checkout' : 'select');
     };
-    handleUrlTab();
     window.addEventListener('popstate', handleUrlTab);
     return () => window.removeEventListener('popstate', handleUrlTab);
   }, []);
@@ -92,28 +105,17 @@ export default function BusinessConsole({
     setActiveTab(tabId);
     setMobileOpen(false);
     try {
-      const tabMap = {
-        'Dashboard': '',
-        'Negative Reviews': 'feedback',
-        'QR Code & Flyer': 'flyer',
-        'Auto AI Reply': 'auto-reply',
-        'AI SEO Analyzer': 'seo',
-        'Growth Services': 'services',
-        'Business Setup': 'business',
-        'Billing & Plans': 'billing'
-      };
-      const slug = tabMap[tabId];
-      const targetUrl = slug ? `/dashboard?tab=${slug}` : '/dashboard';
+      const targetUrl = `/dashboard?tab=${TAB_SLUGS[tabId] || 'dashboard'}`;
       if (window.location.pathname + window.location.search !== targetUrl) {
-        window.history.replaceState({ page: 'Dashboard', tab: tabId }, '', targetUrl);
+        window.history.pushState({ page: 'Dashboard', tab: tabId }, '', targetUrl);
       }
     } catch {}
   };
 
   // Dynamic business and subscription info (declared early to prevent TDZ ReferenceErrors)
-  const bizName = business?.name || user?.company || user?.businessName || user?.name || 'Team Maruti InfoSoft';
-  const bizCategory = business?.category || business?.customIndustry || business?.industry || user?.category || user?.industry || 'Software & IT Services';
-  const bizCity = business?.city || business?.location || (business?.country ? `${business?.country}` : '') || (business?.address ? business.address.split(',')[0].trim() : '') || user?.city || user?.location || user?.country || 'Surat';
+  const bizName = business?.name || user?.company || user?.businessName || user?.name || 'Your business';
+  const bizCategory = business?.category || business?.customIndustry || business?.industry || user?.category || user?.industry || '';
+  const bizCity = business?.city || business?.location || (business?.country ? `${business?.country}` : '') || (business?.address ? business.address.split(',')[0].trim() : '') || user?.city || user?.location || user?.country || '';
   const originUrl = (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1'))
     ? window.location.origin
     : 'https://starreview-ai-alpha.vercel.app';
@@ -121,10 +123,12 @@ export default function BusinessConsole({
     n: bizName,
     c: bizCity,
     cat: bizCategory,
-    g: business?.googleReviewUrl || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+    // The customer's review goes to this business's own Google listing; never a placeholder
+    g: business?.googleReviewUrl || (business?.placeId ? `https://search.google.com/local/writereview?placeid=${encodeURIComponent(business.placeId)}` : ''),
     wa: business?.whatsappNumber || '919904482945'
   });
   const directReviewUrl = `${originUrl}/r/${business?.slug || 'demo'}?${reviewParams.toString()}`;
+  const hasGoogleReviewLink = Boolean(reviewParams.get('g'));
   const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=4&data=${encodeURIComponent(directReviewUrl)}`;
   const [localQrDataUrl, setLocalQrDataUrl] = useState(qrImageSrc);
 
@@ -167,7 +171,7 @@ export default function BusinessConsole({
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
   const [recentEvents, setRecentEvents] = useState([]);
 
-  // Filter & Control States matching ReviewFlow AI Screenshots
+  // Filter & Control States
   const [analyticsTimeframe, setAnalyticsTimeframe] = useState('7 Days');
   const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
   const [signOffSignature, setSignOffSignature] = useState(business?.name || 'The Management Team');
@@ -248,6 +252,7 @@ export default function BusinessConsole({
   // Synchronize activeTab and sub-states with URL query params (?tab=..., ?route=...) and hash (#...)
   useEffect(() => {
     const parseUrlTab = () => {
+      if (!onDashboardUrl()) return;
       try {
         const searchParams = new URLSearchParams(window.location.search);
         const tabParam = searchParams.get('tab');
@@ -307,7 +312,7 @@ export default function BusinessConsole({
               featuresCount: 13
             });
           } else {
-            setPlanCheckoutStep('select');
+            if (searchParams.get('sub') !== 'checkout') setPlanCheckoutStep('select');
           }
           if (lower.includes('with-review-reply') || hash.includes('with-review-reply')) {
             setBillingReviewToggle('with');
@@ -318,8 +323,12 @@ export default function BusinessConsole({
           setActiveTab('Negative Reviews');
         } else if (lower.includes('service')) {
           setActiveTab('Add-On Services');
-        } else if (lower.includes('setting')) {
+        } else if (lower === 'settings') {
+          setActiveTab('Review Settings');
+        } else if (lower.includes('setting') || lower === 'account') {
           setActiveTab('Settings');
+        } else if (lower === 'dashboard') {
+          setActiveTab('Dashboard');
         } else if (lower.includes('reply') || lower.includes('review')) {
           setActiveTab('Review Reply');
         } else if (lower.includes('seo')) {
@@ -336,21 +345,24 @@ export default function BusinessConsole({
     return () => window.removeEventListener('popstate', parseUrlTab);
   }, []);
 
-  // Update browser URL query params whenever tab, size or theme changes
+  // Keep the URL in step with the open tab. A tab change adds a history entry
+  // (so Back returns to the previous tab); QR size/theme tweaks only replace it.
+  const urlSyncReadyRef = useRef(false);
   useEffect(() => {
+    if (!onDashboardUrl()) return;
     try {
       const url = new URL(window.location.href);
-      let tabSlug = 'dashboard';
-      if (activeTab === 'Magic Review QR') tabSlug = 'qr';
-      else if (activeTab === 'Billing & Plans') tabSlug = 'billing';
-      else if (activeTab === 'Negative Reviews') tabSlug = 'feedback';
-      else if (activeTab === 'Add-On Services') tabSlug = 'services';
-      else if (activeTab === 'Review Settings') tabSlug = 'settings';
-      else if (activeTab === 'Review Reply') tabSlug = 'reply';
-      else if (activeTab === 'AI SEO Analyzer') tabSlug = 'seo';
-      else if (activeTab === 'Analytics') tabSlug = 'analytics';
-      
+      const tabSlug = TAB_SLUGS[activeTab] || 'dashboard';
+      const subSlug = activeTab === 'Settings'
+        ? (SETTINGS_SUB_SLUG[settingsSubTab] || 'profile')
+        : (activeTab === 'Billing & Plans' && planCheckoutStep === 'checkout' ? 'checkout' : '');
+      // A missing sub means the section's first inner tab, so that is not a new step
+      const currentSub = url.searchParams.get('sub') || (activeTab === 'Settings' ? 'profile' : '');
+      const tabChanged = (url.searchParams.get('tab') || 'dashboard') !== tabSlug || currentSub !== subSlug;
+
       url.searchParams.set('tab', tabSlug);
+      if (subSlug) url.searchParams.set('sub', subSlug);
+      else url.searchParams.delete('sub');
       if (activeTab === 'Magic Review QR') {
         url.searchParams.set('size', qrDisplaySize === 'Banner' ? 'banner' : 'a6');
         url.searchParams.set('theme', qrTheme.toLowerCase().replace(/\s+/g, '-'));
@@ -358,9 +370,12 @@ export default function BusinessConsole({
         url.searchParams.delete('size');
         url.searchParams.delete('theme');
       }
-      window.history.replaceState({}, '', url.toString());
+      const state = { page: 'Dashboard', tab: activeTab };
+      if (tabChanged && urlSyncReadyRef.current) window.history.pushState(state, '', url.toString());
+      else window.history.replaceState(state, '', url.toString());
+      urlSyncReadyRef.current = true;
     } catch (_) {}
-  }, [activeTab, qrDisplaySize, qrTheme]);
+  }, [activeTab, qrDisplaySize, qrTheme, settingsSubTab, planCheckoutStep]);
 
   const changeTab = (tabName) => {
     setActiveTab(tabName);
@@ -382,14 +397,14 @@ export default function BusinessConsole({
     } catch (_) {}
   };
 
-  // Review Settings Form States (Screenshots 1, 2, 3)
+  // Review Settings Form States
   const [profileSubTab, setProfileSubTab] = useState('Business Details');
-  const [bizFormName, setBizFormName] = useState(business?.name || 'Team Maruti InfoSoft');
-  const [bizFormAddress, setBizFormAddress] = useState(business?.city || 'Surat');
-  const [bizFormCategory, setBizFormCategory] = useState(business?.category || 'Software & IT Services');
-  const [bizFormCustomIndustry, setBizFormCustomIndustry] = useState(business?.customIndustry || 'Software & IT Services');
-  const [bizFormWebsite, setBizFormWebsite] = useState(business?.website || 'https://starreview-ai-alpha.vercel.app/');
-  const [bizFormPhone, setBizFormPhone] = useState(business?.phone || '9904482945');
+  const [bizFormName, setBizFormName] = useState(business?.name || '');
+  const [bizFormAddress, setBizFormAddress] = useState(business?.city || '');
+  const [bizFormCategory, setBizFormCategory] = useState(business?.category || '');
+  const [bizFormCustomIndustry, setBizFormCustomIndustry] = useState(business?.customIndustry || business?.category || '');
+  const [bizFormWebsite, setBizFormWebsite] = useState(business?.website || '');
+  const [bizFormPhone, setBizFormPhone] = useState(business?.phone || '');
   
   const [targetKeywords, setTargetKeywords] = useState(business?.keywords?.length ? business.keywords : ['Fast Service', 'Friendly Staff', 'Clean Store']);
   const [keywordInput, setKeywordInput] = useState('');
@@ -406,7 +421,7 @@ export default function BusinessConsole({
   const [emojiUsage, setEmojiUsage] = useState('Enable Natural Emojis (1-2 per review)');
   const [savingSettings, setSavingSettings] = useState(false);
 
-  // Physical Stand Display States (Screenshots 4 & 5)
+  // Physical Stand Display States
   const [plasticSlide, setPlasticSlide] = useState(0);
   const [acrylicSlide, setAcrylicSlide] = useState(0);
   const [paperSlide, setPaperSlide] = useState(0);
@@ -416,13 +431,13 @@ export default function BusinessConsole({
   const [orderName, setOrderName] = useState('');
   const [orderPhone, setOrderPhone] = useState('');
   const [orderAddress, setOrderAddress] = useState('');
-  const [orderCity, setOrderCity] = useState('Surat');
+  const [orderCity, setOrderCity] = useState(business?.city || '');
   const [orderPincode, setOrderPincode] = useState('395006');
   const [placingOrder, setPlacingOrder] = useState(false);
 
-  // SEO Analyzer States (Screenshot 3)
+  // SEO Analyzer States
   const [seoKeyword, setSeoKeyword] = useState('solar rooftop installation');
-  const [seoCity, setSeoCity] = useState(business?.city || 'Surat');
+  const [seoCity, setSeoCity] = useState(business?.city || '');
   const [seoLoading, setSeoLoading] = useState(false);
   const [seoResult, setSeoResult] = useState(null);
 
@@ -446,11 +461,11 @@ export default function BusinessConsole({
           { name: 'Review Velocity & Sentiment', status: 'pass', desc: '4.9★ rating with regular positive reviews' },
           { name: 'Customer Response Rate', status: 'pass', desc: '100% response rate with keyword-rich answers' },
           { name: 'Photo & Media Freshness', status: 'warn', desc: 'Add 3+ new geotagged photos this week to boost ranking signals' },
-          { name: 'Local Citations & Backlinks', status: 'pass', desc: `Consistent local NAP verified in ${seoCity || 'Surat'}` }
+          { name: 'Local Citations & Backlinks', status: 'pass', desc: `Consistent local NAP verified in ${seoCity || 'your city'}` }
         ],
         recommendations: [
           `Keep collecting fresh reviews for "${seoKeyword}" via QR stand to secure the Local 3-Pack.`,
-          `Upload new project photos geotagged in ${seoCity || 'Surat'} to sustain listing prominence.`,
+          `Upload new project photos geotagged in ${seoCity || 'your city'} to sustain listing prominence.`,
           `Post weekly Google updates containing customer success stories and service highlights.`
         ]
       });
@@ -458,7 +473,7 @@ export default function BusinessConsole({
     }, 1200);
   };
 
-  // Add-On Services States (Screenshots 2 to 5)
+  // Add-On Services States
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState('GMB Profile Optimization');
   const [serviceInquiryName, setServiceInquiryName] = useState(bizName);
@@ -467,9 +482,8 @@ export default function BusinessConsole({
   const [serviceInquiryNotes, setServiceInquiryNotes] = useState('');
   const [submittingInquiry, setSubmittingInquiry] = useState(false);
 
-  // Billing and Settings States (Screenshots 1 to 4)
+  // Billing and Settings States
   const [billingReviewToggle, setBillingReviewToggle] = useState('without');
-  const [settingsSubTab, setSettingsSubTab] = useState('Profile Settings');
 
   // Dynamic Profile Settings (Business Name, Category/Services, City/Location across any country)
   const [settingsBizName, setSettingsBizName] = useState(bizName);
@@ -485,7 +499,7 @@ export default function BusinessConsole({
       setSettingsBizCategory(business?.category || user?.category || 'Software & IT Services');
     }
     if (business?.city || business?.location || user?.city) {
-      setSettingsBizCity(business?.city || business?.location || user?.city || 'Surat');
+      setSettingsBizCity(business?.city || business?.location || user?.city || '');
     }
   }, [business, user]);
 
@@ -521,6 +535,7 @@ export default function BusinessConsole({
         const stored = localStorage.getItem('sr_user');
         if (stored) {
           const parsed = JSON.parse(stored);
+          if (settingsOwnerName.trim()) parsed.name = settingsOwnerName.trim();
           parsed.company = settingsBizName.trim();
           parsed.category = settingsBizCategory.trim();
           parsed.city = settingsBizCity.trim();
@@ -535,20 +550,64 @@ export default function BusinessConsole({
     }
   };
 
-  // Account Deletion Request States & Verification Workflow (sent to marutiinfosoftteam@gmail.com)
-  const [delName, setDelName] = useState(user?.name || 'Business Owner');
-  const [delMobile, setDelMobile] = useState(business?.phone || '+91 9904482945');
-  const [delBizName, setDelBizName] = useState(bizName);
-  const [delEmail, setDelEmail] = useState(user?.email || 'marutiinfosoftteam@gmail.com');
+  // Account deletion request: emailed to the company (server SMTP), with the
+  // customer's own email app as a fallback so the request is never lost.
+  const [delName, setDelName] = useState(user?.name || '');
+  const [delMobile, setDelMobile] = useState(business?.phone || '');
+  const [delBizName, setDelBizName] = useState(business?.name || '');
+  const [delAddress, setDelAddress] = useState(
+    business?.address || [business?.city, business?.state, business?.postcode].filter(Boolean).join(', ')
+  );
+  const [delEmail, setDelEmail] = useState(user?.email || '');
   const [delReason, setDelReason] = useState('');
   const [delAgreed, setDelAgreed] = useState(false);
   const [delSubmitting, setDelSubmitting] = useState(false);
   const [delSuccessRef, setDelSuccessRef] = useState(null);
+  const [delEmailSent, setDelEmailSent] = useState(false);
+  const [delMailto, setDelMailto] = useState('');
+  const [delWhatsappText, setDelWhatsappText] = useState('');
+
+  // Fill the form with what this account already has (sign-up, Settings, business profile).
+  // A field follows the latest saved value until the person types in it themselves.
+  const delAutoRef = useRef({});
+  useEffect(() => {
+    let stored = {};
+    try { stored = JSON.parse(localStorage.getItem('sr_user') || '{}') || {}; } catch {}
+    const placeholderName = /^(google )?business owner$/i;
+    const ownerName = [user?.name, user?.fullName, stored.name, stored.fullName]
+      .map(n => String(n || '').trim())
+      .find(n => n && !placeholderName.test(n)) || '';
+    // Skip empty dial codes ("+91") and our own support number used as a placeholder
+    const ownNumber = String(COMPANY.whatsapp || '').replace(/\D/g, '').slice(-10);
+    // The owner's own sign-up mobile first (the form asks for Mobile / WhatsApp), then the business phone
+    const mobile = [user?.mobile, user?.phone, stored.mobile, stored.phone, business?.phone]
+      .map(n => String(n || '').trim())
+      .find(n => {
+        const digits = n.replace(/\D/g, '');
+        return digits.length >= 7 && !(ownNumber && digits.endsWith(ownNumber));
+      }) || '';
+    const address = business?.address ||
+      [business?.area, business?.city, business?.state, business?.postcode].filter(Boolean).join(', ');
+    const latest = {
+      name: [ownerName, setDelName],
+      mobile: [mobile, setDelMobile],
+      bizName: [business?.name || user?.company || '', setDelBizName],
+      address: [address, setDelAddress],
+      email: [user?.email || stored.email || '', setDelEmail]
+    };
+    Object.entries(latest).forEach(([key, [value, setValue]]) => {
+      if (!value) return;
+      const prevAuto = delAutoRef.current[key];
+      setValue(current => (!current || current === prevAuto ? value : current));
+      delAutoRef.current[key] = value;
+    });
+  }, [user?.name, user?.fullName, user?.mobile, user?.phone, user?.email, user?.company,
+      business?.name, business?.address, business?.area, business?.city, business?.state, business?.postcode, business?.phone]);
 
   const handleSubmitDeletionRequest = async (e) => {
     if (e) e.preventDefault();
-    if (!delName.trim() || !delMobile.trim() || !delBizName.trim()) {
-      notify('Please enter your Full Name, Mobile Number, and Business Name.');
+    if (!delName.trim() || !delMobile.trim() || !delBizName.trim() || !delAddress.trim()) {
+      notify('Please fill in your name, mobile number, company name and company address.');
       return;
     }
     if (!delAgreed) {
@@ -556,46 +615,81 @@ export default function BusinessConsole({
       return;
     }
     setDelSubmitting(true);
-    const refId = 'DEL-' + Math.floor(100000 + Math.random() * 900000);
-    try {
-      const payload = {
-        name: delName.trim(),
-        mobile: delMobile.trim(),
-        businessName: delBizName.trim(),
-        email: delEmail.trim(),
-        reason: delReason.trim() || 'Customer requested account deletion',
-        refId
-      };
-      await api('POST', '/api/account/deletion-request', payload);
-    } catch (_) {}
+    let refId = 'DEL-' + Math.floor(100000 + Math.random() * 900000);
+    const details = {
+      name: delName.trim(),
+      mobile: delMobile.trim(),
+      businessName: delBizName.trim(),
+      address: delAddress.trim(),
+      email: delEmail.trim(),
+      reason: delReason.trim() || 'Not specified'
+    };
 
+    const lines = [
+      ['Request', 'Please delete this StarReview AI account'],
+      ['Reference', refId],
+      ['Company name', details.businessName],
+      ['Company address', details.address],
+      ['Owner name', details.name],
+      ['Mobile', details.mobile],
+      ['Account email', details.email || 'Not given'],
+      ['Reason', details.reason],
+      ['Submitted', new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST']
+    ];
+
+    const r = await api('POST', '/api/account/deletion-request', { ...details, refId });
+    if (r.ok && r.data?.refId) {
+      refId = r.data.refId;
+      lines[1][1] = refId;
+    }
+    let emailSent = Boolean(r.ok && r.data?.emailSent);
+    let emailStatus = r.data?.emailStatus || '';
+
+    // Server not reachable: send it straight from the browser to the company inbox
+    if (!emailSent && !emailStatus) {
+      try {
+        const fr = await fetch(`https://formsubmit.co/ajax/${COMPANY.email}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            _subject: `Account deletion request - ${details.businessName} (${refId})`,
+            _template: 'table',
+            _captcha: 'false',
+            ...(details.email ? { _replyto: details.email } : {}),
+            ...Object.fromEntries(lines)
+          })
+        });
+        const fd = await fr.json().catch(() => ({}));
+        emailSent = String(fd.success) === 'true';
+        emailStatus = emailSent ? 'sent' : (/activat/i.test(fd.message || '') ? 'needs_activation' : 'failed');
+      } catch {
+        emailStatus = 'failed';
+      }
+    }
+
+    const subject = `Account deletion request - ${details.businessName} (${refId})`;
+    const detailLines = lines.slice(1);
+    const body =
+      `Hello ${COMPANY.name} team,\n\nPlease delete my StarReview AI account.\n\n` +
+      detailLines.map(([k, v]) => `${k}: ${v}`).join('\n') + '\n';
+    const whatsappText =
+      `*Account deletion request*\n\n` +
+      detailLines.map(([k, v]) => `*${k}:* ${v}`).join('\n') +
+      `\n\nPlease confirm my request.`;
+
+    setDelMailto(`mailto:${COMPANY.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+    setDelWhatsappText(whatsappText);
+    setDelEmailSent(emailSent);
     setDelSuccessRef(refId);
-    notify(`✓ Deletion request registered (Ref: ${refId}). Sent to marutiinfosoftteam@gmail.com.`);
-
-    // Auto-open mail client with full details to marutiinfosoftteam@gmail.com
-    const mailSubject = encodeURIComponent(`Account Deletion Request - ${delBizName.trim()} (${refId})`);
-    const mailBody = encodeURIComponent(
-      `Hello Maruti InfoSoft Admin Team,\n\nI have officially requested account deletion for my StarReview AI account.\n\n` +
-      `Reference ID: ${refId}\n` +
-      `Business Name: ${delBizName.trim()}\n` +
-      `Account Owner: ${delName.trim()}\n` +
-      `Client Mobile: ${delMobile.trim()}\n` +
-      `Registered Email: ${delEmail.trim()}\n` +
-      `Reason for Deletion: ${delReason.trim() || 'None specified'}\n` +
-      `Submitted At: ${new Date().toLocaleString()}\n\n` +
-      `Please process this account deletion request.\nCompany Support: +91 9904482945`
-    );
-    try {
-      const mailtoUrl = `mailto:marutiinfosoftteam@gmail.com?subject=${mailSubject}&body=${mailBody}`;
-      const w = window.open(mailtoUrl, '_blank');
-      if (!w) window.location.href = mailtoUrl;
-    } catch (_) {}
-
     setDelSubmitting(false);
+
+    notify(emailSent
+      ? `Request sent to ${COMPANY.email} (Ref: ${refId}).`
+      : 'Request saved. Please send it to us by email or WhatsApp using the buttons below.');
   };
   // Country Code Picker States
   const [settingsCountryCode, setSettingsCountryCode] = useState(() => {
-    const raw = business?.phone || '+91 9904482945';
+    const raw = business?.phone || '';
     for (const c of countryDialOptions) {
       if (raw.startsWith(c.code)) return c.code;
     }
@@ -603,7 +697,7 @@ export default function BusinessConsole({
   });
 
   const [settingsPhone, setSettingsPhone] = useState(() => {
-    const raw = business?.phone || '9904482945';
+    const raw = business?.phone || '';
     for (const c of countryDialOptions) {
       if (raw.startsWith(c.code)) {
         return raw.substring(c.code.length).trim();
@@ -636,8 +730,8 @@ export default function BusinessConsole({
 
   // Google Switch / Re-authorize Modal State
   const [googleAuthModalOpen, setGoogleAuthModalOpen] = useState(false);
-  const [googleAuthEmail, setGoogleAuthEmail] = useState(user?.email || 'team.marutiinfosoft@gmail.com');
-  const [googleAuthBizName, setGoogleAuthBizName] = useState(business?.name || 'Team Maruti InfoSoft');
+  const [googleAuthEmail, setGoogleAuthEmail] = useState(user?.email || '');
+  const [googleAuthBizName, setGoogleAuthBizName] = useState(business?.name || '');
   const [googleAuthSwitchMode, setGoogleAuthSwitchMode] = useState(false);
   const [googleAuthLoading, setGoogleAuthLoading] = useState(false);
   const [fetchingReviews, setFetchingReviews] = useState(false);
@@ -651,59 +745,62 @@ export default function BusinessConsole({
   const [placesModalLoading, setPlacesModalLoading] = useState(false);
   const [placesModalSelected, setPlacesModalSelected] = useState(null);
 
+  const [placesModalError, setPlacesModalError] = useState('');
+
   const handleConsolePlacesSearch = async (q) => {
+    setPlacesModalError('');
     setPlacesModalLoading(true);
-    try {
-      const res = await api('GET', `/api/places/autocomplete?input=${encodeURIComponent(q || '')}`);
-      if (res.ok && res.data && Array.isArray(res.data.places)) {
-        setPlacesModalResults(res.data.places);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setPlacesModalLoading(false);
+    const res = await api('GET', `/api/places/search?q=${encodeURIComponent(q || '')}`);
+    setPlacesModalLoading(false);
+    if (res.ok && Array.isArray(res.data?.places)) {
+      setPlacesModalResults(res.data.places);
+      if (!res.data.places.length) setPlacesModalError('No businesses found. Try adding the city or area.');
+    } else {
+      setPlacesModalResults([]);
+      setPlacesModalError(res.data?.error || 'Business search failed. Please try again.');
     }
   };
 
+  // Search results already carry the full address, PIN code and phone
   const connectPlaceFromConsole = async (place) => {
+    setPlacesModalError('');
     setPlacesModalLoading(true);
-    try {
-      const payload = {
-        placeId: place.placeId,
-        name: place.name,
-        address: place.address,
-        city: place.city || 'Surat',
-        category: place.category || 'Local Business',
-        rating: place.rating || 4.9,
-        userRatingsTotal: place.userRatingsTotal || 184,
-        googleReviewUrl: place.googleReviewUrl || `https://search.google.com/local/writereview?placeid=${place.placeId}`,
-        phone: place.phone || '',
-        website: place.website || ''
-      };
-      const res = await api('POST', '/api/business/connect-google-place', payload);
-      if (res.ok && res.data && res.data.business) {
-        setBizFormName(place.name);
-        setBizFormAddress(place.address);
-        if (place.category) setBizFormCategory(place.category);
-        if (place.website) setBizFormWebsite(place.website);
-        if (place.phone) setBizFormPhone(place.phone);
-        setGoogleAuthBizName(place.name);
-        if (setBusiness) setBusiness(res.data.business);
-        notify(`✓ Linked Google Place: ${place.name}`);
-        setPlacesModalOpen(false);
-      } else {
-        notify('Connected Google listing.');
-        setPlacesModalOpen(false);
-      }
-    } catch (err) {
-      notify('Updated Google listing.');
+    const res = await api('POST', '/api/business/connect-google-place', {
+      source: 'google',
+      placeId: place.placeId,
+      name: place.name,
+      address: place.address,
+      area: place.area,
+      city: place.city,
+      state: place.state,
+      postcode: place.postcode,
+      country: place.country,
+      category: place.category,
+      rating: place.rating,
+      userRatingsTotal: place.userRatingsTotal,
+      googleReviewUrl: place.googleReviewUrl,
+      googleMapsUrl: place.googleMapsUrl,
+      phone: place.phone,
+      website: place.website
+    });
+    setPlacesModalLoading(false);
+
+    if (res.ok && res.data?.business) {
+      setBizFormName(place.name);
+      setBizFormAddress(place.city || place.address);
+      if (place.category) setBizFormCategory(place.category);
+      if (place.website) setBizFormWebsite(place.website);
+      if (place.phone) setBizFormPhone(place.phone);
+      setGoogleAuthBizName(place.name);
+      if (setBusiness) setBusiness(res.data.business);
+      notify(`Linked Google listing: ${place.name}`);
       setPlacesModalOpen(false);
-    } finally {
-      setPlacesModalLoading(false);
+    } else {
+      setPlacesModalError(res.data?.error || 'Could not save this business. Please try again.');
     }
   };
 
-  // Physical Stand Checkout State (Screenshot 2)
+  // Physical Stand Checkout State
   const [standCheckoutMode, setStandCheckoutMode] = useState(false);
   const [standCheckoutStep, setStandCheckoutStep] = useState(1);
   const [standUtr, setStandUtr] = useState('');
@@ -716,18 +813,17 @@ export default function BusinessConsole({
     qty: 1,
     tag: 'Premium Executive'
   });
-  const [standRecipientName, setStandRecipientName] = useState(user?.name || 'Team Maruti InfoSoft');
-  const [standPhone, setStandPhone] = useState(business?.phone || '+91 9904482945');
+  const [standRecipientName, setStandRecipientName] = useState(user?.name || business?.name || '');
+  const [standPhone, setStandPhone] = useState(business?.phone || '');
   const [standShopName, setStandShopName] = useState('Shop #12, Ground Floor');
-  const [standBizName, setStandBizName] = useState(business?.name || 'Team Maruti InfoSoft');
+  const [standBizName, setStandBizName] = useState(business?.name || '');
   const [standAddress, setStandAddress] = useState('');
   const [standLandmark, setStandLandmark] = useState('');
-  const [standCity, setStandCity] = useState(business?.city || 'Surat');
+  const [standCity, setStandCity] = useState(business?.city || '');
   const [standState, setStandState] = useState('Gujarat');
   const [standPincode, setStandPincode] = useState('395006');
 
-  // Plan Checkout State (Screenshot 1)
-  const [planCheckoutStep, setPlanCheckoutStep] = useState('select'); // 'select' | 'checkout'
+  // Plan Checkout State
   const [checkoutPlanData, setCheckoutPlanData] = useState({
     name: 'Pro Yearly Plan',
     tier: 'Pro',
@@ -743,7 +839,7 @@ export default function BusinessConsole({
   const [referralCode, setReferralCode] = useState('');
   const [referralVerified, setReferralVerified] = useState(false);
 
-  // WebPress Pay Modal State (Screenshot 4)
+  // WebPress Pay Modal State
   const [webpressModalOpen, setWebpressModalOpen] = useState(false);
   const [webpressData, setWebpressData] = useState({
     amount: 1999,
@@ -794,14 +890,14 @@ export default function BusinessConsole({
         planName: checkoutPlanData.name
       };
       setBusiness(prev => ({ ...(prev || {}), subscription: updatedSub }));
-      notify(`🎉 Payment of ₹${webpressData.amount} verified! ${checkoutPlanData.name} activated successfully.`);
+      notify(`Payment of ₹${webpressData.amount} verified! ${checkoutPlanData.name} activated successfully.`);
       setTimeout(() => {
         setWebpressModalOpen(false);
         setPlanCheckoutStep('select');
         setPaymentDone(false);
       }, 1200);
     } else {
-      notify(`🎉 Payment of ₹${webpressData.amount} verified! Order placed for ${selectedStand.title}. Tracking sent via SMS/WhatsApp.`);
+      notify(`Payment of ₹${webpressData.amount} verified! Order placed for ${selectedStand.title}. Tracking sent via SMS/WhatsApp.`);
       setTimeout(() => {
         setWebpressModalOpen(false);
         setStandCheckoutMode(false);
@@ -1029,10 +1125,14 @@ export default function BusinessConsole({
             }
             const isActive = activeTab === item.id;
             return (
-              <button
+              <a
                 key={item.id}
+                href={tabHref(item.id)}
                 className={`bc-nav-item ${isActive ? 'active' : ''}`}
-                onClick={() => {
+                aria-current={isActive ? 'page' : undefined}
+                onClick={(e) => {
+                  if (!isPlainClick(e)) return; // let the browser open a new tab/window
+                  e.preventDefault();
                   handleTabSelect(item.id);
                   if (item.id === 'Billing & Plans') {
                     setPlanCheckoutStep('select');
@@ -1045,7 +1145,7 @@ export default function BusinessConsole({
                 {!collapsed && item.badge && (
                   <span className={`bc-nav-badge ${item.badgeClass || ''}`}>{item.badge}</span>
                 )}
-              </button>
+              </a>
             );
           })}
         </div>
@@ -1056,7 +1156,7 @@ export default function BusinessConsole({
             <div className="bc-user-avatar">{user?.email ? user.email.slice(0, 2).toUpperCase() : 'TM'}</div>
             {!collapsed && (
               <div className="bc-user-info">
-                <div className="bc-user-name">{business?.name || user?.email?.split('@')[0] || 'Team Maruti InfoSoft'}</div>
+                <div className="bc-user-name">{business?.name || user?.email?.split('@')[0] || 'Your business'}</div>
                 <div className="bc-user-role">Business Owner</div>
               </div>
             )}
@@ -1102,25 +1202,28 @@ export default function BusinessConsole({
             </div>
           </div>
           <div className="bc-mobile-actions">
-            <button
-              type="button"
+            <a
+              href="/"
               className="bc-mobile-btn-site"
-              onClick={() => navigate('Home')}
+              onClick={(e) => { if (!isPlainClick(e)) return; e.preventDefault(); navigate('Home'); }}
               title="Return to Public Website"
+              aria-label="Return to Public Website"
             >
-              <i className="fa-solid fa-arrow-left"></i> Website
-            </button>
+              <i className="fa-solid fa-arrow-left"></i> <span>Website</span>
+            </a>
             {activeTab !== 'Billing & Plans' ? (
-              <button
-                type="button"
+              <a
+                href={tabHref('Billing & Plans')}
                 className="bc-mobile-btn-upgrade"
-                onClick={() => {
+                onClick={(e) => {
+                  if (!isPlainClick(e)) return;
+                  e.preventDefault();
                   setActiveTab('Billing & Plans');
                   setPlanCheckoutStep('select');
                 }}
               >
                 <i className="fa-solid fa-bolt"></i> Upgrade
-              </button>
+              </a>
             ) : (
               <span className="bc-mobile-pill-active">
                 <span className="bc-live-dot"></span> Active
@@ -1190,7 +1293,7 @@ export default function BusinessConsole({
         </div>
 
         {/* ====================================================================
-            VIEW: DASHBOARD (EXACT SCREENSHOT MATCH)
+            VIEW: DASHBOARD
             ==================================================================== */}
         {activeTab === 'Dashboard' && (
           <div>
@@ -1251,17 +1354,21 @@ export default function BusinessConsole({
                   </svg>
                   <span>Google Account</span>
                 </button>
-                <button className="bc-btn-manage-qr" onClick={() => { setActiveTab('Magic Review QR'); setQrDisplaySize('Banner'); }}>
+                <a
+                  href={tabHref('Magic Review QR')}
+                  className="bc-btn-manage-qr"
+                  onClick={(e) => { if (!isPlainClick(e)) return; e.preventDefault(); setActiveTab('Magic Review QR'); setQrDisplaySize('Banner'); }}
+                >
                   <div>
                     Manage QR Tools
                     <span>Poster, QR code &amp; stand</span>
                   </div>
                   <i className="fa-solid fa-arrow-right"></i>
-                </button>
+                </a>
               </div>
             </div>
 
-            {/* QUICK FLOW SHORTCUTS (DIRECT 1-CLICK TEST TO SCREENSHOTS 1, 2, 3, 4, 5) */}
+            {/* QUICK FLOW SHORTCUTS */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -1842,7 +1949,7 @@ export default function BusinessConsole({
         )}
 
         {/* ====================================================================
-            VIEW: ANALYTICS (EXACT MATCH TO SCREENSHOTS 1 & 2)
+            VIEW: ANALYTICS
             ==================================================================== */}
         {activeTab === 'Analytics' && (
           <div>
@@ -2030,7 +2137,7 @@ export default function BusinessConsole({
               </div>
             </div>
 
-            {/* Trend Analysis: Funnel Activity Trends (from Screenshot 2) */}
+            {/* Trend Analysis: Funnel Activity Trends */}
             <div className="bc-trend-section">
               <div className="bc-analytics-header" style={{ marginBottom: '1.25rem' }}>
                 <div>
@@ -2081,7 +2188,7 @@ export default function BusinessConsole({
               </div>
             </div>
 
-            {/* Review Tracking Log: Tracked Review Actions (from Screenshot 2) */}
+            {/* Review Tracking Log: Tracked Review Actions */}
             <div className="bc-tracking-box">
               <div className="bc-pipeline-tag">REVIEW TRACKING LOG</div>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 900, margin: '0 0 0.25rem 0' }}>Tracked Review Actions</h3>
@@ -2138,7 +2245,7 @@ export default function BusinessConsole({
         )}
 
         {/* ====================================================================
-            VIEW: REVIEW REPLY (EXACT MATCH TO SCREENSHOT 3)
+            VIEW: REVIEW REPLY
             ==================================================================== */}
         {activeTab === 'Review Reply' && (
           <div>
@@ -2337,8 +2444,8 @@ export default function BusinessConsole({
                   value={manualReviewText}
                   onChange={e => setManualReviewText(e.target.value)}
                 />
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {['Grateful & Warm', 'Professional', 'Apologetic'].map(tone => (
                       <button
                         key={tone}
@@ -2406,7 +2513,7 @@ export default function BusinessConsole({
         )}
 
         {/* ====================================================================
-            VIEW: NEGATIVE REVIEWS (EXACT MATCH TO SCREENSHOT 4)
+            VIEW: NEGATIVE REVIEWS
             ==================================================================== */}
         {activeTab === 'Negative Reviews' && (
           <div>
@@ -2621,7 +2728,7 @@ export default function BusinessConsole({
         )}
 
         {/* ====================================================================
-            VIEW: MAGIC REVIEW QR (EXACT MATCH TO SCREENSHOT 5)
+            VIEW: MAGIC REVIEW QR
             ==================================================================== */}
         {activeTab === 'Magic Review QR' && (
           <div>
@@ -2647,6 +2754,34 @@ export default function BusinessConsole({
                   <i className="fa-solid fa-download"></i> Download PDF
                 </button>
               </div>
+            </div>
+
+            {!hasGoogleReviewLink && (
+              <div className="bc-qr-link-warning" role="alert">
+                <i className="fa-solid fa-triangle-exclamation"></i>
+                <div>
+                  <strong>Your Google review link is missing.</strong>
+                  <span>Customers can copy a review but won't be sent to your Google page. Connect your business to add it.</span>
+                </div>
+                <a
+                  href="/business-onboard"
+                  className="bc-qr-link-warning-btn"
+                  onClick={(e) => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+                    e.preventDefault();
+                    navigate('Business onboarding');
+                  }}
+                >
+                  Connect business
+                </a>
+              </div>
+            )}
+
+            <div className="bc-qr-preview-strip">
+              <span>Scan the QR or open the page your customers will see:</span>
+              <a href={directReviewUrl} target="_blank" rel="noopener noreferrer">
+                <i className="fa-solid fa-arrow-up-right-from-square"></i> Preview review page
+              </a>
             </div>
 
             {/* 2-Column Layout */}
@@ -2849,7 +2984,7 @@ export default function BusinessConsole({
                   {/* Checkered Canvas Preview Box */}
                   <div className="bc-canvas-bg" style={{ minHeight: 380, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.5rem' }}>
                     {qrDisplaySize === 'Banner' ? (
-                      /* The Exact Wide Counter Banner matching Screenshot 1 */
+                      /* The Exact Wide Counter Banner*/
                       <div
                         className={'bc-counter-banner theme-' + qrTheme.toLowerCase().replace(/\s+/g, '-')}
                         id="printReadyBanner"
@@ -2933,7 +3068,7 @@ export default function BusinessConsole({
                         </div>
                       </div>
                     ) : (
-                      /* The Exact Review Flyer matching Screenshot 5 */
+                      /* The Exact Review Flyer*/
                       <div
                         className={'bc-a6-flyer theme-' + qrTheme.toLowerCase().replace(/\s+/g, '-')}
                         id="printReadyFlyer"
@@ -3049,7 +3184,7 @@ export default function BusinessConsole({
         )}
 
         {/* ====================================================================
-            VIEW: REVIEW SETTINGS (EXACT MATCH TO SCREENSHOTS 1, 2, 3)
+            VIEW: REVIEW SETTINGS
             ==================================================================== */}
         {activeTab === 'Review Settings' && (
           <div>
@@ -3118,8 +3253,8 @@ export default function BusinessConsole({
                     style={{ background: '#2563eb', color: '#ffffff', fontSize: '0.82rem', fontWeight: 800, padding: '0.55rem 1rem', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, whiteSpace: 'nowrap', boxShadow: '0 2px 6px rgba(37,99,235,0.25)' }}
                     onClick={() => {
                       setPlacesModalOpen(true);
-                      setPlacesModalQuery(bizFormName || 'Team Maruti');
-                      handleConsolePlacesSearch(bizFormName || 'Team Maruti');
+                      setPlacesModalQuery(bizFormName || '');
+                      if (bizFormName) handleConsolePlacesSearch(bizFormName);
                     }}
                   >
                     <i className="fa-brands fa-google"></i> Search &amp; Link Google Place
@@ -3137,7 +3272,7 @@ export default function BusinessConsole({
                       className="bc-input-modern"
                       value={bizFormName}
                       onChange={e => setBizFormName(e.target.value)}
-                      placeholder="e.g. Team Maruti InfoSoft"
+                      placeholder="e.g. Sharma Dental Clinic"
                     />
                     <p className="bc-field-subtext">Synced directly from your Google Business Profile.</p>
                   </div>
@@ -3259,7 +3394,7 @@ export default function BusinessConsole({
                         className="bc-input-modern"
                         value={bizFormPhone}
                         onChange={e => setBizFormPhone(e.target.value)}
-                        placeholder="99044 82945"
+                        placeholder="98765 43210"
                         style={{ flex: 1 }}
                       />
                     </div>
@@ -3627,7 +3762,7 @@ export default function BusinessConsole({
               </div>
             )}
 
-            {/* Bottom Apply Action Bar (Screenshot 3) */}
+            {/* Bottom Apply Action Bar */}
             <div className="bc-save-action-bar">
               <div className="bc-sab-left">
                 <h4>Ready to apply changes?</h4>
@@ -3660,7 +3795,7 @@ export default function BusinessConsole({
                   setSavingSettings(false);
                   if (res.ok && res.data.business) {
                     setBusiness(res.data.business);
-                    notify('🎉 All review settings saved successfully! Changes are live across all QR flyers.');
+                    notify('All review settings saved successfully! Changes are live across all QR flyers.');
                   } else {
                     notify('Saved locally.');
                   }
@@ -3792,7 +3927,8 @@ export default function BusinessConsole({
                 <div style={{ textAlign: 'center', marginTop: 10 }}>
                   <button
                     type="button"
-                    style={{ background: 'none', border: 'none', color: '#16a34a', fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+                    className="bc-sample-audit-btn"
+                    style={{ background: 'none', border: 'none', color: '#16a34a', fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer' }}
                     onClick={() => {
                       notify('Running 20-Point AI Local SEO Audit...');
                       setTimeout(() => {
@@ -3912,7 +4048,7 @@ export default function BusinessConsole({
               </div>
             </div>
 
-            {/* Understanding Your Audit Score Alert (Matches Screenshot 3) */}
+            {/* Understanding Your Audit Score Alert */}
             <div style={{ background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: 16, padding: '1.25rem 1.65rem', display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
               <i className="fa-solid fa-circle-info" style={{ color: '#0284c7', fontSize: '1.2rem', marginTop: 2 }}></i>
               <div>
@@ -3934,9 +4070,9 @@ export default function BusinessConsole({
           <div>
             {/* Top Bar */}
             <div className="bc-services-top-bar">
-              <button className="bc-btn-back" onClick={() => setActiveTab('Dashboard')}>
+              <a href={tabHref('Dashboard')} className="bc-btn-back" onClick={(e) => { if (!isPlainClick(e)) return; e.preventDefault(); setActiveTab('Dashboard'); }}>
                 <i className="fa-solid fa-arrow-left"></i> Back to Dashboard
-              </button>
+              </a>
               <div className="bc-services-growth-badge">
                 <i className="fa-solid fa-circle" style={{ fontSize: '0.5rem', color: '#16a34a' }}></i> Business Growth Services
               </div>
@@ -4328,7 +4464,7 @@ export default function BusinessConsole({
               </div>
             </div>
 
-            {/* SERVICE 04: Google Maps Ranking (Teal / Emerald Green - Screenshot 2) */}
+            {/* SERVICE 04: Google Maps Ranking (Teal / Emerald Green) */}
             <div className="bc-service-card-full">
               <div className="bc-scf-header teal">
                 <div className="bc-scf-left">
@@ -4438,7 +4574,7 @@ export default function BusinessConsole({
               </div>
             </div>
 
-            {/* SERVICE 05: Google Posts Management (Indigo / Purple - Screenshot 3) */}
+            {/* SERVICE 05: Google Posts Management (Indigo / Purple) */}
             <div className="bc-service-card-full">
               <div className="bc-scf-header indigo">
                 <div className="bc-scf-left">
@@ -4548,7 +4684,7 @@ export default function BusinessConsole({
               </div>
             </div>
 
-            {/* SERVICE 06: Website Design & Redesign (Crimson / Pink - Screenshot 4) */}
+            {/* SERVICE 06: Website Design & Redesign (Crimson / Pink) */}
             <div className="bc-service-card-full">
               <div className="bc-scf-header crimson">
                 <div className="bc-scf-left">
@@ -4658,13 +4794,13 @@ export default function BusinessConsole({
               </div>
             </div>
 
-            {/* Need More Than One Service Banner (Screenshot 5) */}
+            {/* Need More Than One Service Banner */}
             <div className="bc-services-combo-banner">
               <i className="fa-solid fa-comment-dots" style={{ color: '#059669', fontSize: '1rem' }}></i>
               <span>Need more than one service? Discuss your business goals with us and choose the right combination.</span>
             </div>
 
-            {/* HOW IT WORKS: Simple Process, No Confusion (Screenshot 5) */}
+            {/* HOW IT WORKS: Simple Process, No Confusion */}
             <div className="bc-services-hiw-card">
               <div className="bc-services-hiw-header">
                 <span className="bc-services-hiw-tag">HOW IT WORKS</span>
@@ -4691,7 +4827,7 @@ export default function BusinessConsole({
               </div>
             </div>
 
-            {/* NEED HELP CHOOSING? Green CTA Card (Screenshot 5) */}
+            {/* NEED HELP CHOOSING? Green CTA Card */}
             <div className="bc-services-cta-banner">
               <div className="bc-services-cta-left">
                 <span>NEED HELP CHOOSING?</span>
@@ -4706,12 +4842,13 @@ export default function BusinessConsole({
                 >
                   <i className="fa-brands fa-whatsapp"></i> Ask on WhatsApp
                 </button>
-                <button
+                <a
+                  href={tabHref('Dashboard')}
                   className="bc-btn-dashboard-cta"
-                  onClick={() => setActiveTab('Dashboard')}
+                  onClick={(e) => { if (!isPlainClick(e)) return; e.preventDefault(); setActiveTab('Dashboard'); }}
                 >
                   Back to Dashboard
-                </button>
+                </a>
               </div>
             </div>
 
@@ -4821,12 +4958,12 @@ export default function BusinessConsole({
         )}
 
         {/* ====================================================================
-            VIEW: BILLING & PLANS (EXACT REVIEWFLOW AI SCREENSHOTS 1, 2, 3)
+            VIEW: BILLING & PLANS
             ==================================================================== */}
         {activeTab === 'Billing & Plans' && (
           <div>
             {planCheckoutStep === 'checkout' ? (
-              /* EXACT REVIEWFLOW AI: INSTANT UPI PLAN CHECKOUT (SCREENSHOT 1) */
+              /* EXACT REVIEWFLOW AI: INSTANT UPI PLAN CHECKOUT */
               <div>
                 {/* Top Header Card */}
                 <div className="bc-checkout-top-header" style={{
@@ -5006,7 +5143,7 @@ export default function BusinessConsole({
                             setCouponDiscount(discount);
                             const discountAmt = Math.round((checkoutPlanData.originalPrice * discount) / 100);
                             setCheckoutPlanData(prev => ({ ...prev, price: prev.originalPrice - discountAmt }));
-                            notify(`🎉 Coupon ${couponCode} applied! You saved ₹${discountAmt}.`);
+                            notify(`Coupon ${couponCode} applied! You saved ₹${discountAmt}.`);
                           }}
                         >
                           Apply
@@ -5154,7 +5291,7 @@ export default function BusinessConsole({
                   </div>
                 </div>
 
-                {/* Red Warning Banner if expired or trial 0 days (Screenshot 1) */}
+                {/* Red Warning Banner if expired or trial 0 days */}
                 <div className="bc-billing-alert-banner" style={{
                   background: '#fef2f2',
                   border: '1.5px solid #fecaca',
@@ -5182,7 +5319,7 @@ export default function BusinessConsole({
                   </button>
                 </div>
 
-                {/* Yellow Payment Verification In Progress Banner (Screenshot 1) */}
+                {/* Yellow Payment Verification In Progress Banner */}
                 <div className="bc-billing-verify-banner" style={{
                   background: '#fefce8',
                   border: '1.5px solid #fef08a',
@@ -5236,7 +5373,7 @@ export default function BusinessConsole({
                       STARTER PLAN
                     </span>
                     <span style={{ fontSize: '0.76rem', color: '#64748b', marginLeft: 8 }}>
-                      Account: <b>Team Maruti InfoSoft</b>
+                      Account: <b>{bizName}</b>
                     </span>
                     <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '4px 0 0 0' }}>Starter Plan</h3>
                   </div>
@@ -5416,7 +5553,7 @@ export default function BusinessConsole({
                   </div>
                 </div>
 
-                {/* 4 Value Badges Strip (Screenshot 2) */}
+                {/* 4 Value Badges Strip */}
                 <div className="bc-billing-badges-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', margin: '2rem 0' }}>
                   <div className="bc-bb-item" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ width: 36, height: 36, borderRadius: 8, background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>
@@ -5456,7 +5593,7 @@ export default function BusinessConsole({
                   </div>
                 </div>
 
-                {/* FAQ Accordion (Screenshot 2) */}
+                {/* FAQ Accordion */}
                 <div className="bc-faq-section" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 20, padding: '2rem 2.25rem', marginBottom: '2rem', boxShadow: '0 4px 16px rgba(0,0,0,0.02)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -5486,7 +5623,7 @@ export default function BusinessConsole({
                       },
                       {
                         q: 'Do you provide GST invoices?',
-                        a: 'Yes. Send your business GST details and Order ID to our WhatsApp support team at +919904482945, and we will issue your official tax invoice promptly.'
+                        a: 'Yes. Send your business GST details and Order ID to our WhatsApp support team at +91 99044 82945, and we will issue your official tax invoice promptly.'
                       },
                       {
                         q: 'What happens if my subscription expires?',
@@ -5515,7 +5652,7 @@ export default function BusinessConsole({
                   </div>
                 </div>
 
-                {/* Transaction & Invoice History Table (Screenshot 3) */}
+                {/* Transaction & Invoice History Table */}
                 <div className="bc-history-section" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 20, padding: '2rem 2.25rem', marginBottom: '2rem', boxShadow: '0 4px 16px rgba(0,0,0,0.02)' }}>
                   <div style={{ marginBottom: '1.25rem' }}>
                     <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0' }}>Transaction &amp; Invoice History</h3>
@@ -5559,7 +5696,7 @@ export default function BusinessConsole({
                   </div>
                 </div>
 
-                {/* Bottom Support Strip (Screenshot 3) */}
+                {/* Bottom Support Strip */}
                 <div className="bc-billing-support-strip">
                   <div className="bc-bss-left">
                     <i className="fa-brands fa-whatsapp"></i>
@@ -5633,7 +5770,7 @@ export default function BusinessConsole({
                   color: '#15803d'
                 }}>
                   <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}></span>
-                  {bizName || 'Team Maruti InfoSoft'}
+                  {bizName}
                 </span>
               </div>
             </div>
@@ -5756,7 +5893,7 @@ export default function BusinessConsole({
                       required
                       value={settingsBizName}
                       onChange={(e) => setSettingsBizName(e.target.value)}
-                      placeholder="e.g. Team Maruti InfoSoft"
+                      placeholder="e.g. Sharma Dental Clinic"
                       style={{
                         width: '100%',
                         background: '#ffffff',
@@ -5883,7 +6020,7 @@ export default function BusinessConsole({
                     <input
                       type="email"
                       disabled
-                      value={user?.email || 'marutiinfosoftteam@gmail.com'}
+                      value={user?.email || ''}
                       style={{
                         width: '100%',
                         background: '#f1f5f9',
@@ -5932,7 +6069,7 @@ export default function BusinessConsole({
                         type="tel"
                         value={settingsPhone}
                         onChange={(e) => setSettingsPhone(e.target.value)}
-                        placeholder="99044 82945"
+                        placeholder="98765 43210"
                         style={{
                           flex: 1,
                           background: '#ffffff',
@@ -6088,7 +6225,7 @@ export default function BusinessConsole({
                           required
                           value={delMobile}
                           onChange={(e) => setDelMobile(e.target.value)}
-                          placeholder="+91 99044 82945"
+                          placeholder="+91 98765 43210"
                           style={{
                             width: '100%',
                             border: '1px solid #cbd5e1',
@@ -6103,7 +6240,7 @@ export default function BusinessConsole({
 
                       <div style={{ marginBottom: '1rem' }}>
                         <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
-                          Business / Company Name *
+                          Company Name *
                         </label>
                         <input
                           type="text"
@@ -6119,6 +6256,30 @@ export default function BusinessConsole({
                             fontSize: '0.84rem',
                             boxSizing: 'border-box',
                             outline: 'none'
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                          Company Address *
+                        </label>
+                        <textarea
+                          required
+                          rows="2"
+                          value={delAddress}
+                          onChange={(e) => setDelAddress(e.target.value)}
+                          placeholder="Shop / office, street, city, PIN code"
+                          style={{
+                            width: '100%',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 8,
+                            padding: '0.65rem 0.85rem',
+                            fontSize: '0.84rem',
+                            boxSizing: 'border-box',
+                            outline: 'none',
+                            resize: 'vertical',
+                            fontFamily: 'inherit'
                           }}
                         />
                       </div>
@@ -6213,7 +6374,11 @@ export default function BusinessConsole({
                         Reference: {delSuccessRef}
                       </div>
                       <p style={{ fontSize: '0.82rem', color: '#475569', lineHeight: 1.55, margin: 0 }}>
-                        Your account deletion request has been formally routed to <strong>marutiinfosoftteam@gmail.com</strong>. Company management will verify the request with our official support line (<strong>+91 9904482945</strong>) within 24–48 business hours.
+                        {delEmailSent ? (
+                          <>Your request has been emailed to <strong>{COMPANY.email}</strong>. Our team will contact you within 24–48 business hours.</>
+                        ) : (
+                          <>We saved your request but could not email it automatically. Please send it to us using one of the buttons below.</>
+                        )}
                       </p>
                     </div>
 
@@ -6226,39 +6391,33 @@ export default function BusinessConsole({
                         <span style={{ color: '#64748b' }}>Requester:</span>
                         <strong>{delName}</strong>
                       </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 6 }}>
+                        <span style={{ color: '#64748b' }}>Address:</span>
+                        <strong style={{ textAlign: 'right', overflowWrap: 'anywhere' }}>{delAddress}</strong>
+                      </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                         <span style={{ color: '#64748b' }}>Status:</span>
                         <strong style={{ color: '#b45309' }}>Pending Admin Approval</strong>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#64748b' }}>Security Email:</span>
-                        <strong>marutiinfosoftteam@gmail.com</strong>
+                        <span style={{ color: '#64748b' }}>Company email:</span>
+                        <strong>{COMPANY.email}</strong>
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem' }}>
+                    <div className="bc-del-actions">
+                      {!delEmailSent && delMailto && (
+                        <a href={delMailto} className="bc-del-action bc-del-action-mail">
+                          <i className="fa-solid fa-envelope"></i> Send request by email
+                        </a>
+                      )}
                       <a
-                        href={`https://wa.me/919904482945?text=${encodeURIComponent('Hello Maruti InfoSoft Team, I have officially submitted an account deletion request for ' + delBizName + ' (Ref: ' + delSuccessRef + '). Registered Email: ' + delEmail + '. Please confirm verification.')}`}
+                        href={`https://wa.me/${COMPANY.whatsapp}?text=${encodeURIComponent(delWhatsappText)}`}
                         target="_blank"
                         rel="noreferrer"
-                        style={{
-                          width: '100%',
-                          textAlign: 'center',
-                          background: '#22c55e',
-                          color: '#ffffff',
-                          padding: '0.85rem 1.25rem',
-                          borderRadius: 8,
-                          fontSize: '0.88rem',
-                          fontWeight: 700,
-                          textDecoration: 'none',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 8,
-                          boxShadow: '0 2px 8px rgba(34, 197, 94, 0.25)'
-                        }}
+                        className="bc-del-action bc-del-action-wa"
                       >
-                        <i className="fa-brands fa-whatsapp" style={{ fontSize: '1.2rem' }}></i> WhatsApp Support (+91 9904482945)
+                        <i className="fa-brands fa-whatsapp"></i> Send on WhatsApp
                       </a>
                     </div>
                   </div>
@@ -6268,7 +6427,7 @@ export default function BusinessConsole({
           </div>
         )}
         {/* ====================================================================
-            GOOGLE SWITCH / RE-AUTHORIZE MODAL (SCREENSHOT 1)
+            GOOGLE SWITCH / RE-AUTHORIZE MODAL
             ==================================================================== */}
         {googleAuthModalOpen && (
           <div className="bc-webpress-overlay" onClick={() => !googleAuthLoading && setGoogleAuthModalOpen(false)}>
@@ -6433,7 +6592,7 @@ export default function BusinessConsole({
                           <input
                             type="text"
                             className="bc-input"
-                            placeholder="Team Maruti InfoSoft"
+                            placeholder="Business name"
                             value={newGoogleBizName}
                             onChange={e => setNewGoogleBizName(e.target.value)}
                             style={{
@@ -6538,10 +6697,10 @@ export default function BusinessConsole({
                     </div>
                     <div>
                       <h3 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>
-                        Search Google Places API
+                        Find your business
                       </h3>
                       <p style={{ fontSize: '0.74rem', color: '#64748b', margin: 0 }}>
-                        Find verified listing on Google Maps &amp; auto-sync details
+                        Pick your listing and we'll fill in the details
                       </p>
                     </div>
                   </div>
@@ -6588,6 +6747,12 @@ export default function BusinessConsole({
 
                 {/* Results List */}
                 <div style={{ padding: '0.75rem 1.5rem 1.5rem', maxHeight: 380, overflowY: 'auto' }}>
+                  {placesModalError && (
+                    <div className="rf-search-error" role="alert">
+                      <i className="fa-solid fa-triangle-exclamation"></i>
+                      <span>{placesModalError}</span>
+                    </div>
+                  )}
                   {placesModalResults.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       {placesModalResults.map((p) => (
@@ -6605,21 +6770,13 @@ export default function BusinessConsole({
                             transition: 'all 0.15s ease'
                           }}
                         >
-                          <div style={{ flex: 1 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
                               <strong style={{ fontSize: '0.92rem', color: '#0f172a' }}>{p.name}</strong>
-                              <span style={{ fontSize: '0.68rem', fontWeight: 700, background: '#e0f2fe', color: '#0369a1', padding: '1px 6px', borderRadius: 4 }}>
-                                {p.category || 'Business'}
-                              </span>
                             </div>
                             <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b', lineHeight: 1.35 }}>
                               {p.address}
                             </p>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, fontSize: '0.74rem' }}>
-                              <span style={{ color: '#ca8a04', fontWeight: 800 }}>★ {p.rating || '4.9'}</span>
-                              <span style={{ color: '#64748b' }}>({p.userRatingsTotal || 184} reviews)</span>
-                              <code style={{ fontSize: '0.68rem', color: '#94a3b8' }}>{p.placeId.slice(0, 14)}...</code>
-                            </div>
                           </div>
                           <button
                             type="button"
@@ -6639,14 +6796,14 @@ export default function BusinessConsole({
                             }}
                             onClick={() => connectPlaceFromConsole(p)}
                           >
-                            Select &amp; Sync →
+                            Select
                           </button>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#64748b' }}>
-                      <p style={{ margin: 0, fontSize: '0.86rem' }}>Search for any business name or address to sync with Google Places API.</p>
+                      <p style={{ margin: 0, fontSize: '0.86rem' }}>Search by business name and city to find your listing.</p>
                     </div>
                   )}
                 </div>
@@ -6654,9 +6811,9 @@ export default function BusinessConsole({
                 {/* Footer Security Badges */}
                 <div style={{ background: '#f8fafc', borderTop: '1px solid #f1f5f9', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#166534', fontWeight: 700 }}>
-                    <i className="fa-solid fa-bolt"></i> Google Maps Platform Live
+                    <i className="fa-solid fa-magnifying-glass"></i> Business search
                   </div>
-                  <div>Place ID &amp; Reviews Auto-Fetched</div>
+                  <div>India only</div>
                 </div>
               </div>
             </div>
@@ -6664,7 +6821,7 @@ export default function BusinessConsole({
         )}
 
         {/* ====================================================================
-            WEBPRESS PAY UPI PAYMENT GATEWAY MODAL (SCREENSHOT 4)
+            WEBPRESS PAY UPI PAYMENT GATEWAY MODAL
             ==================================================================== */}
         {webpressModalOpen && (
           <div className="bc-webpress-overlay" onClick={() => !verifyingPayment && setWebpressModalOpen(false)}>
@@ -6862,7 +7019,7 @@ export default function BusinessConsole({
                         <span>Order Reference:</span> <code>{webpressData.orderRef}</code>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <span>Customer:</span> <span>{user?.name || 'Team Maruti InfoSoft'}</span>
+                        <span>Customer:</span> <span>{user?.name || bizName}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                         <span>GST / Taxes:</span> <span>Included (18%)</span>

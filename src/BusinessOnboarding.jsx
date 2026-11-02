@@ -1,320 +1,309 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api } from './api.js';
-import { resolveRealSuratAndGujaratPlaces } from './suratPlacesResolver.js';
+
+const CATEGORY_OPTIONS = [
+  'Restaurant & Cafe',
+  'Salon & Spa',
+  'Clinic & Healthcare',
+  'Dental Clinic',
+  'Retail Store',
+  'Hotel & Hospitality',
+  'Gym & Fitness',
+  'Auto Service & Garage',
+  'Real Estate',
+  'Software & IT Services',
+  'Education & Coaching',
+  'Other'
+];
+
+const pushStep = (step) => {
+  try {
+    const url = step === 1 ? '/business-onboard' : `/business-onboard?step=${step}`;
+    window.history.pushState({ page: 'Business onboarding', step }, '', url);
+  } catch (_) {}
+};
 
 export default function BusinessOnboarding({ user, business, setBusiness, notify, navigate }) {
-  const [step, setStep] = useState(1); // 1: Search, 2: Confirm, 3: Success
+  const [step, setStep] = useState(1); // 1: Search, 2: Confirm, 3: Done
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [searchError, setSearchError] = useState('');
   const [placesList, setPlacesList] = useState([]);
+  const [nextPageToken, setNextPageToken] = useState('');
+  const [loadingMore, setLoadingMore] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [savedBusiness, setSavedBusiness] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [manualMode, setManualMode] = useState(false);
   const [copiedPlaceId, setCopiedPlaceId] = useState(false);
 
-  // Safely extract business string or object properties
-  const initialBizName = typeof business === 'string' ? business : (business?.name || '');
-  const [manualName, setManualName] = useState(initialBizName);
-  const [manualCategory, setManualCategory] = useState(business?.category || 'Retail Store');
-  const [manualCity, setManualCity] = useState(business?.city || 'Surat');
-  const [manualAddress, setManualAddress] = useState(business?.address || '');
-  const [manualReviewUrl, setManualReviewUrl] = useState(business?.googleReviewUrl || '');
-  const [manualPhone, setManualPhone] = useState(business?.phone || '');
-  const [manualWebsite, setManualWebsite] = useState(business?.website || '');
+  const bizObj = business && typeof business === 'object' ? business : {};
+  const [manualName, setManualName] = useState(typeof business === 'string' ? business : (bizObj.name || ''));
+  const [manualCategory, setManualCategory] = useState(bizObj.category || '');
+  const [manualAddress, setManualAddress] = useState(bizObj.address || '');
+  const [manualCity, setManualCity] = useState(bizObj.city || '');
+  const [manualState, setManualState] = useState(bizObj.state || '');
+  const [manualPostcode, setManualPostcode] = useState(bizObj.postcode || '');
+  const [manualReviewUrl, setManualReviewUrl] = useState(bizObj.googleReviewUrl || '');
+  const [manualPhone, setManualPhone] = useState(bizObj.phone || '');
+  const [manualWebsite, setManualWebsite] = useState(bizObj.website || '');
+
+  // A business this account already connected or entered (not the empty starter profile)
+  const hasSavedBusiness = Boolean(bizObj.name && (bizObj.isGoogleVerified || bizObj.placeId || bizObj.address));
 
   const searchDebounceRef = useRef(null);
+  const latestQueryRef = useRef('');
 
-  const handleSearchChange = (e) => {
-    const val = e.target.value;
-    setSearchQuery(val);
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    searchDebounceRef.current = setTimeout(() => {
-      fetchPlaces(val);
-    }, 280);
-  };
-
-  // Step history management for browser back button support
+  // Browser back button moves between steps
   useEffect(() => {
     const handlePop = (e) => {
-      if (e.state && e.state.step) {
-        setStep(e.state.step);
-      } else if (window.location.search.includes('step=2')) {
-        setStep(2);
-      } else {
-        setStep(1);
-      }
+      if (e.state && e.state.step) setStep(e.state.step);
+      else if (window.location.search.includes('step=2') && selectedPlace) setStep(2);
+      else setStep(1);
     };
     window.addEventListener('popstate', handlePop);
     return () => window.removeEventListener('popstate', handlePop);
-  }, []);
+  }, [selectedPlace]);
 
-  // Only prefill search query if explicitly verified business profile exists
-  useEffect(() => {
-    if (business && typeof business === 'object' && business.name && business.isGoogleVerified) {
-      setSearchQuery(business.name);
-      fetchPlaces(business.name);
-    }
-  }, [business?.name, business?.isGoogleVerified]);
-
-  const isNonLatin = (str) => /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f\u0400-\u04FF]/.test(str || '');
-
-  const wordMatches = (target, word) => {
-    if (!target || !word) return false;
-    const t = String(target).toLowerCase();
-    const w = String(word).toLowerCase();
-    try {
-      const regex = new RegExp('\\b' + w, 'i');
-      return regex.test(t);
-    } catch {
-      return t.includes(w);
-    }
-  };
-
-  const GENERIC_WORDS = new Set([
-    'team', 'company', 'corp', 'corporation', 'inc', 'ltd', 'limited', 'pvt',
-    'services', 'service', 'center', 'centre', 'group', 'the', 'and', 'shop',
-    'store', 'agency', 'hub', 'solutions', 'infosoft', 'tech', 'technologies'
-  ]);
-
-  const passesWordFilter = (targetText, qWords) => {
-    if (!qWords || qWords.length === 0) return true;
-    const distinctive = qWords.filter(w => !GENERIC_WORDS.has(w));
-    const wordsToCheck = distinctive.length > 0 ? distinctive : qWords;
-    return wordsToCheck.some(w => wordMatches(targetText, w));
-  };
+  useEffect(() => () => clearTimeout(searchDebounceRef.current), []);
 
   const fetchPlaces = async (query) => {
     const q = (query || '').trim();
-    if (!q || q.length < 2) {
+    latestQueryRef.current = q;
+    setSearchError('');
+    setNextPageToken('');
+    if (q.length < 2) {
       setPlacesList([]);
+      setHasSearched(false);
       setIsSearching(false);
       return;
     }
 
     setIsSearching(true);
-    try {
-      // 1. Instant Real Surat, Gujarat & Worldwide Branch Resolver (guaranteed real roads & PIN codes)
-      const localMatches = resolveRealSuratAndGujaratPlaces(q);
-      const lowerQ = q.toLowerCase();
-      const isKnownLocalBrand = 
-        lowerQ.includes('maruti') ||
-        lowerQ.includes('team') ||
-        lowerQ.includes('coffee') ||
-        lowerQ.includes('tea') ||
-        lowerQ.includes('kiran') ||
-        lowerQ.includes('tata') ||
-        lowerQ.includes('sdb') ||
-        lowerQ.includes('diamond') ||
-        lowerQ.includes('hdfc') ||
-        lowerQ.includes('sbi') ||
-        lowerQ.includes('sasumaa') ||
-        lowerQ.includes('gopi') ||
-        lowerQ.includes('surat') ||
-        lowerQ.includes('gujarat');
+    const r = await api('GET', `/api/places/search?q=${encodeURIComponent(q)}`);
+    // Ignore responses for an older query the user already typed past
+    if (latestQueryRef.current !== q) return;
 
-      // If known brand or local match, show immediately with zero delay
-      if (isKnownLocalBrand && localMatches.length > 0) {
-        setPlacesList(localMatches);
-        setIsSearching(false);
-        return;
-      }
-
-      // 2. Query backend official API endpoint
-      try {
-        const r = await api('GET', `/api/places/autocomplete?input=${encodeURIComponent(q)}`);
-        if (r.ok && r.data && Array.isArray(r.data.places) && r.data.places.length > 0) {
-          // Filter out foreign results unless user specifically searched for that country
-          const filtered = r.data.places.filter(p => {
-            const country = (p.country || '').toLowerCase();
-            if (country.includes('indonesia') && !lowerQ.includes('indonesia')) return false;
-            if (country.includes('thailand') && !lowerQ.includes('thailand')) return false;
-            if (country.includes('china') && !lowerQ.includes('china')) return false;
-            return true;
-          });
-          if (filtered.length > 0) {
-            setPlacesList(filtered);
-            setIsSearching(false);
-            return;
-          }
-        }
-      } catch (backendErr) {
-        console.warn('Backend places endpoint note:', backendErr.message);
-      }
-
-      // 3. Fallback to real branch directory or realistic local generator
-      if (localMatches.length > 0) {
-        setPlacesList(localMatches);
-      } else {
-        setPlacesList(resolveRealSuratAndGujaratPlaces(q));
-      }
-    } catch (err) {
-      console.warn('Places search error:', err.message);
-      setPlacesList(resolveRealSuratAndGujaratPlaces(q));
-    } finally {
-      setIsSearching(false);
+    setIsSearching(false);
+    setHasSearched(true);
+    if (r.ok && Array.isArray(r.data?.places)) {
+      setPlacesList(r.data.places);
+      setNextPageToken(r.data.nextPageToken || '');
+    } else {
+      setPlacesList([]);
+      setSearchError(r.data?.error || 'Business search failed. Please try again.');
     }
   };
 
-  const selectPlace = async (p) => {
-    setIsSearching(true);
-    try {
-      const r = await api('GET', `/api/places/details?placeId=${encodeURIComponent(p.placeId)}`);
-      if (r.ok && r.data && r.data.place) {
-        setSelectedPlace(r.data.place);
-      } else {
-        setSelectedPlace({
-          ...p,
-          googleReviewUrl: p.googleReviewUrl || `https://search.google.com/local/writereview?placeid=${p.placeId}`
-        });
-      }
-      setStep(2);
-      window.scrollTo({ top: 120, behavior: 'smooth' });
-    } catch (err) {
-      console.error('Error fetching place details:', err);
-      setSelectedPlace(p);
-      setStep(2);
-    try { window.history.pushState({ page: 'Business onboarding', step: 2 }, '', '/business-onboard?step=2'); } catch (_) {}
-    } finally {
-      setIsSearching(false);
+  const loadMorePlaces = async () => {
+    const q = latestQueryRef.current;
+    if (!nextPageToken || !q) return;
+    setLoadingMore(true);
+    const r = await api('GET', `/api/places/search?q=${encodeURIComponent(q)}&pageToken=${encodeURIComponent(nextPageToken)}`);
+    setLoadingMore(false);
+    if (latestQueryRef.current !== q) return;
+    if (r.ok && Array.isArray(r.data?.places)) {
+      setPlacesList(prev => {
+        const seen = new Set(prev.map(p => p.placeId));
+        return prev.concat(r.data.places.filter(p => !seen.has(p.placeId)));
+      });
+      setNextPageToken(r.data.nextPageToken || '');
+    } else {
+      setSearchError(r.data?.error || 'Could not load more results.');
     }
+  };
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => fetchPlaces(val), 600);
+  };
+
+  const searchNow = () => {
+    clearTimeout(searchDebounceRef.current);
+    fetchPlaces(searchQuery);
+  };
+
+  // Search results already include the full address, PIN code and phone
+  const selectPlace = (p) => {
+    setSearchError('');
+    setSelectedPlace(p);
+    setStep(2);
+    pushStep(2);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const finishWith = (savedBiz) => {
+    setSavedBusiness(savedBiz);
+    if (setBusiness && savedBiz) setBusiness(savedBiz);
+    setStep(3);
+    pushStep(3);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const confirmConnectPlace = async () => {
     if (!selectedPlace) return;
     setIsConnecting(true);
-    try {
-      const payload = {
-        placeId: selectedPlace.placeId,
-        name: selectedPlace.name,
-        address: selectedPlace.address,
-        city: selectedPlace.city || 'Surat',
-        category: selectedPlace.category || 'Local Business',
-        rating: selectedPlace.rating || 4.9,
-        userRatingsTotal: selectedPlace.userRatingsTotal || 184,
-        googleReviewUrl: selectedPlace.googleReviewUrl || `https://search.google.com/local/writereview?placeid=${selectedPlace.placeId}`,
-        website: selectedPlace.website || '',
-        phone: selectedPlace.phone || ''
-      };
+    const p = selectedPlace;
+    const r = await api('POST', '/api/business/connect-google-place', {
+      source: p.source === 'openstreetmap' ? 'openstreetmap' : 'google',
+      placeId: p.placeId,
+      name: p.name,
+      address: p.address,
+      area: p.area,
+      city: p.city,
+      state: p.state,
+      postcode: p.postcode,
+      country: p.country,
+      category: p.category,
+      rating: p.rating,
+      userRatingsTotal: p.userRatingsTotal,
+      googleReviewUrl: p.googleReviewUrl,
+      googleMapsUrl: p.googleMapsUrl,
+      website: p.website,
+      phone: p.phone
+    });
+    setIsConnecting(false);
 
-      const r = await api('POST', '/api/business/connect-google-place', payload);
-      if (r.ok && r.data && r.data.business) {
-        if (setBusiness) setBusiness(r.data.business);
-        notify('✓ Successfully connected to official Google Places API!');
-        setStep(3); try { window.history.pushState({ page: 'Business onboarding', step: 3 }, '', '/business-onboard?step=3'); } catch (_) {}
-      } else {
-        notify('Connected Google listing successfully.');
-        setStep(3); try { window.history.pushState({ page: 'Business onboarding', step: 3 }, '', '/business-onboard?step=3'); } catch (_) {}
-      }
-    } catch (err) {
-      console.error('Connect error:', err);
+    if (r.ok && r.data?.business) {
       notify('Business connected.');
-      setStep(3); try { window.history.pushState({ page: 'Business onboarding', step: 3 }, '', '/business-onboard?step=3'); } catch (_) {}
-    } finally {
-      setIsConnecting(false);
+      finishWith(r.data.business);
+    } else {
+      notify(r.data?.error || 'Could not save your business. Please try again.');
     }
   };
 
   const saveManualBusiness = async (e) => {
     e.preventDefault();
-    if (!manualName.trim()) {
+    const name = manualName.trim();
+    if (!name) {
       notify('Please enter your business name.');
       return;
     }
-    setIsConnecting(true);
-    try {
-      const generatedPlaceId = 'ChIJ' + Math.random().toString(36).substring(2, 14) + Math.random().toString(36).substring(2, 10);
-      const payload = {
-        name: manualName.trim(),
-        category: manualCategory,
-        city: manualCity.trim(),
-        address: manualAddress.trim() || `${manualName.trim()}, ${manualCity.trim()}`,
-        googleReviewUrl: manualReviewUrl.trim() || `https://search.google.com/local/writereview?placeid=${generatedPlaceId}`,
-        placeId: generatedPlaceId,
-        phone: manualPhone.trim(),
-        website: manualWebsite.trim(),
-        rating: 4.9,
-        userRatingsTotal: 45
-      };
+    const pin = manualPostcode.trim();
+    if (pin && !/^\d{6}$/.test(pin)) {
+      notify('PIN code should be 6 digits.');
+      return;
+    }
 
-      const r = await api('POST', '/api/business/connect-google-place', payload);
-      if (r.ok && r.data && r.data.business) {
-        if (setBusiness) setBusiness(r.data.business);
-      }
-      notify('✓ Business profile saved successfully!');
-      setStep(3); try { window.history.pushState({ page: 'Business onboarding', step: 3 }, '', '/business-onboard?step=3'); } catch (_) {}
-    } catch (err) {
-      console.error('Manual save error:', err);
-      notify('Profile saved.');
-      setStep(3); try { window.history.pushState({ page: 'Business onboarding', step: 3 }, '', '/business-onboard?step=3'); } catch (_) {}
-    } finally {
-      setIsConnecting(false);
+    // A Place ID pasted on its own is turned into the review link
+    let reviewUrl = manualReviewUrl.trim();
+    let placeId = '';
+    if (reviewUrl && !/^https?:\/\//i.test(reviewUrl)) {
+      placeId = reviewUrl;
+      reviewUrl = `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}`;
+    } else {
+      const m = reviewUrl.match(/placeid=([^&]+)/i);
+      if (m) placeId = decodeURIComponent(m[1]);
+    }
+
+    setIsConnecting(true);
+    const r = await api('POST', '/api/business/connect-google-place', {
+      source: 'manual',
+      placeId,
+      name,
+      category: manualCategory,
+      address: manualAddress.trim(),
+      city: manualCity.trim(),
+      state: manualState.trim(),
+      postcode: pin,
+      country: 'India',
+      googleReviewUrl: reviewUrl,
+      phone: manualPhone.trim(),
+      website: manualWebsite.trim()
+    });
+    setIsConnecting(false);
+
+    if (r.ok && r.data?.business) {
+      notify('Business profile saved.');
+      finishWith(r.data.business);
+    } else {
+      notify(r.data?.error || 'Could not save your business. Please try again.');
     }
   };
 
   const copyPlaceId = (pid) => {
     navigator.clipboard?.writeText(pid);
     setCopiedPlaceId(true);
-    notify('Place ID copied to clipboard!');
+    notify('Place ID copied.');
     setTimeout(() => setCopiedPlaceId(false), 2000);
   };
+
+  const locationLine = (p) => [p.area, p.city, p.state].filter((v, i, a) => v && a.indexOf(v) === i).join(', ');
 
   return (
     <div className="rf-onboard-wrap">
 
-      {/* Top Header & Progress Stepper */}
+      {/* Header & progress */}
       <div className="rf-onboard-header">
         <div className="rf-onboard-badge">
-          <i className="fa-brands fa-google" style={{ color: '#4285F4' }}></i>
-          <span>Official Google Places API Onboarding</span>
+          <i className="fa-solid fa-store" style={{ color: '#16a34a' }}></i>
+          <span>Takes about a minute</span>
         </div>
-        <h1 className="rf-onboard-title">Connect Your Business Profile</h1>
+        <h1 className="rf-onboard-title">Connect your business</h1>
         <p className="rf-onboard-sub">
-          Search for your business on Google Maps. We will automatically fetch your verified Place ID, address, rating, and direct review link.
+          Search for your business and we'll fill in its address, PIN code, phone and review link for you.
         </p>
 
-        {/* Stepper */}
         <div className="rf-onboard-stepper">
           <div className={`rf-step-item ${step >= 1 ? 'active' : ''} ${step > 1 ? 'done' : ''}`}>
             <div className="rf-step-circle">{step > 1 ? '✓' : '1'}</div>
-            <div className="rf-step-label">Find on Google</div>
+            <div className="rf-step-label">Find business</div>
           </div>
           <div className="rf-step-line"></div>
           <div className={`rf-step-item ${step >= 2 ? 'active' : ''} ${step > 2 ? 'done' : ''}`}>
             <div className="rf-step-circle">{step > 2 ? '✓' : '2'}</div>
-            <div className="rf-step-label">Confirm Details</div>
+            <div className="rf-step-label">Check details</div>
           </div>
           <div className="rf-step-line"></div>
           <div className={`rf-step-item ${step === 3 ? 'active done' : ''}`}>
             <div className="rf-step-circle">3</div>
-            <div className="rf-step-label">Launch Dashboard</div>
+            <div className="rf-step-label">Done</div>
           </div>
         </div>
       </div>
 
-      {/* STEP 1: SEARCH ON GOOGLE MAPS */}
+      {/* STEP 1: SEARCH */}
       {step === 1 && !manualMode && (
         <div className="rf-onboard-card">
+          {hasSavedBusiness && (
+            <div className="rf-existing-biz">
+              <div className="rf-existing-biz-info">
+                <span className="rf-existing-biz-label">Your business</span>
+                <strong>{bizObj.name}</strong>
+                {(bizObj.address || bizObj.city) && <small>{bizObj.address || bizObj.city}</small>}
+              </div>
+              <button type="button" className="btn btn-dark rf-existing-biz-btn" onClick={() => navigate('Dashboard')}>
+                Continue to dashboard <i className="fa-solid fa-arrow-right"></i>
+              </button>
+              <p className="rf-existing-biz-note">Or search below to connect a different business.</p>
+            </div>
+          )}
+
           <div className="rf-search-box-wrap">
-            <label className="rf-search-label">
-              <span>Search Google Business Profile</span>
+            <label className="rf-search-label" htmlFor="rf-business-search">
+              <span>Business name</span>
             </label>
             <div className="rf-search-input-box">
               <div className="rf-search-field-inner">
                 <i className="fa-solid fa-magnifying-glass rf-search-icon"></i>
                 <input
+                  id="rf-business-search"
                   type="text"
                   className="rf-search-input"
-                  placeholder="Type any company or brand across the world (e.g. Apple, Nike Paris, Starbucks Dubai, Team Maruti)..."
+                  placeholder="Company, shop or branch name, e.g. Domino's Pizza Adajan Surat"
                   value={searchQuery}
                   onChange={handleSearchChange}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-                      fetchPlaces(searchQuery);
+                      searchNow();
                     }
                   }}
-                  autoFocus
+                  autoComplete="off"
+                  autoFocus={!hasSavedBusiness}
                 />
                 {isSearching ? (
                   <i className="fa-solid fa-circle-notch fa-spin rf-search-status"></i>
@@ -322,313 +311,281 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
                   <button
                     type="button"
                     className="rf-search-clear"
+                    aria-label="Clear search"
                     onClick={() => { setSearchQuery(''); fetchPlaces(''); }}
                   >
                     ✕
                   </button>
                 ) : null}
               </div>
-              <button
-                type="button"
-                className="rf-btn-search-go"
-                onClick={() => {
-                  if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-                  fetchPlaces(searchQuery);
-                }}
-              >
+              <button type="button" className="rf-btn-search-go" onClick={searchNow}>
                 <i className="fa-solid fa-magnifying-glass"></i> Search
               </button>
             </div>
             <p className="rf-search-hint">
-              Enter any company name or city globally. We connect live with Google Places API and worldwide business registries.
+              Search any company, shop, restaurant, clinic or branch across India. Adding the city or area gives better matches.
             </p>
           </div>
 
-          {/* Results List */}
           <div className="rf-places-results">
-            <div className="rf-results-header">
-              <span>MATCHING GOOGLE MAPS LISTINGS ({placesList.length})</span>
-            </div>
+            {searchError && (
+              <div className="rf-search-error" role="alert">
+                <i className="fa-solid fa-triangle-exclamation"></i>
+                <span>{searchError}</span>
+              </div>
+            )}
 
-            {placesList.length > 0 ? (
-              <div className="rf-places-list">
-                {placesList.map((p) => (
-                  <div
-                    key={p.placeId}
-                    className="rf-place-card"
-                    onClick={() => selectPlace(p)}
-                  >
-                    <div className="rf-place-left">
-                      <div className="rf-place-gpin">
-                        <svg width="22" height="22" viewBox="0 0 24 24">
-                          <path fill="#EA4335" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                        </svg>
-                      </div>
-                      <div className="rf-place-info">
-                        <div className="rf-place-name-row">
-                          <h4 className="rf-place-name">{p.name}</h4>
-                          <span className="rf-place-cat">{p.category || 'Local Business'}</span>
+            {placesList.length > 0 && (
+              <>
+                <div className="rf-results-header">
+                  <span>{placesList.length} {placesList.length === 1 ? 'business' : 'businesses'} found</span>
+                </div>
+                <div className="rf-places-list">
+                  {placesList.map((p) => (
+                    <button
+                      type="button"
+                      key={p.placeId}
+                      className="rf-place-card"
+                      onClick={() => selectPlace(p)}
+                    >
+                      <div className="rf-place-left">
+                        <div className="rf-place-gpin">
+                          <i className="fa-solid fa-location-dot" aria-hidden="true"></i>
                         </div>
-                        <p className="rf-place-addr">
-                          <i className="fa-solid fa-location-dot"></i> {p.address}
-                        </p>
-                        <div className="rf-place-stats">
-                          <span className="rf-star-badge">
-                            ★ {p.rating || '4.9'}
-                          </span>
-                          <span className="rf-reviews-count">
-                            ({p.userRatingsTotal || 184} Google reviews)
-                          </span>
-                          {p.city && (
-                            <span className="rf-place-city-pill" title="Location">
-                              <i className="fa-solid fa-location-dot"></i> {p.city}{p.state && p.state !== p.city ? `, ${p.state}` : ''}{p.country ? `, ${p.country}` : ''}
-                            </span>
-                          )}
-                          {p.postcode && (
-                            <span className="rf-place-pincode-pill" title="Postal / PIN Code">
-                              <i className="fa-solid fa-map-pin"></i> PIN: {p.postcode}
-                            </span>
-                          )}
-                          <span className="rf-place-id-pill" title="Official Google Place ID">
-                            <i className="fa-solid fa-fingerprint"></i> {p.placeId.slice(0, 14)}...
-                          </span>
+                        <div className="rf-place-info">
+                          <div className="rf-place-name-row">
+                            <h4 className="rf-place-name">{p.name}</h4>
+                            {p.category && <span className="rf-place-cat">{p.category}</span>}
+                          </div>
+                          {p.address && <p className="rf-place-addr">{p.address}</p>}
+                          <div className="rf-place-stats">
+                            {p.rating !== null && p.rating !== undefined && (
+                              <span className="rf-star-badge">★ {Number(p.rating).toFixed(1)}</span>
+                            )}
+                            {p.userRatingsTotal ? (
+                              <span className="rf-reviews-count">{p.userRatingsTotal.toLocaleString('en-IN')} reviews</span>
+                            ) : null}
+                            {p.postcode && (
+                              <span className="rf-place-pincode-pill"><i className="fa-solid fa-map-pin"></i> {p.postcode}</span>
+                            )}
+                            {p.phone && (
+                              <span className="rf-place-city-pill"><i className="fa-solid fa-phone"></i> {p.phone}</span>
+                            )}
+                            {p.businessStatus && p.businessStatus !== 'OPERATIONAL' && (
+                              <span className="rf-place-closed-pill">Closed</span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="rf-place-action">
-                      <button type="button" className="rf-btn-select">
-                        Select Listing <i className="fa-solid fa-arrow-right"></i>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : searchQuery.trim().length >= 2 ? (
-              <div className="rf-no-results">
-                <i className="fa-solid fa-store-slash" style={{ fontSize: '2rem', color: '#94a3b8', marginBottom: 12 }}></i>
-                <h4>No business listings found for "{searchQuery}"</h4>
-                <p>Try searching with another name or city, or switch to manual configuration below.</p>
-              </div>
-            ) : (
-              <div className="rf-no-results" style={{ padding: '36px 16px' }}>
-                <i className="fa-solid fa-magnifying-glass" style={{ fontSize: '2rem', color: '#16a34a', marginBottom: 12 }}></i>
-                <h4>Search for your company or brand</h4>
-                <p>Type your business name above to find and connect your official Google Maps profile.</p>
-              </div>
+                      <div className="rf-place-action">
+                        <span className="rf-btn-select">Select <i className="fa-solid fa-arrow-right"></i></span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {nextPageToken && (
+                  <button type="button" className="btn btn-light rf-load-more" onClick={loadMorePlaces} disabled={loadingMore}>
+                    {loadingMore ? <><i className="fa-solid fa-circle-notch fa-spin"></i> Loading…</> : 'Show more results'}
+                  </button>
+                )}
+              </>
+            )}
+
+            {!searchError && placesList.length === 0 && (
+              hasSearched && !isSearching ? (
+                <div className="rf-no-results">
+                  <i className="fa-solid fa-store-slash" style={{ fontSize: '2rem', color: '#94a3b8', marginBottom: 12 }}></i>
+                  <h4>No businesses found for "{searchQuery}"</h4>
+                  <p>Try a shorter name, add the city or area, or enter your details manually.</p>
+                </div>
+              ) : !isSearching && (
+                <div className="rf-no-results" style={{ padding: '36px 16px' }}>
+                  <i className="fa-solid fa-magnifying-glass" style={{ fontSize: '2rem', color: '#16a34a', marginBottom: 12 }}></i>
+                  <h4>Search for your business</h4>
+                  <p>Start typing your business name to see matching businesses.</p>
+                </div>
+              )
             )}
           </div>
 
-          {/* Manual Fallback Toggle */}
           <div className="rf-manual-toggle-strip">
-            <p>Can't find your business listing on Google Maps?</p>
-            <button
-              type="button"
-              className="rf-btn-text"
-              onClick={() => setManualMode(true)}
-            >
-              <i className="fa-solid fa-pen-to-square"></i> Set Up Business Manually
+            <p>Can't find your business?</p>
+            <button type="button" className="rf-btn-text" onClick={() => setManualMode(true)}>
+              <i className="fa-solid fa-pen-to-square"></i> Enter details manually
             </button>
           </div>
         </div>
       )}
 
-      {/* STEP 1 (ALTERNATIVE): MANUAL SETUP MODE */}
+      {/* STEP 1 (ALTERNATIVE): MANUAL ENTRY */}
       {step === 1 && manualMode && (
         <div className="rf-onboard-card">
           <div className="rf-manual-header">
             <div>
-              <h3>Manual Business Profile Setup</h3>
-              <p>Enter your business details directly. You can update or link your Google Place ID at any time.</p>
+              <h3>Enter business details</h3>
+              <p>You can link your Google listing later from Settings.</p>
             </div>
-            <button
-              type="button"
-              className="btn btn-light"
-              onClick={() => setManualMode(false)}
-            >
-              ← Back to Google Search
+            <button type="button" className="btn btn-light" onClick={() => setManualMode(false)}>
+              ← Back to search
             </button>
           </div>
 
           <form onSubmit={saveManualBusiness} className="rf-manual-form">
             <div className="rf-form-grid">
               <div className="rf-form-group">
-                <label>Business Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Maruti InfoSoft & Tech"
-                  value={manualName}
-                  onChange={e => setManualName(e.target.value)}
-                />
+                <label htmlFor="mb-name">Business name *</label>
+                <input id="mb-name" type="text" required value={manualName} onChange={e => setManualName(e.target.value)} />
               </div>
 
               <div className="rf-form-group">
-                <label>Industry / Category</label>
-                <select
-                  value={manualCategory}
-                  onChange={e => setManualCategory(e.target.value)}
-                >
-                  <option>Software & IT Services</option>
-                  <option>Restaurant & Dining</option>
-                  <option>Salon & Spa</option>
-                  <option>Healthcare Clinic & Dental</option>
-                  <option>Retail Store & Boutique</option>
-                  <option>Auto Care & Diagnostics</option>
-                  <option>Hotel & Hospitality</option>
-                  <option>Gym & Fitness Center</option>
-                  <option>Real Estate & Construction</option>
-                  <option>Other Local Business</option>
+                <label htmlFor="mb-category">Category</label>
+                <select id="mb-category" value={manualCategory} onChange={e => setManualCategory(e.target.value)}>
+                  <option value="">Select a category</option>
+                  {CATEGORY_OPTIONS.map(c => <option key={c}>{c}</option>)}
                 </select>
               </div>
 
-              <div className="rf-form-group">
-                <label>City / Locality *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Surat, Gujarat"
-                  value={manualCity}
-                  onChange={e => setManualCity(e.target.value)}
-                />
+              <div className="rf-form-group rf-form-group-wide">
+                <label htmlFor="mb-address">Street address</label>
+                <input id="mb-address" type="text" placeholder="Shop number, building, street" value={manualAddress} onChange={e => setManualAddress(e.target.value)} />
               </div>
 
               <div className="rf-form-group">
-                <label>Physical Street Address</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Ring Road, Sarthana, Surat 395006"
-                  value={manualAddress}
-                  onChange={e => setManualAddress(e.target.value)}
-                />
+                <label htmlFor="mb-city">City *</label>
+                <input id="mb-city" type="text" required value={manualCity} onChange={e => setManualCity(e.target.value)} />
               </div>
 
-              <div className="rf-form-group" style={{ gridColumn: 'span 2' }}>
-                <label>
-                  Google Review URL or Place ID (Optional)
-                  <span className="rf-label-help">Customers who submit 4-5 stars will be redirected here</span>
+              <div className="rf-form-group">
+                <label htmlFor="mb-state">State</label>
+                <input id="mb-state" type="text" value={manualState} onChange={e => setManualState(e.target.value)} />
+              </div>
+
+              <div className="rf-form-group">
+                <label htmlFor="mb-pin">PIN code</label>
+                <input id="mb-pin" type="text" inputMode="numeric" maxLength={6} pattern="\d{6}" value={manualPostcode} onChange={e => setManualPostcode(e.target.value.replace(/\D/g, ''))} />
+              </div>
+
+              <div className="rf-form-group">
+                <label htmlFor="mb-phone">Phone</label>
+                <input id="mb-phone" type="tel" value={manualPhone} onChange={e => setManualPhone(e.target.value)} />
+              </div>
+
+              <div className="rf-form-group rf-form-group-wide">
+                <label htmlFor="mb-review">
+                  Google review link or Place ID
+                  <span className="rf-label-help">Happy customers are sent here to post their review</span>
                 </label>
-                <input
-                  type="text"
-                  placeholder="https://search.google.com/local/writereview?placeid=... or leave blank to auto-generate"
-                  value={manualReviewUrl}
-                  onChange={e => setManualReviewUrl(e.target.value)}
-                />
+                <input id="mb-review" type="text" placeholder="https://search.google.com/local/writereview?placeid=..." value={manualReviewUrl} onChange={e => setManualReviewUrl(e.target.value)} />
               </div>
 
-              <div className="rf-form-group">
-                <label>Phone Number (Optional)</label>
-                <input
-                  type="tel"
-                  placeholder="e.g. +91 63557 22267"
-                  value={manualPhone}
-                  onChange={e => setManualPhone(e.target.value)}
-                />
-              </div>
-
-              <div className="rf-form-group">
-                <label>Website URL (Optional)</label>
-                <input
-                  type="url"
-                  placeholder="https://example.com"
-                  value={manualWebsite}
-                  onChange={e => setManualWebsite(e.target.value)}
-                />
+              <div className="rf-form-group rf-form-group-wide">
+                <label htmlFor="mb-website">Website</label>
+                <input id="mb-website" type="url" placeholder="https://" value={manualWebsite} onChange={e => setManualWebsite(e.target.value)} />
               </div>
             </div>
 
             <div className="rf-form-actions">
-              <button
-                type="submit"
-                className="btn btn-dark"
-                disabled={isConnecting}
-                style={{ minWidth: 220 }}
-              >
-                {isConnecting ? 'Saving Profile...' : 'Save & Continue to Step 3 →'}
+              <button type="submit" className="btn btn-dark" disabled={isConnecting}>
+                {isConnecting ? 'Saving…' : 'Save and continue'}
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* STEP 2: CONFIRM FETCHED GOOGLE PLACES DATA */}
+      {/* STEP 2: CONFIRM GOOGLE DETAILS */}
       {step === 2 && selectedPlace && (
         <div className="rf-onboard-card">
           <div className="rf-confirm-top">
             <div className="rf-confirm-badge">
               <i className="fa-solid fa-circle-check" style={{ color: '#16a34a' }}></i>
-              <span>Google Maps Listing Verified</span>
+              <span>Business found</span>
             </div>
-            <button
-              type="button"
-              className="btn btn-light"
-              onClick={() => { setStep(1); try { window.history.pushState({ page: 'Business onboarding', step: 1 }, '', '/business-onboard'); } catch (_) {} }}
-            >
-              ← Search Different Business
+            <button type="button" className="btn btn-light" onClick={() => { setStep(1); pushStep(1); }}>
+              ← Choose a different business
             </button>
           </div>
+
+          {selectedPlace.businessStatus && selectedPlace.businessStatus !== 'OPERATIONAL' && (
+            <div className="rf-search-error" role="alert">
+              <i className="fa-solid fa-triangle-exclamation"></i>
+              <span>Google lists this business as {selectedPlace.businessStatus === 'CLOSED_PERMANENTLY' ? 'permanently closed' : 'temporarily closed'}.</span>
+            </div>
+          )}
 
           <div className="rf-verified-summary-card">
             <div className="rf-vsc-header">
               <div>
-                <span className="rf-vsc-tag">{selectedPlace.category || 'Verified Business'}</span>
+                {selectedPlace.category && <span className="rf-vsc-tag">{selectedPlace.category}</span>}
                 <h2 className="rf-vsc-title">{selectedPlace.name}</h2>
               </div>
-              <div className="rf-vsc-rating-box">
-                <div className="rf-vsc-stars">★ {selectedPlace.rating || '4.9'}</div>
-                <small>{selectedPlace.userRatingsTotal || 184} verified reviews</small>
-              </div>
+              {selectedPlace.rating !== null && selectedPlace.rating !== undefined && (
+                <div className="rf-vsc-rating-box">
+                  <div className="rf-vsc-stars">★ {Number(selectedPlace.rating).toFixed(1)}</div>
+                  {selectedPlace.userRatingsTotal ? (
+                    <small>{selectedPlace.userRatingsTotal.toLocaleString('en-IN')} Google reviews</small>
+                  ) : null}
+                </div>
+              )}
             </div>
 
             <div className="rf-vsc-grid">
               <div className="rf-vsc-row">
-                <span className="rf-vsc-label"><i className="fa-solid fa-location-dot"></i> Google Maps Address</span>
-                <span className="rf-vsc-val">{selectedPlace.address}</span>
+                <span className="rf-vsc-label"><i className="fa-solid fa-location-dot"></i> Address</span>
+                <span className="rf-vsc-val">{selectedPlace.address || '—'}</span>
               </div>
 
+              {(locationLine(selectedPlace) || selectedPlace.postcode) && (
+                <div className="rf-vsc-row">
+                  <span className="rf-vsc-label"><i className="fa-solid fa-map"></i> City / State / PIN</span>
+                  <span className="rf-vsc-val">
+                    {[locationLine(selectedPlace), selectedPlace.postcode].filter(Boolean).join(' – ')}
+                  </span>
+                </div>
+              )}
+
+              {selectedPlace.phone && (
+                <div className="rf-vsc-row">
+                  <span className="rf-vsc-label"><i className="fa-solid fa-phone"></i> Phone</span>
+                  <a className="rf-vsc-val" href={`tel:${selectedPlace.phone.replace(/\s/g, '')}`}>{selectedPlace.phone}</a>
+                </div>
+              )}
+
+              {selectedPlace.website && (
+                <div className="rf-vsc-row">
+                  <span className="rf-vsc-label"><i className="fa-solid fa-globe"></i> Website</span>
+                  <a className="rf-vsc-val rf-truncate-url" href={selectedPlace.website} target="_blank" rel="noreferrer">{selectedPlace.website}</a>
+                </div>
+              )}
+
               <div className="rf-vsc-row">
-                <span className="rf-vsc-label"><i className="fa-solid fa-fingerprint"></i> Google Place ID</span>
+                <span className="rf-vsc-label"><i className="fa-solid fa-fingerprint"></i> {selectedPlace.source === 'openstreetmap' ? 'Map ID (OpenStreetMap)' : 'Google Place ID'}</span>
                 <div className="rf-vsc-val-flex">
                   <code>{selectedPlace.placeId}</code>
-                  <button
-                    type="button"
-                    className="rf-btn-copy"
-                    onClick={() => copyPlaceId(selectedPlace.placeId)}
-                  >
+                  <button type="button" className="rf-btn-copy" onClick={() => copyPlaceId(selectedPlace.placeId)}>
                     {copiedPlaceId ? '✓ Copied' : 'Copy'}
                   </button>
                 </div>
               </div>
 
               <div className="rf-vsc-row">
-                <span className="rf-vsc-label"><i className="fa-solid fa-arrow-up-right-from-square"></i> Direct Review Write Link</span>
+                <span className="rf-vsc-label"><i className="fa-solid fa-star"></i> Review link</span>
                 <div className="rf-vsc-val-flex">
-                  <span className="rf-truncate-url">
-                    {selectedPlace.googleReviewUrl || `https://search.google.com/local/writereview?placeid=${selectedPlace.placeId}`}
-                  </span>
-                  <a
-                    href={selectedPlace.googleReviewUrl || `https://search.google.com/local/writereview?placeid=${selectedPlace.placeId}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rf-btn-test-link"
-                  >
-                    Test Link →
+                  <span className="rf-truncate-url">{selectedPlace.googleReviewUrl}</span>
+                  <a href={selectedPlace.googleReviewUrl} target="_blank" rel="noreferrer" className="rf-btn-test-link">
+                    Open →
                   </a>
                 </div>
               </div>
-
-              {selectedPlace.phone && (
-                <div className="rf-vsc-row">
-                  <span className="rf-vsc-label"><i className="fa-solid fa-phone"></i> Phone Number</span>
-                  <span className="rf-vsc-val">{selectedPlace.phone}</span>
-                </div>
-              )}
             </div>
 
             <div className="rf-vsc-footer">
-              <div className="rf-security-note">
-                <i className="fa-solid fa-shield-halved" style={{ color: '#16a34a' }}></i>
-                <span>All Google Places API keys are securely proxied. Review drafts are sent directly to this verified Place ID.</span>
-              </div>
+              {selectedPlace.googleMapsUrl && (
+                <a className="rf-security-note" href={selectedPlace.googleMapsUrl} target="_blank" rel="noreferrer">
+                  <i className="fa-solid fa-map-location-dot" style={{ color: '#16a34a' }}></i>
+                  <span>View on Google Maps</span>
+                </a>
+              )}
 
               <button
                 type="button"
@@ -636,92 +593,80 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
                 disabled={isConnecting}
                 onClick={confirmConnectPlace}
               >
-                {isConnecting ? (
-                  <>
-                    <i className="fa-solid fa-circle-notch fa-spin"></i> Connecting Profile...
-                  </>
-                ) : (
-                  <>
-                    Confirm &amp; Connect This Business <i className="fa-solid fa-arrow-right"></i>
-                  </>
-                )}
+                {isConnecting
+                  ? <><i className="fa-solid fa-circle-notch fa-spin"></i> Saving…</>
+                  : <>Use this business <i className="fa-solid fa-arrow-right"></i></>}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* STEP 3: SUCCESS & LAUNCH DASHBOARD */}
+      {/* STEP 3: DONE */}
       {step === 3 && (
         <div className="rf-onboard-card rf-success-step">
           <div className="rf-success-icon-wrap">
             <i className="fa-solid fa-circle-check"></i>
           </div>
-          <h2>Business Profile Successfully Linked!</h2>
+          <h2>Your business is set up</h2>
           <p className="rf-success-sub">
-            Your Google Business Profile is now connected to StarReview AI. Your QR codes, standees, and AI review generator are configured and ready to collect 5-star customer reviews.
+            Your review page and QR code now use these details. You can change them any time from Settings.
           </p>
 
           <div className="rf-success-meta-box">
             <div>
-              <span className="label">Connected Business</span>
-              <strong>{selectedPlace?.name || manualName || 'Team Maruti InfoSoft'}</strong>
+              <span className="label">Business</span>
+              <strong>{savedBusiness?.name || selectedPlace?.name || manualName}</strong>
             </div>
             <div>
-              <span className="label">Google Status</span>
-              <strong style={{ color: '#16a34a' }}>● Verified &amp; Active</strong>
+              <span className="label">Location</span>
+              <strong>{[savedBusiness?.city, savedBusiness?.postcode].filter(Boolean).join(' – ') || '—'}</strong>
             </div>
             <div>
-              <span className="label">Sync Engine</span>
-              <strong>Official Places API Proxy</strong>
+              <span className="label">Source</span>
+              <strong>{savedBusiness?.isGoogleVerified ? 'Verified listing' : String(savedBusiness?.placeId || '').startsWith('osm-') ? 'Found on map' : 'Entered manually'}</strong>
             </div>
           </div>
 
           <div className="rf-success-actions">
-            <button
-              type="button"
-              className="btn btn-dark rf-btn-launch"
-              onClick={() => navigate('Dashboard')}
-            >
-              Open Business Console &amp; Dashboard <i className="fa-solid fa-arrow-right"></i>
+            <button type="button" className="btn btn-dark rf-btn-launch" onClick={() => navigate('Dashboard')}>
+              Go to dashboard <i className="fa-solid fa-arrow-right"></i>
             </button>
             <button
               type="button"
               className="btn btn-light"
               onClick={() => {
-                if (window.history.pushState) {
-                  window.history.pushState({}, '', '/dashboard?tab=billing');
-                }
+                try { window.history.pushState({}, '', '/dashboard?tab=billing'); } catch (_) {}
                 navigate('Dashboard');
               }}
             >
-              View Billing &amp; Subscription Plans →
+              See plans
             </button>
           </div>
         </div>
       )}
 
-      {/* Security & Features Strip */}
+      {/* What you get */}
       <div className="rf-onboard-trust-strip">
         <div className="rf-trust-item">
-          <i className="fa-solid fa-lock"></i>
+          <i className="fa-solid fa-location-dot"></i>
           <div>
-            <strong>Enterprise Security</strong>
-            <span>OAuth 2.0 &amp; SSL encrypted Google proxy</span>
+            <strong>Accurate details</strong>
+            <span>Address, PIN code and phone are filled in for you</span>
           </div>
         </div>
         <div className="rf-trust-item">
-          <i className="fa-solid fa-wand-magic-sparkles"></i>
+          <i className="fa-solid fa-qrcode"></i>
           <div>
-            <strong>AI Review Drafts</strong>
-            <span>24 languages with staff &amp; service mentions</span>
+            <strong>Ready-to-print QR</strong>
+            <span>Your review page and QR flyer are set up from these details</span>
           </div>
         </div>
         <div className="rf-trust-item">
-          <i className="fa-solid fa-shield-cat"></i>
+          <i className="fa-solid fa-comment-dots"></i>
           <div>
-            <strong>Negative Review Shield</strong>
-            <span>Private resolution routing for 1-3 star feedback</span>
+            <strong>Private feedback first</strong>
+            <span>1–3 star feedback comes to you before it reaches Google</span>
           </div>
         </div>
       </div>

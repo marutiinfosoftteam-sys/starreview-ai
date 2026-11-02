@@ -3,18 +3,19 @@
 
 import { MongoClient } from 'mongodb';
 
-const uri = process.env.MONGODB_URI || '';
+// Read at call time: this module is imported before server.js loads .env
+const mongoUri = () => process.env.MONGODB_URI || '';
 let client = null;
 let clientPromise = null;
 let dbInstance = null;
 
-export const isMongoConfigured = Boolean(uri && uri.startsWith('mongodb'));
+export const isMongoConfigured = () => mongoUri().startsWith('mongodb');
 
 /**
  * Get shared MongoDB connection with pooling
  */
 export async function getDb() {
-  if (!isMongoConfigured) {
+  if (!isMongoConfigured()) {
     return null;
   }
 
@@ -24,7 +25,7 @@ export async function getDb() {
 
   try {
     if (!clientPromise) {
-      client = new MongoClient(uri, {
+      client = new MongoClient(mongoUri(), {
         maxPoolSize: 10,
         serverSelectionTimeoutMS: 5000,
         connectTimeoutMS: 10000

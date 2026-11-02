@@ -4686,7 +4686,7 @@ th.trial-col {
    ========================================================================== */
 
 /* ==========================================================================
-   REVIEWFLOW AI NAVBAR (SCREENSHOT 1 EXACT MATCH)
+   REVIEWFLOW AI NAVBAR
    ========================================================================== */
 .rf-top-header {
   height: 72px;
@@ -4894,7 +4894,7 @@ th.trial-col {
 }
 
 /* ==========================================================================
-   REVIEWFLOW AI LOGIN SCREEN (SCREENSHOT 2 EXACT MATCH)
+   REVIEWFLOW AI LOGIN SCREEN
    ========================================================================== */
 .rf-login-viewport {
   min-height: 100vh;
@@ -5648,7 +5648,7 @@ th.trial-col {
 }
 
 /* ==========================================================================
-   REVIEWFLOW AI LANDING PAGE & ABOUT PAGE SHOWCASE (SCREENSHOTS 1, 2, 3, 4, 5)
+   REVIEWFLOW AI LANDING PAGE & ABOUT PAGE SHOWCASE
    ========================================================================== */
 
 .rf-landing-page {
@@ -5658,7 +5658,7 @@ th.trial-col {
   overflow-x: hidden;
 }
 
-/* 1. SCREENSHOT 1: HERO & GRID BACKGROUND */
+/* 1. HERO & GRID BACKGROUND */
 .rf-hero-container {
   position: relative;
   padding: 4rem 1.25rem 3rem;
@@ -6020,7 +6020,7 @@ th.trial-col {
 }
 
 /* ====================================================================
-   2. SCREENSHOT 2: PILL ROW & 6 CORE SYSTEM FEATURES
+   2. PILL ROW & 6 CORE SYSTEM FEATURES
    ==================================================================== */
 .rf-features-section {
   padding: 4rem 1.25rem;
@@ -6182,7 +6182,7 @@ th.trial-col {
 }
 
 /* ====================================================================
-   3. SCREENSHOT 3: 24/7 AUTOPILOT DARK GREEN CONTAINER
+   3. 24/7 AUTOPILOT DARK GREEN CONTAINER
    ==================================================================== */
 .rf-autopilot-section {
   padding: 2rem 1.25rem 4rem;
@@ -6453,7 +6453,7 @@ th.trial-col {
 }
 
 /* ====================================================================
-   4. SCREENSHOT 4: THE 4-STEP REVIEW FUNNEL
+   4. THE 4-STEP REVIEW FUNNEL
    ==================================================================== */
 .rf-funnel-section {
   padding: 4rem 1.25rem;
@@ -6513,7 +6513,7 @@ th.trial-col {
 }
 
 /* ====================================================================
-   5. SCREENSHOT 5: NORMAL QR VS GOOGLE MAGIC REVIEW QR
+   5. NORMAL QR VS GOOGLE MAGIC REVIEW QR
    ==================================================================== */
 .rf-comparison-section {
   padding: 4rem 1.25rem 6rem;
@@ -6634,7 +6634,7 @@ th.trial-col {
   background: #f0fdf4;
 }
 
-/* Floating WhatsApp Button (visible in all screenshots) */
+/* Floating WhatsApp Button */
 .rf-floating-whatsapp-btn {
   position: fixed;
   right: 24px;
@@ -7490,7 +7490,7 @@ th.trial-col {
 
 
 /* ═══════════════════════════════════════════════════════════════
-   GLOBAL AMBIENT BACKGROUND & ANIMATED LIGHT MESH (SCREENSHOT 4 STYLE)
+   GLOBAL AMBIENT BACKGROUND & ANIMATED LIGHT MESH
    ═══════════════════════════════════════════════════════════════ */
 .rf-global-ambient-glow {
   position: fixed;
@@ -7677,7 +7677,7 @@ footer {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   SCREENSHOT 4 REGISTRATION & SIGNUP MODAL / PAGE ENHANCEMENTS
+   REGISTRATION & SIGNUP MODAL / PAGE ENHANCEMENTS
    ═══════════════════════════════════════════════════════════════ */
 .rf-form-row-2col {
   display: grid;
@@ -8291,7 +8291,7 @@ footer {
   color: #ffffff !important;
 }
 
-/* 2. Full-Width Edge-to-Edge Continuous Slider / Marquee (Screenshot 5 Fix) */
+/* 2. Full-Width Edge-to-Edge Continuous Slider / Marquee */
 .rf-full-marquee-section {
   width: 100vw;
   position: relative;
@@ -8400,7 +8400,7 @@ footer {
   100% { transform: translateX(-50%); }
 }
 
-/* 3. Ranking Trust Metric Cards (Screenshot 2 Fix) */
+/* 3. Ranking Trust Metric Cards */
 .sr-stats-ranking-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -8515,7 +8515,7 @@ footer {
   }
 }
 
-/* 4. Feature Cards Animation & Polish (Screenshot 4 Fix) */
+/* 4. Feature Cards Animation & Polish */
 .feature-card {
   position: relative;
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease !important;
@@ -8557,7 +8557,7 @@ footer {
   color: #15803d;
 }
 
-/* 5. Complete Removal of Feedback Button & Floating WhatsApp Polish (Screenshot 3 Fix) */
+/* 5. Complete Removal of Feedback Button & Floating WhatsApp Polish */
 .feedback-fab {
   display: none !important;
   visibility: hidden !important;
@@ -8607,10 +8607,10 @@ footer {
 
 
 /* ====================================================================
-   APPLY FOR AGENCY (SCREENSHOT 1 & 2) & REVIEW ASSISTANT DEMO (SCREENSHOT 3) & WHATSAPP HALO (SCREENSHOT 4)
+   APPLY FOR AGENCY & REVIEW ASSISTANT DEMO & WHATSAPP HALO
    ==================================================================== */
 
-/* ── Circular Floating WhatsApp Button with Radiant Pulse Halo (Screenshot 4) ── */
+/* ── Circular Floating WhatsApp Button with Radiant Pulse Halo ── */
 .rf-floating-whatsapp-btn {
   position: fixed !important;
   bottom: 24px !important;
@@ -8681,7 +8681,7 @@ footer {
   }
 }
 
-/* ── Apply For Agency Section (Screenshot 1 & 2) ── */
+/* ── Apply For Agency Section ── */
 .rf-agency-page-wrapper {
   padding: 40px 0 90px;
   position: relative;
@@ -8809,7 +8809,7 @@ footer {
   margin: 0 0 20px;
 }
 
-/* Callout Notice Box (Screenshot 1 Match) */
+/* Callout Notice Box */
 .rf-agency-notice-callout {
   background: #f0fdf4;
   border: 1.5px solid #bbf7d0;
@@ -8935,7 +8935,7 @@ footer {
   text-decoration: underline;
 }
 
-/* Footer Trust Badges (Screenshot 2 Match) */
+/* Footer Trust Badges */
 .rf-footer-trust-badges {
   display: flex;
   align-items: center;
@@ -8959,7 +8959,7 @@ footer {
 }
 
 
-/* ── Review Assistant Demo Redesign (Screenshot 3 Match) ── */
+/* ── Review Assistant Demo Redesign ── */
 .sr-demo-form-panel {
   display: flex;
   flex-direction: column;
@@ -9764,7 +9764,7 @@ html, body {
 
 
 /* ═══════════════════════════════════════════════════════════════
-   ABOUT US PAGE STYLES (MATCHING USER SCREENSHOTS 2, 3, 4)
+   ABOUT US PAGE STYLES
    ═══════════════════════════════════════════════════════════════ */
 .rf-about-page-wrap {
   width: 100%;
@@ -11322,7 +11322,7 @@ a.rf-btn-back-home {
 
 
 /* ====================================================================
-   BUTTON HIGH-CONTRAST VISIBILITY FIXES (SCREENSHOT 3 & 4)
+   BUTTON HIGH-CONTRAST VISIBILITY FIXES
    ==================================================================== */
 
 .btn-dark,
@@ -11389,7 +11389,7 @@ button.btn.btn-light:hover {
 }
 
 /* ====================================================================
-   REVIEW DEMO FORM BOX ALIGNMENT FIXES (SCREENSHOT 2)
+   REVIEW DEMO FORM BOX ALIGNMENT FIXES
    ==================================================================== */
 
 .sr-demo-inputs-row {
@@ -11452,7 +11452,7 @@ button.btn.btn-light:hover {
 
 
 /* ====================================================================
-   RESPONSIVE FIXES: SIDE-BY-SIDE CAPABILITIES MOBILE CARDS (SCREENSHOT 3)
+   RESPONSIVE FIXES: SIDE-BY-SIDE CAPABILITIES MOBILE CARDS
    ==================================================================== */
 
 @media (max-width: 880px) {

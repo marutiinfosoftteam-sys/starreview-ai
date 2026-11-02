@@ -2196,7 +2196,7 @@
   border: 1px solid #e2e8f0;
 }
 
-/* The Exact A6 Standee Flyer matching Screenshot 5 */
+/* The Exact A6 Standee Flyer*/
 .bc-a6-flyer {
   width: 320px;
   background: #ffffff;
@@ -2380,7 +2380,7 @@
   pointer-events: none;
 }
 
-/* Print Optimization for Instant Flyer Print (Centers directly in middle of sheet, matching Screenshot 2) */
+/* Print Optimization for Instant Flyer Print (Centers directly in middle of sheet,) */
 @page {
   size: A4 portrait;
   margin: 0;
@@ -2446,7 +2446,7 @@
 
 
 /* ==========================================================================
-   EXACT REVIEW SETTINGS & PHYSICAL STAND STYLES (MATCHING SCREENSHOTS 1 TO 5)
+   EXACT REVIEW SETTINGS & PHYSICAL STAND STYLES (TO 5)
    ========================================================================== */
 
 /* Sub-tabs navigation bar */
@@ -2737,7 +2737,7 @@
 }
 
 /* ==========================================================================
-   PHYSICAL STAND DISPLAY CARDS & CAROUSEL (SCREENSHOTS 4 & 5)
+   PHYSICAL STAND DISPLAY CARDS & CAROUSEL
    ========================================================================== */
 .bc-stand-grid-3 {
   display: grid;
@@ -3072,7 +3072,7 @@
 
 
 /* ==========================================================================
-   AI SEO ANALYZER & ADD-ON SERVICES (SCREENSHOTS 1 TO 5)
+   AI SEO ANALYZER & ADD-ON SERVICES
    ========================================================================== */
 
 /* SEO Layout Grid */
@@ -3152,7 +3152,7 @@
   line-height: 1.45;
 }
 
-/* Services Hero Card (Screenshot 2) */
+/* Services Hero Card */
 .bc-services-hero {
   background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
   border: 1.5px solid #bbf7d0;
@@ -3281,7 +3281,7 @@
   margin: 0;
 }
 
-/* Full Width Done-for-You Service Cards (Screenshots 3, 4, 5) */
+/* Full Width Done-for-You Service Cards */
 .bc-service-card-full {
   background: #ffffff;
   border: 1.5px solid var(--bc-border);
@@ -3803,7 +3803,7 @@
 }
 
 
-/* Amber Warning Banner (Screenshot 1) */
+/* Amber Warning Banner */
 .bc-seo-amber-banner {
   background: #fffbeb;
   border: 1.5px solid #fde68a;
@@ -3875,7 +3875,7 @@
   line-height: 1.45;
 }
 
-/* Service Card Process Strip (Screenshots 3, 4, 5) */
+/* Service Card Process Strip */
 .bc-scf-process-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -3949,7 +3949,7 @@
 
 
 /* ==========================================================================
-   REVIEWFLOW AI EXACT SIGN IN / REGISTER SHOWCASE (SCREENSHOT & DESIGN MATCH)
+   REVIEWFLOW AI EXACT SIGN IN / REGISTER SHOWCASE
    ========================================================================== */
 
 .rf-auth-wrapper {
@@ -4432,7 +4432,7 @@
   background: linear-gradient(135deg, #be123c 0%, #e11d48 100%);
 }
 
-/* Service Need More Banner (Screenshot 5) */
+/* Service Need More Banner */
 .bc-services-combo-banner {
   background: #ecfdf5;
   border: 1px dashed #6ee7b7;
@@ -4449,7 +4449,7 @@
   gap: 0.5rem;
 }
 
-/* How It Works Simple Process Card (Screenshot 5) */
+/* How It Works Simple Process Card */
 .bc-services-hiw-card {
   background: #ffffff;
   border: 1px solid var(--bc-border);
@@ -4524,7 +4524,7 @@
   line-height: 1.45;
 }
 
-/* Need Help Choosing Green CTA Banner (Screenshot 5) */
+/* Need Help Choosing Green CTA Banner */
 .bc-services-cta-banner {
   background: linear-gradient(135deg, #143e27 0%, #15803d 100%);
   border-radius: 20px;
@@ -4631,7 +4631,7 @@
   color: #ffffff;
 }
 
-/* Form Group, Label & Helper Formatting (Screenshot 1 & AI SEO Analyzer) */
+/* Form Group, Label & Helper Formatting */
 .bc-form-group {
   margin-bottom: 1.25rem;
   display: flex;
@@ -4663,7 +4663,7 @@
 
 
 /* ==========================================================================
-   BILLING & PLANS (SCREENSHOTS 1, 2, 3) & SETTINGS (SCREENSHOT 4)
+   BILLING & PLANS & SETTINGS
    ========================================================================== */
 
 /* Status Card */
@@ -5051,7 +5051,7 @@
   margin: 0;
 }
 
-/* SETTINGS (SCREENSHOT 4 - CENTERED CARD) */
+/* SETTINGS */
 .bc-settings-subtabs {
   display: flex;
   align-items: center;
@@ -5102,7 +5102,7 @@
 }
 
 /* ==========================================================================
-   REVIEWFLOW AI: MAGIC REVIEW QR COUNTER BANNER & THEMES (SCREENSHOT 1)
+   REVIEWFLOW AI: MAGIC REVIEW QR COUNTER BANNER & THEMES
    ========================================================================== */
 .bc-counter-banner {
   width: 100%;
@@ -5430,7 +5430,7 @@
 }
 
 /* ==========================================================================
-   REVIEWFLOW AI: PHYSICAL QR STAND CHECKOUT FORM (SCREENSHOT 2)
+   REVIEWFLOW AI: PHYSICAL QR STAND CHECKOUT FORM
    ========================================================================== */
 .bc-stand-checkout-card {
   max-width: 860px;
@@ -5561,7 +5561,7 @@
 }
 
 /* ==========================================================================
-   REVIEWFLOW AI: PLAN CHECKOUT PAGE (SCREENSHOT 3)
+   REVIEWFLOW AI: PLAN CHECKOUT PAGE
    ========================================================================== */
 .bc-plan-checkout-grid {
   display: grid;
@@ -5612,7 +5612,7 @@
 }
 
 /* ==========================================================================
-   REVIEWFLOW AI: WEBPRESS PAY UPI MODAL (SCREENSHOT 4)
+   REVIEWFLOW AI: WEBPRESS PAY UPI MODAL
    ========================================================================== */
 .bc-webpress-overlay {
   position: fixed;
@@ -6486,7 +6486,7 @@
     gap: 0.65rem !important;
   }
 
-  /* ── 1. Analytics & Pipeline Mobile Optimization (Screenshot 2) ── */
+  /* ── 1. Analytics & Pipeline Mobile Optimization ── */
   .bc-analytics-stat-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 0.75rem !important;
@@ -6535,7 +6535,7 @@
     border-radius: 14px !important;
   }
 
-  /* ── 2. Review & Auto-Reply Settings Mobile (Screenshot 3) ── */
+  /* ── 2. Review & Auto-Reply Settings Mobile ── */
   .bc-review-settings-card {
     padding: 1.15rem 1rem !important;
     border-radius: 16px !important;
@@ -6599,7 +6599,7 @@
     border-radius: 14px !important;
   }
 
-  /* ── 3. Negative Review Management Mobile (Screenshot 4) ── */
+  /* ── 3. Negative Review Management Mobile ── */
   .bc-neg-management-card {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -6743,7 +6743,7 @@
 
 
 
-/* Added by AI: Responsive Overrides */
+/* Responsive Overrides */
 @media screen and (max-width: 768px) {
   * {
     max-width: 100vw !important;
@@ -6764,7 +6764,7 @@
 
 
 /* ====================================================================
-   FIX: COLLAPSED SIDEBAR LOGO & TOGGLE BUTTON OVERLAP (SCREENSHOT 2)
+   FIX: COLLAPSED SIDEBAR LOGO & TOGGLE BUTTON OVERLAP
    ==================================================================== */
 .bc-sidebar.collapsed .bc-sidebar-header {
   flex-direction: column !important;

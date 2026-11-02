@@ -23,7 +23,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify }) {
   return (
     <div className="rf-about-page-wrap">
       {/* ═══════════════════════════════════════════════════════════════
-          SCREENSHOT 2: HEADER & SUBTITLE
+          HEADER & SUBTITLE
           ═══════════════════════════════════════════════════════════════ */}
       <section className="rf-about-hero">
         <div className="wrap">
@@ -45,7 +45,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify }) {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          SCREENSHOT 2 & 3: TWO-COLUMN STORY & MISSION SECTION
+          TWO-COLUMN STORY & MISSION SECTION
           ═══════════════════════════════════════════════════════════════ */}
       <section className="rf-about-story-sec">
         <div className="wrap rf-about-story-grid">
@@ -67,7 +67,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify }) {
               We also built an intelligent negative sentiment filter that routes 1–3 star ratings privately to management—protecting your Google Maps ranking while delivering real actionable insights.
             </p>
 
-            {/* Two Stat Boxes (Screenshot 3) */}
+            {/* Two Stat Boxes */}
             <div className="rf-about-stats-grid">
               <div className="rf-about-stat-card">
                 <div className="rf-about-stat-val">300%+</div>
@@ -80,7 +80,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify }) {
             </div>
           </div>
 
-          {/* Right Column: Mission & Ethics Card (Screenshot 2) */}
+          {/* Right Column: Mission & Ethics Card */}
           <div className="rf-about-story-right">
             <div className="rf-about-ethics-card">
               <h3 className="rf-about-ethics-title">Our Mission &amp; Ethics</h3>
@@ -103,7 +103,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify }) {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          SCREENSHOT 3 & 4: WHY BUSINESSES TRUST REVIEW FLOW AI (3 CARDS)
+          WHY BUSINESSES TRUST REVIEW FLOW AI (3 CARDS)
           ═══════════════════════════════════════════════════════════════ */}
       <section className="rf-about-trust-sec">
         <div className="wrap">
@@ -152,7 +152,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify }) {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          SCREENSHOT 4: BOTTOM CTA BANNER
+          BOTTOM CTA BANNER
           ═══════════════════════════════════════════════════════════════ */}
       <section className="rf-about-cta-sec">
         <div className="wrap">
@@ -162,20 +162,20 @@ export default function AboutPage({ user, navigate, setRegMode, notify }) {
               Deploy your personalized Google Magic Review QR standees and start turning daily visitors into glowing 5-star Google reviews.
             </p>
             <div className="rf-about-cta-btns">
-              <button
-                type="button"
+              <a
+                href={user ? '/dashboard' : '/register'}
                 className="rf-about-btn-primary"
-                onClick={handleGetStarted}
+                onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return; e.preventDefault(); handleGetStarted(); }}
               >
                 Get Started Now →
-              </button>
-              <button
-                type="button"
+              </a>
+              <a
+                href="/how-it-works"
                 className="rf-about-btn-secondary"
-                onClick={handleHowItWorks}
+                onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return; e.preventDefault(); handleHowItWorks(); }}
               >
                 See How It Works
-              </button>
+              </a>
             </div>
           </div>
         </div>

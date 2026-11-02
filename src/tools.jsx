@@ -15,11 +15,11 @@ export const funnelUrl = (cfg, business) => {
   const b = business || {
     name: 'StarReview Demo Business',
     slug: 'demo',
-    city: 'Surat',
+    city: '',
     category: 'Retail & Service',
     staff: ['Rahul', 'Priya'],
     services: ['Customer Service', 'Consultation'],
-    googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+    googleReviewUrl: '',
     whatsappNumber: '919904482945',
     brandColor: '#1d4934'
   };
@@ -31,7 +31,7 @@ export const funnelUrl = (cfg, business) => {
     cat: b.category || '',
     s: staff,
     srv: srv,
-    g: b.googleReviewUrl || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+    g: b.googleReviewUrl || (b.placeId ? `https://search.google.com/local/writereview?placeid=${encodeURIComponent(b.placeId)}` : ''),
     wa: b.whatsappNumber || '919904482945',
     col: b.brandColor || '#1d4934'
   });
@@ -52,6 +52,10 @@ export function ReviewFunnel({ slug, notify }) {
   const [message, setMessage] = useState('');
   const [contact, setContact] = useState('');
   const [busy, setBusy] = useState(false);
+  const [finalReview, setFinalReview] = useState('');
+  const [picked, setPicked] = useState(-1);
+  const [posted, setPosted] = useState(false);
+  const finalBoxRef = React.useRef(null);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -61,11 +65,11 @@ export function ReviewFunnel({ slug, notify }) {
       const srvList = (urlParams.get('srv') || urlParams.get('services') || '').split(',').map(x => x.trim()).filter(Boolean);
       const bData = {
         name: pName,
-        city: urlParams.get('c') || urlParams.get('city') || 'Surat',
-        category: urlParams.get('cat') || urlParams.get('category') || 'Software & IT Services',
-        staff: staffList.length ? staffList : ['Team Maruti', 'Rahul', 'Priya'],
-        services: srvList.length ? srvList : ['Software & IT Services', 'Web Development', 'Digital Growth Consultation'],
-        googleReviewUrl: urlParams.get('g') || urlParams.get('googleReviewUrl') || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+        city: urlParams.get('c') || urlParams.get('city') || '',
+        category: urlParams.get('cat') || urlParams.get('category') || '',
+        staff: staffList,
+        services: srvList,
+        googleReviewUrl: urlParams.get('g') || urlParams.get('googleReviewUrl') || '',
         whatsappNumber: urlParams.get('wa') || urlParams.get('whatsappNumber') || '919904482945',
         brandColor: urlParams.get('col') || '#16a34a',
         languages: ['English', 'Hindi', 'Gujarati', 'Hinglish', 'Marathi', 'Tamil']
@@ -92,11 +96,11 @@ export function ReviewFunnel({ slug, notify }) {
         if (name && name !== 'verde eco landing') {
           setBiz({
             name,
-            city: u.city || 'Surat',
-            category: u.category || 'Software & IT Services',
-            services: ['Software & IT Services', 'Web Development', 'Digital Growth Consultation'],
-            staff: ['Team Maruti', 'Rahul', 'Priya'],
-            googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+            city: u.city || '',
+            category: u.category || '',
+            services: [],
+            staff: [],
+            googleReviewUrl: '',
             whatsappNumber: '919904482945',
             brandColor: '#16a34a',
             languages: ['English', 'Hindi', 'Gujarati', 'Hinglish', 'Marathi', 'Tamil']
@@ -110,16 +114,12 @@ export function ReviewFunnel({ slug, notify }) {
     api('GET', `/api/public/business/${slug || 'demo'}`).then(r => {
       if (!r.ok) return setError(r.data.error || 'Review page not found.');
       const d = r.data || {};
-      if (!d.name || d.name === 'verde eco landing') {
-        d.name = 'Team Maruti InfoSoft';
-        d.city = 'Surat';
-      }
       setBiz(d);
       if (!d.unavailable) api('POST', '/api/public/track', { slug: slug || 'demo', type: 'scan' });
     });
   }, [slug]);
 
-  // When customer clicks a star: If 4 or 5 stars, DIRECTLY generate drafts and show Option 1, Option 2, Option 3 (Screenshot 2)
+  // When customer clicks a star: If 4 or 5 stars, DIRECTLY generate drafts and show Option 1, Option 2, Option 3
   const chooseRating = async n => {
     setRating(n);
     if (n < 4) {
@@ -129,8 +129,8 @@ export function ReviewFunnel({ slug, notify }) {
 
     setBusy(true);
     setStep('drafts');
-    const bName = biz?.name || 'Team Maruti InfoSoft';
-    const bCity = biz?.city || 'Surat';
+    const bName = biz?.name || 'this business';
+    const bCity = biz?.city || '';
 
     try {
       const r = await api('POST', '/api/public/drafts', {
@@ -138,7 +138,7 @@ export function ReviewFunnel({ slug, notify }) {
         business: bName,
         city: bCity,
         rating: n,
-        service: (biz?.services && biz.services[0]) || 'Software & IT Services',
+        service: (biz?.services && biz.services[0]) || biz?.category || '',
         language: 'English'
       });
       if (r.ok && r.data?.drafts?.length) {
@@ -161,35 +161,55 @@ export function ReviewFunnel({ slug, notify }) {
     }
   };
 
-  const copyAndPost = async text => {
-    let copied = false;
+  // Copy works on iOS/Android only inside the tap itself, and so does opening
+  // a new tab, so nothing here may await before window.open.
+  const copyText = text => {
+    let ok = false;
     try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(text);
-        copied = true;
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '0';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+    } catch {}
+    try {
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).catch(() => {});
+        ok = true;
       }
     } catch {}
-    if (!copied) {
-      try {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.focus();
-        ta.select();
-        copied = document.execCommand('copy');
-        document.body.removeChild(ta);
-      } catch {}
-    }
+    return ok;
+  };
 
-    api('POST', '/api/public/track', { slug: slug || 'demo', type: 'copy' });
-    const targetGUrl = biz?.googleReviewUrl || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4';
-    window.open(targetGUrl, '_blank', 'noopener');
-    api('POST', '/api/public/track', { slug: slug || 'demo', type: 'redirect' });
-    if (notify) {
-      notify(copied ? 'Review copied! Opening Google review page in new tab.' : 'Review copied. Paste it on Google.');
+  const pickDraft = (text, i) => {
+    setFinalReview(text);
+    setPicked(i);
+    setPosted(false);
+    setTimeout(() => {
+      finalBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+  };
+
+  const copyAndPost = () => {
+    const text = finalReview.trim();
+    if (!text) return;
+    const copied = copyText(text);
+    const target = biz?.googleReviewUrl;
+    if (target) {
+      const win = window.open(target, '_blank', 'noopener');
+      // Popup blocked (some in-app browsers): open Google in this tab instead
+      if (!win) window.location.href = target;
     }
+    setPosted(true);
+    api('POST', '/api/public/track', { slug: slug || 'demo', type: 'copy' });
+    if (target) api('POST', '/api/public/track', { slug: slug || 'demo', type: 'redirect' });
+    if (notify) notify(copied ? 'Review copied. Paste it in the Google review box.' : 'Select the review text and copy it, then paste it on Google.');
   };
 
   const sendPrivate = async e => {
@@ -204,7 +224,7 @@ export function ReviewFunnel({ slug, notify }) {
     <main className="page-shell wrap">
       <div className="page-heading">
         <div className="eyebrow" style={{ color: '#16a34a', fontWeight: 800, letterSpacing: '0.08em', fontSize: '0.78rem', marginBottom: '0.35rem', textTransform: 'uppercase' }}>
-          {biz?.name ? biz.name.toUpperCase() : 'TEAM MARUTI INFOSOFT'}
+          {biz?.name ? biz.name.toUpperCase() : ''}
         </div>
         <h1 style={{ fontSize: '1.9rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.5rem 0', letterSpacing: '-0.02em' }}>
           {biz && !biz.unavailable ? 'How was your experience?' : 'Review page'}
@@ -237,47 +257,67 @@ export function ReviewFunnel({ slug, notify }) {
     </div>
   );
 
-  // SCREEN 2: Exact Match to Screenshot 2 (Drafts Option 1, Option 2, Option 3)
+  // SCREEN 2: pick a draft -> it fills the review box -> copy & open Google
   if (step === 'drafts') return shell(
-    <div>
-      <p style={{ color: '#475569', fontSize: '0.92rem', marginBottom: '1.25rem', lineHeight: 1.5 }}>
-        Edit a draft if you like, then copy it and post it on Google.
-      </p>
+    <div className="rf-review-flow">
       {busy ? (
         <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
-          <p style={{ color: '#16a34a', fontWeight: 800, fontSize: '0.95rem' }}>✦ Generating customized AI review drafts for {biz?.name}...</p>
+          <p style={{ color: '#16a34a', fontWeight: 800, fontSize: '0.95rem' }}>Writing review suggestions for {biz?.name}…</p>
         </div>
       ) : (
         <>
-          {drafts.map((d, i) => (
-            <div className="draft" key={i} style={{ marginBottom: '1.25rem', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '1.1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-              <div className="draft-top" style={{ marginBottom: '0.45rem' }}>
-                <b style={{ color: '#475569', fontSize: '0.78rem' }}>Option {i + 1}</b>
-              </div>
-              <textarea
-                rows="4"
-                value={d}
-                onChange={e => setDrafts(drafts.map((x, j) => j === i ? e.target.value : x))}
-                style={{ width: '100%', padding: '0.85rem', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '0.9rem', color: '#1e293b', boxSizing: 'border-box', marginBottom: '0.85rem', fontFamily: 'inherit', resize: 'vertical', lineHeight: 1.5 }}
-              />
+          <p className="rf-review-step-title"><span>1</span> Tap the review you like</p>
+          <div className="rf-review-options">
+            {drafts.map((d, i) => (
               <button
                 type="button"
-                className="btn btn-dark full"
-                onClick={() => copyAndPost(d)}
-                style={{ width: '100%', background: '#1d4934', color: '#ffffff', padding: '0.85rem', borderRadius: '10px', fontWeight: 700, fontSize: '0.9rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                key={i}
+                className={`rf-review-option ${picked === i ? 'selected' : ''}`}
+                onClick={() => pickDraft(d, i)}
+                aria-pressed={picked === i}
               >
-                Copy &amp; post on Google →
+                <span className="rf-review-option-text">{d}</span>
+                <span className="rf-review-option-cta">{picked === i ? '✓ Selected' : 'Use this'}</span>
               </button>
+            ))}
+          </div>
+
+          <p className="rf-review-step-title"><span>2</span> Your review <small>(you can edit it)</small></p>
+          <textarea
+            ref={finalBoxRef}
+            className="rf-review-final"
+            rows="5"
+            value={finalReview}
+            onChange={e => { setFinalReview(e.target.value); setPosted(false); }}
+            placeholder="Tap a review above, or write your own here."
+          />
+
+          <button
+            type="button"
+            className="btn btn-dark full rf-review-post"
+            onClick={copyAndPost}
+            disabled={!finalReview.trim()}
+          >
+            {biz?.googleReviewUrl ? 'Copy & open Google review' : 'Copy review'}
+          </button>
+
+          {posted && (
+            <div className="rf-review-paste-help" role="status">
+              <strong>✓ Review copied</strong>
+              <span>On Google, choose your stars, then tap the review box and <b>long-press → Paste</b> (on a computer: Ctrl+V / ⌘V) and tap <b>Post</b>.</span>
+              {biz?.googleReviewUrl && (
+                <a href={biz.googleReviewUrl} target="_blank" rel="noopener noreferrer">Open Google review page again</a>
+              )}
             </div>
-          ))}
+          )}
+
+          {!biz?.googleReviewUrl && (
+            <p className="rf-review-missing-link">This business hasn't linked its Google review page yet. You can still copy your review.</p>
+          )}
+
           <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-            <button
-              type="button"
-              className="text-btn centered"
-              onClick={() => setStep('rate')}
-              style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.84rem', cursor: 'pointer', fontWeight: 600 }}
-            >
-              ← Back
+            <button type="button" className="text-btn centered rf-review-back" onClick={() => { setStep('rate'); setPicked(-1); setFinalReview(''); setPosted(false); }}>
+              ← Change rating
             </button>
           </div>
         </>
@@ -344,7 +384,8 @@ export function ReviewFunnel({ slug, notify }) {
 /* ---------- Business profile ---------- */
 export function BusinessSetup({ user, business, setBusiness, notify, navigate, cfg }) {
   const blank = { name: '', city: '', category: '', googleReviewUrl: '', services: '', staff: '', keywords: '', whatsappNumber: '919904482945', brandColor: '#1d4934' };
-  const fromBiz = b => b ? { ...b, services: b.services.join(', '), staff: b.staff.join(', '), keywords: b.keywords.join(', ') } : blank;
+  const joinList = v => (Array.isArray(v) ? v.join(', ') : (v || ''));
+  const fromBiz = b => b ? { ...b, services: joinList(b.services), staff: joinList(b.staff), keywords: joinList(b.keywords) } : blank;
   const [f, setF] = useState(fromBiz(business));
   useEffect(() => setF(fromBiz(business)), [business]);
   if (!user) return <SignInPrompt navigate={navigate} text="Create a free account to set up your business and get your review link." />;
@@ -370,7 +411,7 @@ export function BusinessSetup({ user, business, setBusiness, notify, navigate, c
       <label>Brand color<input type="color" value={f.brandColor} onChange={set('brandColor')} /></label>
       <button className="btn btn-dark full">Save business</button>
       {business && <div className="notice small-notice">Your customer review page: <b>{funnelUrl(cfg, business)}</b>
-        <div className="row-gap"><button type="button" className="btn btn-light btn-sm" onClick={() => window.open(funnelUrl(cfg, business), '_blank')}>Open →</button><button type="button" className="btn btn-light btn-sm" onClick={() => navigate('QR flyer')}>Create QR flyer →</button></div></div>}
+        <div className="row-gap"><a className="btn btn-light btn-sm" href={funnelUrl(cfg, business)} target="_blank" rel="noopener noreferrer">Open →</a><a className="btn btn-light btn-sm" href="/qr-flyer" onClick={e => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return; e.preventDefault(); navigate('QR flyer'); }}>Create QR flyer →</a></div></div>}
     </form>
   );
 }

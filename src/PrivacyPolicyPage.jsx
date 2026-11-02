@@ -41,7 +41,7 @@ export default function PrivacyPolicyPage({ navigate }) {
               We collect information that is strictly necessary to deliver our reputation management, review funnel, and AI review drafting services:
             </p>
             <ul>
-              <li><strong>Account Credentials:</strong> Name, business email, contact telephone number (+91 9904482945 for platform support), and encrypted authentication tokens.</li>
+              <li><strong>Account Credentials:</strong> Name, business email, contact telephone number (+91 99044 82945 for platform support), and encrypted authentication tokens.</li>
               <li><strong>Business Profile Details:</strong> Business name, address, Google Maps Place ID, industry category, services offered, staff names (for review personalization), and brand colors.</li>
               <li><strong>Customer Interaction Data:</strong> Number of QR scans, review suggestions generated, draft copy events, and redirects to official Google review pages.</li>
               <li><strong>Private Customer Feedback:</strong> Ratings, constructive suggestions, and optional contact details submitted through your private feedback filter form.</li>
@@ -173,10 +173,13 @@ export default function PrivacyPolicyPage({ navigate }) {
                 <strong>Platform:</strong> StarReview AI
               </div>
               <div>
-                <strong>Direct Phone:</strong> <a href="tel:+919904482945" target="_blank" rel="noopener noreferrer">+91 9904482945</a>
+                <strong>Direct Phone:</strong> <a href="tel:+919904482945">+91 99044 82945</a>
               </div>
               <div>
-                <strong>WhatsApp Support:</strong> <a href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20have%20a%20privacy%20inquiry." target="_blank" rel="noopener noreferrer">+91 9904482945</a>
+                <strong>Email:</strong> <a href="mailto:marutiinfosoftteam@gmail.com">marutiinfosoftteam@gmail.com</a>
+              </div>
+              <div>
+                <strong>WhatsApp Support:</strong> <a href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20have%20a%20privacy%20inquiry." target="_blank" rel="noopener noreferrer">+91 99044 82945</a>
               </div>
               <div>
                 <strong>Headquarters:</strong> Surat, Gujarat, India

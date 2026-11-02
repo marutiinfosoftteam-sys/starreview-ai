@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import crypto from 'node:crypto';
+import dns from 'node:dns/promises';
 import fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
@@ -14,6 +15,8 @@ import { LANGUAGES, localDrafts, localReply } from './lib/drafts.js';
 import { runSeoAudit } from './lib/seo.js';
 import { getDb, isMongoConfigured, getTenantBusiness, saveTenantBusiness, logAuditEvent } from './db/mongodb.js';
 import { generateOpenRouterDrafts, generateOpenRouterReply, isOpenRouterConfigured } from './lib/openrouter.js';
+import { searchIndianBusinesses, getPlaceDetails, getPlacesApiKey } from './lib/placesSearch.js';
+import { searchIndiaOpenStreetMap } from './lib/osmSearch.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
@@ -79,11 +82,26 @@ const emptyStore = () => ({
   ],
   payments: []
 });
+// With MONGODB_URI set, the store lives in MongoDB so accounts survive serverless
+// restarts (Vercel's disk is temporary). Without it, server/data/store.json is used.
 async function readStore() {
+  const mongo = await getDb();
+  if (mongo) {
+    const doc = await mongo.collection('app_store').findOne({ _id: 'main' });
+    if (!doc) return emptyStore();
+    const { _id, ...data } = doc;
+    return { ...emptyStore(), ...data };
+  }
   try { return { ...emptyStore(), ...JSON.parse(await fs.readFile(dbFile, 'utf8')) }; }
   catch { return emptyStore(); }
 }
 async function writeStore(store) {
+  const mongo = await getDb();
+  if (mongo) {
+    const { _id, ...data } = store;
+    await mongo.collection('app_store').replaceOne({ _id: 'main' }, data, { upsert: true });
+    return;
+  }
   const tmp = dbFile + '.tmp';
   await fs.writeFile(tmp, JSON.stringify(store, null, 2));
   await fs.rename(tmp, dbFile);
@@ -123,13 +141,38 @@ app.use('/api', (req, res, next) => {
 /* ---------- Helpers ---------- */
 const clean = (v, max = 2000) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const emailOk = e => /^\S+@\S+\.\S+$/.test(e);
+// Rejects made-up addresses: the email's domain must be able to receive mail
+async function emailDomainReceivesMail(email) {
+  const domain = email.split('@')[1];
+  try {
+    const mx = await dns.resolveMx(domain);
+    return mx.some(r => r.exchange && r.exchange !== '.');
+  } catch (err) {
+    // No such domain / no mail servers: fake. Any other DNS problem: don't block a real user
+    return !['ENOTFOUND', 'ENODATA'].includes(err.code);
+  }
+}
+// Confirms a Firebase Google sign-in token with Google and returns the verified account
+async function verifyFirebaseIdToken(idToken) {
+  const key = process.env.FIREBASE_API_KEY || process.env.VITE_FIREBASE_API_KEY;
+  if (!key || !idToken) return null;
+  const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(key)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken })
+  });
+  if (!r.ok) return null;
+  const account = (await r.json()).users?.[0];
+  if (!account?.email || !account.emailVerified) return null;
+  return { email: account.email.toLowerCase(), name: account.displayName || '', uid: account.localId };
+}
 const signToken = u => jwt.sign({ sub: u.id, email: u.email }, JWT_SECRET, { expiresIn: '7d' });
 const hasAccess = u => {
   if (!u || u.id === 'demo-user-id') return true;
   return Boolean(u?.subscription && u.subscription.status === 'active' && new Date(u.subscription.expiresAt) > new Date());
 };
 const hasReplies = u => hasAccess(u) && ['Trial', 'Pro'].includes(u.subscription.plan);
-const publicUser = u => ({ id: u.id, email: u.email, subscription: u.subscription || null, access: hasAccess(u), replyAssistant: hasReplies(u) });
+const publicUser = u => ({ id: u.id, email: u.email, name: u.name || '', mobile: u.mobile || '', subscription: u.subscription || null, access: hasAccess(u), replyAssistant: hasReplies(u) });
 const slugify = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'business';
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
@@ -150,16 +193,46 @@ function auth(req, res, next) {
   catch { return res.status(401).json({ error: 'Your session expired. Please sign in again.' }); }
 }
 
-async function sendMail({ to, subject, text, replyTo }) {
+// Without SMTP, mail for the company's own inbox goes through FormSubmit (no key needed).
+// FormSubmit emails an activation link to that inbox the first time; after one click it delivers.
+const COMPANY_INBOX = (process.env.DELETION_REQUEST_EMAIL || 'marutiinfosoftteam@gmail.com').toLowerCase();
+async function sendViaFormSubmit({ to, subject, fields, replyTo }) {
+  if (String(process.env.FORMSUBMIT || 'on').toLowerCase() === 'off') return { sent: false, reason: 'email_not_configured' };
+  const site = process.env.APP_URL || 'https://starreview-ai-alpha.vercel.app';
+  const r = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', Origin: site, Referer: site + '/' },
+    body: JSON.stringify({ _subject: subject, _template: 'table', _captcha: 'false', ...(replyTo ? { _replyto: replyTo } : {}), ...fields })
+  });
+  const data = await r.json().catch(() => ({}));
+  if (String(data.success) === 'true') return { sent: true, via: 'formsubmit' };
+  const needsActivation = /activat/i.test(data.message || '');
+  return { sent: false, reason: needsActivation ? 'needs_activation' : 'formsubmit_failed', message: data.message };
+}
+
+async function sendMail({ to, subject, text, replyTo, fields }) {
   const recipient = to || process.env.NOTIFY_EMAIL;
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS || !recipient) return { sent: false, reason: 'email_not_configured' };
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS || !recipient) {
+    if (recipient && recipient.toLowerCase() === COMPANY_INBOX) {
+      return sendViaFormSubmit({ to: recipient, subject, replyTo, fields: fields || { Message: text } });
+    }
+    return { sent: false, reason: 'email_not_configured' };
+  }
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT || 587),
     secure: String(process.env.SMTP_SECURE || 'false') === 'true',
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
   });
-  await transporter.sendMail({ from: process.env.MAIL_FROM || process.env.SMTP_USER, to: recipient, replyTo, subject, text });
+  // Same details as a neat two-column table for mail apps that show HTML
+  const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const html = fields ? `<h2 style="font-family:Arial,sans-serif;font-size:18px">${esc(subject)}</h2>` +
+    '<table cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px">' +
+    Object.entries(fields).map(([k, v]) =>
+      `<tr><th align="left" style="border:1px solid #ddd;background:#f6f6f6;white-space:nowrap">${esc(k)}</th>` +
+      `<td style="border:1px solid #ddd;white-space:pre-wrap">${esc(v)}</td></tr>`).join('') +
+    '</table>' : undefined;
+  await transporter.sendMail({ from: process.env.MAIL_FROM || process.env.SMTP_USER, to: recipient, replyTo, subject, text, html });
   return { sent: true };
 }
 
@@ -235,12 +308,16 @@ app.post('/api/auth/register', async (req, res) => {
     const password = typeof req.body?.password === 'string' ? req.body.password : '';
     if (!emailOk(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
     if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    if (!(await emailDomainReceivesMail(email))) {
+      return res.status(400).json({ error: 'This email address does not exist. Please use your real email (for example your Gmail).' });
+    }
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await mutate(db => {
       if (db.users.some(u => u.email === email)) return null;
       const now = new Date();
       const u = {
         id: crypto.randomUUID(), email, passwordHash, createdAt: now.toISOString(),
+        name: clean(req.body?.fullName || req.body?.name, 120), mobile: clean(req.body?.mobile || req.body?.phone, 30),
         subscription: { plan: 'Trial', period: `${TRIAL_DAYS} days`, status: 'active', startedAt: now.toISOString(), expiresAt: new Date(now.getTime() + TRIAL_DAYS * 86400000).toISOString() }
       };
       db.users.push(u);
@@ -255,16 +332,15 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const email = clean(req.body?.email, 254).toLowerCase();
     const password = typeof req.body?.password === 'string' ? req.body.password : '';
+    if (!emailOk(email) || !password) return res.status(400).json({ error: 'Enter your email and password.' });
     const db = await readStore();
 
-    if ((email === 'team@maruti.com' || email === 'demo@starreview.ai') && password === 'password123') {
-      const demoUser = db.users[0] || { id: 'demo-user-id', email: 'team@maruti.com', subscription: { plan: 'Trial', status: 'active', expiresAt: new Date(Date.now() + 3 * 86400000).toISOString(), isTrial: true } };
-      return res.json({ token: signToken(demoUser), user: publicUser(demoUser) });
-    }
-
     const user = db.users.find(u => u.email === email);
-    if (!user) return res.status(401).json({ error: 'Email or password is incorrect.' });
-    if (user.passwordHash && !(await bcrypt.compare(password, user.passwordHash))) {
+    if (!user) return res.status(401).json({ error: 'No account found with this email. Please create an account first.' });
+    if (!user.passwordHash) {
+      return res.status(401).json({ error: 'This account uses Google sign-in. Please tap "Continue with Google".' });
+    }
+    if (!(await bcrypt.compare(password, user.passwordHash))) {
       return res.status(401).json({ error: 'Email or password is incorrect.' });
     }
     res.json({ token: signToken(user), user: publicUser(user) });
@@ -273,84 +349,39 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.post('/api/auth/firebase-login', async (req, res) => {
   try {
-    const email = clean(req.body?.email, 254).toLowerCase();
-    const name = clean(req.body?.name, 120) || 'Google User';
-    if (!email || !emailOk(email)) {
-      return res.status(400).json({ error: 'Valid email is required.' });
+    // Only trust the account Google confirms, never an email sent by the browser
+    const verified = await verifyFirebaseIdToken(clean(req.body?.idToken, 4096));
+    if (!verified) {
+      return res.status(401).json({ error: 'Google sign-in could not be verified. Please try again.' });
     }
+    const { email, uid } = verified;
+    const name = clean(verified.name, 120) || email.split('@')[0];
 
-    const mongo = await getDb();
-    let user = null;
-
-    if (mongo) {
-      user = await mongo.collection('users').findOne({ email });
-      if (!user) {
+    const user = await mutate(db => {
+      let u = db.users.find(x => x.email === email);
+      if (!u) {
         const now = new Date();
-        user = {
+        u = {
           id: crypto.randomUUID(),
           email,
           name,
+          firebaseUid: uid,
           role: email === ADMIN_EMAIL ? 'admin' : 'user',
-          subscription: { plan: 'Starter', period: 'Yearly', status: 'active', startedAt: now.toISOString(), expiresAt: new Date(now.getTime() + 365 * 86400000).toISOString() },
+          subscription: { plan: 'Trial', period: `${TRIAL_DAYS} days`, status: 'active', startedAt: now.toISOString(), expiresAt: new Date(now.getTime() + TRIAL_DAYS * 86400000).toISOString() },
           createdAt: now.toISOString()
         };
-        await mongo.collection('users').insertOne(user);
-        await mongo.collection('businesses').insertOne({
-          id: 'biz_' + crypto.randomUUID().slice(0, 8),
-          userId: user.id,
-          name: `${name}'s Business`,
-          slug: slugify(name) + '-' + crypto.randomBytes(2).toString('hex'),
-          city: 'Surat',
-          category: 'Services',
-          googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
-          services: ['Customer Care', 'High Quality Service'],
-          staff: ['Staff Member'],
-          keywords: ['reliable', 'fast service'],
-          whatsappNumber: '919904482945',
-          brandColor: '#16a34a',
-          competitors: [],
-          createdAt: now.toISOString()
-        });
+        db.users.push(u);
+      } else if (!u.firebaseUid) {
+        u.firebaseUid = uid;
+        if (!u.name) u.name = name;
       }
-    } else {
-      user = await mutate(db => {
-        let u = db.users.find(x => x.email === email);
-        if (!u) {
-          const now = new Date();
-          u = {
-            id: crypto.randomUUID(),
-            email,
-            name,
-            role: email === ADMIN_EMAIL ? 'admin' : 'user',
-            subscription: { plan: 'Starter', period: 'Yearly', status: 'active', startedAt: now.toISOString(), expiresAt: new Date(now.getTime() + 365 * 86400000).toISOString() },
-            createdAt: now.toISOString()
-          };
-          db.users.push(u);
-          db.businesses.push({
-            id: 'biz_' + crypto.randomUUID().slice(0, 8),
-            userId: u.id,
-            name: `${name}'s Business`,
-            slug: slugify(name) + '-' + crypto.randomBytes(2).toString('hex'),
-            city: 'Surat',
-            category: 'Services',
-            googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
-            services: ['Customer Care', 'High Quality Service'],
-            staff: ['Staff Member'],
-            keywords: ['reliable', 'fast service'],
-            whatsappNumber: '919904482945',
-            brandColor: '#16a34a',
-            competitors: [],
-            createdAt: now.toISOString()
-          });
-        }
-        return u;
-      });
-    }
+      return u;
+    });
 
     res.json({ token: signToken(user), user: publicUser(user) });
   } catch (err) {
     console.error('[Firebase Login Error]:', err);
-    res.status(500).json({ error: 'Could not complete Google authentication.' });
+    res.status(500).json({ error: 'Could not complete Google sign-in.' });
   }
 });
 
@@ -417,124 +448,122 @@ app.put('/api/business', auth, async (req, res) => {
 /* ---------- Account Deletion Request with Admin Notification to marutiinfosoftteam@gmail.com ---------- */
 app.post('/api/account/deletion-request', auth, async (req, res) => {
   try {
-    const { name, mobile, businessName, email, reason } = req.body || {};
-    const refId = 'DEL-' + Math.floor(100000 + Math.random() * 900000);
-    const deletionRecord = {
+    const body = req.body || {};
+    const companyEmail = process.env.DELETION_REQUEST_EMAIL || 'marutiinfosoftteam@gmail.com';
+    const refId = /^DEL-\d{6}$/.test(body.refId || '') ? body.refId : 'DEL-' + Math.floor(100000 + Math.random() * 900000);
+    const record = {
       id: refId,
-      userId: req.user?.sub || 'user_demo',
-      name: clean(name, 100),
-      mobile: clean(mobile, 50),
-      businessName: clean(businessName, 120),
-      email: clean(email || req.user?.email, 120),
-      reason: clean(reason, 500) || 'Customer requested account deletion',
+      userId: req.user?.sub || '',
+      name: clean(body.name, 100),
+      mobile: clean(body.mobile, 50),
+      businessName: clean(body.businessName, 120),
+      address: clean(body.address, 400),
+      email: clean(body.email || req.user?.email, 120),
+      reason: clean(body.reason, 500) || 'Not specified',
       status: 'pending_review',
-      companyAdminEmail: 'marutiinfosoftteam@gmail.com',
       createdAt: new Date().toISOString()
     };
+    if (!record.name || !record.mobile || !record.businessName || !record.address) {
+      return res.status(400).json({ error: 'Please fill in your name, mobile number, company name and company address.' });
+    }
 
     await mutate(db => {
       if (!Array.isArray(db.deletionRequests)) db.deletionRequests = [];
-      db.deletionRequests.push(deletionRecord);
+      db.deletionRequests.push(record);
       return db;
     });
 
-    console.log(`[Account Deletion Alert] Request ${refId} for ${deletionRecord.businessName} (${deletionRecord.email}) logged for marutiinfosoftteam@gmail.com review.`);
+    let emailSent = false;
+    let emailStatus = 'not_sent';
+    try {
+      const result = await sendMail({
+        to: companyEmail,
+        replyTo: emailOk(record.email) ? record.email : undefined,
+        subject: `Account deletion request - ${record.businessName} (${refId})`,
+        fields: {
+          Request: 'Please delete this StarReview AI account',
+          Reference: refId,
+          'Company name': record.businessName,
+          'Company address': record.address,
+          'Owner name': record.name,
+          Mobile: record.mobile,
+          'Account email': record.email,
+          Reason: record.reason,
+          Submitted: new Date(record.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST',
+          'User ID': record.userId || 'Not signed in'
+        },
+        text:
+          `A customer has asked to delete their StarReview AI account.\n\n` +
+          `Reference: ${refId}\n` +
+          `Company name: ${record.businessName}\n` +
+          `Company address: ${record.address}\n` +
+          `Owner name: ${record.name}\n` +
+          `Mobile: ${record.mobile}\n` +
+          `Account email: ${record.email}\n` +
+          `User ID: ${record.userId}\n` +
+          `Reason: ${record.reason}\n` +
+          `Submitted: ${record.createdAt}\n`
+      });
+      emailSent = Boolean(result?.sent);
+      emailStatus = emailSent ? 'sent' : (result?.reason || 'not_sent');
+      if (!emailSent) console.warn(`[Account deletion] ${refId}: email not sent (${result?.reason}${result?.message ? ': ' + result.message : ''}).`);
+    } catch (mailErr) {
+      console.error(`[Account deletion] ${refId}: email failed:`, mailErr.message);
+    }
 
-    res.json({
-      ok: true,
-      refId,
-      status: 'pending_review',
-      adminEmail: 'marutiinfosoftteam@gmail.com',
-      message: 'Your account deletion request has been registered and sent to marutiinfosoftteam@gmail.com. An administrator will verify and process your request within 24-48 business hours.'
-    });
+    res.json({ ok: true, refId, emailSent, emailStatus, status: 'pending_review' });
   } catch (err) {
     console.error('Account deletion request error:', err);
     res.status(500).json({ error: 'Failed to record deletion request.' });
   }
 });
 
-/* ---------- Google Places API (Official Search & Details with Secure Proxy) ---------- */
-import { searchRealGooglePlaces, serverPlacesCache } from './lib/placesSearch.js';
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || process.env.GOOGLE_MAPS_API_KEY || '';
-
-app.get('/api/places/autocomplete', async (req, res) => {
-  const query = clean(req.query.input || req.query.query, 120);
-  const apiKey = clean(req.query.apiKey, 150) || GOOGLE_PLACES_API_KEY;
-
-  try {
-    const places = await searchRealGooglePlaces(query, apiKey);
-    res.json({ places: places || [] });
-  } catch (err) {
-    console.error('[API Places Autocomplete Error]:', err.message);
-    res.json({ places: [] });
-  }
-});
-
-app.get('/api/places/details', async (req, res) => {
-  const placeId = clean(req.query.placeId || req.query.place_id, 150);
-  const apiKey = clean(req.query.apiKey, 150) || GOOGLE_PLACES_API_KEY;
-  if (!placeId) return res.status(400).json({ error: 'placeId is required.' });
-
-  const cached = serverPlacesCache.get(placeId);
-  if (cached) return res.json({ place: cached });
-
-  // 1. If real Google Places API Key configured
-  if (apiKey) {
+/* ---------- Google Places API (New): business search for onboarding ---------- */
+// The key is read on the server only; the browser never sees it.
+// Search: /api/places/search?q=...&pageToken=...  (/api/places/autocomplete kept as an alias)
+const placesSearchHandler = async (req, res) => {
+  const query = clean(req.query.q || req.query.input || req.query.query, 150);
+  const pageToken = clean(req.query.pageToken, 2000);
+  // Google Places when a key is set; otherwise (or if Google fails) free OpenStreetMap search
+  if (getPlacesApiKey()) {
     try {
-      const gUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=name,rating,user_ratings_total,formatted_address,address_components,types,website,formatted_phone_number,url&key=${apiKey}`;
-      const response = await fetch(gUrl, { signal: AbortSignal.timeout(4500) });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.status === 'OK' && data.result) {
-          const r = data.result;
-          const cityComp = (r.address_components || []).find(c => c.types.includes('locality'));
-          const placeObj = {
-            placeId,
-            name: r.name,
-            address: r.formatted_address,
-            city: cityComp?.long_name || '',
-            rating: r.rating || 4.8,
-            userRatingsTotal: r.user_ratings_total || 45,
-            phone: r.formatted_phone_number || '',
-            website: r.website || '',
-            googleMapsUrl: r.url || `https://maps.google.com/?q=place_id:${placeId}`,
-            googleReviewUrl: `https://search.google.com/local/writereview?placeid=${placeId}`,
-            isGoogleVerified: true
-          };
-          serverPlacesCache.set(placeId, placeObj);
-          return res.json({ place: placeObj });
-        }
-      }
+      return res.json({ ...(await searchIndianBusinesses(query, pageToken)), source: 'google' });
     } catch (err) {
-      console.warn('Google Place Details error:', err.message);
+      if (err.status === 404 || err.status === 400 || pageToken) return res.status(err.status || 502).json({ error: err.message, places: [] });
     }
   }
+  try {
+    res.json(await searchIndiaOpenStreetMap(query));
+  } catch (err) {
+    console.warn('[OpenStreetMap search]', err.message);
+    res.status(502).json({ error: 'Business search is not available right now. Please try again or enter your details manually.', places: [] });
+  }
+};
+app.get('/api/places/search', placesSearchHandler);
+app.get('/api/places/autocomplete', placesSearchHandler);
 
-  // 2. Generic fallback if place details not in memory
-  const placeObj = {
-    placeId,
-    name: 'Verified Google Business Listing',
-    address: 'Google Maps Verified Location',
-    city: '',
-    rating: 4.9,
-    userRatingsTotal: 84,
-    phone: '',
-    website: '',
-    googleReviewUrl: `https://search.google.com/local/writereview?placeid=${placeId}`,
-    isGoogleVerified: true
-  };
-
-  res.json({ place: placeObj });
+app.get('/api/places/details', async (req, res) => {
+  const placeId = clean(req.query.placeId || req.query.place_id, 300);
+  if (!placeId) return res.status(400).json({ error: 'placeId is required.' });
+  try {
+    const place = await getPlaceDetails(placeId);
+    res.json({ place });
+  } catch (err) {
+    res.status(err.status || 502).json({ error: err.message });
+  }
 });
 
 app.post('/api/business/connect-google-place', auth, async (req, res) => {
   try {
-    const { placeId, name, address, city, category, rating, userRatingsTotal, website, phone, googleReviewUrl } = req.body || {};
-    if (!name || !placeId) {
-      return res.status(400).json({ error: 'Business Name and Google Place ID are required.' });
-    }
+    const body = req.body || {};
+    const name = clean(body.name, 120);
+    const placeId = clean(body.placeId, 300);
+    const fromGoogle = Boolean(placeId) && body.source === 'google';
+    if (!name) return res.status(400).json({ error: 'Business name is required.' });
 
-    const reviewUrl = googleReviewUrl || `https://search.google.com/local/writereview?placeid=${placeId}`;
+    const reviewUrl = clean(body.googleReviewUrl, 500) || (placeId ? `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}` : '');
+    const num = v => (v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
+
     const business = await mutate(db => {
       let b = db.businesses.find(x => x.userId === req.user.sub);
       if (!b) {
@@ -546,30 +575,38 @@ app.post('/api/business/connect-google-place', auth, async (req, res) => {
           id: crypto.randomUUID(),
           userId: req.user.sub,
           slug,
+          services: [],
+          staff: [],
+          keywords: [],
           competitors: [],
           createdAt: new Date().toISOString()
         };
         db.businesses.push(b);
       }
-      b.name = clean(name, 120);
-      b.placeId = clean(placeId, 120);
-      b.address = clean(address, 300);
-      b.city = clean(city, 80) || b.city || 'Surat';
-      b.category = clean(category, 80) || b.category || 'Services';
+      b.name = name;
+      b.placeId = placeId;
+      b.address = clean(body.address, 300);
+      b.area = clean(body.area, 80);
+      b.city = clean(body.city, 80);
+      b.state = clean(body.state, 80);
+      b.postcode = clean(body.postcode, 12);
+      b.country = clean(body.country, 60);
+      b.category = clean(body.category, 80);
       b.googleReviewUrl = reviewUrl;
-      b.rating = rating ? Number(rating) : 4.8;
-      b.userRatingsTotal = userRatingsTotal ? Number(userRatingsTotal) : 25;
-      if (website) b.website = clean(website, 300);
-      if (phone) b.phone = clean(phone, 30);
-      b.isGoogleVerified = true;
-      b.googleSyncedAt = new Date().toISOString();
+      b.googleMapsUrl = clean(body.googleMapsUrl, 500);
+      b.rating = num(body.rating);
+      b.userRatingsTotal = num(body.userRatingsTotal);
+      b.website = clean(body.website, 300);
+      b.phone = clean(body.phone, 30);
+      b.isGoogleVerified = fromGoogle;
+      b.googleSyncedAt = fromGoogle ? new Date().toISOString() : null;
       return b;
     });
 
     res.json({ ok: true, business });
   } catch (err) {
     console.error('connect-google-place error:', err);
-    res.status(500).json({ error: 'Could not connect Google Place to business profile.' });
+    res.status(500).json({ error: 'Could not save the business profile.' });
   }
 });
 
