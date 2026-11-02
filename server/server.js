@@ -17,6 +17,7 @@ import { getDb, isMongoConfigured, getTenantBusiness, saveTenantBusiness, logAud
 import { generateOpenRouterDrafts, generateOpenRouterReply, isOpenRouterConfigured } from './lib/openrouter.js';
 import { searchIndianBusinesses, getPlaceDetails, getPlacesApiKey } from './lib/placesSearch.js';
 import { searchIndiaOpenStreetMap } from './lib/osmSearch.js';
+import { checkWebsite, pageSpeedMobile, toWebsiteUrl, SiteCheckError } from './lib/siteCheck.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
@@ -784,6 +785,68 @@ app.post('/api/replies', auth, async (req, res) => {
 
 /* ---------- SEO / profile health analyzer ---------- */
 app.post('/api/seo-audit', (req, res) => res.json(runSeoAudit(req.body || {})));
+
+// Live website / Google listing check. Each IP gets a fair number of checks per 10 minutes.
+const siteCheckHits = new Map();
+const siteCheckAllowed = ip => {
+  const now = Date.now();
+  const hits = (siteCheckHits.get(ip) || []).filter(t => now - t < 10 * 60 * 1000);
+  if (hits.length >= 30) return false;
+  hits.push(now);
+  siteCheckHits.set(ip, hits);
+  return true;
+};
+
+const findBusinessOnMaps = async query => {
+  if (getPlacesApiKey()) {
+    try { return { ...(await searchIndianBusinesses(query)), source: 'google' }; } catch (err) { console.warn('[site-check places]', err.message); }
+  }
+  return searchIndiaOpenStreetMap(query);
+};
+
+app.post('/api/seo/site-check', async (req, res) => {
+  const query = clean(req.body?.query, 300);
+  const keyword = clean(req.body?.keyword, 80);
+  const city = clean(req.body?.city, 80);
+  if (query.length < 3) return res.status(400).json({ error: 'Enter your website address or your business name as it appears on Google.' });
+  if (!siteCheckAllowed(req.ip || 'ip')) return res.status(429).json({ error: 'Too many checks. Please wait a few minutes and try again.' });
+  try {
+    // 1. A website address: open it live
+    if (toWebsiteUrl(query)) return res.json({ type: 'website', site: await checkWebsite(query, { keyword, city }) });
+
+    // 2. A business name: it must exist on Google Maps (or OpenStreetMap when no Google key is set)
+    const found = await findBusinessOnMaps(city && !query.toLowerCase().includes(city.toLowerCase()) ? `${query} ${city}` : query);
+    const place = (found.places || [])[0];
+    if (!place) {
+      return res.status(404).json({ error: `"${query}" was not found on ${getPlacesApiKey() ? 'Google Maps' : 'the map'}${city ? ` in ${city}` : ''}. Check the spelling, add your city, or paste your website address.` });
+    }
+    const listing = {
+      name: place.name, address: place.address, phone: place.phone || '', website: place.website || '',
+      rating: place.rating, reviews: place.userRatingsTotal, category: place.category || '',
+      mapsUrl: place.googleMapsUrl || '', source: found.source || place.source || 'openstreetmap',
+      others: (found.places || []).slice(1, 4).map(p => ({ name: p.name, address: p.address }))
+    };
+    let site = null, siteError = '';
+    if (listing.website) {
+      try { site = await checkWebsite(listing.website, { keyword, city }); } catch (err) { siteError = err.message; }
+    }
+    res.json({ type: 'business', listing, site, siteError });
+  } catch (err) {
+    if (err instanceof SiteCheckError) return res.status(err.status).json({ error: err.message });
+    console.error('[site-check]', err);
+    res.status(502).json({ error: 'Could not check this website right now. Please try again.' });
+  }
+});
+
+app.post('/api/seo/pagespeed', async (req, res) => {
+  const url = clean(req.body?.url, 500);
+  if (!siteCheckAllowed(req.ip || 'ip')) return res.status(429).json({ error: 'Too many checks. Please wait a few minutes.' });
+  try {
+    res.json(await pageSpeedMobile(url, process.env.GOOGLE_PAGESPEED_API_KEY || ''));
+  } catch (err) {
+    res.status(err.status || 502).json({ error: err.message || 'Google PageSpeed is not available right now.' });
+  }
+});
 
 /* ---------- Analytics (owner only) ---------- */
 app.get('/api/analytics', auth, async (req, res) => {

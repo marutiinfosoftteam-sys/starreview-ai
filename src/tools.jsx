@@ -119,10 +119,32 @@ export function ReviewFunnel({ slug, notify }) {
     });
   }, [slug]);
 
-  // When customer clicks a star: If 4 or 5 stars, DIRECTLY generate drafts and show Option 1, Option 2, Option 3
+  // Ready-made review text for the chosen star count (used when the AI server is not reachable)
+  const fallbackDrafts = (n, bName, bCity) => {
+    const where = bCity ? ` in ${bCity}` : '';
+    if (n >= 5) return [
+      `Excellent experience at ${bName}${where}! The team was friendly, professional and very helpful. Highly recommended! ⭐⭐⭐⭐⭐`,
+      `I'm really happy with ${bName}${where}. Everything was smooth, on time and better than I expected. Thank you to the whole team! 👍`,
+      `Top-class service from ${bName}. Polite staff, quick response and great quality. I will definitely come back and recommend them to friends.`
+    ];
+    if (n === 4) return [
+      `Very good experience at ${bName}${where}. Friendly staff and good service overall. Would recommend! 👍`,
+      `${bName}${where} did a good job. The service was smooth and the team was helpful — just a small wait, otherwise great.`,
+      `Good quality and polite staff at ${bName}. Happy with the experience and will visit again.`
+    ];
+    return [
+      `My experience at ${bName}${where} was okay. The staff was polite, but there is some room for improvement in speed and service.`,
+      `Average visit to ${bName}. Some things were good, a few could be better. Hope to see improvement next time.`,
+      `${bName}${where} is decent. The service was fine overall, though it could be a little faster and more consistent.`
+    ];
+  };
+
+  // Customer taps a star: 3, 4 or 5 stars get ready-made review messages for that rating;
+  // 1–2 stars open a private feedback form for the owner.
   const chooseRating = async n => {
     setRating(n);
-    if (n < 4) {
+    setPosted(false);
+    if (n < 3) {
       setStep('private');
       return;
     }
@@ -131,7 +153,7 @@ export function ReviewFunnel({ slug, notify }) {
     setStep('drafts');
     const bName = biz?.name || 'this business';
     const bCity = biz?.city || '';
-
+    let list = [];
     try {
       const r = await api('POST', '/api/public/drafts', {
         slug: slug || 'demo',
@@ -141,24 +163,14 @@ export function ReviewFunnel({ slug, notify }) {
         service: (biz?.services && biz.services[0]) || biz?.category || '',
         language: 'English'
       });
-      if (r.ok && r.data?.drafts?.length) {
-        setDrafts(r.data.drafts);
-      } else {
-        setDrafts([
-          `Great experience at ${bName}${bCity ? ` in ${bCity}` : ''}! Highly recommend to everyone! 😊 ⭐`,
-          `I recently visited ${bName}${bCity ? ` in ${bCity}` : ''}. Everything was smooth, professional and exceeded expectations. Thank you! 👍`,
-          `Thank you to the entire team at ${bName}! Clean, welcoming and extremely easy to deal with. Will definitely be back! ✨`
-        ]);
-      }
-    } catch {
-      setDrafts([
-        `Great experience at ${bName}${bCity ? ` in ${bCity}` : ''}! Highly recommend to everyone! 😊 ⭐`,
-        `I recently visited ${bName}${bCity ? ` in ${bCity}` : ''}. Everything was smooth, professional and exceeded expectations. Thank you! 👍`,
-        `Thank you to the entire team at ${bName}! Clean, welcoming and extremely easy to deal with. Will definitely be back! ✨`
-      ]);
-    } finally {
-      setBusy(false);
-    }
+      if (r.ok && r.data?.drafts?.length) list = r.data.drafts.filter(Boolean);
+    } catch {}
+    if (!list.length) list = fallbackDrafts(n, bName, bCity);
+    setDrafts(list);
+    // The first message is filled in right away, so one tap copies it and opens Google
+    setFinalReview(list[0]);
+    setPicked(0);
+    setBusy(false);
   };
 
   // Copy works on iOS/Android only inside the tap itself, and so does opening
@@ -242,7 +254,7 @@ export function ReviewFunnel({ slug, notify }) {
   if (step === 'rate') return shell(
     <div style={{ textAlign: 'center', padding: '1rem 0' }}>
       <p style={{ color: '#64748b', fontSize: '0.95rem', marginBottom: '1.25rem' }}>
-        Tap a star rating to continue.
+        Tap a star — we'll write a ready review for you to post on Google.
       </p>
       <div style={{ display: 'flex', justifyContent: 'center' }}>
         <Stars value={rating} onChange={chooseRating} />
@@ -266,6 +278,16 @@ export function ReviewFunnel({ slug, notify }) {
         </div>
       ) : (
         <>
+          <div className="rf-review-rating-bar">
+            <span>Your rating</span>
+            <div className="rf-review-rating-stars" role="radiogroup" aria-label="Your rating">
+              {[1, 2, 3, 4, 5].map(n => (
+                <button type="button" key={n} role="radio" aria-checked={rating === n} aria-label={`${n} star${n > 1 ? 's' : ''}`} className={rating >= n ? 'on' : ''} onClick={() => n !== rating && chooseRating(n)}>★</button>
+              ))}
+            </div>
+            <b>{rating}/5</b>
+          </div>
+
           <p className="rf-review-step-title"><span>1</span> Tap the review you like</p>
           <div className="rf-review-options">
             {drafts.map((d, i) => (
@@ -298,13 +320,22 @@ export function ReviewFunnel({ slug, notify }) {
             onClick={copyAndPost}
             disabled={!finalReview.trim()}
           >
-            {biz?.googleReviewUrl ? 'Copy & open Google review' : 'Copy review'}
+            {biz?.googleReviewUrl ? `Copy review & post ${rating}★ on Google` : 'Copy review'}
           </button>
+          {biz?.googleReviewUrl && !posted && (
+            <p className="rf-review-next-hint">
+              Google opens next — tap <b className="rf-review-hint-stars">{'★'.repeat(rating)}</b> ({rating} stars), paste your review and tap <b>Post</b>.
+            </p>
+          )}
 
           {posted && (
             <div className="rf-review-paste-help" role="status">
-              <strong>✓ Review copied</strong>
-              <span>On Google, choose your stars, then tap the review box and <b>long-press → Paste</b> (on a computer: Ctrl+V / ⌘V) and tap <b>Post</b>.</span>
+              <strong>✓ Review copied — 2 taps left on Google</strong>
+              <ol>
+                <li>Tap <b className="rf-review-hint-stars">{'★'.repeat(rating)}</b> — {rating} star{rating > 1 ? 's' : ''}, same as you chose here.</li>
+                <li>Tap the review box, <b>long-press → Paste</b> (computer: Ctrl+V / ⌘V), then tap <b>Post</b>.</li>
+              </ol>
+              <button type="button" className="rf-review-copy-again" onClick={() => { copyText(finalReview.trim()); notify && notify('Review copied again.'); }}>Copy review again</button>
               {biz?.googleReviewUrl && (
                 <a href={biz.googleReviewUrl} target="_blank" rel="noopener noreferrer">Open Google review page again</a>
               )}
@@ -325,7 +356,7 @@ export function ReviewFunnel({ slug, notify }) {
     </div>
   );
 
-  // Negative Review (1-3 Stars): Private filter
+  // Low rating (1-2 stars): private feedback for the owner
   if (step === 'private') return shell(
     <form onSubmit={sendPrivate}>
       <p style={{ color: '#475569', fontSize: '0.92rem', marginBottom: '1.15rem' }}>
