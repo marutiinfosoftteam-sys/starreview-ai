@@ -254,8 +254,49 @@ export default function BusinessConsole({
   const [manualReplyTone, setManualReplyTone] = useState('Grateful');
   const [manualReplyDraft, setManualReplyDraft] = useState('');
   const [generatingReply, setGeneratingReply] = useState(false);
-  const [negGatingEnabled, setNegGatingEnabled] = useState(true);
+  const [negGatingEnabled, setNegGatingEnabled] = useState(() => {
+    try {
+      const saved = localStorage.getItem('starreview_neg_gating');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
   const [negTab, setNegTab] = useState('Active');
+  const [feedbackItems, setFeedbackItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem('starreview_feedback_items');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [
+      {
+        id: 'fb-101',
+        customerName: 'Rahul Patel',
+        contact: '+91 99044 82945',
+        rating: 2,
+        message: 'The waiting time was about 30 minutes on Saturday evening. Please improve queue management.',
+        createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+        status: 'active'
+      },
+      {
+        id: 'fb-102',
+        customerName: 'Priya Mehta',
+        contact: '+91 98765 43210',
+        rating: 1,
+        message: 'Need clearer parking instructions outside the premises. Got delayed looking for spot.',
+        createdAt: new Date(Date.now() - 3600000 * 22).toISOString(),
+        status: 'archived'
+      }
+    ];
+  });
+  const [addFeedbackModalOpen, setAddFeedbackModalOpen] = useState(false);
+  const [newFeedbackName, setNewFeedbackName] = useState('');
+  const [newFeedbackPhone, setNewFeedbackPhone] = useState('');
+  const [newFeedbackRating, setNewFeedbackRating] = useState(2);
+  const [newFeedbackMessage, setNewFeedbackMessage] = useState('');
   const [qrTheme, setQrTheme] = useState('Classic');
   const [qrDisplaySize, setQrDisplaySize] = useState('A6');
 
@@ -1066,6 +1107,63 @@ export default function BusinessConsole({
     notify(`Inquiry for ${selectedService} sent! Our team will contact you on WhatsApp soon.`);
   };
 
+  const handleToggleNegGating = (enabled) => {
+    setNegGatingEnabled(enabled);
+    try { localStorage.setItem('starreview_neg_gating', String(enabled)); } catch {}
+    notify(enabled
+      ? '✓ Negative review filter enabled. Low star ratings (1–2 stars) are captured privately.'
+      : 'Review shielding disabled. Customers go directly to Google link.'
+    );
+  };
+
+  const handleResolveFeedback = (id) => {
+    const updated = feedbackItems.map(f => f.id === id ? { ...f, status: 'archived', resolvedAt: new Date().toISOString() } : f);
+    setFeedbackItems(updated);
+    try { localStorage.setItem('starreview_feedback_items', JSON.stringify(updated)); } catch {}
+    notify('✓ Marked as resolved and moved to Archived.');
+  };
+
+  const handleRestoreFeedback = (id) => {
+    const updated = feedbackItems.map(f => f.id === id ? { ...f, status: 'active', resolvedAt: null } : f);
+    setFeedbackItems(updated);
+    try { localStorage.setItem('starreview_feedback_items', JSON.stringify(updated)); } catch {}
+    notify('✓ Restored feedback back to Active list.');
+  };
+
+  const handleDeleteFeedback = (id) => {
+    const updated = feedbackItems.filter(f => f.id !== id);
+    setFeedbackItems(updated);
+    try { localStorage.setItem('starreview_feedback_items', JSON.stringify(updated)); } catch {}
+    notify('Feedback entry removed.');
+  };
+
+  const handleAddFeedbackSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (!newFeedbackMessage.trim()) {
+      notify('Please enter a feedback message or complaint.');
+      return;
+    }
+    const newEntry = {
+      id: `fb-${Date.now()}`,
+      customerName: newFeedbackName.trim() || 'Verified Customer',
+      contact: newFeedbackPhone.trim() || '+91 99044 82945',
+      rating: Number(newFeedbackRating) || 2,
+      message: newFeedbackMessage.trim(),
+      createdAt: new Date().toISOString(),
+      status: 'active'
+    };
+    const updated = [newEntry, ...feedbackItems];
+    setFeedbackItems(updated);
+    try { localStorage.setItem('starreview_feedback_items', JSON.stringify(updated)); } catch {}
+    setAddFeedbackModalOpen(false);
+    setNewFeedbackName('');
+    setNewFeedbackPhone('');
+    setNewFeedbackMessage('');
+    setNewFeedbackRating(2);
+    setNegTab('Active');
+    notify('✓ New customer feedback entry logged successfully!');
+  };
+
   // Load user-specific analytics and business
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -1098,7 +1196,9 @@ export default function BusinessConsole({
     conversion: 0
   };
 
-  const feedbackList = analyticsData?.feedback || [];
+  const activeFeedback = feedbackItems.filter(f => f.status !== 'archived');
+  const archivedFeedback = feedbackItems.filter(f => f.status === 'archived');
+  const feedbackList = activeFeedback;
 
   const handleSignOut = () => {
     setToken('');
@@ -2230,7 +2330,7 @@ export default function BusinessConsole({
                 </div>
                 <div>
                   <h1>Reviews &amp; AI Review Reply</h1>
-                  <p>Manage customer reviews, auto-sync from Google, and publish AI responses with smart rate pacing.</p>
+                  <p>Manage customer reviews and publish AI responses with smart rate pacing.</p>
                 </div>
               </div>
               <div className="bc-view-header-badges">
@@ -2246,9 +2346,6 @@ export default function BusinessConsole({
                 <div className="bc-rsc-title">
                   <i className="fa-solid fa-gear"></i> Review &amp; Auto-Reply Settings
                 </div>
-                <div style={{ fontSize: '0.76rem', color: '#16a34a', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span className="bc-live-dot"></span> 24h Auto-Sync Active (Last: Never)
-                </div>
               </div>
 
               {/* Google Connect Bar */}
@@ -2256,7 +2353,7 @@ export default function BusinessConsole({
                 <div className="bc-gcb-left">
                   <span className="bc-gcb-badge">✓ Connected to Google</span>
                   <span className="bc-gcb-text">
-                    Reviews auto-sync every 24 hours. AI responses rate-paced with 1–2 min intervals.
+                    AI responses rate-paced with 1–2 min intervals.
                   </span>
                 </div>
                 <div className="bc-gcb-actions">
@@ -2503,7 +2600,7 @@ export default function BusinessConsole({
               </div>
               <div className="bc-view-header-badges">
                 <span className="bc-header-pill bc-pill-live">
-                  <span className="bc-live-dot"></span> {feedbackList.length} Active
+                  <span className="bc-live-dot"></span> {activeFeedback.length} Active
                 </span>
               </div>
             </div>
@@ -2517,7 +2614,20 @@ export default function BusinessConsole({
                 <div className="bc-nmc-titles">
                   <h3>
                     <span>Negative Review Management</span>
-                    <span className="bc-header-pill bc-pill-live" style={{ padding: '2px 8px', fontSize: '0.68rem', whiteSpace: 'nowrap' }}>
+                    <span
+                      style={{
+                        padding: '3px 10px',
+                        fontSize: '0.68rem',
+                        fontWeight: 800,
+                        borderRadius: 12,
+                        background: negGatingEnabled ? '#dcfce7' : '#f1f5f9',
+                        color: negGatingEnabled ? '#15803d' : '#64748b',
+                        border: negGatingEnabled ? '1px solid #bbf7d0' : '1px solid #cbd5e1',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5
+                      }}
+                    >
                       ● {negGatingEnabled ? 'ENABLED' : 'DISABLED'}
                     </span>
                   </h3>
@@ -2528,14 +2638,14 @@ export default function BusinessConsole({
                 <button
                   type="button"
                   className={`bc-toggle-btn ${negGatingEnabled ? 'active' : ''}`}
-                  onClick={() => { setNegGatingEnabled(true); notify('Negative review shielding enabled.'); }}
+                  onClick={() => handleToggleNegGating(true)}
                 >
                   Enable
                 </button>
                 <button
                   type="button"
                   className={`bc-toggle-btn ${!negGatingEnabled ? 'active' : ''}`}
-                  onClick={() => { setNegGatingEnabled(false); notify('Review shielding disabled. Customers go directly to Google link.'); }}
+                  onClick={() => handleToggleNegGating(false)}
                 >
                   Disable
                 </button>
@@ -2588,87 +2698,342 @@ export default function BusinessConsole({
               </div>
             </div>
 
-            {/* Tab Filter: Active / Archived */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: '1.25rem' }}>
+            {/* Tab Filter: Active / Archived & Add Button */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  type="button"
+                  className={`bc-time-btn ${negTab === 'Active' ? 'active' : ''}`}
+                  onClick={() => setNegTab('Active')}
+                  style={{ background: negTab === 'Active' ? '#ffffff' : '#f1f5f9', border: '1px solid #e2e8f0', fontWeight: 800 }}
+                >
+                  Active ({activeFeedback.length})
+                </button>
+                <button
+                  type="button"
+                  className={`bc-time-btn ${negTab === 'Archived' ? 'active' : ''}`}
+                  onClick={() => setNegTab('Archived')}
+                  style={{ background: negTab === 'Archived' ? '#ffffff' : '#f1f5f9', border: '1px solid #e2e8f0', fontWeight: 800 }}
+                >
+                  Archived ({archivedFeedback.length})
+                </button>
+              </div>
+
               <button
                 type="button"
-                className={`bc-time-btn ${negTab === 'Active' ? 'active' : ''}`}
-                onClick={() => setNegTab('Active')}
-                style={{ background: negTab === 'Active' ? '#ffffff' : '#f1f5f9', border: '1px solid #e2e8f0' }}
+                onClick={() => setAddFeedbackModalOpen(true)}
+                style={{
+                  background: '#16a34a',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '0.55rem 1rem',
+                  fontSize: '0.82rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  boxShadow: '0 2px 6px rgba(22, 163, 74, 0.25)'
+                }}
               >
-                Active
-              </button>
-              <button
-                type="button"
-                className={`bc-time-btn ${negTab === 'Archived' ? 'active' : ''}`}
-                onClick={() => setNegTab('Archived')}
-                style={{ background: negTab === 'Archived' ? '#ffffff' : '#f1f5f9', border: '1px solid #e2e8f0' }}
-              >
-                Archived
+                <i className="fa-solid fa-plus"></i> Add Customer Feedback
               </button>
             </div>
 
             {/* Feedback items or Empty State */}
-            {feedbackList.length === 0 ? (
-              <div className="bc-tracking-box" style={{ textAlign: 'center', padding: '3.5rem 1.5rem' }}>
-                <div style={{ fontSize: '2.5rem', color: '#16a34a', marginBottom: '0.75rem' }}>
-                  <i className="fa-regular fa-square-check"></i>
+            {(negTab === 'Active' ? activeFeedback : archivedFeedback).length === 0 ? (
+              <div className="bc-tracking-box" style={{ textAlign: 'center', padding: '3.5rem 1.5rem', background: '#ffffff', borderRadius: 14, border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '2.5rem', color: negTab === 'Active' ? '#16a34a' : '#64748b', marginBottom: '0.75rem' }}>
+                  <i className={negTab === 'Active' ? "fa-regular fa-square-check" : "fa-solid fa-box-archive"}></i>
                 </div>
                 <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.35rem 0' }}>
-                  No Active Negative Reviews
+                  {negTab === 'Active' ? 'No Active Negative Reviews' : 'No Archived Feedback'}
                 </h4>
-                <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
-                  You don't have any pending negative review messages. Great job keeping customers happy!
+                <p style={{ fontSize: '0.84rem', color: '#64748b', margin: '0 0 1rem 0' }}>
+                  {negTab === 'Active'
+                    ? "You don't have any pending negative review messages. Great job keeping customers happy!"
+                    : "Resolved complaints will be archived here for your records."
+                  }
                 </p>
+                {negTab === 'Active' && (
+                  <button
+                    type="button"
+                    onClick={() => setAddFeedbackModalOpen(true)}
+                    style={{
+                      background: '#f0fdf4',
+                      color: '#16a34a',
+                      border: '1px solid #bbf7d0',
+                      borderRadius: 8,
+                      padding: '0.5rem 0.95rem',
+                      fontSize: '0.8rem',
+                      fontWeight: 800,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    + Add Test Feedback Entry
+                  </button>
+                )}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {feedbackList.map(f => (
-                  <div key={f.id} className="bc-panel" style={{ padding: '1.25rem', borderLeft: '4px solid #f59e0b', marginBottom: 0 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {(negTab === 'Active' ? activeFeedback : archivedFeedback).map(f => (
+                  <div
+                    key={f.id}
+                    className="bc-panel"
+                    style={{
+                      padding: '1.25rem',
+                      borderLeft: f.status === 'archived' ? '4px solid #16a34a' : '4px solid #f59e0b',
+                      marginBottom: 0,
+                      background: '#ffffff',
+                      borderRadius: 12,
+                      border: '1px solid #e2e8f0',
+                      borderLeftWidth: 4
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                         <span style={{ color: '#eab308', fontSize: '1rem', letterSpacing: 2 }}>
                           {'★'.repeat(f.rating)}{'☆'.repeat(5 - f.rating)}
                         </span>
                         <span style={{ fontSize: '0.78rem', background: '#fef3c7', color: '#b45309', padding: '2px 8px', borderRadius: 6, fontWeight: 800 }}>
                           {f.rating} Stars
                         </span>
+                        <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>
+                          {f.customerName || 'Customer'}
+                        </strong>
                         <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
-                          {new Date(f.createdAt || Date.now()).toLocaleDateString()}
+                          {new Date(f.createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>
                       </div>
-                      <span className="bc-header-pill bc-pill-live" style={{ padding: '2px 8px', fontSize: '0.7rem' }}>Active</span>
+                      <span
+                        style={{
+                          fontSize: '0.72rem',
+                          fontWeight: 800,
+                          padding: '3px 9px',
+                          borderRadius: 8,
+                          background: f.status === 'archived' ? '#dcfce7' : '#fef3c7',
+                          color: f.status === 'archived' ? '#15803d' : '#b45309'
+                        }}
+                      >
+                        {f.status === 'archived' ? '✓ Resolved' : '● Action Required'}
+                      </span>
                     </div>
 
-                    <p style={{ color: '#0f172a', fontSize: '0.9rem', lineHeight: 1.5, margin: '0 0 10px 0', fontWeight: 600 }}>
+                    <p style={{ color: '#1e293b', fontSize: '0.88rem', lineHeight: 1.55, margin: '0 0 10px 0', fontWeight: 500, background: '#f8fafc', padding: '0.75rem', borderRadius: 8 }}>
                       "{f.message}"
                     </p>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 8, flexWrap: 'wrap', gap: 8 }}>
                       <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                        Customer Contact: <strong>{f.contact || '+91 98250 12345'}</strong>
+                        Phone / WhatsApp: <strong style={{ color: '#0f172a' }}>{f.contact || '+91 99044 82945'}</strong>
                       </div>
-                      <div style={{ display: 'flex', gap: 8 }}>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                         <a
-                          href={`https://wa.me/${(f.contact || '919904482945').replace(/\D/g, '')}?text=${encodeURIComponent('Hi, thank you for sharing your feedback with ' + bizName + '. We would like to resolve this for you immediately.')}`}
+                          href={`https://wa.me/${(f.contact || '919904482945').replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${f.customerName || 'Customer'}, thank you for sharing your feedback with ${bizName}. We are deeply committed to your satisfaction and would like to resolve this immediately.`)}`}
                           target="_blank"
                           rel="noreferrer"
                           className="bc-btn-fetch"
-                          style={{ background: '#25d366', textDecoration: 'none' }}
+                          style={{ background: '#25d366', color: '#ffffff', textDecoration: 'none', border: 'none', borderRadius: 6, padding: '0.45rem 0.85rem', fontSize: '0.78rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 5 }}
                         >
                           <i className="fa-brands fa-whatsapp"></i> WhatsApp Customer
                         </a>
+                        {f.status !== 'archived' ? (
+                          <button
+                            type="button"
+                            className="bc-btn-switch"
+                            style={{ cursor: 'pointer', borderRadius: 6, padding: '0.45rem 0.85rem', fontSize: '0.78rem', fontWeight: 800 }}
+                            onClick={() => handleResolveFeedback(f.id)}
+                          >
+                            ✓ Resolve
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="bc-btn-switch"
+                            style={{ cursor: 'pointer', borderRadius: 6, padding: '0.45rem 0.85rem', fontSize: '0.78rem', fontWeight: 800 }}
+                            onClick={() => handleRestoreFeedback(f.id)}
+                          >
+                            ↺ Restore
+                          </button>
+                        )}
                         <button
                           type="button"
-                          className="bc-btn-switch"
-                          onClick={() => notify('Marked as resolved.')}
+                          onClick={() => handleDeleteFeedback(f.id)}
+                          style={{
+                            background: '#fee2e2',
+                            color: '#dc2626',
+                            border: 'none',
+                            borderRadius: 6,
+                            padding: '0.45rem 0.75rem',
+                            fontSize: '0.78rem',
+                            fontWeight: 800,
+                            cursor: 'pointer'
+                          }}
+                          title="Delete entry"
                         >
-                          ✓ Resolve
+                          <i className="fa-solid fa-trash-can"></i>
                         </button>
                       </div>
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Modal: Add Customer Feedback */}
+            {addFeedbackModalOpen && (
+              <div className="bc-webpress-overlay" onClick={() => setAddFeedbackModalOpen(false)}>
+                <div style={{ width: '100%', maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+                  <div style={{ background: '#ffffff', borderRadius: 18, overflow: 'hidden', boxShadow: '0 25px 60px rgba(0,0,0,0.22)', animation: 'bcModalPop 0.2s ease-out' }}>
+                    <div style={{ padding: '1.1rem 1.4rem', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 34, height: 34, borderRadius: 8, background: '#fef2f2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>
+                          <i className="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 900, color: '#0f172a' }}>Log Customer Feedback</h3>
+                          <p style={{ margin: 0, fontSize: '0.74rem', color: '#64748b' }}>Simulate or record private customer dissatisfaction</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setAddFeedbackModalOpen(false)}
+                        style={{ background: '#e2e8f0', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', fontWeight: 800, color: '#475569' }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleAddFeedbackSubmit} style={{ padding: '1.25rem 1.4rem' }}>
+                      <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
+                          Customer Full Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={newFeedbackName}
+                          onChange={e => setNewFeedbackName(e.target.value)}
+                          placeholder="e.g. Ramesh Bhai"
+                          style={{
+                            width: '100%',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 8,
+                            padding: '0.65rem 0.85rem',
+                            fontSize: '0.85rem',
+                            boxSizing: 'border-box',
+                            outline: 'none'
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
+                          Customer WhatsApp / Phone *
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          value={newFeedbackPhone}
+                          onChange={e => setNewFeedbackPhone(e.target.value)}
+                          placeholder="e.g. +91 99044 82945"
+                          style={{
+                            width: '100%',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 8,
+                            padding: '0.65rem 0.85rem',
+                            fontSize: '0.85rem',
+                            boxSizing: 'border-box',
+                            outline: 'none'
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
+                          Star Rating Given (1–3 Stars)
+                        </label>
+                        <select
+                          value={newFeedbackRating}
+                          onChange={e => setNewFeedbackRating(Number(e.target.value))}
+                          style={{
+                            width: '100%',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 8,
+                            padding: '0.65rem 0.85rem',
+                            fontSize: '0.85rem',
+                            fontWeight: 700,
+                            boxSizing: 'border-box',
+                            outline: 'none'
+                          }}
+                        >
+                          <option value={1}>★☆☆☆☆ 1 Star (Very Dissatisfied)</option>
+                          <option value={2}>★★☆☆☆ 2 Stars (Needs Improvement)</option>
+                          <option value={3}>★★★☆☆ 3 Stars (Average Experience)</option>
+                        </select>
+                      </div>
+
+                      <div style={{ marginBottom: '1.25rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
+                          Customer Complaint / Message *
+                        </label>
+                        <textarea
+                          required
+                          rows={3}
+                          value={newFeedbackMessage}
+                          onChange={e => setNewFeedbackMessage(e.target.value)}
+                          placeholder="What went wrong during their visit or service..."
+                          style={{
+                            width: '100%',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 8,
+                            padding: '0.65rem 0.85rem',
+                            fontSize: '0.85rem',
+                            boxSizing: 'border-box',
+                            outline: 'none',
+                            fontFamily: 'inherit'
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                        <button
+                          type="button"
+                          onClick={() => setAddFeedbackModalOpen(false)}
+                          style={{
+                            background: '#f1f5f9',
+                            color: '#475569',
+                            border: 'none',
+                            borderRadius: 8,
+                            padding: '0.65rem 1rem',
+                            fontSize: '0.85rem',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          style={{
+                            background: '#16a34a',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: 8,
+                            padding: '0.65rem 1.25rem',
+                            fontSize: '0.85rem',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 8px rgba(22, 163, 74, 0.3)'
+                          }}
+                        >
+                          Save Feedback Entry
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -5142,8 +5507,20 @@ export default function BusinessConsole({
                       id="settings-category"
                       className="bc-settings-select"
                       required
-                      value={settingsBizCategory || ''}
-                      onChange={(e) => setSettingsBizCategory(e.target.value)}
+                      value={
+                        settingsCatOther || (settingsBizCategory && !CATEGORY_OPTIONS.filter(c => c !== 'Other').includes(settingsBizCategory))
+                          ? 'Other'
+                          : (settingsBizCategory || '')
+                      }
+                      onChange={(e) => {
+                        if (e.target.value === 'Other') {
+                          setSettingsCatOther(true);
+                          if (CATEGORY_OPTIONS.includes(settingsBizCategory)) setSettingsBizCategory('');
+                        } else {
+                          setSettingsCatOther(false);
+                          setSettingsBizCategory(e.target.value);
+                        }
+                      }}
                       style={{
                         width: '100%',
                         background: '#ffffff',
@@ -5162,12 +5539,38 @@ export default function BusinessConsole({
                     >
                       <option value="" disabled>Select your industry or service</option>
                       {CATEGORY_OPTIONS.map(c => (
-                        <option key={c} value={c}>{c}</option>
+                        <option key={c} value={c}>{c === 'Other' ? 'Other (type your own)' : c}</option>
                       ))}
-                      {settingsBizCategory && !CATEGORY_OPTIONS.includes(settingsBizCategory) && (
-                        <option value={settingsBizCategory}>{settingsBizCategory}</option>
-                      )}
                     </select>
+
+                    {(settingsCatOther || (settingsBizCategory && !CATEGORY_OPTIONS.filter(c => c !== 'Other').includes(settingsBizCategory))) && (
+                      <input
+                        type="text"
+                        required
+                        autoFocus={settingsCatOther}
+                        className="bc-settings-select"
+                        style={{
+                          marginTop: 8,
+                          width: '100%',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: 8,
+                          padding: '0.65rem 0.85rem',
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          boxSizing: 'border-box',
+                          outline: 'none'
+                        }}
+                        onFocus={(e) => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22, 163, 74, 0.12)'; }}
+                        onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
+                        value={settingsBizCategory}
+                        onChange={(e) => setSettingsBizCategory(e.target.value)}
+                        placeholder="Type your own service or industry..."
+                        maxLength={80}
+                        aria-label="Your custom service or industry"
+                      />
+                    )}
                     <p style={{ margin: '5px 0 0', fontSize: '0.72rem', color: '#64748b' }}>
                       Appears under your business title in the dashboard header and helps AI tailor customer review prompts.
                     </p>
@@ -5572,24 +5975,24 @@ export default function BusinessConsole({
                             setDelAgreed(!delAgreed);
                           }}
                           style={{
-                            width: 20,
-                            height: 20,
-                            minWidth: 20,
-                            borderRadius: 4,
-                            border: delAgreed ? '2px solid #dc2626' : '2px solid #94a3b8',
+                            width: 16,
+                            height: 16,
+                            minWidth: 16,
+                            borderRadius: 3,
+                            border: delAgreed ? '2px solid #dc2626' : '1.5px solid #94a3b8',
                             background: delAgreed ? '#dc2626' : '#ffffff',
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             cursor: 'pointer',
-                            marginTop: 1,
+                            marginTop: 2,
                             flexShrink: 0,
                             transition: 'all 0.15s ease',
-                            boxShadow: delAgreed ? '0 1px 4px rgba(220, 38, 38, 0.3)' : '0 1px 2px rgba(0, 0, 0, 0.05)'
+                            boxShadow: delAgreed ? '0 1px 3px rgba(220, 38, 38, 0.25)' : 'none'
                           }}
                         >
                           {delAgreed && (
-                            <i className="fa-solid fa-check" style={{ color: '#ffffff', fontSize: 12, fontWeight: 900 }} />
+                            <i className="fa-solid fa-check" style={{ color: '#ffffff', fontSize: 10, fontWeight: 900 }} />
                           )}
                         </span>
                         <input
@@ -5752,9 +6155,6 @@ export default function BusinessConsole({
                           <span>{googleAuthEmail}</span>
                         </div>
                         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 8, padding: '0.65rem 0.85rem', fontSize: '0.72rem', color: '#64748b', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Google Reviews Auto-Sync (Every 24 Hours)
-                          </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <i className="fa-solid fa-check" style={{ color: '#16a34a' }}></i> Google Business Profile API (manage_reviews enabled)
                           </div>

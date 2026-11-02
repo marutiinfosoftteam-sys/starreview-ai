@@ -46,6 +46,7 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
   const bizObj = business && typeof business === 'object' ? business : {};
   const [manualName, setManualName] = useState(typeof business === 'string' ? business : (bizObj.name || ''));
   const [manualCategory, setManualCategory] = useState(bizObj.category || '');
+  const [customManualCategory, setCustomManualCategory] = useState('');
   const [manualAddress, setManualAddress] = useState(bizObj.address || '');
   const [manualCity, setManualCity] = useState(bizObj.city || '');
   const [manualState, setManualState] = useState(bizObj.state || '');
@@ -209,7 +210,7 @@ export default function BusinessOnboarding({ user, business, setBusiness, notify
       source: 'manual',
       placeId,
       name,
-      category: manualCategory,
+      category: manualCategory === 'Other' ? (customManualCategory.trim() || 'Other') : manualCategory,
       address: manualAddress.trim(),
       city: manualCity.trim(),
       state: manualState.trim(),
