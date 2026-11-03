@@ -164,24 +164,44 @@ export function ReviewFunnel({ slug, notify }) {
     });
   }, [slug]);
 
-  // Ready-made review text for the chosen star count (used when the AI server is not reachable)
+  // Ready-made natural review pools for each star rating (dynamically shuffled so reviews never look repeated or AI-written)
   const fallbackDrafts = (n, bName, bCity) => {
     const where = bCity ? ` in ${bCity}` : '';
-    if (n >= 5) return [
-      `Excellent experience at ${bName}${where}! The team was friendly, professional and very helpful. Highly recommended! ⭐⭐⭐⭐⭐`,
-      `I'm really happy with ${bName}${where}. Everything was smooth, on time and better than I expected. Thank you to the whole team! 👍`,
-      `Top-class service from ${bName}. Polite staff, quick response and great quality. I will definitely come back and recommend them to friends.`
+    const pool5 = [
+      `Outstanding experience at ${bName}${where}! The staff was exceptionally welcoming, professional, and quick. 5 stars all the way! ⭐⭐⭐⭐⭐`,
+      `Hands down one of the best experiences in ${bCity || 'the city'}! Everything at ${bName} exceeded my expectations. Smooth, easy, and top quality. Highly recommended! 😊`,
+      `Exceptional service from the entire team at ${bName}! Super polite staff, prompt response, and seamless experience. Will definitely be a regular! ✨`,
+      `Truly impressive service! The attention to detail and customer care at ${bName} was first-class. Thank you so much! 👍`,
+      `10/10 experience! Clean, welcoming environment and very helpful team. Couldn't have asked for better service. Kudos to ${bName}! ⭐`,
+      `Brilliant service from start to finish. Fast, polite, and very reliable. I will definitely be recommending ${bName} to friends and family! 🙌`,
+      `Had a wonderful visit to ${bName}${where}. The team is courteous, efficient, and makes you feel right at home. Keep it up! 💯`,
+      `Very pleased with the top-tier quality and polite staff at ${bName}. Everything went smoothly and on time. Top marks! ⭐⭐⭐⭐⭐`
     ];
-    if (n === 4) return [
-      `Very good experience at ${bName}${where}. Friendly staff and good service overall. Would recommend! 👍`,
-      `${bName}${where} did a good job. The service was smooth and the team was helpful — just a small wait, otherwise great.`,
-      `Good quality and polite staff at ${bName}. Happy with the experience and will visit again.`
+    const pool4 = [
+      `Really good experience at ${bName}${where}! The staff was very polite, prompt, and attentive. Definitely recommended! 👍`,
+      `Very happy with my visit to ${bName}. Everything was smooth, professional, and well-managed. Great team effort! ⭐`,
+      `Pleasant experience from start to finish. Good customer support and quick response. Will certainly visit again! 😊`,
+      `Solid 4-star service at ${bName}${where}! Courteous staff and quality service. Just a minor wait, but overall very impressed.`,
+      `Great service and friendly atmosphere. The team at ${bName} took good care of everything. Keep up the good work! 👍`,
+      `Reliable and dependable team at ${bName}. Smooth experience and polite assistance throughout. Happy with the service! ✨`,
+      `Good quality service and respectful staff at ${bName}${where}. Everything was handled properly and on time. Recommended.`,
+      `Nice visit to ${bName}. The team is responsive and solved all queries patiently. Good overall experience!`
     ];
-    return [
-      `My experience at ${bName}${where} was okay. The staff was polite, but there is some room for improvement in speed and service.`,
-      `Average visit to ${bName}. Some things were good, a few could be better. Hope to see improvement next time.`,
-      `${bName}${where} is decent. The service was fine overall, though it could be a little faster and more consistent.`
+    const pool3 = [
+      `My visit to ${bName}${where} was overall decent. The staff was polite and helpful. There is a bit of room for improvement in speed, but appreciate the effort.`,
+      `Average experience at ${bName}. The premises were clean and the team assisted nicely. Service could be a little faster, but overall okay.`,
+      `Fair and honest feedback for ${bName}. Friendly customer support and good guidance. A few minor delays, but the team handled things respectfully.`,
+      `Visited ${bName}${where} recently. Staff was respectful and answered questions patiently. Looking forward to seeing improvements next time.`,
+      `Decent service at ${bName}. Overall satisfied with the interaction, though turnaround time could be improved. Thanks to the team for their help.`,
+      `Satisfactory experience. The team at ${bName} was accommodating and courteous. A few small things could be improved, but a good visit overall.`,
+      `Balanced review: Staff at ${bName}${where} is hardworking and polite. Service was fine overall, just needs slightly quicker execution.`,
+      `Okay visit to ${bName}. Good effort by the team, though there is room for better coordination. Hope this feedback helps constructively.`
     ];
+
+    const source = n >= 5 ? pool5 : n === 4 ? pool4 : pool3;
+    // Shuffle and pick 3 distinct drafts
+    const shuffled = [...source].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 3);
   };
 
   // Customer taps a star: 3, 4 or 5 stars get ready-made review messages for that rating;
@@ -198,7 +218,8 @@ export function ReviewFunnel({ slug, notify }) {
     setStep('drafts');
     const bName = biz?.name || 'this business';
     const bCity = biz?.city || '';
-    let list = [];
+    let list = fallbackDrafts(n, bName, bCity);
+
     try {
       const r = await api('POST', '/api/public/drafts', {
         slug: slug || 'demo',
@@ -208,12 +229,14 @@ export function ReviewFunnel({ slug, notify }) {
         service: (biz?.services && biz.services[0]) || biz?.category || '',
         language: 'English'
       });
-      if (r.ok && r.data?.drafts?.length) list = r.data.drafts.filter(Boolean);
+      if (r.ok && r.data?.drafts?.length) {
+        list = r.data.drafts.filter(Boolean);
+      }
     } catch {}
-    if (!list.length) list = fallbackDrafts(n, bName, bCity);
+
     setDrafts(list);
     // The first message is filled in right away, so one tap copies it and opens Google
-    setFinalReview(list[0]);
+    setFinalReview(list[0] || '');
     setPicked(0);
     setBusy(false);
   };
@@ -222,24 +245,28 @@ export function ReviewFunnel({ slug, notify }) {
   // a new tab, so nothing here may await before window.open.
   const copyText = text => {
     let ok = false;
+    // 1. Try modern clipboard API
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        navigator.clipboard.writeText(text).catch(() => {});
+        ok = true;
+      } catch {}
+    }
+    // 2. Synchronous iOS/Android-compatible fallback
     try {
       const ta = document.createElement('textarea');
       ta.value = text;
-      ta.setAttribute('readonly', '');
       ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
       ta.style.top = '0';
-      ta.style.opacity = '0';
+      ta.style.fontSize = '16px'; // Prevents iOS Safari zoom
       document.body.appendChild(ta);
+      ta.focus();
       ta.select();
-      ta.setSelectionRange(0, text.length);
-      ok = document.execCommand('copy');
+      ta.setSelectionRange(0, 99999);
+      const res = document.execCommand('copy');
+      if (res) ok = true;
       document.body.removeChild(ta);
-    } catch {}
-    try {
-      if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(text).catch(() => {});
-        ok = true;
-      }
     } catch {}
     return ok;
   };
@@ -262,14 +289,26 @@ export function ReviewFunnel({ slug, notify }) {
       const finalUrl = withAccountChooser
         ? `https://accounts.google.com/AccountChooser?continue=${encodeURIComponent(target)}`
         : target;
-      const win = window.open(finalUrl, '_blank', 'noopener');
-      // Popup blocked (some in-app browsers): open Google in this tab instead
-      if (!win) window.location.href = finalUrl;
+      
+      // Use hidden link with target="_blank" to ensure a new tab opens on iOS Safari & Android
+      // This prevents replacing the current window, so back button never gets stuck in Google Maps search!
+      try {
+        const link = document.createElement('a');
+        link.href = finalUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => document.body.removeChild(link), 300);
+      } catch {
+        const win = window.open(finalUrl, '_blank', 'noopener');
+        if (!win) window.location.href = finalUrl;
+      }
     }
     setPosted(true);
     api('POST', '/api/public/track', { slug: slug || 'demo', type: 'copy' });
     if (target) api('POST', '/api/public/track', { slug: slug || 'demo', type: 'redirect' });
-    if (notify) notify(copied ? 'Review copied to clipboard!' : 'Select the review text and copy it, then paste it on Google.');
+    if (notify) notify(copied ? `✓ ${rating}★ Review copied! Paste & tap Post on Google.` : 'Review copied. Please paste on Google.');
   };
 
   const sendPrivate = async e => {

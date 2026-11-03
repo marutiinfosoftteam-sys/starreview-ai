@@ -90,24 +90,33 @@ export function localDrafts({ business = 'this business', city = '', rating = 5,
   }
 
   // 5. ENGLISH (DEFAULT)
-  const staffLine = staff ? `${staff} was helpful, attentive and very polite throughout.` : '';
-  const serviceLine = service ? `My experience with the ${service} was top-notch.` : '';
-  const keywordLine = keywords ? `A great choice if you are looking for quality ${keywords}.` : '';
+  const staffLine = staff ? `${staff} was very polite and helpful throughout.` : '';
   const noteLine = sentence(note);
 
-  if (rating >= 4) {
-    const strong = rating === 5;
-    return [
-      join(pick(['Great experience at', 'Really happy with', 'Had a wonderful visit to']), where + '!', noteLine, staffLine, srvLine, pick(['Highly recommend to everyone!', 'Will definitely be back soon.']), pick(['😊', '⭐', '🙌'])),
-      join(`I recently visited ${where}.`, serviceLine, noteLine, staffLine, keywordLine, strong ? 'Everything was smooth, professional and exceeded expectations. Thank you!' : 'A really good experience overall. Thank you!'),
-      join(`Thank you to the entire team at ${business}!`, staffLine, noteLine, serviceLine, pick(['Friendly service and a welcoming atmosphere.', 'Clean, professional and extremely easy to deal with.']), pick(['👍', '✨', '😊']))
+  if (rating >= 5) {
+    const list5 = [
+      join(pick(['Outstanding experience at', 'Exceptional service at', 'Had a wonderful visit to']), where + '!', noteLine, staffLine, pick(['The staff was exceptionally welcoming, professional, and quick.', 'Smooth, easy, and top quality.']), pick(['5 stars all the way! ⭐⭐⭐⭐⭐', 'Highly recommended to everyone! 😊', 'Will definitely be a regular! ✨'])),
+      join(`Hands down one of the best in the area!`, `Everything at ${where} exceeded my expectations.`, staffLine, noteLine, pick(['Super polite staff and prompt response.', 'Clean environment and first-class customer care.']), pick(['👍', '⭐', '🙌'])),
+      join(`Thank you to the entire team at ${business}!`, staffLine, noteLine, pick(['Clean, welcoming and extremely easy to deal with.', 'Top-notch service from start to finish.']), pick(['Will definitely be back! ✨', '10/10 experience! ⭐', 'Highly recommended! 👍']))
     ];
+    return list5;
   }
-  return [
-    join(`My visit to ${where} was okay.`, noteLine, staffLine, 'There is some room for improvement, but I appreciate the staff effort.'),
-    join(`Sharing honest feedback about ${business}.`, serviceLine, noteLine, 'I hope the team takes this constructively.'),
-    join(`I visited ${business} recently.`, noteLine, 'A few things could be better, and I hope this feedback helps improve the experience.')
+
+  if (rating === 4) {
+    const list4 = [
+      join(pick(['Really good experience at', 'Very happy with my visit to']), where + '!', noteLine, staffLine, pick(['The staff was very polite, prompt, and attentive.', 'Everything was smooth and well-managed.']), pick(['Definitely recommended! 👍', 'Great team effort! ⭐', 'Will certainly visit again! 😊'])),
+      join(`Pleasant experience at ${where}.`, staffLine, noteLine, 'Good customer support and quality service.', pick(['Just a minor wait, but overall very impressed.', 'Keep up the good work! 👍', 'Happy with the service! ✨'])),
+      join(`Solid 4-star service from ${business}!`, staffLine, noteLine, 'Courteous staff and dependable assistance throughout.', pick(['Recommended! 👍', 'Will visit again soon.', 'Good overall experience!']))
+    ];
+    return list4;
+  }
+
+  const list3 = [
+    join(`My visit to ${where} was overall decent.`, noteLine, staffLine, 'The staff was polite and helpful. There is a bit of room for improvement in speed, but appreciate the effort.'),
+    join(`Average experience at ${business}.`, noteLine, 'The premises were clean and the team assisted nicely. Service could be a little faster, but overall okay.'),
+    join(`Fair and honest feedback for ${where}.`, staffLine, noteLine, 'Friendly customer support. A few minor delays, but the team handled things respectfully.')
   ];
+  return list3;
 }
 
 export function localReply({ business = 'our team', city = '', rating = 5, reviewerName = '', keyword = '', ownerName = '' }) {

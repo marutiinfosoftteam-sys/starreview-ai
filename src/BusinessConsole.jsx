@@ -1353,7 +1353,15 @@ export default function BusinessConsole({
             </div>
           </div>
           <div className="bc-mobile-actions">
-            
+            <a
+              href="/"
+              className="bc-mobile-btn-site"
+              onClick={(e) => { if (!isPlainClick(e)) return; e.preventDefault(); navigate('Home'); }}
+              title="Return to Website"
+              aria-label="Return to Website"
+            >
+              <i className="fa-solid fa-arrow-left"></i> <span>Website</span>
+            </a>
             {activeTab !== 'Billing & Plans' ? (
               <a
                 href={tabHref('Billing & Plans')}
@@ -1378,6 +1386,21 @@ export default function BusinessConsole({
         {/* Persistent Desktop / Tablet Topbar with Quick Navigation & Back to Website */}
         <div className="bc-topbar-strip">
           <div className="bc-topbar-crumbs">
+            <a
+              href="/"
+              className="bc-topbar-back-btn"
+              onClick={(e) => {
+                if (!e.metaKey && !e.ctrlKey && !e.shiftKey && e.button !== 1) {
+                  e.preventDefault();
+                  if (goBackToWebsite) goBackToWebsite();
+                  else navigate(lastPublicPage && lastPublicPage !== 'Dashboard' ? lastPublicPage : 'Home');
+                }
+              }}
+              title="Go back to website"
+            >
+              <i className="fa-solid fa-arrow-left"></i> Back to Website
+            </a>
+            <span className="bc-topbar-sep">/</span>
             <span className="bc-topbar-crumb-tab">{activeTab}</span>
           </div>
           <div className="bc-topbar-actions">

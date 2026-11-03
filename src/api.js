@@ -190,23 +190,43 @@ function generateLocalDrafts({ business = 'this business', city = '', rating = 5
     ].map(s => s.replace(/\s+/g, ' ').trim());
   }
 
-  // English
-  const staffLine = staff ? `${staff} was helpful and attentive throughout.` : '';
-  const serviceLine = service ? `My experience with ${service} was top-notch.` : '';
+  // English (distinct, natural human reviews for 5★, 4★ and 3★)
+  const staffLine = staff ? `${staff} was very polite and helpful throughout.` : '';
   const noteLine = note ? `${note}.` : '';
 
-  if (rating >= 4) {
-    return [
-      `Great experience at ${where}! ${noteLine} ${staffLine} ${serviceLine} Highly recommend to everyone! 😊 ⭐`,
-      `I recently visited ${where}. ${serviceLine} ${noteLine} ${staffLine} Everything was smooth, professional and exceeded expectations. Thank you! 👍`,
-      `Thank you to the entire team at ${business}! ${staffLine} ${noteLine} Clean, welcoming and extremely easy to deal with. Will definitely be back! ✨`
-    ].map(s => s.replace(/\s+/g, ' ').trim());
+  if (rating >= 5) {
+    const list5 = [
+      `Outstanding experience at ${where}! ${staffLine} ${noteLine} The staff was exceptionally welcoming, professional, and quick. 5 stars all the way! ⭐⭐⭐⭐⭐`,
+      `Hands down one of the best in the area! Everything at ${where} exceeded my expectations. Smooth, easy, and top quality. Highly recommended! 😊`,
+      `Exceptional service from the entire team at ${business}! ${staffLine} Super polite, prompt response, and seamless experience. Will definitely be a regular! ✨`,
+      `Truly impressive service! The attention to detail and customer care at ${where} was first-class. Thank you so much! 👍`,
+      `10/10 experience! Clean, welcoming environment and very helpful team. Couldn't have asked for better service. Kudos to ${business}! ⭐`,
+      `Brilliant service from start to finish. Fast, polite, and very reliable. I will definitely be recommending ${where} to friends and family! 🙌`
+    ];
+    return [...list5].sort(() => Math.random() - 0.5).slice(0, 3).map(s => s.replace(/\s+/g, ' ').trim());
   }
-  return [
-    `My visit to ${where} was okay. ${noteLine} ${staffLine} There is some room for improvement, but I appreciate the staff effort.`,
-    `Sharing honest feedback about ${business}. ${serviceLine} ${noteLine} I hope the team takes this constructively.`,
-    `I visited ${business} recently. A few things could be better, and I hope this feedback helps.`
-  ].map(s => s.replace(/\s+/g, ' ').trim());
+
+  if (rating === 4) {
+    const list4 = [
+      `Really good experience at ${where}! ${staffLine} ${noteLine} The staff was very polite, prompt, and attentive. Definitely recommended! 👍`,
+      `Very happy with my visit to ${where}. Everything was smooth, professional, and well-managed. Great team effort! ⭐`,
+      `Pleasant experience from start to finish. Good customer support and quick response. Will certainly visit again! 😊`,
+      `Solid 4-star service at ${where}! Courteous staff and quality service. Just a minor wait, but overall very impressed.`,
+      `Great service and friendly atmosphere. The team at ${business} took good care of everything. Keep up the good work! 👍`,
+      `Reliable and dependable team at ${business}. Smooth experience and polite assistance throughout. Happy with the service! ✨`
+    ];
+    return [...list4].sort(() => Math.random() - 0.5).slice(0, 3).map(s => s.replace(/\s+/g, ' ').trim());
+  }
+
+  const list3 = [
+    `My visit to ${where} was overall decent. ${staffLine} ${noteLine} The staff was polite and helpful. There is a bit of room for improvement in speed, but appreciate the effort.`,
+    `Average experience at ${business}. The premises were clean and the team assisted nicely. Service could be a little faster, but overall okay.`,
+    `Fair and honest feedback for ${where}. Friendly customer support and good guidance. A few minor delays, but the team handled things respectfully.`,
+    `Visited ${where} recently. Staff was respectful and answered questions patiently. Looking forward to seeing improvements next time.`,
+    `Decent service at ${business}. Overall satisfied with the interaction, though turnaround time could be improved. Thanks to the team for their help.`,
+    `Satisfactory experience at ${where}. The team was accommodating and courteous. A few small things could be improved, but a good visit overall.`
+  ];
+  return [...list3].sort(() => Math.random() - 0.5).slice(0, 3).map(s => s.replace(/\s+/g, ' ').trim());
 }
 
 function runLocalSeoAudit(input = {}) {
