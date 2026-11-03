@@ -18,22 +18,30 @@ const Stars = ({ value, onChange }) => {
       }}
     >
       {[1, 2, 3, 4, 5].map(n => {
-        const isLit = activeVal >= n;
+        const isLit = activeVal >= n && activeVal > 0;
         return (
           <button
             type="button"
             key={n}
-            onMouseEnter={() => setHoverVal(n)}
+            onMouseEnter={() => {
+              if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: hover)').matches) {
+                setHoverVal(n);
+              }
+            }}
             onMouseLeave={() => setHoverVal(0)}
-            onClick={() => onChange(n)}
+            onClick={() => {
+              setHoverVal(0);
+              onChange(n);
+            }}
+            onTouchEnd={() => setHoverVal(0)}
             aria-label={`${n} stars`}
             style={{
               width: 54,
               height: 54,
               borderRadius: 14,
-              border: isLit ? '2.5px solid #f59e0b' : '2px solid #e2e8f0',
+              border: isLit ? '2.5px solid #f59e0b' : '2px solid #cbd5e1',
               background: isLit ? '#fffbeb' : '#ffffff',
-              color: isLit ? '#f59e0b' : '#cbd5e1',
+              color: isLit ? '#f59e0b' : '#94a3b8',
               fontSize: '34px',
               lineHeight: 1,
               cursor: 'pointer',
@@ -164,38 +172,61 @@ export function ReviewFunnel({ slug, notify }) {
     });
   }, [slug]);
 
+  useEffect(() => {
+    const onPop = () => {
+      setStep('rate');
+      setRating(0);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  const getBizName = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pName = urlParams.get('n') || urlParams.get('name');
+    if (pName && !pName.toLowerCase().includes('demo') && pName !== 'verde eco landing') return pName;
+    if (biz?.name && !biz.name.toLowerCase().includes('demo') && biz.name !== 'verde eco landing' && biz.name !== 'Team Maruti InfoSoft') return biz.name;
+    return pName || biz?.name || 'this business';
+  };
+
+  const getBizCity = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('c') || urlParams.get('city') || biz?.city || '';
+  };
+
   // Ready-made natural review pools for each star rating (dynamically shuffled so reviews never look repeated or AI-written)
   const fallbackDrafts = (n, bName, bCity) => {
+    const cleanBiz = (bName && bName.toLowerCase().includes('demo') ? 'this place' : bName) || 'this business';
     const where = bCity ? ` in ${bCity}` : '';
     const pool5 = [
-      `Outstanding experience at ${bName}${where}! The staff was exceptionally welcoming, professional, and quick. 5 stars all the way! ⭐⭐⭐⭐⭐`,
-      `Hands down one of the best experiences in ${bCity || 'the city'}! Everything at ${bName} exceeded my expectations. Smooth, easy, and top quality. Highly recommended! 😊`,
-      `Exceptional service from the entire team at ${bName}! Super polite staff, prompt response, and seamless experience. Will definitely be a regular! ✨`,
-      `Truly impressive service! The attention to detail and customer care at ${bName} was first-class. Thank you so much! 👍`,
-      `10/10 experience! Clean, welcoming environment and very helpful team. Couldn't have asked for better service. Kudos to ${bName}! ⭐`,
-      `Brilliant service from start to finish. Fast, polite, and very reliable. I will definitely be recommending ${bName} to friends and family! 🙌`,
-      `Had a wonderful visit to ${bName}${where}. The team is courteous, efficient, and makes you feel right at home. Keep it up! 💯`,
-      `Very pleased with the top-tier quality and polite staff at ${bName}. Everything went smoothly and on time. Top marks! ⭐⭐⭐⭐⭐`
+      `Outstanding experience at ${cleanBiz}${where}! The staff was exceptionally welcoming, professional, and quick. 5 stars all the way! ⭐⭐⭐⭐⭐`,
+      `Hands down one of the best experiences in ${bCity || 'the city'}! Everything at ${cleanBiz} exceeded my expectations. Smooth, easy, and top quality. Highly recommended! 😊`,
+      `Exceptional service from the entire team at ${cleanBiz}! Super polite staff, prompt response, and seamless experience. Will definitely be a regular! ✨`,
+      `Truly impressive service! The attention to detail and customer care at ${cleanBiz} was first-class. Thank you so much! 👍`,
+      `10/10 experience! Clean, welcoming environment and very helpful team. Couldn't have asked for better service. Kudos to ${cleanBiz}! ⭐`,
+      `Brilliant service from start to finish. Fast, polite, and very reliable. I will definitely be recommending ${cleanBiz} to friends and family! 🙌`,
+      `Had a wonderful visit to ${cleanBiz}${where}. The team is courteous, efficient, and makes you feel right at home. Keep it up! 💯`,
+      `Very pleased with the top-tier quality and polite staff at ${cleanBiz}. Everything went smoothly and on time. Top marks! ⭐⭐⭐⭐⭐`
     ];
     const pool4 = [
-      `Really good experience at ${bName}${where}! The staff was very polite, prompt, and attentive. Definitely recommended! 👍`,
-      `Very happy with my visit to ${bName}. Everything was smooth, professional, and well-managed. Great team effort! ⭐`,
+      `Really good experience at ${cleanBiz}${where}! The staff was very polite, prompt, and attentive. Definitely recommended! 👍`,
+      `Very happy with my visit to ${cleanBiz}. Everything was smooth, professional, and well-managed. Great team effort! ⭐`,
       `Pleasant experience from start to finish. Good customer support and quick response. Will certainly visit again! 😊`,
-      `Solid 4-star service at ${bName}${where}! Courteous staff and quality service. Just a minor wait, but overall very impressed.`,
-      `Great service and friendly atmosphere. The team at ${bName} took good care of everything. Keep up the good work! 👍`,
-      `Reliable and dependable team at ${bName}. Smooth experience and polite assistance throughout. Happy with the service! ✨`,
-      `Good quality service and respectful staff at ${bName}${where}. Everything was handled properly and on time. Recommended.`,
-      `Nice visit to ${bName}. The team is responsive and solved all queries patiently. Good overall experience!`
+      `Solid 4-star service at ${cleanBiz}${where}! Courteous staff and quality service. Just a minor wait, but overall very impressed.`,
+      `Great service and friendly atmosphere. The team at ${cleanBiz} took good care of everything. Keep up the good work! 👍`,
+      `Reliable and dependable team at ${cleanBiz}. Smooth experience and polite assistance throughout. Happy with the service! ✨`,
+      `Good quality service and respectful staff at ${cleanBiz}${where}. Everything was handled properly and on time. Recommended.`,
+      `Nice visit to ${cleanBiz}. The team is responsive and solved all queries patiently. Good overall experience!`
     ];
     const pool3 = [
-      `My visit to ${bName}${where} was overall decent. The staff was polite and helpful. There is a bit of room for improvement in speed, but appreciate the effort.`,
-      `Average experience at ${bName}. The premises were clean and the team assisted nicely. Service could be a little faster, but overall okay.`,
-      `Fair and honest feedback for ${bName}. Friendly customer support and good guidance. A few minor delays, but the team handled things respectfully.`,
-      `Visited ${bName}${where} recently. Staff was respectful and answered questions patiently. Looking forward to seeing improvements next time.`,
-      `Decent service at ${bName}. Overall satisfied with the interaction, though turnaround time could be improved. Thanks to the team for their help.`,
-      `Satisfactory experience. The team at ${bName} was accommodating and courteous. A few small things could be improved, but a good visit overall.`,
-      `Balanced review: Staff at ${bName}${where} is hardworking and polite. Service was fine overall, just needs slightly quicker execution.`,
-      `Okay visit to ${bName}. Good effort by the team, though there is room for better coordination. Hope this feedback helps constructively.`
+      `My visit to ${cleanBiz}${where} was overall decent. The staff was polite and helpful. There is a bit of room for improvement in speed, but appreciate the effort.`,
+      `Average experience at ${cleanBiz}. The premises were clean and the team assisted nicely. Service could be a little faster, but overall okay.`,
+      `Fair and honest feedback for ${cleanBiz}. Friendly customer support and good guidance. A few minor delays, but the team handled things respectfully.`,
+      `Visited ${cleanBiz}${where} recently. Staff was respectful and answered questions patiently. Looking forward to seeing improvements next time.`,
+      `Decent service at ${cleanBiz}. Overall satisfied with the interaction, though turnaround time could be improved. Thanks to the team for their help.`,
+      `Satisfactory experience. The team at ${cleanBiz} was accommodating and courteous. A few small things could be improved, but a good visit overall.`,
+      `Balanced review: Staff at ${cleanBiz}${where} is hardworking and polite. Service was fine overall, just needs slightly quicker execution.`,
+      `Okay visit to ${cleanBiz}. Good effort by the team, though there is room for better coordination. Hope this feedback helps constructively.`
     ];
 
     const source = n >= 5 ? pool5 : n === 4 ? pool4 : pool3;
@@ -206,39 +237,26 @@ export function ReviewFunnel({ slug, notify }) {
 
   // Customer taps a star: 3, 4 or 5 stars get ready-made review messages for that rating;
   // 1–2 stars open a private feedback form for the owner.
-  const chooseRating = async n => {
+  const chooseRating = n => {
     setRating(n);
     setPosted(false);
     if (n < 3) {
       setStep('private');
+      try { window.history.pushState({ step: 'private' }, ''); } catch {}
       return;
     }
 
-    setBusy(true);
     setStep('drafts');
-    const bName = biz?.name || 'this business';
-    const bCity = biz?.city || '';
-    let list = fallbackDrafts(n, bName, bCity);
-
-    try {
-      const r = await api('POST', '/api/public/drafts', {
-        slug: slug || 'demo',
-        business: bName,
-        city: bCity,
-        rating: n,
-        service: (biz?.services && biz.services[0]) || biz?.category || '',
-        language: 'English'
-      });
-      if (r.ok && r.data?.drafts?.length) {
-        list = r.data.drafts.filter(Boolean);
-      }
-    } catch {}
+    setBusy(false);
+    const bName = getBizName();
+    const bCity = getBizCity();
+    const list = fallbackDrafts(n, bName, bCity);
 
     setDrafts(list);
     // The first message is filled in right away, so one tap copies it and opens Google
     setFinalReview(list[0] || '');
     setPicked(0);
-    setBusy(false);
+    try { window.history.pushState({ step: 'drafts' }, ''); } catch {}
   };
 
   // Copy works on iOS/Android only inside the tap itself, and so does opening
@@ -284,14 +302,31 @@ export function ReviewFunnel({ slug, notify }) {
     const text = finalReview.trim();
     if (!text) return;
     const copied = copyText(text);
-    const target = biz?.googleReviewUrl;
-    if (target) {
-      const finalUrl = withAccountChooser
-        ? `https://accounts.google.com/AccountChooser?continue=${encodeURIComponent(target)}`
-        : target;
-      
-      // Use hidden link with target="_blank" to ensure a new tab opens on iOS Safari & Android
-      // This prevents replacing the current window, so back button never gets stuck in Google Maps search!
+
+    const bName = getBizName();
+    const bCity = getBizCity();
+    let target = biz?.googleReviewUrl;
+    if (!target) {
+      if (bName && bName !== 'this business') {
+        target = `https://www.google.com/search?q=${encodeURIComponent(bName + (bCity ? ' ' + bCity : '') + ' review')}`;
+      } else {
+        target = 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4';
+      }
+    }
+
+    const finalUrl = withAccountChooser
+      ? `https://accounts.google.com/AccountChooser?continue=${encodeURIComponent(target)}`
+      : target;
+    
+    // Open Google in a NEW TAB using window.open and fallback to anchor tag
+    // This leaves the review page open in its own tab, so back button never gets stuck in Google Maps search!
+    let opened = false;
+    try {
+      const win = window.open(finalUrl, '_blank', 'noopener,noreferrer');
+      if (win && !win.closed) opened = true;
+    } catch {}
+
+    if (!opened) {
       try {
         const link = document.createElement('a');
         link.href = finalUrl;
@@ -300,11 +335,10 @@ export function ReviewFunnel({ slug, notify }) {
         document.body.appendChild(link);
         link.click();
         setTimeout(() => document.body.removeChild(link), 300);
-      } catch {
-        const win = window.open(finalUrl, '_blank', 'noopener');
-        if (!win) window.location.href = finalUrl;
-      }
+        opened = true;
+      } catch {}
     }
+
     setPosted(true);
     api('POST', '/api/public/track', { slug: slug || 'demo', type: 'copy' });
     if (target) api('POST', '/api/public/track', { slug: slug || 'demo', type: 'redirect' });
@@ -323,7 +357,7 @@ export function ReviewFunnel({ slug, notify }) {
     <main className="page-shell wrap">
       <div className="page-heading">
         <div className="eyebrow" style={{ color: '#16a34a', fontWeight: 800, letterSpacing: '0.08em', fontSize: '0.78rem', marginBottom: '0.35rem', textTransform: 'uppercase' }}>
-          {biz?.name ? biz.name.toUpperCase() : ''}
+          {getBizName().toUpperCase()}
         </div>
         <h1 style={{ fontSize: '1.9rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.5rem 0', letterSpacing: '-0.02em' }}>
           {biz && !biz.unavailable ? 'How was your experience?' : 'Review page'}
@@ -361,10 +395,34 @@ export function ReviewFunnel({ slug, notify }) {
     <div className="rf-review-flow">
       {busy ? (
         <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
-          <p style={{ color: '#16a34a', fontWeight: 800, fontSize: '0.95rem' }}>Writing review suggestions for {biz?.name}…</p>
+          <p style={{ color: '#16a34a', fontWeight: 800, fontSize: '0.95rem' }}>Writing review suggestions for {getBizName()}…</p>
         </div>
       ) : (
         <>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+            <button
+              type="button"
+              onClick={() => { setStep('rate'); setRating(0); setPicked(-1); setFinalReview(''); setPosted(false); }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#64748b',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: 0
+              }}
+            >
+              ← Back to rating
+            </button>
+            <span style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: 800 }}>
+              Ready to post
+            </span>
+          </div>
+
           <div className="rf-review-rating-bar">
             <span>Your rating</span>
             <div className="rf-review-rating-stars" role="radiogroup" aria-label="Your rating">

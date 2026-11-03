@@ -723,8 +723,10 @@ app.post('/api/public/drafts', async (req, res) => {
     if (!b || !hasAccess(owner)) return res.status(404).json({ error: 'Review page not found.' });
     const rating = Math.min(5, Math.max(1, Math.floor(Number(req.body?.rating) || 5)));
     const language = LANGUAGES.includes(req.body?.language) ? req.body.language : 'English';
+    const bizName = (req.body?.business && req.body.business.trim()) || b.name;
+    const bizCity = req.body?.city !== undefined ? req.body.city : b.city;
     const result = await generateDrafts({
-      business: b.name, city: b.city, rating, language,
+      business: bizName, city: bizCity, rating, language,
       staff: clean(req.body?.staff, 60), service: clean(req.body?.service, 80),
       note: clean(req.body?.note, 300), keywords: b.keywords.join(', ')
     });

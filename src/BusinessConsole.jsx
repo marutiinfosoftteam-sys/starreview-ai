@@ -5506,14 +5506,16 @@ export default function BusinessConsole({
                       className="bc-settings-select"
                       required
                       value={
-                        settingsCatOther || (settingsBizCategory && !CATEGORY_OPTIONS.filter(c => c !== 'Other').includes(settingsBizCategory))
+                        settingsCatOther || (settingsBizCategory && settingsBizCategory !== 'Local Business & Services' && settingsBizCategory !== 'Services' && !CATEGORY_OPTIONS.filter(c => c !== 'Other').includes(settingsBizCategory))
                           ? 'Other'
-                          : (settingsBizCategory || '')
+                          : (settingsBizCategory && settingsBizCategory !== 'Local Business & Services' && settingsBizCategory !== 'Services' ? settingsBizCategory : '')
                       }
                       onChange={(e) => {
                         if (e.target.value === 'Other') {
                           setSettingsCatOther(true);
-                          if (CATEGORY_OPTIONS.includes(settingsBizCategory)) setSettingsBizCategory('');
+                          if (CATEGORY_OPTIONS.includes(settingsBizCategory) || settingsBizCategory === 'Local Business & Services' || settingsBizCategory === 'Services') {
+                            setSettingsBizCategory('');
+                          }
                         } else {
                           setSettingsCatOther(false);
                           setSettingsBizCategory(e.target.value);
@@ -5562,7 +5564,7 @@ export default function BusinessConsole({
                         }}
                         onFocus={(e) => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22, 163, 74, 0.12)'; }}
                         onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
-                        value={settingsBizCategory}
+                        value={settingsBizCategory === 'Local Business & Services' || settingsBizCategory === 'Services' ? '' : settingsBizCategory}
                         onChange={(e) => setSettingsBizCategory(e.target.value)}
                         placeholder="Type your own service or industry..."
                         maxLength={80}
@@ -5973,11 +5975,11 @@ export default function BusinessConsole({
                             setDelAgreed(!delAgreed);
                           }}
                           style={{
-                            width: 16,
-                            height: 16,
-                            minWidth: 16,
-                            borderRadius: 3,
-                            border: delAgreed ? '2px solid #dc2626' : '1.5px solid #94a3b8',
+                            width: 18,
+                            height: 18,
+                            minWidth: 18,
+                            borderRadius: 4,
+                            border: delAgreed ? '2px solid #dc2626' : '2px solid #94a3b8',
                             background: delAgreed ? '#dc2626' : '#ffffff',
                             display: 'inline-flex',
                             alignItems: 'center',
@@ -5990,7 +5992,7 @@ export default function BusinessConsole({
                           }}
                         >
                           {delAgreed && (
-                            <i className="fa-solid fa-check" style={{ color: '#ffffff', fontSize: 10, fontWeight: 900 }} />
+                            <i className="fa-solid fa-check" style={{ color: '#ffffff', fontSize: 11, fontWeight: 900 }} />
                           )}
                         </span>
                         <input

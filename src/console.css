@@ -5899,9 +5899,11 @@
     overflow-x: hidden !important;
   }
 
-  /* Sticky Topbar for Tablet & Mobile */
+  /* Topbar strip with Back to Website */
   .bc-topbar-strip {
-    display: none !important;
+    display: flex !important;
+    padding: 0.6rem 0.85rem !important;
+    margin-bottom: 0.85rem !important;
   }
 
   .bc-mobile-topbar {

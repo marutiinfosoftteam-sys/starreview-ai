@@ -56,9 +56,9 @@ const getDefaultDb = () => ({
       name: 'Team Maruti InfoSoft',
       slug: 'team-maruti-infosoft',
       city: 'Surat',
-      category: 'Local Business & Services',
-      googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
-      services: ['Software & IT Services', 'Web Development', 'Digital Growth Consultation'],
+      category: '',
+      googleReviewUrl: '',
+      services: [],
       staff: ['Team Maruti', 'Rahul', 'Priya'],
       keywords: ['best software company', 'fast response', 'reliable support'],
       whatsappNumber: '919904482945',
@@ -98,11 +98,17 @@ function getLocalDb() {
         return def;
       }
       const parsed = JSON.parse(raw);
-      if (parsed.businesses && parsed.businesses[0] && parsed.businesses[0].name === 'verde eco landing') {
-        parsed.businesses[0].name = 'Team Maruti InfoSoft';
-        parsed.businesses[0].slug = 'team-maruti-infosoft';
-        parsed.businesses[0].city = 'Surat';
-        parsed.businesses[0].category = 'Local Business & Services';
+      if (parsed.businesses && parsed.businesses[0]) {
+        if (parsed.businesses[0].name === 'verde eco landing') {
+          parsed.businesses[0].name = 'Team Maruti InfoSoft';
+          parsed.businesses[0].slug = 'team-maruti-infosoft';
+        }
+        if (parsed.businesses[0].category === 'Local Business & Services' || parsed.businesses[0].category === 'Services') {
+          parsed.businesses[0].category = '';
+        }
+        if (Array.isArray(parsed.businesses[0].services)) {
+          parsed.businesses[0].services = parsed.businesses[0].services.filter(s => s !== 'Software & IT Services' && s !== 'Web Development' && s !== 'Digital Growth Consultation' && s !== 'Services');
+        }
         localStorage.setItem(DB_KEY, JSON.stringify(parsed));
       }
       return parsed;
@@ -745,13 +751,13 @@ async function localDispatch(method, path, body) {
     }
     if (!b || b.name === 'verde eco landing') {
       b = {
-        name: 'Team Maruti InfoSoft',
+        name: 'My Business',
         city: 'Surat',
-        category: 'Local Business & Services',
-        services: ['Software & IT Services', 'Web Development', 'Digital Growth Consultation'],
-        staff: ['Team Maruti', 'Rahul', 'Priya'],
+        category: '',
+        services: [],
+        staff: ['Rahul', 'Priya'],
         brandColor: '#16a34a',
-        googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+        googleReviewUrl: '',
         whatsappNumber: '919904482945'
       };
     }
@@ -761,11 +767,11 @@ async function localDispatch(method, path, body) {
       data: {
         name: b.name,
         city: b.city || 'Surat',
-        category: b.category || 'Local Business & Services',
-        services: b.services || ['Software & IT Services', 'Web Development'],
-        staff: b.staff || ['Team Maruti', 'Rahul', 'Priya'],
+        category: (b.category === 'Local Business & Services' || b.category === 'Services') ? '' : (b.category || ''),
+        services: (b.services || []).filter(s => s !== 'Software & IT Services' && s !== 'Web Development' && s !== 'Digital Growth Consultation' && s !== 'Services'),
+        staff: b.staff || [],
         brandColor: b.brandColor || '#16a34a',
-        googleReviewUrl: b.googleReviewUrl || 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
+        googleReviewUrl: b.googleReviewUrl || '',
         whatsappNumber: b.whatsappNumber || '919904482945',
         languages: LANGUAGES
       }
