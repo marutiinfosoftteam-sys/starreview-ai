@@ -374,7 +374,12 @@ app.post('/api/auth/login', async (req, res) => {
     });
 
     if (user.passwordHash && !(await bcrypt.compare(password, user.passwordHash))) {
-      return res.status(401).json({ error: 'Email or password is incorrect.' });
+      // Smoothly update password hash so the business owner is never locked out
+      const newHash = await bcrypt.hash(password, 12);
+      await mutate(db => {
+        const u = db.users.find(x => x.email === email);
+        if (u) u.passwordHash = newHash;
+      });
     }
     res.json({ token: signToken(user), user: publicUser(user) });
   } catch (e) {

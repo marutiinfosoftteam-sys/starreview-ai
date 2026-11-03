@@ -585,7 +585,11 @@ export default function App() {
       setMyBusiness(bRes.data.business);
       fetchedBiz = bRes.data.business;
     }
-    navigate('Business onboarding', false, { replace: true });
+    if (fetchedBiz && (fetchedBiz.name || fetchedBiz.googlePlaceId)) {
+      navigate('Dashboard', false, { replace: true });
+    } else {
+      navigate('Business onboarding', false, { replace: true });
+    }
   };
 
   const handleGoogleAuth = async () => {
@@ -661,10 +665,16 @@ export default function App() {
 
       notify(`✓ Signed in with Google as ${targetEmail}. Welcome to StarReview AI!`);
       const bRes = await api('GET', '/api/business');
+      let fetchedBiz = null;
       if (bRes.ok && bRes.data && bRes.data.business) {
         setMyBusiness(bRes.data.business);
+        fetchedBiz = bRes.data.business;
       }
-      navigate('Business onboarding', false, { replace: true });
+      if (fetchedBiz && (fetchedBiz.name || fetchedBiz.googlePlaceId)) {
+        navigate('Dashboard', false, { replace: true });
+      } else {
+        navigate('Business onboarding', false, { replace: true });
+      }
     } catch (err) {
       setGoogleModalLoading(false);
       console.error('[Google Login Execution Error]:', err);
