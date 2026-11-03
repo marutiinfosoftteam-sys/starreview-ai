@@ -3553,12 +3553,55 @@ export default function App() {
             <label>Work email<input type="email" required placeholder="you@company.com" /></label>
             <label>What can we help with?<select><option>Product demo</option><option>Agency / multiple locations</option><option>Technical integrations</option><option>General question</option></select></label>
             <label>Message<textarea required rows="4" placeholder="Tell us about your business…" /></label>
-            <button className="btn btn-dark">Submit inquiry →</button>
-            {cfg.whatsappNumber && (
-              <a className="btn btn-light" href={`https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent('Hi StarReview AI, I need help.')}`} target="_blank" rel="noreferrer">
-                <i className="fa-brands fa-whatsapp"></i> Chat on WhatsApp
-              </a>
-            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+              <button
+                type="submit"
+                className="btn btn-dark"
+                style={{
+                  width: '100%',
+                  padding: '13px 20px',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                  fontSize: '0.92rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 14px rgba(29, 73, 52, 0.2)'
+                }}
+              >
+                Submit inquiry →
+              </button>
+              {cfg.whatsappNumber && (
+                <a
+                  className="btn"
+                  href={`https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent('Hi StarReview AI, I need help.')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    width: '100%',
+                    padding: '13px 20px',
+                    borderRadius: '10px',
+                    background: '#ffffff',
+                    border: '1.5px solid #22c55e',
+                    color: '#15803d',
+                    fontWeight: 700,
+                    fontSize: '0.92rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 6px rgba(34, 197, 94, 0.12)'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.borderColor = '#16a34a'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#22c55e'; }}
+                >
+                  <i className="fa-brands fa-whatsapp" style={{ fontSize: '1.25rem', color: '#25D366' }}></i> Chat on WhatsApp
+                </a>
+              )}
+            </div>
           </form>
         </PageShell>
       )}
