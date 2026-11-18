@@ -4928,7 +4928,10 @@ export default function BusinessConsole({
                         <h4>{pro ? 'Pro Monthly Plan' : 'Monthly Plan'}</h4>
                         <p className="bc-billing-card-sub">Monthly billing · 1 business · {pro ? '24/7 Autopilot Replies' : 'QR funnel & AI drafts'}</p>
                         <div className="bc-billing-price-row">
-                          <div className="price">₹{monthly.toLocaleString('en-IN')} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ month</span></div>
+                          <div className="price">
+                            <span className="bc-price-val">₹{monthly.toLocaleString('en-IN')}</span>{' '}
+                            <span className="bc-price-period" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.88rem', fontWeight: 600, color: '#64748b', letterSpacing: 'normal' }}>/ month</span>
+                          </div>
                           <div className="sub-price">Month-to-month · Cancel anytime</div>
                         </div>
                         {replyNotice}
@@ -4947,7 +4950,10 @@ export default function BusinessConsole({
                         <h4>{pro ? 'Pro Yearly Plan' : 'Yearly Plan'}</h4>
                         <p className="bc-billing-card-sub">1 year · 1 business · {pro ? '24/7 Autopilot Replies' : 'Maximum savings'}</p>
                         <div className="bc-billing-price-row">
-                          <div className="price">₹{yearly.toLocaleString('en-IN')} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ year</span></div>
+                          <div className="price">
+                            <span className="bc-price-val">₹{yearly.toLocaleString('en-IN')}</span>{' '}
+                            <span className="bc-price-period" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.88rem', fontWeight: 600, color: '#64748b', letterSpacing: 'normal' }}>/ year</span>
+                          </div>
                           <div className="sub-price" style={{ color: '#ea580c', fontWeight: 700 }}>
                             ≈ ₹{perMonth}/month · Save ₹{saving.toLocaleString('en-IN')} a year
                           </div>
@@ -4968,7 +4974,10 @@ export default function BusinessConsole({
                         <h4>Multi-Business Plan</h4>
                         <p className="bc-billing-card-sub">Multiple locations · Centralized dashboard · For agencies &amp; chains</p>
                         <div className="bc-billing-price-row">
-                          <div className="price">Custom <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ tailored capacity</span></div>
+                          <div className="price">
+                            <span className="bc-price-val">Custom</span>{' '}
+                            <span className="bc-price-period" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.88rem', fontWeight: 600, color: '#64748b', letterSpacing: 'normal' }}>/ Tailored capacity</span>
+                          </div>
                           <div className="sub-price">Priced by number of businesses or locations</div>
                         </div>
                         <div className="bc-multi-highlight-box">

@@ -4831,9 +4831,32 @@
   border-bottom: 1px solid #f1f5f9;
 }
 .bc-billing-price-row .price {
+  font-family: Manrope, sans-serif;
   font-size: 1.85rem;
   font-weight: 900;
   color: #0f172a;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  line-height: 1.2;
+}
+.bc-billing-price-row .price .bc-price-val {
+  font-family: Manrope, sans-serif;
+  font-size: 1.85rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+.bc-billing-price-row .price .bc-price-period,
+.bc-billing-price-row .price span:not(.bc-price-val) {
+  font-family: 'DM Sans', sans-serif !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  letter-spacing: normal !important;
+  line-height: 1.2;
 }
 .bc-billing-price-row .sub-price {
   font-size: 0.74rem;
