@@ -8,6 +8,7 @@ import PrivacyPolicyPage from './PrivacyPolicyPage.jsx';
 import TermsOfServicePage from './TermsOfServicePage.jsx';
 import CookiePolicyPage from './CookiePolicyPage.jsx';
 import PlatformFeaturesPage from './PlatformFeaturesPage.jsx';
+import GrowingBusinessesPage from './GrowingBusinessesPage.jsx';
 import DemoVideo from './DemoVideo.jsx';
 import { COMPANY } from './company.js';
 import { isFirebaseConfigured, loginWithGoogle } from './firebase.js';
@@ -101,6 +102,7 @@ export const routeMap = {
   '/privacy': 'Privacy policy',
   '/terms': 'Terms of service',
   '/cookies': 'Cookie policy',
+  '/growing-businesses': 'Growing businesses',
   '/index.php': 'Dashboard',
   '/console': 'Dashboard',
   '/admin': 'Dashboard'
@@ -2117,6 +2119,10 @@ export default function App() {
           ==================================================================== */}
       {page === 'Features' && (
         <PlatformFeaturesPage navigate={navigate} user={user} />
+      )}
+
+      {page === 'Growing businesses' && (
+        <GrowingBusinessesPage navigate={navigate} />
       )}
 
       {/* ====================================================================
@@ -4413,7 +4419,7 @@ function Footer({ navigate }) {
         ['AI vs Normal QR', 'AI vs QR'],
         ['AI SEO Analyzer', 'SEO analyzer'],
         ['How It Works', 'How it works'],
-        ['Growing Businesses', 'Features']
+        ['Growing Businesses', 'Growing businesses']
       ]
     },
     {

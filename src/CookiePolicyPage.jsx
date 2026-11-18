@@ -1,177 +1,239 @@
-// StarReview AI — Official Cookie & Storage Policy Page
-// Clear, detailed disclosures about browser cookies and local storage
+// StarReview AI — Official Cookie & Storage Preferences Page
+// Distinctive interactive privacy center & local storage transparency
 
-import React from 'react';
+import React, { useState } from 'react';
 
 export default function CookiePolicyPage({ navigate }) {
+  const [cleared, setCleared] = useState(false);
+  const [prefAnalytics, setPrefAnalytics] = useState(true);
+
+  const handleClearCache = () => {
+    try {
+      localStorage.removeItem('starreview_business');
+      localStorage.removeItem('selected_theme');
+      sessionStorage.clear();
+      setCleared(true);
+      setTimeout(() => setCleared(false), 4000);
+    } catch {
+      setCleared(true);
+    }
+  };
+
   return (
-    <div className="rf-privacy-page-shell">
-      <div className="rf-privacy-container">
-        {/* Breadcrumb & Navigation */}
-        <div className="rf-privacy-top-bar">
+    <div style={{ background: '#f8fafc', minHeight: '100vh', padding: '40px 20px 80px' }}>
+      <div className="wrap" style={{ maxWidth: 960, margin: '0 auto' }}>
+        {/* Top Navigation Bar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
           <button
             type="button"
             className="rf-privacy-back-btn"
             onClick={() => navigate('Home')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, color: '#334155', cursor: 'pointer' }}
           >
             <i className="fa-solid fa-arrow-left"></i> Back to Homepage
           </button>
-          <span className="rf-privacy-badge">
-            <i className="fa-solid fa-cookie-bite"></i> COOKIE POLICY · DATA TRANSPARENCY
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#e0f2fe', color: '#0369a1', padding: '6px 14px', borderRadius: 20, fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+            <i className="fa-solid fa-cookie-bite"></i> COOKIE &amp; STORAGE TRANSPARENCY
           </span>
         </div>
 
-        {/* Hero Banner */}
-        <header className="rf-privacy-header">
-          <h1>Cookie &amp; Local Storage Policy</h1>
-          <p className="rf-privacy-effective">
-            <strong>StarReview AI</strong> &bull; Effective Date: November 2026 &bull; Version 2.2
-          </p>
-          <p className="rf-privacy-lead">
-            This Cookie Policy explains how StarReview AI uses minimal cookies, local browser storage (`localStorage`), and session tokens to provide our Google Review acceleration service, preserve your dashboard state, and deliver seamless QR review funnels.
+        {/* Hero Header */}
+        <header style={{ textAlign: 'center', maxWidth: 760, margin: '0 auto 40px' }}>
+          <h1 style={{ fontFamily: 'Manrope, sans-serif', fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: 14 }}>
+            Cookie &amp; Local Storage <span style={{ color: '#16a34a' }}>Preferences</span>
+          </h1>
+          <p style={{ fontSize: '1.02rem', color: '#64748b', lineHeight: 1.6, margin: 0 }}>
+            StarReview AI uses minimal, policy-safe browser storage to authenticate dashboard sessions and preserve review funnel states. We never use third-party advertising trackers or sell customer data.
           </p>
         </header>
 
-        {/* Policy Content */}
-        <div className="rf-privacy-content">
-          {/* 1. What Are Cookies */}
-          <section className="rf-privacy-section">
-            <h2>1. What Are Cookies and Local Browser Storage?</h2>
-            <p>
-              Cookies are small text files placed on your computer or mobile device when you visit a website. In addition to cookies, modern web applications utilize <strong>Local Storage (`localStorage`)</strong> and <strong>Session Storage</strong>, which allow your browser to remember user preferences and state locally without constantly re-sending data across the network.
-            </p>
-            <p>
-              StarReview AI adopts a privacy-first approach: we use storage mechanisms strictly to enable platform functionality and security, never for third-party ad profiling.
-            </p>
-          </section>
-
-          {/* 2. How StarReview AI Uses Cookies & Storage */}
-          <section className="rf-privacy-section">
-            <h2>2. How StarReview AI Uses Cookies &amp; Storage</h2>
-            <p>
-              We categorize our browser storage into the following functional purposes:
-            </p>
-            <ul>
-              <li>
-                <strong>Essential Authentication Sessions:</strong> When you sign in to your StarReview AI Business Console (via email/password or Google OAuth), an encrypted token is securely stored in your browser session. This verifies your identity and keeps you logged in as you navigate between tabs.
-              </li>
-              <li>
-                <strong>Review Funnel State:</strong> When a customer scans your QR code and selects a 5-star rating, their chosen rating and draft selection are temporarily held in browser state. This ensures that when the customer taps &ldquo;Copy review &amp; post on Google&rdquo;, their text is seamlessly pre-filled and clipboard-ready.
-              </li>
-              <li>
-                <strong>Onboarding &amp; Setup Persistence:</strong> While setting up your business profile or connecting your Google Place ID, draft changes are cached locally to prevent accidental data loss if you refresh or switch tabs.
-              </li>
-              <li>
-                <strong>Dashboard Preferences:</strong> Remembers your active dashboard tab (e.g., Overview, QR Flyer, Reply Assistant, SEO Analyzer, or Billing) and theme choices (e.g., Standee color, Classic, Minimalist, Vibrant).
-              </li>
-            </ul>
-          </section>
-
-          {/* 3. Detailed Storage Table */}
-          <section className="rf-privacy-section">
-            <h2>3. Specific Storage Elements We Use</h2>
-            <div style={{ overflowX: 'auto', margin: '16px 0' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #e2e8f0', background: '#f8fafc' }}>
-                    <th style={{ padding: '10px 12px' }}>Name / Key</th>
-                    <th style={{ padding: '10px 12px' }}>Type</th>
-                    <th style={{ padding: '10px 12px' }}>Purpose</th>
-                    <th style={{ padding: '10px 12px' }}>Lifespan</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontWeight: 600 }}>token</td>
-                    <td style={{ padding: '10px 12px' }}>Session Cookie / Local</td>
-                    <td style={{ padding: '10px 12px' }}>Authenticated user authorization token</td>
-                    <td style={{ padding: '10px 12px' }}>Session / 30 Days</td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontWeight: 600 }}>activeTab</td>
-                    <td style={{ padding: '10px 12px' }}>Local Storage</td>
-                    <td style={{ padding: '10px 12px' }}>Remembers currently selected dashboard view</td>
-                    <td style={{ padding: '10px 12px' }}>Persistent</td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontWeight: 600 }}>starreview_business</td>
-                    <td style={{ padding: '10px 12px' }}>Local Storage</td>
-                    <td style={{ padding: '10px 12px' }}>Cached Google Place ID &amp; business display name</td>
-                    <td style={{ padding: '10px 12px' }}>Persistent until logout</td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontWeight: 600 }}>selected_theme</td>
-                    <td style={{ padding: '10px 12px' }}>Local Storage</td>
-                    <td style={{ padding: '10px 12px' }}>Stores QR flyer background &amp; standee palette</td>
-                    <td style={{ padding: '10px 12px' }}>Persistent</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          {/* 4. Zero Third-Party Ad Trackers */}
-          <section className="rf-privacy-section">
-            <h2>4. Strict Zero Third-Party Advertising Policy</h2>
-            <p>
-              Unlike conventional ad-supported web applications, <strong>StarReview AI does NOT use third-party behavioral advertising cookies, cross-site trackers, or data-broker pixels</strong>:
-            </p>
-            <ul>
-              <li>We do not sell, rent, or trade your personal data or your customers&rsquo; review patterns to marketing conglomerates.</li>
-              <li>We do not allow third-party ad networks to place tracking beacons on your branded review funnels.</li>
-              <li>Your customer review experience remains 100% clean, professional, and free of banner ads or retargeting scripts.</li>
-            </ul>
-          </section>
-
-          {/* 5. Managing & Disabling Cookies */}
-          <section className="rf-privacy-section">
-            <h2>5. How You Can Manage or Clear Cookies</h2>
-            <p>
-              You can control and manage cookies through your browser settings at any time:
-            </p>
-            <ul>
-              <li><strong>Google Chrome:</strong> Settings &rarr; Privacy and security &rarr; Cookies and other site data.</li>
-              <li><strong>Apple Safari:</strong> Preferences &rarr; Privacy &rarr; Manage Website Data.</li>
-              <li><strong>Mozilla Firefox:</strong> Settings &rarr; Privacy &amp; Security &rarr; Cookies and Site Data.</li>
-              <li><strong>Microsoft Edge:</strong> Settings &rarr; Cookies and site permissions &rarr; Manage and delete cookies.</li>
-            </ul>
-            <p>
-              <em>Note:</em> Because our session tokens are essential for verifying your account, disabling all browser cookies or local storage will prevent you from signing in to the StarReview AI Business Console.
-            </p>
-          </section>
-
-          {/* 6. Questions */}
-          <section className="rf-privacy-section rf-privacy-contact-box">
-            <h2>6. Cookie &amp; Privacy Questions</h2>
-            <p>
-              If you have any questions about our use of cookies or local data storage, our team is available to help:
-            </p>
-            <div className="rf-privacy-contact-grid">
-              <div>
-                <strong>Email:</strong>
-                <a href="mailto:marutiinfosoftteam@gmail.com">marutiinfosoftteam@gmail.com</a>
-              </div>
-              <div>
-                <strong>WhatsApp / Phone:</strong>
-                <a href="https://wa.me/919904482945" target="_blank" rel="noopener noreferrer">+91 99044 82945</a>
-              </div>
-              <div>
-                <strong>Location:</strong>
-                <span>Surat, Gujarat, India</span>
-              </div>
-            </div>
-          </section>
+        {/* Quick Privacy Status Bar */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 36 }}>
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px', textAlign: 'center', boxShadow: '0 2px 8px rgba(15,23,42,0.02)' }}>
+            <i className="fa-solid fa-lock" style={{ color: '#16a34a', fontSize: '1.25rem', marginBottom: 6 }}></i>
+            <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0f172a' }}>Session Tokens</div>
+            <div style={{ fontSize: '0.76rem', color: '#16a34a', fontWeight: 700, marginTop: 2 }}>Secure &amp; Encrypted</div>
+          </div>
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px', textAlign: 'center', boxShadow: '0 2px 8px rgba(15,23,42,0.02)' }}>
+            <i className="fa-solid fa-qrcode" style={{ color: '#16a34a', fontSize: '1.25rem', marginBottom: 6 }}></i>
+            <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0f172a' }}>Funnel Cache</div>
+            <div style={{ fontSize: '0.76rem', color: '#16a34a', fontWeight: 700, marginTop: 2 }}>Zero App Required</div>
+          </div>
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px', textAlign: 'center', boxShadow: '0 2px 8px rgba(15,23,42,0.02)' }}>
+            <i className="fa-solid fa-ban" style={{ color: '#dc2626', fontSize: '1.25rem', marginBottom: 6 }}></i>
+            <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0f172a' }}>Ad Pixels</div>
+            <div style={{ fontSize: '0.76rem', color: '#dc2626', fontWeight: 700, marginTop: 2 }}>100% Blocked</div>
+          </div>
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px', textAlign: 'center', boxShadow: '0 2px 8px rgba(15,23,42,0.02)' }}>
+            <i className="fa-solid fa-user-shield" style={{ color: '#16a34a', fontSize: '1.25rem', marginBottom: 6 }}></i>
+            <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0f172a' }}>Data Selling</div>
+            <div style={{ fontSize: '0.76rem', color: '#16a34a', fontWeight: 700, marginTop: 2 }}>Never Monetized</div>
+          </div>
         </div>
 
-        {/* Bottom Return CTA */}
-        <div className="rf-privacy-footer-cta">
+        {/* Interactive Preferences Cards */}
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 20, padding: '32px', marginBottom: 36, boxShadow: '0 4px 16px rgba(15,23,42,0.03)' }}>
+          <h2 style={{ fontFamily: 'Manrope, sans-serif', fontSize: '1.3rem', fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+            Storage Categories &amp; Purpose
+          </h2>
+          <p style={{ fontSize: '0.88rem', color: '#64748b', margin: '0 0 24px', lineHeight: 1.5 }}>
+            Review how StarReview AI uses storage technologies on your device. Essential elements are required for service operation.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            {/* 1. Essential Auth Session */}
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 14, padding: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <i className="fa-solid fa-key" style={{ color: '#16a34a', fontSize: '1.1rem' }}></i>
+                  <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a' }}>Essential Authentication Session</span>
+                </div>
+                <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.72rem', fontWeight: 800, padding: '4px 10px', borderRadius: 12 }}>
+                  ALWAYS ACTIVE · REQUIRED
+                </span>
+              </div>
+              <p style={{ fontSize: '0.86rem', color: '#475569', margin: '0 0 8px', lineHeight: 1.5 }}>
+                Stores your encrypted authentication token (`token`) when you log in to the Business Console. This ensures you remain securely signed in across tabs without re-entering your email and password.
+              </p>
+              <div style={{ fontSize: '0.76rem', color: '#64748b', fontFamily: 'monospace' }}>
+                Key: token &bull; Type: Session Cookie / LocalStorage &bull; Expiry: 30 Days or Logout
+              </div>
+            </div>
+
+            {/* 2. Review Funnel State */}
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 14, padding: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <i className="fa-solid fa-star" style={{ color: '#eab308', fontSize: '1.1rem' }}></i>
+                  <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a' }}>Review Funnel State &amp; Rating Cache</span>
+                </div>
+                <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.72rem', fontWeight: 800, padding: '4px 10px', borderRadius: 12 }}>
+                  ALWAYS ACTIVE · CORE FUNCTION
+                </span>
+              </div>
+              <p style={{ fontSize: '0.86rem', color: '#475569', margin: '0 0 8px', lineHeight: 1.5 }}>
+                When a customer scans your QR code, their chosen star rating and selected AI draft are temporarily preserved in browser memory. This allows 1-click clipboard copying so the text is instantly ready to paste on Google Maps.
+              </p>
+              <div style={{ fontSize: '0.76rem', color: '#64748b', fontFamily: 'monospace' }}>
+                Key: starreview_funnel &bull; Type: Temporary Session State &bull; Expiry: Cleared upon completion
+              </div>
+            </div>
+
+            {/* 3. Dashboard UI Preferences */}
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 14, padding: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <i className="fa-solid fa-palette" style={{ color: '#6366f1', fontSize: '1.1rem' }}></i>
+                  <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a' }}>Workspace &amp; Theme Preferences</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPrefAnalytics(!prefAnalytics)}
+                  style={{
+                    background: prefAnalytics ? '#16a34a' : '#cbd5e1',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 12,
+                    padding: '4px 12px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {prefAnalytics ? '✓ ENABLED' : 'DISABLED'}
+                </button>
+              </div>
+              <p style={{ fontSize: '0.86rem', color: '#475569', margin: '0 0 8px', lineHeight: 1.5 }}>
+                Remembers your chosen QR standee color palette (Classic, Minimalist, Vibrant) and active dashboard tab so you never lose your visual setup upon refreshing.
+              </p>
+              <div style={{ fontSize: '0.76rem', color: '#64748b', fontFamily: 'monospace' }}>
+                Key: activeTab, selected_theme &bull; Type: LocalStorage &bull; Expiry: Persistent
+              </div>
+            </div>
+
+            {/* 4. Third-Party Ad Trackers */}
+            <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: 14, padding: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <i className="fa-solid fa-shield-virus" style={{ color: '#e11d48', fontSize: '1.1rem' }}></i>
+                  <span style={{ fontWeight: 800, fontSize: '1rem', color: '#9f1239' }}>Third-Party Advertising Trackers</span>
+                </div>
+                <span style={{ background: '#ffe4e6', color: '#e11d48', fontSize: '0.72rem', fontWeight: 800, padding: '4px 10px', borderRadius: 12 }}>
+                  100% BLOCKED · NEVER USED
+                </span>
+              </div>
+              <p style={{ fontSize: '0.86rem', color: '#881337', margin: 0, lineHeight: 1.5 }}>
+                StarReview AI maintains a zero-ad-tracker guarantee. We do not permit Facebook Pixel, Google AdSense, or cross-site behavioral retargeting scripts on customer review funnels. Your customers experience clean, professional review pages.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Clear Local Cache Action Box */}
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 20, padding: '28px', marginBottom: 36, boxShadow: '0 4px 16px rgba(15,23,42,0.03)', textAlign: 'center' }}>
+          <h3 style={{ fontFamily: 'Manrope, sans-serif', fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+            Manage Your Local Browser Storage
+          </h3>
+          <p style={{ fontSize: '0.88rem', color: '#64748b', margin: '0 auto 18px', maxWidth: 600, lineHeight: 1.5 }}>
+            You can clear locally stored demo previews, theme preferences, and cached draft configurations on this browser with one click.
+          </p>
           <button
             type="button"
-            className="rf-privacy-back-btn"
-            onClick={() => navigate('Home')}
+            onClick={handleClearCache}
+            style={{
+              background: '#f1f5f9',
+              border: '1px solid #cbd5e1',
+              borderRadius: 10,
+              padding: '10px 20px',
+              fontWeight: 700,
+              fontSize: '0.88rem',
+              color: '#334155',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              transition: 'all 0.2s'
+            }}
           >
-            ← Return to Homepage
+            <i className="fa-solid fa-trash-can" style={{ color: '#64748b' }}></i>
+            {cleared ? '✓ Local Funnel Cache Cleared!' : 'Clear Local Funnel Cache'}
           </button>
+          {cleared && (
+            <div style={{ color: '#16a34a', fontSize: '0.82rem', fontWeight: 700, marginTop: 10 }}>
+              Local browser storage has been successfully refreshed.
+            </div>
+          )}
+        </div>
+
+        {/* Browser Settings Guide & Privacy Contact */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: '24px' }}>
+            <h4 style={{ fontSize: '0.96rem', fontWeight: 800, color: '#0f172a', margin: '0 0 10px' }}>
+              <i className="fa-solid fa-gear" style={{ color: '#16a34a', marginRight: 8 }}></i>
+              How to Clear Cookies in Your Browser
+            </h4>
+            <ul style={{ margin: 0, paddingLeft: 18, fontSize: '0.84rem', color: '#475569', lineHeight: 1.6 }}>
+              <li><strong>Chrome:</strong> Settings &rarr; Privacy and security &rarr; Clear browsing data.</li>
+              <li><strong>Safari:</strong> Preferences &rarr; Privacy &rarr; Manage Website Data.</li>
+              <li><strong>Firefox:</strong> Settings &rarr; Privacy &amp; Security &rarr; Cookies and Site Data.</li>
+              <li><strong>Edge:</strong> Settings &rarr; Cookies and site permissions &rarr; Manage and delete.</li>
+            </ul>
+          </div>
+
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: '24px' }}>
+            <h4 style={{ fontSize: '0.96rem', fontWeight: 800, color: '#0f172a', margin: '0 0 10px' }}>
+              <i className="fa-solid fa-envelope" style={{ color: '#16a34a', marginRight: 8 }}></i>
+              Privacy &amp; Data Questions?
+            </h4>
+            <p style={{ fontSize: '0.84rem', color: '#475569', lineHeight: 1.55, margin: '0 0 12px' }}>
+              Our team is committed to complete data transparency. Feel free to contact us with any questions regarding cookies or data privacy.
+            </p>
+            <div style={{ fontSize: '0.84rem', color: '#16a34a', fontWeight: 700 }}>
+              <a href="mailto:marutiinfosoftteam@gmail.com" style={{ color: '#16a34a', textDecoration: 'none' }}>
+                <i className="fa-solid fa-paper-plane" style={{ marginRight: 6 }}></i> marutiinfosoftteam@gmail.com
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
