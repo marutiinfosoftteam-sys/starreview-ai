@@ -5,6 +5,9 @@ import BusinessConsole from './BusinessConsole.jsx';
 import BusinessOnboarding from './BusinessOnboarding.jsx';
 import AboutPage from './AboutPage.jsx';
 import PrivacyPolicyPage from './PrivacyPolicyPage.jsx';
+import TermsOfServicePage from './TermsOfServicePage.jsx';
+import CookiePolicyPage from './CookiePolicyPage.jsx';
+import PlatformFeaturesPage from './PlatformFeaturesPage.jsx';
 import DemoVideo from './DemoVideo.jsx';
 import { COMPANY } from './company.js';
 import { isFirebaseConfigured, loginWithGoogle } from './firebase.js';
@@ -2113,25 +2116,7 @@ export default function App() {
           FEATURES PAGE
           ==================================================================== */}
       {page === 'Features' && (
-        <PageShell title="Tools to build trust, thoughtfully." subtitle="A connected toolkit for feedback collection, AI-assisted writing, and reputation insights.">
-          <div className="feature-grid">
-            {features.map(f => (
-              <article className="feature-card" key={f[1]}>
-                <div className="feature-icon"><i className={f[0]}></i></div>
-                <h3>{f[1]}</h3>
-                <p>{f[2]}</p>
-                <a
-                  className="learn-link"
-                  href={slugMap[toolTarget[f[1]] || 'Dashboard'] || '/dashboard'}
-                  onClick={(e) => handleNavClick(e, toolTarget[f[1]] || 'Dashboard')}
-                >
-                  Open tool <i className="fa-solid fa-arrow-right" style={{ fontSize: 11, marginLeft: 4 }}></i>
-                </a>
-              </article>
-            ))}
-          </div>
-          <div className="notice">Note: AI drafts in languages other than English need an AI key on the server. Replies are generated for you to copy and post. Automatic publishing to Google needs approved Google Business Profile API access and is not included.</div>
-        </PageShell>
+        <PlatformFeaturesPage navigate={navigate} user={user} />
       )}
 
       {/* ====================================================================
@@ -3632,9 +3617,62 @@ export default function App() {
       )}
 
       {page === 'SEO analyzer' && (
-        <PageShell title="Profile health and SEO analyzer" subtitle="Run a 20-point check of your Google Business Profile and compare yourself with local competitors.">
-          <SeoAnalyzer user={user} business={myBusiness} setBusiness={setMyBusiness} notify={notify} />
-        </PageShell>
+        <div className="rf-privacy-page-shell" style={{ background: '#f8fafc' }}>
+          <div className="wrap" style={{ maxWidth: 1160, margin: '0 auto', padding: '40px 20px 80px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+              <button
+                type="button"
+                className="rf-privacy-back-btn"
+                onClick={() => navigate('Home')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, color: '#334155', cursor: 'pointer' }}
+              >
+                <i className="fa-solid fa-arrow-left"></i> Back to Homepage
+              </button>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#fef3c7', color: '#92400e', padding: '6px 14px', borderRadius: 20, fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+                <i className="fa-solid fa-magnifying-glass-chart"></i> LOCAL SEO &amp; GOOGLE MAPS AUDIT
+              </span>
+            </div>
+
+            <header style={{ textAlign: 'center', maxWidth: 840, margin: '0 auto 36px' }}>
+              <h1 style={{ fontFamily: 'Manrope, sans-serif', fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: 14 }}>
+                Google Business Profile <span style={{ color: '#16a34a' }}>Health &amp; SEO Analyzer</span>
+              </h1>
+              <p style={{ fontSize: '1.05rem', color: '#64748b', lineHeight: 1.6, marginBottom: 0 }}>
+                Audit your Google Maps listing across 20 essential ranking factors. Check completeness, identify keyword gaps, and benchmark against local competitors to capture the top position in the Google 3-Pack.
+              </p>
+            </header>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 36 }}>
+              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
+                <div style={{ color: '#16a34a', fontWeight: 800, fontSize: '1.35rem' }}>46%</div>
+                <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, marginTop: 4 }}>Google Searches Have Local Intent</div>
+              </div>
+              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
+                <div style={{ color: '#16a34a', fontWeight: 800, fontSize: '1.35rem' }}>78%</div>
+                <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, marginTop: 4 }}>Local Searches Lead to Visits in 24h</div>
+              </div>
+              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
+                <div style={{ color: '#16a34a', fontWeight: 800, fontSize: '1.35rem' }}>Top 3</div>
+                <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, marginTop: 4 }}>Local 3-Pack Captures 70%+ Clicks</div>
+              </div>
+              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
+                <div style={{ color: '#16a34a', fontWeight: 800, fontSize: '1.35rem' }}>#1 Signal</div>
+                <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, marginTop: 4 }}>Review Velocity &amp; Keywords in Reviews</div>
+              </div>
+            </div>
+
+            <SeoAnalyzer user={user} business={myBusiness} setBusiness={setMyBusiness} notify={notify} />
+
+            <div style={{ marginTop: 36, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 16, padding: '24px 28px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, color: '#15803d', fontWeight: 800, fontSize: '1.02rem' }}>
+                <i className="fa-solid fa-lightbulb"></i> How StarReview AI Helps You Win Google Maps SEO
+              </div>
+              <p style={{ margin: 0, fontSize: '0.88rem', color: '#166534', lineHeight: 1.6 }}>
+                Google ranks local businesses based on three core pillars: <strong>Review Velocity</strong> (fresh reviews every week), <strong>Keywords in Review Text</strong> (e.g. your specific dishes, treatments, or repairs), and <strong>Owner Response Rate</strong> (replying to 90%+ reviews). StarReview AI solves all three seamlessly through automated AI review prompts and our 24/7 reply assistant.
+              </p>
+            </div>
+          </div>
+        </div>
       )}
 
       {page === 'Review' && (
@@ -3642,16 +3680,19 @@ export default function App() {
       )}
 
       {page === 'Contact' && (
-        <PageShell title="Let's talk about your feedback workflow." subtitle="Send us a message and we will get back to you soon.">
+        <PageShell title="Get in touch with the StarReview AI team." subtitle="Send us a message and our team will get back to you shortly, or chat with us directly on WhatsApp.">
           <form className="contact-card" onSubmit={async e => {
             e.preventDefault();
             const form = e.currentTarget;
-            const fields = form.querySelectorAll('input,select,textarea');
+            const name = form.querySelector('input[name="name"]')?.value || form.querySelectorAll('input')[0]?.value;
+            const email = form.querySelector('input[name="email"]')?.value || form.querySelectorAll('input')[1]?.value;
+            const topic = form.querySelector('select[name="topic"]')?.value || form.querySelector('select')?.value;
+            const message = form.querySelector('textarea[name="message"]')?.value || form.querySelector('textarea')?.value;
             const r = await api('POST', '/api/contact', {
-              name: fields[0].value,
-              email: fields[1].value,
-              topic: fields[2].value,
-              message: fields[3].value
+              name,
+              email,
+              topic,
+              message
             });
             if (r.ok) {
               notify(r.data.message || 'Inquiry submitted successfully! We will contact you shortly.');
@@ -3664,10 +3705,29 @@ export default function App() {
               <a href={`mailto:${COMPANY.email}`}><i className="fa-solid fa-envelope"></i> {COMPANY.email}</a>
               <a href={COMPANY.phoneHref}><i className="fa-solid fa-phone"></i> {COMPANY.phone}</a>
             </div>
-            <label>Your name<input required placeholder="Full name" /></label>
-            <label>Work email<input type="email" required placeholder="you@company.com" /></label>
-            <label>What can we help with?<select><option>Product demo</option><option>Agency / multiple locations</option><option>Technical integrations</option><option>General question</option></select></label>
-            <label>Message<textarea required rows="4" placeholder="Tell us about your business…" /></label>
+            <label>Your name<input name="name" required placeholder="Full name" /></label>
+            <label>Work email<input name="email" type="email" required placeholder="you@company.com" /></label>
+            <label>
+              What can we help with?
+              <div className="contact-select-wrap">
+                <select name="topic" required defaultValue="Product demo & Live walkthrough">
+                  <option value="Product demo & Live walkthrough">Product demo &amp; Live walkthrough</option>
+                  <option value="Google Review Standees & Physical Kits">Google Review Standees &amp; Physical Kits</option>
+                  <option value="Agency & Multi-Location Plans">Agency &amp; Multi-Location Plans (5+ locations)</option>
+                  <option value="AI Review Drafting & Keyword Setup">AI Review Drafting &amp; Keyword Setup</option>
+                  <option value="Private Feedback Shield & Resolution">Private Feedback Shield &amp; Complaint Filter</option>
+                  <option value="Google Business Profile & SEO Audit">Google Business Profile &amp; SEO Audit</option>
+                  <option value="Technical Integrations & API Access">Technical Integrations &amp; API Access</option>
+                  <option value="White-Label & Reseller Partnership">White-Label &amp; Reseller Partnership</option>
+                  <option value="Billing & Custom Enterprise Pricing">Billing &amp; Custom Enterprise Pricing</option>
+                  <option value="General Question or Consultation">General Question or Consultation</option>
+                </select>
+                <div className="contact-select-arrow">
+                  <i className="fa-solid fa-chevron-down"></i>
+                </div>
+              </div>
+            </label>
+            <label>Message<textarea name="message" required rows="4" placeholder="Tell us about your business or inquiry…" /></label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
               <button
                 type="submit"
@@ -3765,32 +3825,127 @@ export default function App() {
         />
       )}
 
-      {['Frequently asked questions', 'Multi-business plan', 'Privacy policy', 'Terms of service', 'Cookie policy'].includes(page) && (
-        <PageShell
-          title={({ 'Frequently asked questions': 'Frequently asked questions', 'Source code': 'Source code and commercial licensing', 'Multi-business plan': 'Manage multiple business locations', 'Apply for agency': 'Agency partnerships', 'Privacy policy': 'Privacy policy', 'Terms of service': 'Terms of service', 'Cookie policy': 'Cookie policy' })[page]}
-          subtitle={({ 'Frequently asked questions': 'Helpful answers about trials, plans, reviews, and payments.', 'Source code': 'Ask our team about source-code access and commercial licensing.', 'Multi-business plan': 'A scalable workflow for teams managing more than one location.', 'Apply for agency': 'Tell us about your agency and the businesses you support.', 'Privacy policy': 'We aim to collect only the information needed to provide the service.', 'Terms of service': 'Use the platform responsibly.', 'Cookie policy': 'Cookies and local storage may be used to support sign-in and core site functionality.' })[page]}
-        >
-          <div className="legal-content">
-            {page === 'Frequently asked questions' ? (
-              <>
-                {[
-                  ['How do I get started?', 'Simply sign in or message us on WhatsApp at +91 99044 82945 to activate your business review kit in minutes.'],
-                  ['How do paid plans work?', 'Starter and Pro are available monthly or yearly. Payments are processed through Razorpay when live keys are configured.'],
-                  ['Does StarReview AI post reviews automatically?', 'No. Customers remain in control and must review, edit, and post their own feedback.'],
-                  ['Can I manage multiple locations?', 'Contact us about the multi-business and agency options.'],
-                  ['How can I contact support?', 'Use the Contact Support link or the inquiry form on this website.']
-                ].map(([q, a]) => (
-                  <details key={q}><summary>{q}</summary><p>{a}</p></details>
-                ))}
-              </>
-            ) : (
-              <>
-                <p>StarReview AI helps local businesses create a clear customer feedback workflow, prepare editable review drafts, and understand feedback trends.</p>
-                <a href="/contact" className="btn btn-dark" onClick={(e) => handleNavClick(e, 'Contact')}>Contact support →</a>
-              </>
-            )}
+      {page === 'Terms of service' && (
+        <TermsOfServicePage navigate={navigate} />
+      )}
+
+      {page === 'Cookie policy' && (
+        <CookiePolicyPage navigate={navigate} />
+      )}
+
+      {page === 'Frequently asked questions' && (
+        <div className="rf-privacy-page-shell" style={{ background: '#f8fafc' }}>
+          <div className="wrap" style={{ maxWidth: 880, margin: '0 auto', padding: '40px 20px 80px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+              <button
+                type="button"
+                className="rf-privacy-back-btn"
+                onClick={() => navigate('Home')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, color: '#334155', cursor: 'pointer' }}
+              >
+                <i className="fa-solid fa-arrow-left"></i> Back to Homepage
+              </button>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#dcfce7', color: '#166534', padding: '6px 14px', borderRadius: 20, fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+                <i className="fa-solid fa-circle-question"></i> FREQUENTLY ASKED QUESTIONS
+              </span>
+            </div>
+
+            <header style={{ textAlign: 'center', maxWidth: 760, margin: '0 auto 40px' }}>
+              <h1 style={{ fontFamily: 'Manrope, sans-serif', fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: 14 }}>
+                Frequently Asked <span style={{ color: '#16a34a' }}>Questions</span>
+              </h1>
+              <p style={{ fontSize: '1.02rem', color: '#64748b', lineHeight: 1.6, margin: 0 }}>
+                Everything you need to know about StarReview AI, the Google Magic Review QR funnel, AI drafting, standees, and Google policy compliance.
+              </p>
+            </header>
+
+            <div className="legal-content" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: '32px', boxShadow: '0 4px 16px rgba(15, 23, 42, 0.04)' }}>
+              {[
+                ['How does the StarReview AI Google Review QR work?', 'Customers scan your branded QR code with their regular smartphone camera (no special app required). They tap a star rating, choose from 3 authentic, AI-generated review suggestions tailored to your services, and tap once to copy and post directly on Google Maps in just 10 seconds.'],
+                ['Does StarReview AI post reviews automatically to Google?', 'No. In strict compliance with Google policies and consumer protection laws, customers remain in 100% voluntary control. AI drafts are non-binding suggestions to eliminate writer’s block; the customer reviews, edits, and submits the feedback using their own personal Google Account.'],
+                ['How does the private negative feedback shield protect my business?', 'When a customer taps 1, 2, or 3 stars, our intelligent funnel offers them a private resolution form instead of venting publicly on Google. The message reaches your management inbox and WhatsApp privately, giving you the immediate opportunity to resolve complaints and protect your public rating.'],
+                ['Will StarReview AI help my Google Maps ranking?', 'Yes. Google\'s local ranking algorithm heavily factors in review velocity (frequent fresh reviews), high star ratings, service keywords inside reviews, and owner response rates. StarReview AI directly boosts all of these factors.'],
+                ['What printable standees and materials do I receive?', 'You can download print-ready high-resolution A6 counter standees, acrylic table tents, table stickers, and billing receipt inserts customized with your business logo, colors, and direct review link directly from the dashboard.'],
+                ['How do the 3-day free trial and paid plans work?', 'You can start with a 3-day full-feature free trial with zero credit card required. Afterwards, you can upgrade to Starter or Pro plans billed monthly or yearly via Razorpay, with the freedom to cancel anytime.'],
+                ['Can I manage multiple locations or client accounts?', 'Yes! Our Multi-Business and Agency plans provide a centralized console to manage 5 to 500+ locations, individual QR kits per branch, and Bring-Your-Own-API keys (Gemini, OpenAI, Claude).'],
+                ['How can I reach the StarReview AI team?', 'You can message us directly on WhatsApp at +91 99044 82945 or email us at marutiinfosoftteam@gmail.com. Our team typically replies within minutes during business hours.']
+              ].map(([q, a]) => (
+                <details key={q} style={{ borderBottom: '1px solid #f1f5f9', padding: '16px 0' }}>
+                  <summary style={{ cursor: 'pointer', color: '#0f172a', fontWeight: 700, fontSize: '0.98rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>{q}</span>
+                    <i className="fa-solid fa-chevron-down" style={{ fontSize: 12, color: '#16a34a' }}></i>
+                  </summary>
+                  <p style={{ margin: '12px 0 0', color: '#475569', fontSize: '0.9rem', lineHeight: 1.65 }}>{a}</p>
+                </details>
+              ))}
+            </div>
           </div>
-        </PageShell>
+        </div>
+      )}
+
+      {page === 'Multi-business plan' && (
+        <div className="rf-privacy-page-shell" style={{ background: '#f8fafc' }}>
+          <div className="wrap" style={{ maxWidth: 960, margin: '0 auto', padding: '40px 20px 80px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+              <button
+                type="button"
+                className="rf-privacy-back-btn"
+                onClick={() => navigate('Home')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, color: '#334155', cursor: 'pointer' }}
+              >
+                <i className="fa-solid fa-arrow-left"></i> Back to Homepage
+              </button>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#dbeafe', color: '#1e40af', padding: '6px 14px', borderRadius: 20, fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+                <i className="fa-solid fa-layer-group"></i> MULTI-LOCATION &amp; AGENCY SOLUTIONS
+              </span>
+            </div>
+
+            <header style={{ textAlign: 'center', maxWidth: 800, margin: '0 auto 40px' }}>
+              <h1 style={{ fontFamily: 'Manrope, sans-serif', fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: 14 }}>
+                Scale Reviews Across <span style={{ color: '#16a34a' }}>Multiple Locations</span>
+              </h1>
+              <p style={{ fontSize: '1.02rem', color: '#64748b', lineHeight: 1.6, margin: 0 }}>
+                A centralized reputation workflow built for multi-branch chains, franchise networks, healthcare clinics, and digital marketing agencies.
+              </p>
+            </header>
+
+            <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: '32px', boxShadow: '0 4px 16px rgba(15, 23, 42, 0.04)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24, marginBottom: 32 }}>
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '20px' }}>
+                  <i className="fa-solid fa-building" style={{ color: '#16a34a', fontSize: '1.5rem', marginBottom: 10 }}></i>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', margin: '0 0 6px' }}>Centralized Dashboard</h3>
+                  <p style={{ fontSize: '0.86rem', color: '#64748b', margin: 0, lineHeight: 1.55 }}>Switch seamlessly between 5 to 500+ business branches with one master administrator login.</p>
+                </div>
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '20px' }}>
+                  <i className="fa-solid fa-key" style={{ color: '#16a34a', fontSize: '1.5rem', marginBottom: 10 }}></i>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', margin: '0 0 6px' }}>Bring Your Own AI API</h3>
+                  <p style={{ fontSize: '0.86rem', color: '#64748b', margin: 0, lineHeight: 1.55 }}>Plug in your own Gemini, OpenAI, or Claude API key for high-volume review drafting at direct API cost.</p>
+                </div>
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '20px' }}>
+                  <i className="fa-solid fa-qrcode" style={{ color: '#16a34a', fontSize: '1.5rem', marginBottom: 10 }}></i>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', margin: '0 0 6px' }}>Branch-Specific Kits</h3>
+                  <p style={{ fontSize: '0.86rem', color: '#64748b', margin: 0, lineHeight: 1.55 }}>Unique Place IDs, custom staff tags, and distinct standees for every storefront location.</p>
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'center', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '24px' }}>
+                <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#15803d', margin: '0 0 8px' }}>Need a Tailored Capacity Plan?</h4>
+                <p style={{ fontSize: '0.9rem', color: '#166534', margin: '0 0 18px', maxWidth: 600, marginInline: 'auto' }}>
+                  We offer customized pricing and white-label packages based on your exact number of locations and client requirements.
+                </p>
+                <a
+                  href="https://wa.me/919904482945?text=Hello%20StarReview%20AI%2C%20I%20am%20interested%20in%20a%20Multi-Business%20%2F%20Agency%20plan."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-dark"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#16a34a', border: 'none', padding: '12px 24px', fontWeight: 700, borderRadius: 10, textDecoration: 'none' }}
+                >
+                  <i className="fa-brands fa-whatsapp"></i> Chat on WhatsApp for Custom Agency Pricing
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {toast && <div className="toast">✓ {toast}</div>}
@@ -4256,7 +4411,7 @@ function Footer({ navigate }) {
       items: [
         ['Platform Features', 'Features'],
         ['AI vs Normal QR', 'AI vs QR'],
-        ['AI SEO Analyzer', 'Features'],
+        ['AI SEO Analyzer', 'SEO analyzer'],
         ['How It Works', 'How it works'],
         ['Growing Businesses', 'Features']
       ]
@@ -4264,7 +4419,7 @@ function Footer({ navigate }) {
     {
       title: 'Plans & Scale',
       items: [
-          ['Pricing & Plans', 'Pricing'],
+        ['Pricing & Plans', 'Pricing'],
         ['Apply for Agency', 'Apply for agency'],
         ['Sign In to Account', 'Account'],
         ['Payment QR Demo', 'Payment QR Demo']
@@ -4274,7 +4429,6 @@ function Footer({ navigate }) {
       title: 'Company',
       items: [
         ['About Us', 'About us'],
-        ['Contact Support', 'Contact'],
         ['Frequently Asked Questions', 'Frequently asked questions'],
         ['Smart QR Funnels', 'QR flyer']
       ]

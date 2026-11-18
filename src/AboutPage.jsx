@@ -29,7 +29,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify }) {
         <div className="wrap">
           <div className="rf-about-badge">
             <span className="rf-about-badge-star">☆</span>
-            <span>About Review Flow AI</span>
+            <span>About StarReview AI</span>
           </div>
 
           <h1 className="rf-about-main-title">
@@ -39,7 +39,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify }) {
           </h1>
 
           <p className="rf-about-main-sub">
-            Review Flow AI was founded to solve a massive challenge faced by local storefronts, restaurants, clinics, and service providers: turning everyday happy visitors into published 5-star Google reviews consistently.
+            StarReview AI was founded to solve a massive challenge faced by local storefronts, restaurants, clinics, and service providers: turning everyday happy visitors into published 5-star Google reviews consistently.
           </p>
         </div>
       </section>
@@ -60,7 +60,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify }) {
             </p>
 
             <p className="rf-about-text">
-              Meanwhile, normal static QR codes simply redirect customers to an empty text box. That's why we created <strong>Review Flow AI</strong> and the <strong>Google Magic Review QR</strong>: a smart, interactive review funnel that crafts authentic, human-like drafts in 24+ languages, weaves in high-ranking SEO keywords, and guides customers to post in <strong>just 10 seconds</strong>.
+              Meanwhile, normal static QR codes simply redirect customers to an empty text box. That's why we created <strong>StarReview AI</strong> and the <strong>Google Magic Review QR</strong>: a smart, interactive review funnel that crafts authentic, human-like drafts in 24+ languages, weaves in high-ranking SEO keywords, and guides customers to post in <strong>just 10 seconds</strong>.
             </p>
 
             <p className="rf-about-text">
@@ -86,7 +86,7 @@ export default function AboutPage({ user, navigate, setRegMode, notify }) {
               <h3 className="rf-about-ethics-title">Our Mission &amp; Ethics</h3>
 
               <p className="rf-about-ethics-p">
-                At <strong>Review Flow AI</strong>, we believe genuine customer reviews should be earned effortlessly through exceptional real-world customer service. We never generate fake reviews or automated bots.
+                At <strong>StarReview AI</strong>, we believe genuine customer reviews should be earned effortlessly through exceptional real-world customer service. We never generate fake reviews or automated bots.
               </p>
 
               <p className="rf-about-ethics-p">
@@ -103,12 +103,12 @@ export default function AboutPage({ user, navigate, setRegMode, notify }) {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          WHY BUSINESSES TRUST REVIEW FLOW AI (3 CARDS)
+          WHY BUSINESSES TRUST STARREVIEW AI (3 CARDS)
           ═══════════════════════════════════════════════════════════════ */}
       <section className="rf-about-trust-sec">
         <div className="wrap">
           <div className="rf-about-center-header">
-            <h2 className="rf-about-sec-heading-centered">Why Businesses Trust Review Flow AI</h2>
+            <h2 className="rf-about-sec-heading-centered">Why Businesses Trust StarReview AI</h2>
             <p className="rf-about-sec-sub-centered">
               Designed from the ground up to give local brands the unfair local SEO advantage on Google Maps.
             </p>
