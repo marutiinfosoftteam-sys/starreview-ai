@@ -1,7 +1,11 @@
 // Real website SEO check: the site is fetched live and every result comes from
 // what the page actually returns. A website that does not exist is reported as such.
 import dns from 'node:dns/promises';
+import { lookup as dnsLookupCb } from 'node:dns';
 import net from 'node:net';
+import http from 'node:http';
+import https from 'node:https';
+import zlib from 'node:zlib';
 
 const UA = 'Mozilla/5.0 (compatible; StarReviewAI-SEO-Check/1.0; +https://starreview-ai-alpha.vercel.app)';
 const MAX_BYTES = 1_500_000;
@@ -24,6 +28,7 @@ export function toWebsiteUrl(input) {
   try {
     const u = new URL(s);
     if (!['http:', 'https:'].includes(u.protocol) || !u.hostname.includes('.')) return null;
+    if (u.port && !['80', '443'].includes(u.port)) return null; // only normal web ports
     return u;
   } catch {
     return null;
@@ -33,12 +38,14 @@ export function toWebsiteUrl(input) {
 const isPrivateIp = ip => {
   if (net.isIPv4(ip)) {
     const [a, b] = ip.split('.').map(Number);
+    const c = Number(ip.split('.')[2]);
     return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) ||
-      (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224;
+      (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224 ||
+      (a === 198 && (b === 18 || b === 19)) || (a === 192 && b === 0 && c === 0);
   }
   const v = ip.toLowerCase();
   if (v.startsWith('::ffff:')) return isPrivateIp(v.slice(7));
-  return v === '::1' || v === '::' || v.startsWith('fc') || v.startsWith('fd') || v.startsWith('fe80');
+  return v === '::1' || v === '::' || v.startsWith('fc') || v.startsWith('fd') || v.startsWith('fe80') || v.startsWith('64:ff9b');
 };
 
 // Only public internet hosts may be fetched (no localhost or internal network)
@@ -71,17 +78,61 @@ async function readLimited(res) {
   return Buffer.concat(chunks.map(c => Buffer.from(c))).toString('utf8');
 }
 
+// DNS lookup used by the actual connection: refuses private addresses, so a domain cannot pass the
+// first check with a public IP and then point the real connection at an internal one (DNS rebinding)
+function publicOnlyLookup(hostname, options, callback) {
+  dnsLookupCb(hostname, { ...options, all: true }, (err, addrs) => {
+    if (err) return callback(err);
+    if (!addrs.length || addrs.some(a => isPrivateIp(a.address))) return callback(new SiteCheckError('Please enter a public website address.'));
+    if (options && options.all) return callback(null, addrs);
+    return callback(null, addrs[0].address, addrs[0].family);
+  });
+}
+
+// Minimal fetch-like request over node:http(s) using publicOnlyLookup. Returns { status, ok, headers.get, body.getReader }
+function pinnedRequest(url, { method = 'GET', headers = {}, timeout = 10000 } = {}) {
+  return new Promise((resolve, reject) => {
+    const mod = url.protocol === 'https:' ? https : http;
+    const req = mod.request(url, { method, headers: { ...headers, 'Accept-Encoding': 'gzip, deflate, br' }, lookup: publicOnlyLookup, timeout }, res => {
+      const enc = String(res.headers['content-encoding'] || '').toLowerCase();
+      let stream = res;
+      if (enc === 'gzip' || enc === 'x-gzip') stream = res.pipe(zlib.createGunzip());
+      else if (enc === 'deflate') stream = res.pipe(zlib.createInflate());
+      else if (enc === 'br') stream = res.pipe(zlib.createBrotliDecompress());
+      stream.on('error', () => {});
+      const it = stream[Symbol.asyncIterator]();
+      resolve({
+        status: res.statusCode,
+        ok: res.statusCode >= 200 && res.statusCode < 300,
+        headers: { get: name => { const v = res.headers[String(name).toLowerCase()]; return Array.isArray(v) ? v.join(', ') : (v ?? null); } },
+        body: {
+          getReader: () => ({
+            read: () => it.next().then(r => ({ done: r.done, value: r.value })).catch(() => ({ done: true })),
+            cancel: () => { res.destroy(); }
+          }),
+          cancel: () => { res.destroy(); }
+        }
+      });
+    });
+    req.on('timeout', () => req.destroy(new SiteCheckError('This website took too long to respond.', 504)));
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 // Follows redirects by hand so every hop is checked for a public host
 async function safeFetch(startUrl, { method = 'GET', timeout = 10000 } = {}) {
   let url = new URL(startUrl);
   const hops = [];
   for (let i = 0; i < 6; i++) {
     await assertPublicHost(url.hostname);
-    const res = await fetch(url, {
+    if (!['http:', 'https:'].includes(url.protocol) || (url.port && !['80', '443'].includes(url.port))) {
+      throw new SiteCheckError('Please enter a public website address.');
+    }
+    const res = await pinnedRequest(url, {
       method,
-      redirect: 'manual',
       headers: { 'User-Agent': UA, Accept: 'text/html,application/xhtml+xml,*/*;q=0.8' },
-      signal: AbortSignal.timeout(timeout)
+      timeout
     });
     if (res.status >= 300 && res.status < 400 && res.headers.get('location')) {
       hops.push(url.toString());

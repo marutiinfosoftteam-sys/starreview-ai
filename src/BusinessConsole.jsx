@@ -263,40 +263,14 @@ export default function BusinessConsole({
     }
   });
   const [negTab, setNegTab] = useState('Active');
-  const [feedbackItems, setFeedbackItems] = useState(() => {
-    try {
-      const saved = localStorage.getItem('starreview_feedback_items');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {}
-    return [
-      {
-        id: 'fb-101',
-        customerName: 'Rahul Patel',
-        contact: '+91 99044 82945',
-        rating: 2,
-        message: 'The waiting time was about 30 minutes on Saturday evening. Please improve queue management.',
-        createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
-        status: 'active'
-      },
-      {
-        id: 'fb-102',
-        customerName: 'Priya Mehta',
-        contact: '+91 98765 43210',
-        rating: 1,
-        message: 'Need clearer parking instructions outside the premises. Got delayed looking for spot.',
-        createdAt: new Date(Date.now() - 3600000 * 22).toISOString(),
-        status: 'archived'
-      }
-    ];
-  });
-  const [addFeedbackModalOpen, setAddFeedbackModalOpen] = useState(false);
-  const [newFeedbackName, setNewFeedbackName] = useState('');
-  const [newFeedbackPhone, setNewFeedbackPhone] = useState('');
-  const [newFeedbackRating, setNewFeedbackRating] = useState(2);
-  const [newFeedbackMessage, setNewFeedbackMessage] = useState('');
+  // Negative reviews = 1–2 star private feedback sent from the review QR page, loaded from the server (newest first)
+  const [feedbackItems, setFeedbackItems] = useState([]);
+  const loadFeedback = async () => {
+    const r = await api('GET', '/api/business/feedback');
+    if (r.ok && Array.isArray(r.data?.feedback)) {
+      setFeedbackItems([...r.data.feedback].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+    }
+  };
   const [qrTheme, setQrTheme] = useState('Classic');
   const [qrDisplaySize, setQrDisplaySize] = useState('A6');
 
@@ -405,14 +379,13 @@ export default function BusinessConsole({
             setPlanCheckoutStep('checkout');
             const pParam = searchParams.get('plan') || '';
             const isMonthly = pParam.toLowerCase().includes('monthly');
-            const isAgency = pParam.toLowerCase().includes('agency') || pParam.toLowerCase().includes('multi');
             const isStarter = pParam.toLowerCase().includes('starter');
-            const tier = isAgency ? 'Agency' : (isStarter ? 'Starter' : 'Pro');
+            // Multi-Business is custom-priced over WhatsApp, so a checkout link for it opens the Pro plan
+            const tier = isStarter ? 'Starter' : 'Pro';
             const period = isMonthly ? 'Monthly' : 'Yearly';
-            const price = tier === 'Agency' ? 2999 : (period === 'Yearly' ? (tier === 'Starter' ? 999 : 2999) : (tier === 'Starter' ? 99 : 299));
+            const price = period === 'Yearly' ? (tier === 'Starter' ? 1999 : 2999) : (tier === 'Starter' ? 199 : 299);
             let displayName = `${tier} ${period} Plan`;
-            if (tier === 'Agency') displayName = '10 Locations Agency Plan';
-            else if (tier === 'Starter' && period === 'Yearly') displayName = 'Starter Yearly Plan';
+            if (tier === 'Starter' && period === 'Yearly') displayName = 'Starter Yearly Plan';
             else if (tier === 'Pro' && period === 'Yearly') displayName = 'Pro Yearly Plan';
             setCheckoutPlanData({
               name: displayName,
@@ -420,7 +393,7 @@ export default function BusinessConsole({
               period: period,
               price: price,
               originalPrice: price,
-              businessLimit: tier === 'Agency' ? 'Up to 10 Business Profiles' : '1 Single Business Profile',
+              businessLimit: '1 Single Business Profile',
               featuresCount: 13
             });
           } else {
@@ -511,6 +484,41 @@ export default function BusinessConsole({
 
   // Review Settings Form States
   const [profileSubTab, setProfileSubTab] = useState('Business Details');
+  // Customer Reviews (Review Settings): every review customers left through the QR page, newest first
+  const [customerReviews, setCustomerReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewFilter, setReviewFilter] = useState('all');
+  const [reviewSearch, setReviewSearch] = useState('');
+  const loadCustomerReviews = async () => {
+    setReviewsLoading(true);
+    const r = await api('GET', '/api/business/reviews');
+    setReviewsLoading(false);
+    if (r.ok && Array.isArray(r.data?.reviews)) {
+      setCustomerReviews([...r.data.reviews].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+    }
+  };
+  useEffect(() => {
+    if (profileSubTab === 'Customer Reviews') loadCustomerReviews();
+  }, [profileSubTab]);
+  const deleteCustomerReview = async (id) => {
+    if (!window.confirm('Delete this review from your records? This cannot be undone.')) return;
+    const r = await api('DELETE', `/api/business/reviews/${id}`);
+    if (!r.ok) return notify(r.data?.error || 'Could not delete the review.');
+    setCustomerReviews(list => list.filter(x => x.id !== id));
+    notify('Review removed from your records.');
+  };
+  const downloadReviewsCsv = (rows) => {
+    const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const lines = [['Date', 'Stars', 'Type', 'Review', 'Customer contact'].map(esc).join(',')]
+      .concat(rows.map(r => [new Date(r.createdAt).toLocaleString('en-IN'), r.rating, r.kind === 'google' ? 'Copied for Google' : 'Private feedback', r.text, r.contact || ''].map(esc).join(',')));
+    const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'customer-reviews.csv';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 300);
+  };
   const [bizFormName, setBizFormName] = useState(business?.name || '');
   const [bizFormAddress, setBizFormAddress] = useState(business?.city || '');
   const [bizFormCategory, setBizFormCategory] = useState(business?.category || '');
@@ -1034,11 +1042,9 @@ export default function BusinessConsole({
     setCouponCode('');
     setReferralCode('');
     setReferralVerified(false);
-    const p = price || (period === 'Yearly' ? (planTier === 'Starter' ? 999 : 2999) : (planTier === 'Starter' ? 99 : 299));
+    const p = price || (period === 'Yearly' ? (planTier === 'Starter' ? 1999 : 2999) : (planTier === 'Starter' ? 199 : 299));
     let displayName = `${planTier} ${period} Plan`;
-    if (planTier === 'Agency') {
-      displayName = '10 Locations Agency Plan';
-    } else if (planTier === 'Starter' && period === 'Yearly') {
+    if (planTier === 'Starter' && period === 'Yearly') {
       displayName = 'Starter Yearly Plan';
     } else if (planTier === 'Pro' && period === 'Yearly') {
       displayName = 'Pro Yearly Plan';
@@ -1049,7 +1055,7 @@ export default function BusinessConsole({
       period: period,
       price: p,
       originalPrice: p,
-      businessLimit: planTier === 'Agency' ? 'Up to 10 Business Profiles' : '1 Single Business Profile',
+      businessLimit: '1 Single Business Profile',
       featuresCount: 13
     });
   };
@@ -1115,52 +1121,21 @@ export default function BusinessConsole({
     );
   };
 
-  const handleResolveFeedback = (id) => {
-    const updated = feedbackItems.map(f => f.id === id ? { ...f, status: 'archived', resolvedAt: new Date().toISOString() } : f);
-    setFeedbackItems(updated);
-    try { localStorage.setItem('starreview_feedback_items', JSON.stringify(updated)); } catch {}
-    notify('✓ Marked as resolved and moved to Archived.');
+  const updateFeedbackStatus = async (id, status, message) => {
+    const r = await api('PATCH', `/api/business/feedback/${id}`, { status });
+    if (!r.ok) return notify(r.data?.error || 'Could not update the feedback.');
+    setFeedbackItems(items => items.map(f => f.id === id ? { ...f, status, resolvedAt: status === 'archived' ? new Date().toISOString() : null } : f));
+    notify(message);
   };
+  const handleResolveFeedback = (id) => updateFeedbackStatus(id, 'archived', '✓ Marked as resolved and moved to Archived.');
+  const handleRestoreFeedback = (id) => updateFeedbackStatus(id, 'active', '✓ Restored feedback back to Active list.');
 
-  const handleRestoreFeedback = (id) => {
-    const updated = feedbackItems.map(f => f.id === id ? { ...f, status: 'active', resolvedAt: null } : f);
-    setFeedbackItems(updated);
-    try { localStorage.setItem('starreview_feedback_items', JSON.stringify(updated)); } catch {}
-    notify('✓ Restored feedback back to Active list.');
-  };
-
-  const handleDeleteFeedback = (id) => {
-    const updated = feedbackItems.filter(f => f.id !== id);
-    setFeedbackItems(updated);
-    try { localStorage.setItem('starreview_feedback_items', JSON.stringify(updated)); } catch {}
+  const handleDeleteFeedback = async (id) => {
+    if (!window.confirm('Delete this feedback permanently?')) return;
+    const r = await api('DELETE', `/api/business/feedback/${id}`);
+    if (!r.ok) return notify(r.data?.error || 'Could not delete the feedback.');
+    setFeedbackItems(items => items.filter(f => f.id !== id));
     notify('Feedback entry removed.');
-  };
-
-  const handleAddFeedbackSubmit = (e) => {
-    if (e) e.preventDefault();
-    if (!newFeedbackMessage.trim()) {
-      notify('Please enter a feedback message or complaint.');
-      return;
-    }
-    const newEntry = {
-      id: `fb-${Date.now()}`,
-      customerName: newFeedbackName.trim() || 'Verified Customer',
-      contact: newFeedbackPhone.trim() || '+91 99044 82945',
-      rating: Number(newFeedbackRating) || 2,
-      message: newFeedbackMessage.trim(),
-      createdAt: new Date().toISOString(),
-      status: 'active'
-    };
-    const updated = [newEntry, ...feedbackItems];
-    setFeedbackItems(updated);
-    try { localStorage.setItem('starreview_feedback_items', JSON.stringify(updated)); } catch {}
-    setAddFeedbackModalOpen(false);
-    setNewFeedbackName('');
-    setNewFeedbackPhone('');
-    setNewFeedbackMessage('');
-    setNewFeedbackRating(2);
-    setNegTab('Active');
-    notify('✓ New customer feedback entry logged successfully!');
   };
 
   // Load user-specific analytics and business
@@ -1181,7 +1156,13 @@ export default function BusinessConsole({
 
   useEffect(() => {
     fetchDashboardData();
+    if (user) loadFeedback();
   }, [user?.id, business?.id]);
+
+  // Refresh negative reviews whenever the owner opens that tab
+  useEffect(() => {
+    if (user && activeTab === 'Negative Reviews') loadFeedback();
+  }, [activeTab]);
 
   // (Derived info hoisted to component top)
 
@@ -2697,7 +2678,7 @@ export default function BusinessConsole({
               </div>
             </div>
 
-            {/* Tab Filter: Active / Archived & Add Button */}
+            {/* Tab Filter: Active / Archived (newest first) */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: 10 }}>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
@@ -2718,26 +2699,6 @@ export default function BusinessConsole({
                 </button>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setAddFeedbackModalOpen(true)}
-                style={{
-                  background: '#16a34a',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: 8,
-                  padding: '0.55rem 1rem',
-                  fontSize: '0.82rem',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  boxShadow: '0 2px 6px rgba(22, 163, 74, 0.25)'
-                }}
-              >
-                <i className="fa-solid fa-plus"></i> Add Customer Feedback
-              </button>
             </div>
 
             {/* Feedback items or Empty State */}
@@ -2755,24 +2716,6 @@ export default function BusinessConsole({
                     : "Resolved complaints will be archived here for your records."
                   }
                 </p>
-                {negTab === 'Active' && (
-                  <button
-                    type="button"
-                    onClick={() => setAddFeedbackModalOpen(true)}
-                    style={{
-                      background: '#f0fdf4',
-                      color: '#16a34a',
-                      border: '1px solid #bbf7d0',
-                      borderRadius: 8,
-                      padding: '0.5rem 0.95rem',
-                      fontSize: '0.8rem',
-                      fontWeight: 800,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    + Add Test Feedback Entry
-                  </button>
-                )}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -2802,7 +2745,7 @@ export default function BusinessConsole({
                           {f.customerName || 'Customer'}
                         </strong>
                         <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
-                          {new Date(f.createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          {new Date(f.createdAt || Date.now()).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
                         </span>
                       </div>
                       <span
@@ -2825,18 +2768,34 @@ export default function BusinessConsole({
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 8, flexWrap: 'wrap', gap: 8 }}>
                       <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                        Phone / WhatsApp: <strong style={{ color: '#0f172a' }}>{f.contact || '+91 99044 82945'}</strong>
+                        Customer contact: <strong style={{ color: '#0f172a' }}>{f.contact || 'Not provided'}</strong>
                       </div>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <a
-                          href={`https://wa.me/${(f.contact || '919904482945').replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${f.customerName || 'Customer'}, thank you for sharing your feedback with ${bizName}. We are deeply committed to your satisfaction and would like to resolve this immediately.`)}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="bc-btn-fetch"
-                          style={{ background: '#25d366', color: '#ffffff', textDecoration: 'none', border: 'none', borderRadius: 6, padding: '0.45rem 0.85rem', fontSize: '0.78rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 5 }}
-                        >
-                          <i className="fa-brands fa-whatsapp"></i> WhatsApp Customer
-                        </a>
+                        {(() => {
+                          const digits = String(f.contact || '').replace(/\D/g, '');
+                          const waNumber = digits.length === 10 ? '91' + digits : digits;
+                          if (String(f.contact || '').includes('@')) {
+                            return (
+                              <a href={`mailto:${f.contact}?subject=${encodeURIComponent(`About your feedback for ${bizName}`)}`}
+                                className="bc-btn-fetch"
+                                style={{ background: '#2563eb', color: '#ffffff', textDecoration: 'none', border: 'none', borderRadius: 6, padding: '0.45rem 0.85rem', fontSize: '0.78rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                                <i className="fa-regular fa-envelope"></i> Email Customer
+                              </a>
+                            );
+                          }
+                          if (waNumber.length < 11) return null;
+                          return (
+                            <a
+                              href={`https://wa.me/${waNumber}?text=${encodeURIComponent(`Hello, thank you for sharing your feedback with ${bizName}. We are sorry about your experience and would like to make it right.`)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="bc-btn-fetch"
+                              style={{ background: '#25d366', color: '#ffffff', textDecoration: 'none', border: 'none', borderRadius: 6, padding: '0.45rem 0.85rem', fontSize: '0.78rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 5 }}
+                            >
+                              <i className="fa-brands fa-whatsapp"></i> WhatsApp Customer
+                            </a>
+                          );
+                        })()}
                         {f.status !== 'archived' ? (
                           <button
                             type="button"
@@ -2880,161 +2839,6 @@ export default function BusinessConsole({
               </div>
             )}
 
-            {/* Modal: Add Customer Feedback */}
-            {addFeedbackModalOpen && (
-              <div className="bc-webpress-overlay" onClick={() => setAddFeedbackModalOpen(false)}>
-                <div style={{ width: '100%', maxWidth: 480 }} onClick={e => e.stopPropagation()}>
-                  <div style={{ background: '#ffffff', borderRadius: 18, overflow: 'hidden', boxShadow: '0 25px 60px rgba(0,0,0,0.22)', animation: 'bcModalPop 0.2s ease-out' }}>
-                    <div style={{ padding: '1.1rem 1.4rem', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ width: 34, height: 34, borderRadius: 8, background: '#fef2f2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>
-                          <i className="fa-solid fa-triangle-exclamation"></i>
-                        </div>
-                        <div>
-                          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 900, color: '#0f172a' }}>Log Customer Feedback</h3>
-                          <p style={{ margin: 0, fontSize: '0.74rem', color: '#64748b' }}>Simulate or record private customer dissatisfaction</p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setAddFeedbackModalOpen(false)}
-                        style={{ background: '#e2e8f0', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', fontWeight: 800, color: '#475569' }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-
-                    <form onSubmit={handleAddFeedbackSubmit} style={{ padding: '1.25rem 1.4rem' }}>
-                      <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
-                          Customer Full Name *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={newFeedbackName}
-                          onChange={e => setNewFeedbackName(e.target.value)}
-                          placeholder="e.g. Ramesh Bhai"
-                          style={{
-                            width: '100%',
-                            border: '1px solid #cbd5e1',
-                            borderRadius: 8,
-                            padding: '0.65rem 0.85rem',
-                            fontSize: '0.85rem',
-                            boxSizing: 'border-box',
-                            outline: 'none'
-                          }}
-                        />
-                      </div>
-
-                      <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
-                          Customer WhatsApp / Phone *
-                        </label>
-                        <input
-                          type="tel"
-                          required
-                          value={newFeedbackPhone}
-                          onChange={e => setNewFeedbackPhone(e.target.value)}
-                          placeholder="e.g. +91 99044 82945"
-                          style={{
-                            width: '100%',
-                            border: '1px solid #cbd5e1',
-                            borderRadius: 8,
-                            padding: '0.65rem 0.85rem',
-                            fontSize: '0.85rem',
-                            boxSizing: 'border-box',
-                            outline: 'none'
-                          }}
-                        />
-                      </div>
-
-                      <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
-                          Star Rating Given (1–3 Stars)
-                        </label>
-                        <select
-                          value={newFeedbackRating}
-                          onChange={e => setNewFeedbackRating(Number(e.target.value))}
-                          style={{
-                            width: '100%',
-                            border: '1px solid #cbd5e1',
-                            borderRadius: 8,
-                            padding: '0.65rem 0.85rem',
-                            fontSize: '0.85rem',
-                            fontWeight: 700,
-                            boxSizing: 'border-box',
-                            outline: 'none'
-                          }}
-                        >
-                          <option value={1}>★☆☆☆☆ 1 Star (Very Dissatisfied)</option>
-                          <option value={2}>★★☆☆☆ 2 Stars (Needs Improvement)</option>
-                          <option value={3}>★★★☆☆ 3 Stars (Average Experience)</option>
-                        </select>
-                      </div>
-
-                      <div style={{ marginBottom: '1.25rem' }}>
-                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
-                          Customer Complaint / Message *
-                        </label>
-                        <textarea
-                          required
-                          rows={3}
-                          value={newFeedbackMessage}
-                          onChange={e => setNewFeedbackMessage(e.target.value)}
-                          placeholder="What went wrong during their visit or service..."
-                          style={{
-                            width: '100%',
-                            border: '1px solid #cbd5e1',
-                            borderRadius: 8,
-                            padding: '0.65rem 0.85rem',
-                            fontSize: '0.85rem',
-                            boxSizing: 'border-box',
-                            outline: 'none',
-                            fontFamily: 'inherit'
-                          }}
-                        />
-                      </div>
-
-                      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                        <button
-                          type="button"
-                          onClick={() => setAddFeedbackModalOpen(false)}
-                          style={{
-                            background: '#f1f5f9',
-                            color: '#475569',
-                            border: 'none',
-                            borderRadius: 8,
-                            padding: '0.65rem 1rem',
-                            fontSize: '0.85rem',
-                            fontWeight: 700,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          style={{
-                            background: '#16a34a',
-                            color: '#ffffff',
-                            border: 'none',
-                            borderRadius: 8,
-                            padding: '0.65rem 1.25rem',
-                            fontSize: '0.85rem',
-                            fontWeight: 800,
-                            cursor: 'pointer',
-                            boxShadow: '0 2px 8px rgba(22, 163, 74, 0.3)'
-                          }}
-                        >
-                          Save Feedback Entry
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -3524,7 +3328,8 @@ export default function BusinessConsole({
                 { id: 'Business Details', label: 'Business Details', icon: 'fa-regular fa-folder-open' },
                 { id: 'Contact Info', label: 'Contact Info', icon: 'fa-solid fa-phone' },
                 { id: 'AI Customization', label: 'AI Customization', icon: 'fa-solid fa-bolt' },
-                { id: 'Review Style', label: 'Review Style', icon: 'fa-solid fa-gear' }
+                { id: 'Review Style', label: 'Review Style', icon: 'fa-solid fa-gear' },
+                { id: 'Customer Reviews', label: 'Customer Reviews', icon: 'fa-solid fa-star' }
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -3536,6 +3341,107 @@ export default function BusinessConsole({
                 </button>
               ))}
             </div>
+
+            {/* SECTION: CUSTOMER REVIEWS (saved automatically from the QR review page) */}
+            {profileSubTab === 'Customer Reviews' && (() => {
+              const q = reviewSearch.trim().toLowerCase();
+              const rows = customerReviews.filter(r => {
+                if (reviewFilter === 'low' && r.rating > 2) return false;
+                if (['3', '4', '5'].includes(reviewFilter) && String(r.rating) !== reviewFilter) return false;
+                return !q || String(r.text || '').toLowerCase().includes(q);
+              });
+              const count = n => customerReviews.filter(r => (n === 'low' ? r.rating <= 2 : String(r.rating) === n)).length;
+              const avg = customerReviews.length ? (customerReviews.reduce((a, r) => a + Number(r.rating || 0), 0) / customerReviews.length).toFixed(1) : '0.0';
+              const chip = (id, label) => (
+                <button key={id} type="button" onClick={() => setReviewFilter(id)}
+                  style={{ border: '1px solid ' + (reviewFilter === id ? '#16a34a' : '#e2e8f0'), background: reviewFilter === id ? '#f0fdf4' : '#fff', color: reviewFilter === id ? '#166534' : '#475569', borderRadius: 999, padding: '6px 12px', fontSize: '0.78rem', fontWeight: 800, cursor: 'pointer' }}>
+                  {label}
+                </button>
+              );
+              return (
+                <div className="bc-settings-section-card">
+                  <div className="bc-ssc-header">
+                    <div className="bc-ssc-icon" style={{ background: '#fef9c3', color: '#ca8a04' }}>
+                      <i className="fa-solid fa-star"></i>
+                    </div>
+                    <div className="bc-ssc-titles">
+                      <h3>Customer Reviews</h3>
+                      <p>Every review your customers leave through your QR page is saved here automatically. Customers never need to sign in.</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 16 }}>
+                    {[
+                      ['Total saved', customerReviews.length],
+                      ['Average stars', `${avg}★`],
+                      ['Copied for Google', customerReviews.filter(r => r.kind === 'google').length],
+                      ['Private (1–2★)', count('low')]
+                    ].map(([label, value]) => (
+                      <div key={label} style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px', background: '#f8fafc' }}>
+                        <div style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 700 }}>{label}</div>
+                        <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{value}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 14 }}>
+                    {chip('all', `All (${customerReviews.length})`)}
+                    {chip('5', `5★ (${count('5')})`)}
+                    {chip('4', `4★ (${count('4')})`)}
+                    {chip('3', `3★ (${count('3')})`)}
+                    {chip('low', `1–2★ private (${count('low')})`)}
+                    <input value={reviewSearch} onChange={e => setReviewSearch(e.target.value)} placeholder="Search reviews…"
+                      style={{ flex: '1 1 180px', minWidth: 160, border: '1px solid #e2e8f0', borderRadius: 8, padding: '7px 10px', fontSize: '0.82rem' }} />
+                    <button type="button" onClick={loadCustomerReviews} title="Refresh"
+                      style={{ border: '1px solid #e2e8f0', background: '#fff', borderRadius: 8, padding: '7px 10px', cursor: 'pointer', color: '#475569' }}>
+                      <i className={`fa-solid fa-rotate-right ${reviewsLoading ? 'fa-spin' : ''}`}></i>
+                    </button>
+                    <button type="button" disabled={!rows.length} onClick={() => downloadReviewsCsv(rows)}
+                      style={{ border: 'none', background: rows.length ? '#16a34a' : '#cbd5e1', color: '#fff', borderRadius: 8, padding: '8px 12px', fontSize: '0.78rem', fontWeight: 800, cursor: rows.length ? 'pointer' : 'default' }}>
+                      <i className="fa-solid fa-download"></i> Download CSV
+                    </button>
+                  </div>
+
+                  {rows.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '2.5rem 1rem', border: '1px dashed #cbd5e1', borderRadius: 12, color: '#64748b' }}>
+                      <i className="fa-regular fa-star" style={{ fontSize: '1.8rem', color: '#16a34a' }}></i>
+                      <p style={{ margin: '10px 0 0', fontWeight: 700, color: '#0f172a' }}>{reviewsLoading ? 'Loading reviews…' : customerReviews.length ? 'No reviews match this filter.' : 'No reviews yet'}</p>
+                      {!reviewsLoading && !customerReviews.length && (
+                        <p style={{ margin: '6px 0 0', fontSize: '0.82rem' }}>When customers scan your Magic Review QR and copy a review for Google, it appears here.</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {rows.map(r => (
+                        <div key={r.id} style={{ border: '1px solid #e2e8f0', borderLeft: `4px solid ${r.kind === 'google' ? '#16a34a' : '#f59e0b'}`, borderRadius: 12, padding: '12px 14px', background: '#fff' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+                            <span style={{ color: '#eab308', letterSpacing: 1 }}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: 6, background: r.kind === 'google' ? '#dcfce7' : '#fef3c7', color: r.kind === 'google' ? '#166534' : '#b45309' }}>
+                              {r.kind === 'google' ? <><i className="fa-brands fa-google"></i> Copied for Google</> : <><i className="fa-solid fa-lock"></i> Private feedback</>}
+                            </span>
+                            {r.copies > 1 && <span style={{ fontSize: '0.72rem', color: '#64748b' }}>copied {r.copies}×</span>}
+                            <span style={{ marginLeft: 'auto', fontSize: '0.76rem', color: '#94a3b8' }}>
+                              {new Date(r.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <p style={{ margin: 0, fontSize: '0.88rem', lineHeight: 1.55, color: '#1e293b' }}>{r.text}</p>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '0.76rem', color: '#64748b' }}>{r.kind === 'private' ? `Customer contact: ${r.contact || 'Not provided'}` : 'From your Magic Review QR page'}</span>
+                            <button type="button" onClick={() => deleteCustomerReview(r.id)}
+                              style={{ border: 'none', background: 'none', color: '#dc2626', fontSize: '0.76rem', fontWeight: 700, cursor: 'pointer' }}>
+                              <i className="fa-regular fa-trash-can"></i> Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <p style={{ fontSize: '0.74rem', color: '#94a3b8', margin: '12px 0 0' }}>
+                    "Copied for Google" means the customer copied this review and was sent to your Google review page; Google decides when it is published.
+                  </p>
+                </div>
+              );
+            })()}
 
             {/* SECTION 1: CORE BUSINESS DETAILS */}
             {(profileSubTab === 'Business Details' || profileSubTab === 'All') && (
@@ -4877,6 +4783,7 @@ export default function BusinessConsole({
                 </div>
 
                 {/* Red Warning Banner if expired or trial 0 days */}
+                {daysLeft === 0 && (
                 <div className="bc-billing-alert-banner" style={{
                   background: '#fef2f2',
                   border: '1.5px solid #fecaca',
@@ -4903,85 +4810,47 @@ export default function BusinessConsole({
                     Reactivate Plan Below ↓
                   </button>
                 </div>
+                )}
 
-                {/* Yellow Payment Verification In Progress Banner */}
-                <div className="bc-billing-verify-banner" style={{
-                  background: '#fefce8',
-                  border: '1.5px solid #fef08a',
-                  borderRadius: 14,
-                  padding: '0.85rem 1.25rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '1rem',
-                  marginBottom: '1.5rem',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#fef08a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#b45309', fontSize: '1rem', flexShrink: 0 }}>
-                      <i className="fa-regular fa-clock"></i>
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#854d0e' }}>
-                        Payment Verification In Progress
+                {/* Current Plan Status Card (from the signed-in account) */}
+                {(() => {
+                  const expired = daysLeft === 0;
+                  const planLabel = isTrial ? 'Free Trial' : `${planName} Plan`;
+                  const until = sub?.expiresAt ? new Date(sub.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+                  return (
+                    <div className="bc-status-card">
+                      <div className="bc-status-left">
+                        <span style={{ background: isTrial ? '#fef3c7' : '#dcfce7', color: isTrial ? '#b45309' : '#166534', padding: '0.2rem 0.65rem', borderRadius: 6, fontSize: '0.68rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          {isTrial ? 'TRIAL' : 'CURRENT PLAN'}
+                        </span>
+                        <span style={{ fontSize: '0.76rem', color: '#64748b', marginLeft: 8 }}>
+                          Account: <b>{bizName}</b>
+                        </span>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '4px 0 0 0' }}>
+                          {planLabel}{!isTrial && sub?.period ? <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 700 }}> · {sub.period}</span> : null}
+                        </h3>
                       </div>
-                      <div style={{ fontSize: '0.74rem', color: '#a16207' }}>
-                        You requested an upgrade to <strong>Pro_Yearly</strong>. We are verifying your transaction UTR reference.
+                      <div className="bc-status-stats">
+                        <div className="bc-status-stat-box">
+                          <span className="stat-label">STATUS</span>
+                          <span className="stat-val" style={{ color: expired ? '#dc2626' : '#16a34a', fontWeight: 800 }}>
+                            ● {expired ? 'Expired' : 'Active'}
+                          </span>
+                        </div>
+                        <div className="bc-status-stat-box">
+                          <span className="stat-label">VALID UNTIL</span>
+                          <span className="stat-val" style={{ fontWeight: 800, color: '#0f172a' }}>{until}</span>
+                        </div>
+                        <div className="bc-status-stat-box">
+                          <span className="stat-label">DAYS LEFT</span>
+                          <span className="stat-val" style={{ color: expired ? '#dc2626' : daysLeft <= 3 ? '#d97706' : '#16a34a', fontSize: '1rem', fontWeight: 900 }}>
+                            {daysLeft} {daysLeft === 1 ? 'Day' : 'Days'}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      className="btn btn-light btn-sm"
-                      style={{ fontSize: '0.74rem', fontWeight: 800, padding: '0.4rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: 6, background: '#ffffff', borderColor: '#fef08a', color: '#854d0e' }}
-                      onClick={() => openWebpressPay(2999, 'Pro Yearly Plan Verification', 'plan')}
-                    >
-                      <i className="fa-regular fa-file-lines"></i> View Payment Details
-                    </button>
-                    <a
-                      href="https://wa.me/919904482945?text=Hi!%20I%20need%20assistance%20verifying%20my%20payment%20UTR%20reference."
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn btn-sm"
-                      style={{ background: '#ffffff', color: '#16a34a', border: '1px solid #bbf7d0', fontSize: '0.74rem', fontWeight: 800, padding: '0.4rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                    >
-                      <i className="fa-brands fa-whatsapp"></i> WhatsApp Support
-                    </a>
-                  </div>
-                </div>
-
-                {/* Current Plan Status Card */}
-                <div className="bc-status-card">
-                  <div className="bc-status-left">
-                    <span style={{ background: '#fef3c7', color: '#b45309', padding: '0.2rem 0.65rem', borderRadius: 6, fontSize: '0.68rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      STARTER PLAN
-                    </span>
-                    <span style={{ fontSize: '0.76rem', color: '#64748b', marginLeft: 8 }}>
-                      Account: <b>{bizName}</b>
-                    </span>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '4px 0 0 0' }}>Starter Plan</h3>
-                  </div>
-
-                  <div className="bc-status-stats">
-                    <div className="bc-status-stat-box">
-                      <span className="stat-label">STATUS</span>
-                      <span className="stat-val" style={{ color: '#dc2626', fontWeight: 800 }}>
-                        ● Expired
-                      </span>
-                    </div>
-                    <div className="bc-status-stat-box">
-                      <span className="stat-label">VALID UNTIL</span>
-                      <span className="stat-val" style={{ fontWeight: 800, color: '#0f172a' }}>Oct 24, 2026</span>
-                    </div>
-                    <div className="bc-status-stat-box">
-                      <span className="stat-label">DAYS LEFT</span>
-                      <span className="stat-val" style={{ color: '#dc2626', fontSize: '1rem', fontWeight: 900 }}>
-                        0 Days
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* Select or Upgrade Your Plan Heading */}
                 <div id="billing-plans-section" style={{ textAlign: 'center', marginBottom: '1.25rem', scrollMarginTop: '80px' }}>
@@ -5017,126 +4886,118 @@ export default function BusinessConsole({
                   </div>
                 </div>
 
-                {/* 3 Pricing Cards Grid */}
-                <div className="bc-billing-grid">
-                  {/* Card 1: Monthly Plan */}
-                  <div className="bc-billing-card">
-                    <div className="bc-billing-badge-top green">FLEXIBLE MONTHLY</div>
-                    <h4>Monthly Plan</h4>
-                    <p className="bc-billing-card-sub">Complete review growth suite for single locations.</p>
-
-                    <div className="bc-billing-price-row">
-                      <div className="price">₹ {billingReviewToggle === 'without' ? '99' : '299'} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ month</span></div>
-                      <div className="sub-price">Month-to-Month · Cancel anytime</div>
+                {/* Plans (same as the public Pricing page): Monthly, Yearly, Multi-Business */}
+                {(() => {
+                  const pro = billingReviewToggle === 'with';
+                  const tier = pro ? 'Pro' : 'Starter';
+                  const monthly = pro ? 299 : 199;
+                  const yearly = pro ? 2999 : 1999;
+                  const perMonth = Math.round(yearly / 12);
+                  const saving = monthly * 12 - yearly;
+                  const features = [
+                    'Human-Like AI Written Reviews',
+                    'Custom Keywords, Services, Products & Staff',
+                    'Emoji Support & Multiple Review Styles',
+                    'Personalized AI Review Suggestions',
+                    'Smart & Customizable Google Review QR Code',
+                    'Printable QR Standee & Direct Review Link',
+                    'Review, Rating & Growth Analytics',
+                    'AI Google Business Profile Analyzer',
+                    'Customer Review Tracking',
+                    'No Review Drop / Loss Guarantee',
+                    '100% Ad-Free Funnel Experience',
+                    'Priority Support'
+                  ];
+                  const replyNotice = (
+                    <div className={`bc-billing-ai-notice ${pro ? 'on' : 'off'}`}>
+                      <i className={pro ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark'}></i>
+                      <span>{pro ? 'Automatic AI Review Reply (24/7 Autopilot Included)' : 'Automatic AI Review Reply: Not included in Standard'}</span>
                     </div>
-
-                    <div className={`bc-billing-ai-notice ${billingReviewToggle === 'without' ? 'off' : 'on'}`}>
-                      <i className={billingReviewToggle === 'without' ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-circle-check'}></i>
-                      <span>{billingReviewToggle === 'without' ? 'AI Powered Automatic Review Replies: Not Available' : '24/7 AI Automatic Review Replies: Included & Active'}</span>
-                    </div>
-
+                  );
+                  const featureList = (
                     <ul className="bc-billing-features">
-                      <li><i className="fa-solid fa-check"></i> Human-Like AI Written Reviews</li>
-                      <li><i className="fa-solid fa-check"></i> Custom Keywords, Services &amp; Staff</li>
-                      <li><i className="fa-solid fa-check"></i> Emoji Support &amp; Review Styles</li>
-                      <li><i className="fa-solid fa-check"></i> Customizable Google Review QR</li>
-                      <li><i className="fa-solid fa-check"></i> Printable QR Standee (PDF/PNG)</li>
-                      <li><i className="fa-solid fa-check"></i> Private Negative Feedback Routing</li>
-                      <li><i className="fa-solid fa-check"></i> Review, Rating &amp; Growth Analytics</li>
-                      <li><i className="fa-solid fa-check"></i> AI Google Business Analyzer</li>
-                      <li><i className="fa-solid fa-check"></i> 100% Ad-Free Customer Funnel</li>
-                      <li><i className="fa-solid fa-check"></i> Standard Priority Support</li>
+                      {features.map(f => <li key={f}><i className="fa-solid fa-check"></i> {f}</li>)}
                     </ul>
+                  );
+                  const current = !isTrial && sub?.plan === tier;
+                  return (
+                    <div className="bc-billing-grid">
+                      {/* Monthly */}
+                      <div className="bc-billing-card">
+                        <div className="bc-billing-badge-top green">{pro ? 'PRO MONTHLY' : 'STANDARD MONTHLY'}</div>
+                        <h4>{pro ? 'Pro Monthly Plan' : 'Monthly Plan'}</h4>
+                        <p className="bc-billing-card-sub">Monthly billing · 1 business · {pro ? '24/7 Autopilot Replies' : 'QR funnel & AI drafts'}</p>
+                        <div className="bc-billing-price-row">
+                          <div className="price">₹{monthly.toLocaleString('en-IN')} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ month</span></div>
+                          <div className="sub-price">Month-to-month · Cancel anytime</div>
+                        </div>
+                        {replyNotice}
+                        {featureList}
+                        <div className="bc-billing-micro">Best for starting out</div>
+                        <button className="btn btn-dark full" style={{ background: '#16a34a', border: 'none', fontWeight: 800, padding: '0.75rem' }}
+                          disabled={current && sub?.period === 'Monthly'}
+                          onClick={() => startPlanCheckout(tier, 'Monthly', monthly)}>
+                          {current && sub?.period === 'Monthly' ? 'Current Plan' : `Choose ${pro ? 'Pro ' : ''}Monthly Plan →`}
+                        </button>
+                      </div>
 
-                    <div className="bc-billing-micro">Flexible monthly commitment</div>
-                    <button
-                      className="btn btn-dark full"
-                      style={{ background: '#16a34a', border: 'none', fontWeight: 800, padding: '0.75rem' }}
-                      onClick={() => startPlanCheckout(billingReviewToggle === 'without' ? 'Starter' : 'Pro', 'Monthly', billingReviewToggle === 'without' ? 99 : 299)}
-                    >
-                      {billingReviewToggle === 'without' ? 'Upgrade to Starter' : 'Upgrade to Pro'}
-                    </button>
-                  </div>
+                      {/* Yearly */}
+                      <div className="bc-billing-card featured">
+                        <div className="bc-billing-badge-top orange">{pro ? 'BEST PRO VALUE · SAVE 16%' : 'BEST VALUE · SAVE 16%'}</div>
+                        <h4>{pro ? 'Pro Yearly Plan' : 'Yearly Plan'}</h4>
+                        <p className="bc-billing-card-sub">1 year · 1 business · {pro ? '24/7 Autopilot Replies' : 'Maximum savings'}</p>
+                        <div className="bc-billing-price-row">
+                          <div className="price">₹{yearly.toLocaleString('en-IN')} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ year</span></div>
+                          <div className="sub-price" style={{ color: '#ea580c', fontWeight: 700 }}>
+                            ≈ ₹{perMonth}/month · Save ₹{saving.toLocaleString('en-IN')} a year
+                          </div>
+                        </div>
+                        {replyNotice}
+                        {featureList}
+                        <div className="bc-billing-micro">Best for established growth</div>
+                        <button className="btn full" style={{ background: '#ea580c', color: '#fff', border: 'none', fontWeight: 800, padding: '0.75rem' }}
+                          disabled={current && sub?.period === 'Yearly'}
+                          onClick={() => startPlanCheckout(tier, 'Yearly', yearly)}>
+                          {current && sub?.period === 'Yearly' ? 'Current Plan' : `Choose ${pro ? 'Pro ' : ''}Yearly Plan →`}
+                        </button>
+                      </div>
 
-                  {/* Card 2: Yearly Plan */}
-                  <div className="bc-billing-card featured">
-                    <div className="bc-billing-badge-top orange">BEST VALUE - SAVE 16%</div>
-                    <h4>Yearly Plan</h4>
-                    <p className="bc-billing-card-sub">Annual membership with maximum savings for 12 full months.</p>
-
-                    <div className="bc-billing-price-row">
-                      <div className="price">₹ {billingReviewToggle === 'without' ? '999' : '2,999'} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ year</span></div>
-                      <div className="sub-price" style={{ color: '#ea580c', fontWeight: 700 }}>
-                        ⚡ Save 16% · {billingReviewToggle === 'without' ? '₹83/mo · Save ₹189/yr' : '₹250/mo · Save ₹589/yr'}
+                      {/* Multi-Business (custom pricing, handled on WhatsApp like the Pricing page) */}
+                      <div className="bc-billing-card">
+                        <div className="bc-billing-badge-top outline-green">MULTI-BUSINESS</div>
+                        <h4>Multi-Business Plan</h4>
+                        <p className="bc-billing-card-sub">Multiple locations · Centralized dashboard · For agencies &amp; chains</p>
+                        <div className="bc-billing-price-row">
+                          <div className="price">Custom <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ tailored capacity</span></div>
+                          <div className="sub-price">Priced by number of businesses or locations</div>
+                        </div>
+                        <div className="bc-multi-highlight-box">
+                          <div style={{ fontWeight: 800, marginBottom: 4 }}><i className="fa-solid fa-layer-group" style={{ marginRight: 5 }}></i> Centralized management</div>
+                          <div style={{ fontSize: '0.71rem', color: '#14532d', background: '#dcfce7', padding: '4px 6px', borderRadius: 6 }}>
+                            🔑 <b>Bring Your Own AI API:</b> connect your own API key (Gemini, OpenAI or Claude) for review generation. API keys are not provided with Multi-Business plans.
+                          </div>
+                        </div>
+                        <ul className="bc-billing-features">
+                          {[
+                            'Multi-Business Centralized Dashboard',
+                            'Configurable Business Capacity Limit',
+                            'Separate AI Customization & Languages per Location',
+                            'Individual QR Flyers & Printable Downloads',
+                            'Private Negative Feedback Routing',
+                            'Cross-Business Conversion & Activity Analytics',
+                            'Dedicated WhatsApp Support & Onboarding'
+                          ].map(f => <li key={f}><i className="fa-solid fa-check"></i> {f}</li>)}
+                        </ul>
+                        <div className="bc-billing-micro">Tell us how many locations you manage</div>
+                        <a className="btn full" href={`https://wa.me/919904482945?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business Plan for StarReview AI.")}`}
+                          target="_blank" rel="noopener noreferrer"
+                          style={{ background: '#25d366', color: '#fff', border: 'none', fontWeight: 800, padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none' }}>
+                          <i className="fa-brands fa-whatsapp"></i> Chat With Us on WhatsApp
+                        </a>
                       </div>
                     </div>
-
-                    <div className={`bc-billing-ai-notice ${billingReviewToggle === 'without' ? 'off' : 'on'}`}>
-                      <i className={billingReviewToggle === 'without' ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-circle-check'}></i>
-                      <span>{billingReviewToggle === 'without' ? 'AI Powered Automatic Review Replies: Not Available' : '24/7 AI Automatic Review Replies: Included & Active'}</span>
-                    </div>
-
-                    <ul className="bc-billing-features">
-                      <li><i className="fa-solid fa-check"></i> Human-Like AI Written Reviews</li>
-                      <li><i className="fa-solid fa-check"></i> Custom Keywords, Services &amp; Staff</li>
-                      <li><i className="fa-solid fa-check"></i> Emoji Support &amp; Review Styles</li>
-                      <li><i className="fa-solid fa-check"></i> Customizable Google Review QR</li>
-                      <li><i className="fa-solid fa-check"></i> Printable QR Standee (PDF/PNG High-Res)</li>
-                      <li><i className="fa-solid fa-check"></i> Private Negative Feedback Routing</li>
-                      <li><i className="fa-solid fa-check"></i> Review, Rating &amp; Growth Analytics</li>
-                      <li><i className="fa-solid fa-check"></i> AI Google Business Analyzer</li>
-                      <li><i className="fa-solid fa-check"></i> Priority VIP Support</li>
-                    </ul>
-
-                    <div className="bc-billing-micro">Best price guaranteed for 12 months</div>
-                    <button
-                      className="btn full"
-                      style={{ background: '#ea580c', color: '#fff', border: 'none', fontWeight: 800, padding: '0.75rem' }}
-                      onClick={() => startPlanCheckout(billingReviewToggle === 'without' ? 'Starter' : 'Pro', 'Yearly', billingReviewToggle === 'without' ? 999 : 2999)}
-                    >
-                      Upgrade to Yearly (Save 16%)
-                    </button>
-                  </div>
-
-                  {/* Card 3: 10 Locations Agency Plan */}
-                  <div className="bc-billing-card">
-                    <div className="bc-billing-badge-top outline-green">MULTI-BUSINESS - STARTER</div>
-                    <h4>10 Locations Agency Plan</h4>
-                    <p className="bc-billing-card-sub">Centralized management for brands and growing teams managing up to 10 businesses or locations.</p>
-
-                    <div className="bc-billing-price-row">
-                      <div className="price">₹ 2,999 <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>/ year</span></div>
-                      <div className="sub-price" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ecfdf5', color: '#15803d', fontWeight: 800, padding: '2px 8px', borderRadius: 6, fontSize: '0.74rem' }}>
-                        ⚡ ₹250 / mo · Billed Annually
-                      </div>
-                    </div>
-
-                    <div className="bc-multi-highlight-box">
-                      <div style={{ fontWeight: 800, marginBottom: 4 }}><i className="fa-solid fa-check" style={{ marginRight: 5 }}></i> Up to 10 Businesses or Locations Managed</div>
-                      <p style={{ margin: '0 0 6px 0', fontSize: '0.72rem' }}>Manage Up to 10 Businesses or Locations simultaneously</p>
-                      <div style={{ fontSize: '0.71rem', color: '#14532d', background: '#dcfce7', padding: '4px 6px', borderRadius: 6 }}>
-                        🔑 <b>Bring Your Own AI API:</b> Use your own API key (Gemini, OpenAI, or Claude) for review generation (API keys not provided with Multi-Business plans)
-                      </div>
-                    </div>
-
-                    <ul className="bc-billing-features">
-                      <li><i className="fa-solid fa-check"></i> Multi-Business Central Dashboard</li>
-                      <li><i className="fa-solid fa-check"></i> Dedicated Printable QR Standees per Location</li>
-                      <li><i className="fa-solid fa-check"></i> Private Negative Feedback Shield &amp; Routing</li>
-                      <li><i className="fa-solid fa-check"></i> Cross-Location Growth &amp; Review Analytics</li>
-                      <li><i className="fa-solid fa-check"></i> Standard Email &amp; WhatsApp Support Desk</li>
-                    </ul>
-
-                    <div className="bc-billing-micro">Starter Multi-Business capacity (10 locations)</div>
-                    <button
-                      className="btn btn-dark full"
-                      style={{ background: '#16a34a', border: 'none', fontWeight: 800, padding: '0.75rem' }}
-                      onClick={() => startPlanCheckout('Agency', 'Yearly', 2999)}
-                    >
-                      Choose 10 Businesses or Locations →
-                    </button>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* 4 Value Badges Strip */}
                 <div className="bc-billing-badges-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', margin: '2rem 0' }}>
@@ -5244,40 +5105,10 @@ export default function BusinessConsole({
                     <p style={{ fontSize: '0.76rem', color: '#64748b', margin: 0 }}>Your recent subscription orders, activations, and payment references.</p>
                   </div>
 
-                  <div className="bc-table-wrap">
-                    <table className="bc-table">
-                      <thead>
-                        <tr>
-                          <th>ORDER ID</th>
-                          <th>AMOUNT</th>
-                          <th>STATUS</th>
-                          <th>UTR / REFERENCE</th>
-                          <th>DATE &amp; TIME</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[
-                          { id: '#ORDER_RF_632_1793094812_257', amount: '₹2,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 - 09:40' },
-                          { id: '#ORDER_RF_632_1793093970_918', amount: '₹2,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 - 09:39' },
-                          { id: '#ORDER_RF_632_1793084957_707', amount: '₹1,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 - 07:09' },
-                          { id: '#ORDER_RF_632_1793084915_873', amount: '₹1,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 - 07:08' },
-                          { id: '#ORDER_RF_632_1793084902_717', amount: '₹1,999.00', status: 'Pending', statusClass: 'bc-badge-yellow', utr: '—', date: 'Oct 27, 2026 - 07:08' }
-                        ].map((tx, idx) => (
-                          <tr key={idx}>
-                            <td style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.76rem', color: '#0f172a' }}>{tx.id}</td>
-                            <td style={{ fontWeight: 800, color: '#0f172a' }}>{tx.amount}</td>
-                            <td>
-                              <span style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: 999, fontSize: '0.68rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b' }}></span>
-                                {tx.status}
-                              </span>
-                            </td>
-                            <td style={{ color: '#94a3b8', fontSize: '0.76rem' }}>{tx.utr}</td>
-                            <td style={{ color: '#64748b', fontSize: '0.76rem' }}>{tx.date}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div style={{ textAlign: 'center', padding: '2rem 1rem', border: '1px dashed #cbd5e1', borderRadius: 14, color: '#64748b' }}>
+                    <i className="fa-regular fa-file-lines" style={{ fontSize: '1.6rem', color: '#94a3b8' }}></i>
+                    <p style={{ margin: '10px 0 2px', fontWeight: 800, color: '#0f172a' }}>No payments yet</p>
+                    <p style={{ margin: 0, fontSize: '0.8rem' }}>Your plan payments and invoices will appear here.</p>
                   </div>
                 </div>
 

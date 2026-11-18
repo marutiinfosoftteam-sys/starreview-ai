@@ -1,0 +1,95 @@
+/* ─────────────────────────────────────────────────────────────────────
+   Site header (landing + public pages). Loaded last so it settles the
+   older overlapping rules in styles.css / responsive.css.
+   Layout: logo left · links centred · actions right · menu button far right (small screens)
+   ───────────────────────────────────────────────────────────────────── */
+
+.rf-top-header .rf-top-header-inner { gap: 20px !important; }
+.rf-top-header .rf-nav-brand { order: 1; flex: 0 0 auto; min-width: 0; }
+.rf-top-header .rf-nav-links { order: 2; }
+.rf-top-header .rf-nav-actions { order: 3; flex: 0 0 auto; margin-left: auto; gap: 10px !important; }
+.rf-top-header .rf-menu-toggle { order: 4; }
+
+/* Desktop & small laptop: full menu in the bar */
+@media (min-width: 900px) {
+  .rf-top-header .rf-nav-links,
+  .rf-top-header .rf-nav-links:not(.open),
+  .rf-top-header .rf-nav-links.open {
+    display: flex !important;
+    position: static !important;
+    flex: 1 1 auto;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center;
+    gap: clamp(18px, 2.4vw, 34px) !important;
+    width: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  .rf-top-header .rf-nav-link {
+    display: inline-block !important;
+    width: auto !important;
+    padding: 8px 0 !important;
+    border-bottom: 0 !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #334155 !important;
+  }
+  .rf-top-header .rf-nav-link:hover { color: #16a34a !important; }
+  .rf-top-header .rf-nav-link.active { color: #16a34a !important; font-weight: 700 !important; }
+  .rf-top-header .rf-nav-link.active::after { display: block !important; }
+  .rf-top-header .rf-menu-toggle,
+  .rf-top-header .rf-mobile-drawer-actions,
+  .rf-top-header .rf-mobile-backdrop { display: none !important; }
+  .rf-top-header .rf-nav-actions { margin-left: 0; }
+}
+
+/* Small laptop / large tablet: tighter bar */
+@media (min-width: 900px) and (max-width: 1180px) {
+  .rf-top-header .rf-nav-brand-sub { display: none !important; }
+  .rf-top-header .rf-nav-link { font-size: 13.5px !important; }
+  /* WhatsApp button becomes an icon */
+  .rf-top-header .rf-nav-actions .rf-nav-whatsapp-btn { font-size: 0 !important; gap: 0 !important; padding: 8px 10px !important; }
+  .rf-top-header .rf-nav-actions .rf-nav-whatsapp-btn i { font-size: 17px !important; margin: 0 !important; }
+}
+
+/* Tablet & phone: menu button at the far right, links in the drawer */
+@media (max-width: 899px) {
+  .rf-top-header .rf-top-header-inner { gap: 10px !important; }
+  .rf-top-header .rf-nav-brand-sub { display: none !important; }
+  .rf-top-header .rf-menu-toggle {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto;
+    width: 40px !important;
+    height: 40px !important;
+    margin-left: 2px;
+  }
+  .rf-top-header .rf-nav-links:not(.open) { display: none !important; }
+  /* The header's blur makes it the containing block for fixed children, so bottom:0 gave the
+     dim layer zero height; size it to the screen instead */
+  .rf-top-header .rf-mobile-backdrop { bottom: auto !important; height: calc(100dvh - 64px) !important; }
+  .rf-top-header .rf-nav-actions .rf-nav-whatsapp-btn { font-size: 0 !important; gap: 0 !important; padding: 8px 10px !important; }
+  .rf-top-header .rf-nav-actions .rf-nav-whatsapp-btn i { font-size: 17px !important; margin: 0 !important; }
+}
+
+/* Phone: keep only the main action in the bar; Sign out / WhatsApp live in the menu */
+@media (max-width: 600px) {
+  .rf-top-header { padding: 0 14px !important; }
+  .rf-top-header .rf-nav-brand-icon { width: 34px !important; height: 34px !important; }
+  .rf-top-header .rf-nav-brand-title { font-size: 17px !important; }
+  .rf-top-header .rf-nav-actions .rf-nav-whatsapp-btn,
+  .rf-top-header .rf-nav-actions button.rf-btn-signin { display: none !important; }
+  .rf-top-header .rf-nav-actions .rf-btn-startfree,
+  .rf-top-header .rf-nav-actions a.rf-btn-signin { display: inline-flex !important; padding: 7px 12px !important; font-size: 13px !important; }
+}
+
+@media (max-width: 360px) {
+  .rf-top-header .rf-nav-brand-title { font-size: 15.5px !important; }
+  .rf-top-header .rf-nav-actions .rf-online-dot { display: none !important; }
+}

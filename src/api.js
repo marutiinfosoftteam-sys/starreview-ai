@@ -1036,6 +1036,13 @@ async function localDispatch(method, path, body) {
   return { ok: true, status: 200, data: { ok: true } };
 }
 
+// Auth never uses the in-browser fallback: a fake local login would let anyone in
+const authUnavailable = (status, data = {}) => ({
+  ok: false,
+  status: status || 503,
+  data: { error: data.error || 'Could not reach the StarReview AI server. Please check your connection and try again.' }
+});
+
 // Master API Function: Attempts Live Server First -> Falls Back to Local DB seamlessly
 export async function api(method, url, body) {
   const headers = { 'Content-Type': 'application/json' };
@@ -1044,7 +1051,7 @@ export async function api(method, url, body) {
 
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
   // Google Places search can take a few seconds; other calls fall back to local data quickly
-  const timeoutMs = url.startsWith('/api/places/') ? 10000 : 3500;
+  const timeoutMs = url.startsWith('/api/places/') || url.startsWith('/api/auth/') ? 20000 : 3500;
   const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
 
   try {
@@ -1071,10 +1078,14 @@ export async function api(method, url, body) {
       return { ok: false, status: r.status, data };
     }
 
+    // Sign-in, sign-up and verification are only ever decided by the real server
+    if (url.startsWith('/api/auth/')) return authUnavailable(r.status, data);
+
     // Server returned 404/500/HTML (e.g. Vite SPA fallback or missing endpoint)
     return await localDispatch(method, url, body);
   } catch {
     if (timeoutId) clearTimeout(timeoutId);
+    if (url.startsWith('/api/auth/')) return authUnavailable(0);
     // Network failed or offline: seamless local database fallback
     return await localDispatch(method, url, body);
   }

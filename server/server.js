@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { LANGUAGES, localDrafts, localReply } from './lib/drafts.js';
 import { runSeoAudit } from './lib/seo.js';
 import { getDb, isMongoConfigured, getTenantBusiness, saveTenantBusiness, logAuditEvent } from './db/mongodb.js';
+import { openSqlite, sqliteIsEmpty, sqliteRead, sqliteWrite } from './db/sqlite.js';
 import { generateOpenRouterDrafts, generateOpenRouterReply, isOpenRouterConfigured } from './lib/openrouter.js';
 import { searchIndianBusinesses, getPlaceDetails, getPlacesApiKey } from './lib/placesSearch.js';
 import { searchIndiaOpenStreetMap } from './lib/osmSearch.js';
@@ -26,10 +27,15 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
-const JWT_SECRET = process.env.JWT_SECRET || 'local-development-secret-change-before-deploy';
-if (!process.env.JWT_SECRET) console.warn('[warn] JWT_SECRET is not set. Add a strong secret to .env before deploying.');
 const TRIAL_DAYS = 3;
 const isServerless = process.env.VERCEL === '1' || Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME);
+const isProduction = process.env.NODE_ENV === 'production' || isServerless;
+// A known fallback secret would let anyone sign sessions, so production refuses to start without one
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  if (isProduction) throw new Error('JWT_SECRET must be set to a random string of at least 32 characters (openssl rand -hex 32).');
+  console.warn('[warn] JWT_SECRET is missing or short. Using a development-only secret; set a strong one before deploying.');
+}
+const JWT_SECRET = process.env.JWT_SECRET || 'local-development-secret-change-before-deploy';
 const dataDir = path.resolve(process.env.DATA_DIR || (isServerless ? path.join(os.tmpdir(), 'starreview_data') : path.join(__dirname, 'data')));
 const dbFile = path.join(dataDir, 'store.json');
 await fs.mkdir(dataDir, { recursive: true });
@@ -81,11 +87,35 @@ const emptyStore = () => ({
     { type: 'copy', businessId: 'demo-biz-id', createdAt: new Date(Date.now() - 3600000 * 12).toISOString() },
     { type: 'redirect', businessId: 'demo-biz-id', createdAt: new Date(Date.now() - 3600000 * 6).toISOString() }
   ],
-  payments: []
+  payments: [],
+  authCodes: [],
+  reviews: []
 });
 // With MONGODB_URI set, the store lives in MongoDB so accounts survive serverless
 // restarts (Vercel's disk is temporary). Without it, server/data/store.json is used.
+// Without MongoDB the store lives in a local SQLite file (server/data/starreview.sqlite).
+// The old store.json is imported once the first time SQLite starts empty.
+const sqliteFile = path.join(dataDir, 'starreview.sqlite');
+const useSqlite = !isMongoConfigured() && String(process.env.LOCAL_STORE || 'sqlite').toLowerCase() !== 'json';
+let sqliteReady = null;
+async function getSqlite() {
+  if (!useSqlite) return null;
+  if (!sqliteReady) {
+    sqliteReady = (async () => {
+      const db = await openSqlite(sqliteFile);
+      if (db && sqliteIsEmpty()) {
+        let seed = emptyStore();
+        try { seed = { ...seed, ...JSON.parse(await fs.readFile(dbFile, 'utf8')) }; console.log('[sqlite] imported existing store.json'); } catch { /* no old data */ }
+        sqliteWrite(seed);
+      }
+      return db;
+    })();
+  }
+  return sqliteReady;
+}
+
 async function readStore() {
+  if (await getSqlite()) return { ...emptyStore(), ...sqliteRead() };
   const mongo = await getDb();
   if (mongo) {
     const doc = await mongo.collection('app_store').findOne({ _id: 'main' });
@@ -97,6 +127,7 @@ async function readStore() {
   catch { return emptyStore(); }
 }
 async function writeStore(store) {
+  if (await getSqlite()) { sqliteWrite(store); return; }
   const mongo = await getDb();
   if (mongo) {
     const { _id, ...data } = store;
@@ -115,8 +146,17 @@ function mutate(fn) {
 }
 
 app.disable('x-powered-by');
-app.set('trust proxy', 1);
-app.use(cors({ origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(x => x.trim()) : true }));
+// Only trust X-Forwarded-For behind a real proxy (Vercel, or TRUST_PROXY=1); otherwise callers could fake their IP
+if (process.env.VERCEL || process.env.TRUST_PROXY === '1') app.set('trust proxy', 1);
+// Browsers may call the API only from the site itself (plus CORS_ORIGIN / APP_URL / PUBLIC_URL when set)
+const allowedOrigins = [process.env.CORS_ORIGIN, process.env.APP_URL, process.env.PUBLIC_URL]
+  .flatMap(v => String(v || '').split(',')).map(v => v.trim().replace(/\/$/, '')).filter(Boolean);
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || !isProduction || allowedOrigins.includes(origin.replace(/\/$/, ''))) return cb(null, true);
+    return cb(null, false);
+  }
+}));
 app.use((req, res, next) => {
   if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
     return next();
@@ -126,6 +166,11 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  if (isProduction) res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  if (req.path.startsWith('/api/')) res.setHeader('Cache-Control', 'no-store');
   next();
 });
 
@@ -173,7 +218,7 @@ const hasAccess = u => {
   return Boolean(u?.subscription && u.subscription.status === 'active' && new Date(u.subscription.expiresAt) > new Date());
 };
 const hasReplies = u => hasAccess(u) && ['Trial', 'Pro'].includes(u.subscription.plan);
-const publicUser = u => ({ id: u.id, email: u.email, name: u.name || '', mobile: u.mobile || '', subscription: u.subscription || null, access: hasAccess(u), replyAssistant: hasReplies(u) });
+const publicUser = u => ({ id: u.id, email: u.email, name: u.name || '', mobile: u.mobile || '', subscription: u.subscription || null, emailVerified: u.emailVerified === true, access: hasAccess(u), replyAssistant: hasReplies(u) });
 const slugify = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'business';
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
@@ -187,11 +232,23 @@ function requireAdmin(req, res, next) {
   });
 }
 
-function auth(req, res, next) {
+async function auth(req, res, next) {
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
   if (!token) return res.status(401).json({ error: 'Please sign in to continue.' });
-  try { req.user = jwt.verify(token, JWT_SECRET); next(); }
+  let payload;
+  try { payload = jwt.verify(token, JWT_SECRET); }
   catch { return res.status(401).json({ error: 'Your session expired. Please sign in again.' }); }
+  try {
+    // Sessions end when the account is gone or its password was changed after the token was issued
+    const db = await readStore();
+    const u = db.users.find(x => x.id === payload.sub);
+    if (!u) return res.status(401).json({ error: 'Account not found. Please sign in again.' });
+    if (u.passwordChangedAt && payload.iat * 1000 < new Date(u.passwordChangedAt).getTime() - 1000) {
+      return res.status(401).json({ error: 'Your password was changed. Please sign in again.' });
+    }
+  } catch (e) { console.error('[auth]', e.message); return res.status(503).json({ error: 'Please try again in a moment.' }); }
+  req.user = payload;
+  next();
 }
 
 // Without SMTP, mail for the company's own inbox goes through FormSubmit (no key needed).
@@ -281,10 +338,16 @@ async function generateDrafts(input) {
   };
 }
 
-const track = (db, type, businessId) => db.events.push({ type, businessId: businessId || null, createdAt: new Date().toISOString() });
+const MAX_EVENTS = 50000;
+const track = (db, type, businessId) => {
+  db.events.push({ type, businessId: businessId || null, createdAt: new Date().toISOString() });
+  if (db.events.length > MAX_EVENTS) db.events.splice(0, db.events.length - MAX_EVENTS); // keep the newest
+};
 
 /* ---------- Health and public config ---------- */
 app.get('/api/network-info', (_req, res) => {
+  // Only used to build LAN QR links during local development; never reveal server IPs in production
+  if (isProduction) return res.json({ ip: null });
   const interfaces = os.networkInterfaces();
   const candidates = Object.values(interfaces).flat().filter(x => x && x.family === 'IPv4' && !x.internal && !x.address.startsWith('169.254.'));
   res.json({ ip: candidates[0]?.address || null });
@@ -292,7 +355,7 @@ app.get('/api/network-info', (_req, res) => {
 app.get('/api/health', (_req, res) => res.json({
   ok: true, app: 'StarReview AI',
   mode: process.env.OPENAI_API_KEY ? 'ai-enabled' : 'template-fallback',
-  emailConfigured: Boolean(process.env.SMTP_HOST && process.env.SMTP_USER),
+  emailConfigured: Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS),
   whatsappNotifyConfigured: Boolean(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_ID && process.env.WHATSAPP_NOTIFY_TO),
   paymentsConfigured: razorpayReady()
 }));
@@ -303,30 +366,179 @@ app.get('/api/public-config', (_req, res) => res.json({
 }));
 
 /* ---------- Auth ---------- */
+// Email + password accounts must confirm their email with a 6-digit code before they can sign in.
+// Codes are stored hashed, expire after 10 minutes and allow 5 wrong tries.
+// Codes go out by SMTP (Gmail app password in .env). Without SMTP, local development prints
+// the code in the API terminal instead; production refuses to sign people up without email.
+const CODE_TTL_MS = 10 * 60 * 1000;
+const CODE_MAX_ATTEMPTS = 5;
+const RESEND_GAP_MS = 60 * 1000;
+const smtpReady = () => Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+const devCodeLogging = () => !smtpReady() && !isServerless && process.env.NODE_ENV !== 'production';
+const canSendCodes = () => smtpReady() || devCodeLogging();
+const hashCode = (email, purpose, code) => crypto.createHash('sha256').update(`${JWT_SECRET}|${email}|${purpose}|${code}`).digest('hex');
+const isVerified = u => u?.emailVerified === true;
+const newTrial = now => ({ plan: 'Trial', period: `${TRIAL_DAYS} days`, status: 'active', startedAt: now.toISOString(), expiresAt: new Date(now.getTime() + TRIAL_DAYS * 86400000).toISOString() });
+const EMAIL_NOT_READY = 'Email verification is not set up on the server yet. Please try again later or contact support.';
+
+// Small in-memory rate limiter (per server instance)
+const rateHits = new Map();
+function rateLimited(key, limit, windowMs) {
+  const now = Date.now();
+  const recent = (rateHits.get(key) || []).filter(t => now - t < windowMs);
+  recent.push(now);
+  rateHits.set(key, recent);
+  if (rateHits.size > 5000) for (const [k, v] of rateHits) if (!v.some(t => now - t < windowMs)) rateHits.delete(k);
+  return recent.length > limit;
+}
+
+async function sendCodeEmail(email, code, purpose) {
+  const verify = purpose === 'verify';
+  const subject = verify ? `${code} is your StarReview AI verification code` : `${code} is your StarReview AI password reset code`;
+  const intro = verify ? 'Use this code to verify your email and finish creating your StarReview AI account:' : 'Use this code to reset your StarReview AI password:';
+  const text = `${intro}\n\n${code}\n\nThe code expires in 10 minutes. If you did not request it, you can ignore this email.\n\n— StarReview AI`;
+  if (!smtpReady()) {
+    if (!devCodeLogging()) return false;
+    console.log(`\n[dev email] SMTP is not configured, so the code is shown here instead.\n  To: ${email}\n  Purpose: ${purpose}\n  Code: ${code}\n`);
+    return true;
+  }
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: String(process.env.SMTP_SECURE || 'false') === 'true',
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+  });
+  const html = `<div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
+    <h2 style="margin:0 0 12px;color:#166534">StarReview AI</h2>
+    <p style="font-size:15px;color:#111827">${intro}</p>
+    <p style="font-size:32px;font-weight:700;letter-spacing:8px;color:#111827;margin:20px 0">${code}</p>
+    <p style="font-size:13px;color:#6b7280">The code expires in 10 minutes. If you did not request it, you can ignore this email.</p></div>`;
+  try {
+    await transporter.sendMail({ from: process.env.MAIL_FROM || `StarReview AI <${process.env.SMTP_USER}>`, to: email, subject, text, html });
+    return true;
+  } catch (err) {
+    console.error('[email] could not send code:', err.message);
+    return false;
+  }
+}
+
+// Creates (or reuses, within the resend gap) a code and emails it.
+// Returns { ok } or { ok:false, status, error }.
+async function issueCode(email, purpose, { reuseRecent = false } = {}) {
+  if (!canSendCodes()) return { ok: false, status: 503, error: EMAIL_NOT_READY };
+  const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+  const now = Date.now();
+  const r = await mutate(db => {
+    db.authCodes = (db.authCodes || []).filter(c => new Date(c.expiresAt).getTime() > now);
+    const existing = db.authCodes.find(c => c.email === email && c.purpose === purpose);
+    if (existing && now - new Date(existing.sentAt).getTime() < RESEND_GAP_MS) {
+      return { wait: Math.ceil((RESEND_GAP_MS - (now - new Date(existing.sentAt).getTime())) / 1000) };
+    }
+    db.authCodes = db.authCodes.filter(c => !(c.email === email && c.purpose === purpose));
+    db.authCodes.push({ id: crypto.randomUUID(), email, purpose, codeHash: hashCode(email, purpose, code), attempts: 0, sentAt: new Date(now).toISOString(), expiresAt: new Date(now + CODE_TTL_MS).toISOString() });
+    return {};
+  });
+  if (r.wait) return reuseRecent ? { ok: true } : { ok: false, status: 429, error: `Please wait ${r.wait} seconds before asking for a new code.` };
+  if (!(await sendCodeEmail(email, code, purpose))) {
+    await mutate(db => { db.authCodes = (db.authCodes || []).filter(c => !(c.email === email && c.purpose === purpose)); });
+    return { ok: false, status: 502, error: 'We could not send the email right now. Please try again in a minute.' };
+  }
+  return { ok: true };
+}
+
+// Checks a code; returns null when it is right, otherwise an error message.
+async function checkCode(email, purpose, code) {
+  const given = String(code || '').replace(/\D/g, '');
+  if (given.length !== 6) return 'Enter the 6-digit code from the email.';
+  return mutate(db => {
+    const now = Date.now();
+    db.authCodes = (db.authCodes || []).filter(c => new Date(c.expiresAt).getTime() > now);
+    const entry = db.authCodes.find(c => c.email === email && c.purpose === purpose);
+    if (!entry) return 'This code has expired or was already used. Please ask for a new one.';
+    if (entry.attempts >= CODE_MAX_ATTEMPTS) return 'Too many wrong tries. Please ask for a new code.';
+    const ok = crypto.timingSafeEqual(Buffer.from(entry.codeHash), Buffer.from(hashCode(email, purpose, given)));
+    if (!ok) {
+      entry.attempts += 1;
+      const left = CODE_MAX_ATTEMPTS - entry.attempts;
+      return left > 0 ? `That code is not right. ${left} ${left === 1 ? 'try' : 'tries'} left.` : 'Too many wrong tries. Please ask for a new code.';
+    }
+    db.authCodes = db.authCodes.filter(c => c !== entry);
+    return null;
+  });
+}
+
+const signedIn = (res, user, status = 200) => res.status(status).json({ token: signToken(user), user: publicUser(user) });
+
 app.post('/api/auth/register', async (req, res) => {
   try {
     const email = clean(req.body?.email, 254).toLowerCase();
     const password = typeof req.body?.password === 'string' ? req.body.password : '';
     if (!emailOk(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
     if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    if (rateLimited('register:' + req.ip, 10, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many sign-up attempts. Please try again later.' });
+    if (!canSendCodes()) return res.status(503).json({ error: EMAIL_NOT_READY });
     if (!(await emailDomainReceivesMail(email))) {
       return res.status(400).json({ error: 'This email address does not exist. Please use your real email (for example your Gmail).' });
     }
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = await mutate(db => {
-      if (db.users.some(u => u.email === email)) return null;
+    const outcome = await mutate(db => {
+      const existing = db.users.find(u => u.email === email);
+      if (existing && isVerified(existing)) return 'exists';
+      const name = clean(req.body?.fullName || req.body?.name, 120);
+      const mobile = clean(req.body?.mobile || req.body?.phone, 30);
+      const company = clean(req.body?.company, 120);
+      if (existing) {
+        // Unverified sign-up: whoever proves the email owns it, so the newest details win
+        Object.assign(existing, { passwordHash, ...(name && { name }), ...(mobile && { mobile }), ...(company && { company }) });
+        return 'updated';
+      }
       const now = new Date();
-      const u = {
-        id: crypto.randomUUID(), email, passwordHash, createdAt: now.toISOString(),
-        name: clean(req.body?.fullName || req.body?.name, 120), mobile: clean(req.body?.mobile || req.body?.phone, 30),
-        subscription: { plan: 'Trial', period: `${TRIAL_DAYS} days`, status: 'active', startedAt: now.toISOString(), expiresAt: new Date(now.getTime() + TRIAL_DAYS * 86400000).toISOString() }
-      };
-      db.users.push(u);
+      db.users.push({
+        id: crypto.randomUUID(), email, passwordHash, emailVerified: false, createdAt: now.toISOString(),
+        name, mobile, ...(company && { company }), ...(req.body?.role === 'agency' && { role: 'agency' }),
+        subscription: newTrial(now)
+      });
+      return 'created';
+    });
+    if (outcome === 'exists') return res.status(409).json({ error: 'An account with this email already exists. Please sign in.' });
+    const sent = await issueCode(email, 'verify', { reuseRecent: true });
+    if (!sent.ok) return res.status(sent.status).json({ error: sent.error });
+    res.status(201).json({ needsVerification: true, email, message: `We sent a 6-digit code to ${email}. Enter it to activate your account.` });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not create the account.' }); }
+});
+
+app.post('/api/auth/verify-email', async (req, res) => {
+  try {
+    const email = clean(req.body?.email, 254).toLowerCase();
+    if (!emailOk(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
+    if (rateLimited('verify:' + req.ip, 30, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many attempts. Please try again later.' });
+    const problem = await checkCode(email, 'verify', req.body?.code);
+    if (problem) return res.status(400).json({ error: problem });
+    const user = await mutate(db => {
+      const u = db.users.find(x => x.email === email);
+      if (u) { u.emailVerified = true; u.verifiedAt = new Date().toISOString(); }
       return u;
     });
-    if (!user) return res.status(409).json({ error: 'An account with this email already exists. Please sign in.' });
-    res.status(201).json({ token: signToken(user), user: publicUser(user) });
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not create the account.' }); }
+    if (!user) return res.status(404).json({ error: 'Account not found. Please create it again.' });
+    signedIn(res, user);
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not verify the email.' }); }
+});
+
+app.post('/api/auth/resend-code', async (req, res) => {
+  try {
+    const email = clean(req.body?.email, 254).toLowerCase();
+    const purpose = req.body?.purpose === 'reset' ? 'reset' : 'verify';
+    if (!emailOk(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
+    if (rateLimited('resend:' + req.ip, 10, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+    const db = await readStore();
+    const u = db.users.find(x => x.email === email);
+    const eligible = u && u.id !== 'demo-user-id' && (purpose === 'reset' ? true : !isVerified(u));
+    if (eligible) {
+      const sent = await issueCode(email, purpose);
+      if (!sent.ok) return res.status(sent.status).json({ error: sent.error });
+    }
+    res.json({ ok: true, message: `If ${email} needs a code, a new one is on its way.` });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not send a new code.' }); }
 });
 
 app.post('/api/auth/login', async (req, res) => {
@@ -334,114 +546,92 @@ app.post('/api/auth/login', async (req, res) => {
     const email = clean(req.body?.email, 254).toLowerCase();
     const password = typeof req.body?.password === 'string' ? req.body.password : '';
     if (!emailOk(email) || !password) return res.status(400).json({ error: 'Enter your email and password.' });
-
-    const user = await mutate(async db => {
-      let u = db.users.find(x => x.email === email);
-      if (!u) {
-        const now = new Date();
-        const passwordHash = await bcrypt.hash(password, 12);
-        u = {
-          id: crypto.randomUUID(),
-          email,
-          passwordHash,
-          createdAt: now.toISOString(),
-          name: clean(req.body?.fullName || req.body?.name, 120) || email.split('@')[0],
-          mobile: clean(req.body?.mobile || req.body?.phone, 30) || '+91 9904482945',
-          subscription: { plan: 'Trial', period: `${TRIAL_DAYS} days`, status: 'active', startedAt: now.toISOString(), expiresAt: new Date(now.getTime() + TRIAL_DAYS * 86400000).toISOString() }
-        };
-        db.users.push(u);
-
-        const prefix = email.split('@')[0];
-        const cleanName = prefix.charAt(0).toUpperCase() + prefix.slice(1) + ' Business';
-        db.businesses.push({
-          id: crypto.randomUUID(),
-          userId: u.id,
-          name: cleanName,
-          slug: prefix.replace(/[^a-z0-9]/g, '-') + '-' + Math.random().toString(36).substring(2, 5),
-          city: 'Surat',
-          category: 'Services',
-          googleReviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4',
-          services: ['Customer Care', 'High Quality Service'],
-          staff: ['Team Member'],
-          keywords: ['fast service', 'helpful'],
-          whatsappNumber: '919904482945',
-          brandColor: '#16a34a',
-          competitors: [],
-          createdAt: now.toISOString()
-        });
-      }
-      return u;
-    });
-
-    if (user.passwordHash && !(await bcrypt.compare(password, user.passwordHash))) {
-      // Smoothly update password hash so the business owner is never locked out
-      const newHash = await bcrypt.hash(password, 12);
-      await mutate(db => {
-        const u = db.users.find(x => x.email === email);
-        if (u) u.passwordHash = newHash;
-      });
+    if (rateLimited('login:' + req.ip + ':' + email, 10, 15 * 60 * 1000)) {
+      return res.status(429).json({ error: 'Too many sign-in attempts. Please wait 15 minutes or reset your password.' });
     }
-    res.json({ token: signToken(user), user: publicUser(user) });
+    const db = await readStore();
+    const user = db.users.find(x => x.email === email);
+    if (user && !user.passwordHash && user.googleLinked) {
+      return res.status(401).json({ error: 'This account uses Google sign-in. Use "Sign in with Google", or reset your password to add one.' });
+    }
+    if (!user || !user.passwordHash || !(await bcrypt.compare(password, user.passwordHash))) {
+      return res.status(401).json({ error: 'Incorrect email or password.' });
+    }
+    if (!isVerified(user)) {
+      const sent = await issueCode(email, 'verify', { reuseRecent: true });
+      if (!sent.ok) return res.status(sent.status).json({ error: sent.error });
+      return res.status(403).json({ needsVerification: true, email, error: `Please verify your email first. We sent a 6-digit code to ${email}.` });
+    }
+    signedIn(res, user);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Could not sign in.' });
   }
 });
 
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const email = clean(req.body?.email, 254).toLowerCase();
+    if (!emailOk(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
+    if (rateLimited('forgot:' + req.ip, 10, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+    if (!canSendCodes()) return res.status(503).json({ error: EMAIL_NOT_READY });
+    const db = await readStore();
+    if (db.users.some(x => x.email === email && x.id !== 'demo-user-id')) {
+      const sent = await issueCode(email, 'reset', { reuseRecent: true });
+      if (!sent.ok) return res.status(sent.status).json({ error: sent.error });
+    }
+    res.json({ ok: true, message: `If an account exists for ${email}, we sent a 6-digit reset code to it.` });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not start the password reset.' }); }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const email = clean(req.body?.email, 254).toLowerCase();
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
+    if (!emailOk(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
+    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    if (rateLimited('reset:' + req.ip, 30, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many attempts. Please try again later.' });
+    const problem = await checkCode(email, 'reset', req.body?.code);
+    if (problem) return res.status(400).json({ error: problem });
+    const passwordHash = await bcrypt.hash(password, 12);
+    const user = await mutate(db => {
+      const u = db.users.find(x => x.email === email);
+      if (u) Object.assign(u, { passwordHash, emailVerified: true, verifiedAt: u.verifiedAt || new Date().toISOString(), passwordChangedAt: new Date().toISOString() });
+      return u;
+    });
+    if (!user) return res.status(404).json({ error: 'Account not found.' });
+    signedIn(res, user);
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not reset the password.' }); }
+});
+
+// Google sign-in: only accepted with a Firebase ID token that Google confirms.
 app.post('/api/auth/firebase-login', async (req, res) => {
   try {
-    const rawEmail = clean(req.body?.email, 254).toLowerCase();
-    const idToken = clean(req.body?.idToken, 4096);
-    let verifiedEmail = null;
-    let verifiedName = clean(req.body?.name, 120);
-    let uid = 'google_' + Date.now();
-
-    if (idToken) {
-      const verified = await verifyFirebaseIdToken(idToken);
-      if (verified) {
-        verifiedEmail = verified.email;
-        verifiedName = verified.name || verifiedName;
-        uid = verified.uid;
-      }
+    if (!(process.env.FIREBASE_API_KEY || process.env.VITE_FIREBASE_API_KEY)) {
+      return res.status(503).json({ error: 'Google sign-in is not set up yet. Please use email and password.' });
     }
-
-    if (!verifiedEmail && emailOk(rawEmail)) {
-      verifiedEmail = rawEmail;
-    }
-
-    if (!verifiedEmail) {
-      return res.status(401).json({ error: 'Google sign-in could not be verified. Please enter a valid email.' });
-    }
-
-    const createIfMissing = req.body?.createIfMissing !== false;
-    const db = await readStore();
-    let existingUser = db.users.find(x => x.email === verifiedEmail);
-
-    // Always auto-provision on Google login - no blocking
+    const verified = await verifyFirebaseIdToken(clean(req.body?.idToken, 4096));
+    if (!verified) return res.status(401).json({ error: 'Google sign-in could not be verified. Please try again.' });
 
     const user = await mutate(db => {
-      let u = db.users.find(x => x.email === verifiedEmail);
+      let u = db.users.find(x => x.email === verified.email);
+      const now = new Date();
       if (!u) {
-        const now = new Date();
         u = {
-          id: crypto.randomUUID(),
-          email: verifiedEmail,
-          name: verifiedName || verifiedEmail.split('@')[0],
-          firebaseUid: uid,
-          googleLinked: true,
-          role: verifiedEmail === ADMIN_EMAIL ? 'admin' : 'user',
-          subscription: { plan: 'Trial', period: `${TRIAL_DAYS} days`, status: 'active', startedAt: now.toISOString(), expiresAt: new Date(now.getTime() + TRIAL_DAYS * 86400000).toISOString() },
-          createdAt: now.toISOString()
+          id: crypto.randomUUID(), email: verified.email, name: verified.name || verified.email.split('@')[0],
+          firebaseUid: verified.uid, googleLinked: true, emailVerified: true, verifiedAt: now.toISOString(),
+          role: verified.email === ADMIN_EMAIL ? 'admin' : 'user', subscription: newTrial(now), createdAt: now.toISOString()
         };
         db.users.push(u);
-      } else if (!u.firebaseUid) {
-        u.firebaseUid = uid;
-        if (!u.name) u.name = verifiedName;
+      } else {
+        // An unverified password sign-up for this email was never proven by its maker: drop that password
+        if (!isVerified(u)) u.passwordHash = '';
+        Object.assign(u, { firebaseUid: u.firebaseUid || verified.uid, googleLinked: true, emailVerified: true, verifiedAt: u.verifiedAt || now.toISOString() });
+        if (!u.name) u.name = verified.name;
       }
       return u;
     });
-
-    res.json({ token: signToken(user), user: publicUser(user) });
+    signedIn(res, user);
   } catch (err) {
     console.error('[Firebase Login Error]:', err);
     res.status(500).json({ error: 'Could not complete Google sign-in.' });
@@ -452,6 +642,8 @@ app.get('/api/auth/me', auth, async (req, res) => {
   const db = await readStore();
   const user = db.users.find(u => u.id === req.user.sub);
   if (!user) return res.status(401).json({ error: 'Account not found. Please sign in again.' });
+  // Sessions made before email verification existed must sign in again and verify
+  if (user.id !== 'demo-user-id' && !isVerified(user)) return res.status(401).json({ error: 'Please verify your email to continue.' });
   res.json({ user: publicUser(user) });
 });
 
@@ -585,6 +777,7 @@ app.post('/api/account/deletion-request', auth, async (req, res) => {
 // The key is read on the server only; the browser never sees it.
 // Search: /api/places/search?q=...&pageToken=...  (/api/places/autocomplete kept as an alias)
 const placesSearchHandler = async (req, res) => {
+  if (rateLimited('places:' + req.ip, 60, 60 * 60 * 1000)) return res.status(429).json({ error: 'Too many searches. Please wait a little and try again.', places: [] });
   const query = clean(req.query.q || req.query.input || req.query.query, 150);
   const pageToken = clean(req.query.pageToken, 2000);
   // Google Places when a key is set; otherwise (or if Google fails) free OpenStreetMap search
@@ -606,6 +799,7 @@ app.get('/api/places/search', placesSearchHandler);
 app.get('/api/places/autocomplete', placesSearchHandler);
 
 app.get('/api/places/details', async (req, res) => {
+  if (rateLimited('places:' + req.ip, 60, 60 * 60 * 1000)) return res.status(429).json({ error: 'Too many searches. Please wait a little and try again.' });
   const placeId = clean(req.query.placeId || req.query.place_id, 300);
   if (!placeId) return res.status(400).json({ error: 'placeId is required.' });
   try {
@@ -675,12 +869,11 @@ app.post('/api/business/connect-google-place', auth, async (req, res) => {
 
 /* ---------- Public review funnel (opened by customers via the QR code) ---------- */
 async function funnelContext(slug) {
-  const reqSlug = clean(slug, 80);
+  const reqSlug = clean(slug, 80) || 'demo';
   const db = await readStore();
+  // Unknown slugs must not fall back to another business, or its owner would receive strangers' feedback
   let b = db.businesses.find(x => x.slug === reqSlug);
-  if (!b && (reqSlug === 'demo' || !reqSlug || !db.businesses.some(x => x.slug === reqSlug))) {
-    b = db.businesses[0];
-  }
+  if (!b && reqSlug === 'demo') b = db.businesses.find(x => x.id === 'demo-biz-id') || null;
   const owner = b && db.users.find(u => u.id === b.userId);
   return { db, b, owner };
 }
@@ -698,6 +891,7 @@ app.get('/api/public/business/:slug', async (req, res) => {
   res.json({
     name: b.name,
     city: b.city || '',
+    category: b.category || '',
     services: b.services || [],
     staff: b.staff || [],
     brandColor: b.brandColor || '#1d4934',
@@ -710,21 +904,21 @@ app.get('/api/public/business/:slug', async (req, res) => {
 app.post('/api/public/track', async (req, res) => {
   const type = clean(req.body?.type, 20);
   if (!['scan', 'copy', 'redirect'].includes(type)) return res.status(400).json({ error: 'Unknown event type.' });
-  const reqSlug = clean(req.body?.slug, 80);
-  const db = await readStore();
-  let b = db.businesses.find(x => x.slug === reqSlug) || db.businesses[0];
+  if (rateLimited('track:' + req.ip, 120, 60 * 60 * 1000)) return res.status(429).json({ error: 'Too many requests.' });
+  const { b } = await funnelContext(req.body?.slug);
   if (b) await mutate(db => track(db, type, b.id));
   res.status(201).json({ ok: true });
 });
 
 app.post('/api/public/drafts', async (req, res) => {
   try {
+    if (rateLimited('pdrafts:' + req.ip, 40, 60 * 60 * 1000)) return res.status(429).json({ error: 'Too many requests. Please try again later.' });
     const { b, owner } = await funnelContext(req.body?.slug);
     if (!b || !hasAccess(owner)) return res.status(404).json({ error: 'Review page not found.' });
     const rating = Math.min(5, Math.max(1, Math.floor(Number(req.body?.rating) || 5)));
     const language = LANGUAGES.includes(req.body?.language) ? req.body.language : 'English';
-    const bizName = (req.body?.business && req.body.business.trim()) || b.name;
-    const bizCity = req.body?.city !== undefined ? req.body.city : b.city;
+    const bizName = clean(req.body?.business, 120) || b.name;
+    const bizCity = typeof req.body?.city === 'string' ? clean(req.body.city, 80) : b.city;
     const result = await generateDrafts({
       business: bizName, city: bizCity, rating, language,
       staff: clean(req.body?.staff, 60), service: clean(req.body?.service, 80),
@@ -737,6 +931,7 @@ app.post('/api/public/drafts', async (req, res) => {
 
 app.post('/api/public/feedback', async (req, res) => {
   try {
+    if (rateLimited('feedback:' + req.ip, 10, 60 * 60 * 1000)) return res.status(429).json({ error: 'Too many messages from this device. Please try again later.' });
     const { b, owner } = await funnelContext(req.body?.slug);
     if (!b || !hasAccess(owner)) return res.status(404).json({ error: 'Review page not found.' });
     const message = clean(req.body?.message, 3000);
@@ -756,6 +951,7 @@ app.post('/api/public/feedback', async (req, res) => {
 /* ---------- Demo drafts (public demo page) ---------- */
 app.post('/api/drafts', async (req, res) => {
   try {
+    if (rateLimited('drafts:' + req.ip, 40, 60 * 60 * 1000)) return res.status(429).json({ error: 'Too many requests. Please try again later.' });
     const experience = clean(req.body?.experience, 1000);
     if (!experience) return res.status(400).json({ error: 'Describe a genuine customer experience first.' });
     const language = LANGUAGES.includes(req.body?.language) ? req.body.language : 'English';
@@ -876,9 +1072,95 @@ app.get('/api/analytics', auth, async (req, res) => {
   });
 });
 
+/* ---------- Customer reviews from the QR review page (no login for customers) ---------- */
+// Saved when a customer taps "Copy review & post on Google". We only know the review was copied
+// for Google, not that Google published it, so the status says "copied".
+app.post('/api/public/reviews', async (req, res) => {
+  try {
+    if (rateLimited('review:' + req.ip, 30, 60 * 60 * 1000)) return res.status(429).json({ error: 'Too many reviews from this device. Please try later.' });
+    const { b, owner } = await funnelContext(req.body?.slug);
+    if (!b || (owner && !hasAccess(owner))) return res.status(404).json({ error: 'Review page not found.' });
+    const text = clean(req.body?.text, 3000);
+    const rating = Number(req.body?.rating || 0);
+    if (!text) return res.status(400).json({ error: 'Review text is empty.' });
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) return res.status(400).json({ error: 'Choose a rating from 1 to 5.' });
+    const now = Date.now();
+    const saved = await mutate(db => {
+      db.reviews = db.reviews || [];
+      // Same review copied again within 30 minutes (e.g. "Copy review again"): keep one entry
+      const dup = db.reviews.find(r => r.businessId === b.id && r.text === text && now - new Date(r.createdAt).getTime() < 30 * 60 * 1000);
+      if (dup) { dup.copies = (dup.copies || 1) + 1; return dup; }
+      const item = { id: crypto.randomUUID(), businessId: b.id, rating, text, status: 'copied', copies: 1, source: 'qr', createdAt: new Date(now).toISOString() };
+      db.reviews.push(item);
+      return item;
+    });
+    res.status(201).json({ ok: true, id: saved.id });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Could not save the review.' }); }
+});
+
+// Owner view: every customer review (3-5 star copied for Google + 1-2 star private feedback), newest first
+app.get('/api/business/reviews', auth, async (req, res) => {
+  const db = await readStore();
+  const b = db.businesses.find(x => x.userId === req.user.sub);
+  if (!b) return res.json({ reviews: [] });
+  const posted = (db.reviews || []).filter(r => r.businessId === b.id)
+    .map(r => ({ id: r.id, kind: 'google', rating: r.rating, text: r.text, status: r.status || 'copied', copies: r.copies || 1, createdAt: r.createdAt }));
+  const privateFb = db.feedback.filter(f => f.businessId === b.id)
+    .map(f => ({ id: f.id, kind: 'private', rating: f.rating, text: f.message, contact: f.contact || '', status: f.status || 'active', createdAt: f.createdAt }));
+  res.json({ reviews: [...posted, ...privateFb].sort((x, y) => new Date(y.createdAt) - new Date(x.createdAt)) });
+});
+
+app.delete('/api/business/reviews/:id', auth, async (req, res) => {
+  const removed = await mutate(db => {
+    const b = db.businesses.find(x => x.userId === req.user.sub);
+    if (!b) return false;
+    const r = (db.reviews || []).find(x => x.id === req.params.id && x.businessId === b.id);
+    if (r) { db.reviews = db.reviews.filter(x => x !== r); return true; }
+    const f = db.feedback.find(x => x.id === req.params.id && x.businessId === b.id);
+    if (f) { db.feedback = db.feedback.filter(x => x !== f); return true; }
+    return false;
+  });
+  if (!removed) return res.status(404).json({ error: 'Review not found.' });
+  res.json({ ok: true });
+});
+
+/* ---------- Negative reviews (1-2 star private feedback from the review page) ---------- */
+// Newest first. Each item: { id, rating, message, contact, createdAt, status: 'active' | 'archived' }
+const ownerFeedback = (db, userId) => {
+  const b = db.businesses.find(x => x.userId === userId);
+  return b ? db.feedback.filter(f => f.businessId === b.id) : [];
+};
+app.get('/api/business/feedback', auth, async (req, res) => {
+  const db = await readStore();
+  const list = ownerFeedback(db, req.user.sub)
+    .map(({ id, rating, message, contact, createdAt, status, resolvedAt }) => ({ id, rating, message, contact, createdAt, status: status || 'active', resolvedAt: resolvedAt || null }))
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  res.json({ feedback: list });
+});
+app.patch('/api/business/feedback/:id', auth, async (req, res) => {
+  const status = req.body?.status === 'archived' ? 'archived' : 'active';
+  const item = await mutate(db => {
+    const f = ownerFeedback(db, req.user.sub).find(x => x.id === req.params.id);
+    if (f) { f.status = status; f.resolvedAt = status === 'archived' ? new Date().toISOString() : null; }
+    return f;
+  });
+  if (!item) return res.status(404).json({ error: 'Feedback not found.' });
+  res.json({ ok: true });
+});
+app.delete('/api/business/feedback/:id', auth, async (req, res) => {
+  const removed = await mutate(db => {
+    const f = ownerFeedback(db, req.user.sub).find(x => x.id === req.params.id);
+    if (f) db.feedback = db.feedback.filter(x => x !== f);
+    return Boolean(f);
+  });
+  if (!removed) return res.status(404).json({ error: 'Feedback not found.' });
+  res.json({ ok: true });
+});
+
 /* ---------- Platform feedback and contact ---------- */
 app.post('/api/feedback', async (req, res) => {
   try {
+    if (rateLimited('pfeedback:' + req.ip, 5, 60 * 60 * 1000)) return res.status(429).json({ error: 'Too many messages. Please try again later.' });
     const message = clean(req.body?.message, 3000);
     const rating = Number(req.body?.rating || 0);
     if (!message) return res.status(400).json({ error: 'Please enter feedback.' });
@@ -894,6 +1176,7 @@ app.post('/api/feedback', async (req, res) => {
 
 app.post('/api/contact', async (req, res) => {
   try {
+    if (rateLimited('contact:' + req.ip, 5, 60 * 60 * 1000)) return res.status(429).json({ error: 'Too many messages. Please try again later or contact us on WhatsApp.' });
     const name = clean(req.body?.name, 120), email = clean(req.body?.email, 254), topic = clean(req.body?.topic, 150), message = clean(req.body?.message, 3000);
     if (!name || !emailOk(email) || !message) return res.status(400).json({ error: 'Name, a valid email and a message are required.' });
     const inquiry = { id: crypto.randomUUID(), name, email, topic, message, createdAt: new Date().toISOString() };
@@ -948,33 +1231,17 @@ function activatePayment(db, orderId, paymentId, onlyUserId) {
   return user;
 }
 
-app.post('/api/billing/verify', async (req, res) => {
+app.post('/api/billing/verify', auth, async (req, res) => {
   try {
-    const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
-    let userId = null;
-    if (token) {
-      try { const decoded = jwt.verify(token, JWT_SECRET); userId = decoded.sub; } catch {}
-    }
-
     if (!razorpayReady() || req.body?.mode === 'demo') {
-      const plan = clean(req.body?.plan, 40) || 'Pro';
+      // Demo checkout only simulates a payment: no money is taken and the plan is NOT changed
+      const plan = clean(req.body?.plan, 40);
       const period = clean(req.body?.period, 20) === 'Yearly' ? 'Yearly' : 'Monthly';
-      const result = await mutate(db => {
-        const user = (userId && db.users.find(u => u.id === userId)) || db.users[0];
-        if (user) {
-          user.subscription = {
-            plan,
-            period,
-            status: 'active',
-            startedAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + PERIOD_DAYS[period] * 86400000).toISOString(),
-            isTrial: false
-          };
-          track(db, 'payment_success', null);
-        }
-        return user;
-      });
-      return res.json({ ok: true, user: publicUser(result), message: `Your ${plan} (${period}) plan is now active. Thank you!` });
+      if (!PLANS[plan]) return res.status(400).json({ error: 'Choose a valid plan.' });
+      const db = await readStore();
+      const user = db.users.find(u => u.id === req.user.sub);
+      if (!user) return res.status(404).json({ error: 'Account not found.' });
+      return res.json({ ok: true, demo: true, user: publicUser(user), message: `Demo payment for ${plan} (${period}) succeeded. This is a demo: no money was taken and your plan was not changed.` });
     }
     const orderId = clean(req.body?.razorpay_order_id, 100);
     const paymentId = clean(req.body?.razorpay_payment_id, 100);

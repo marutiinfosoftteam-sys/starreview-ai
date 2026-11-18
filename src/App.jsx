@@ -5,6 +5,7 @@ import BusinessConsole from './BusinessConsole.jsx';
 import BusinessOnboarding from './BusinessOnboarding.jsx';
 import AboutPage from './AboutPage.jsx';
 import PrivacyPolicyPage from './PrivacyPolicyPage.jsx';
+import DemoVideo from './DemoVideo.jsx';
 import { COMPANY } from './company.js';
 import { isFirebaseConfigured, loginWithGoogle } from './firebase.js';
 
@@ -244,11 +245,17 @@ export default function App() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState('');
-  const [mobileCode, setMobileCode] = useState('+1');
+  const [mobileCode, setMobileCode] = useState('+91');
   const [mobileNumber, setMobileNumber] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedPlanForReg, setSelectedPlanForReg] = useState(null);
+  // Email verification / password reset steps on the sign-in card: 'form' | 'verify' | 'forgot' | 'reset'
+  const [authStep, setAuthStep] = useState('form');
+  const [pendingEmail, setPendingEmail] = useState('');
+  const [authCode, setAuthCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [authBusy, setAuthBusy] = useState(false);
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem('sr_user');
@@ -346,25 +353,15 @@ export default function App() {
       razorpay_payment_id: txnId
     });
 
-    const days = periodToActivate === 'Yearly' ? 365 : 30;
-    const updatedUser = r.ok && r.data.user ? r.data.user : {
-      id: user?.id || 'user_' + Date.now(),
-      email: paymentEmail || user?.email || 'customer@mybusiness.com',
-      subscription: {
-        plan: planToActivate,
-        period: periodToActivate,
-        status: 'active',
-        startedAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + days * 86400000).toISOString(),
-        isTrial: false
-      },
-      access: true,
-      replyAssistant: planToActivate === 'Pro' || planToActivate === 'Agency'
-    };
-
-    setUser(updatedUser);
+    // Demo checkout never activates a plan; the server says so and returns the account unchanged
+    if (!r.ok) {
+      setPaymentStep('failed');
+      notify(r.data?.error || 'Demo payment could not be completed. Please sign in and try again.');
+      return;
+    }
+    if (r.data?.user) setUser(r.data.user);
     setPaymentStep('success');
-    notify(`Payment Successful! ${planToActivate} (${periodToActivate}) plan is now active.`);
+    notify(r.data?.message || 'Demo payment succeeded. No money was taken and your plan was not changed.');
   };
 
   const notify = (msg) => {
@@ -547,38 +544,20 @@ export default function App() {
     }
   }, [page, user]);
 
-  const submitAuth = async (e) => {
-    e.preventDefault();
-    const cleanMail = (email || '').trim().toLowerCase();
-    if (!cleanMail) {
-      notify('Please enter your email or username.');
-      return;
-    }
-    if (!password) {
-      notify('Please enter your password.');
-      return;
-    }
-    if (regMode && confirmPassword && password !== confirmPassword) {
-      notify('Passwords do not match');
-      return;
-    }
-    const payload = regMode
-      ? { email: cleanMail, password, fullName, mobile: `${mobileCode} ${mobileNumber}`, plan: selectedPlanForReg?.name || 'Starter' }
-      : { email: cleanMail, password };
-    const r = await api('POST', regMode ? '/api/auth/register' : '/api/auth/login', payload);
-    if (!r.ok) {
-      notify(r.data?.error || 'Authentication failed. Please check your credentials.');
-      return;
-    }
-    setToken(r.data.token);
-    setUser(r.data.user);
+  // Saves the session the server returned and moves on to the dashboard or onboarding
+  const finishSignIn = async (data, message) => {
+    setToken(data.token);
+    setUser(data.user);
     try {
-      localStorage.setItem('sr_email', r.data.user.email);
-      localStorage.setItem('sr_user', JSON.stringify(r.data.user));
+      localStorage.setItem('sr_email', data.user.email);
+      localStorage.setItem('sr_user', JSON.stringify(data.user));
     } catch {}
     setPassword('');
     setConfirmPassword('');
-    notify(regMode ? '🎉 Account created successfully! Welcome to StarReview AI!' : '✓ Signed in successfully.');
+    setAuthCode('');
+    setNewPassword('');
+    setAuthStep('form');
+    notify(message);
     const bRes = await api('GET', '/api/business');
     let fetchedBiz = null;
     if (bRes.ok && bRes.data && bRes.data.business) {
@@ -592,48 +571,133 @@ export default function App() {
     }
   };
 
-  const handleGoogleAuth = async () => {
-    const typedEmail = (email || '').trim().toLowerCase();
-    // If user already typed their email in the login box (e.g. aeshajasani2910@gmail.com), sign in directly with Google!
-    if (typedEmail && typedEmail.includes('@') && typedEmail.includes('.')) {
-      notify(`Signing in with Google as ${typedEmail}...`);
-      await handleExecuteGoogleLogin(typedEmail, true);
+  const goToVerifyStep = (mail, message) => {
+    setPendingEmail(mail);
+    setAuthCode('');
+    setAuthStep('verify');
+    notify(message || `We sent a 6-digit code to ${mail}.`);
+  };
+
+  const submitAuth = async (e) => {
+    e.preventDefault();
+    if (authBusy) return;
+    const cleanMail = (email || '').trim().toLowerCase();
+    if (!cleanMail) {
+      notify('Please enter your email.');
       return;
     }
-
-    // 1. If Firebase Auth is fully configured with environment credentials, use Firebase popup
-    if (isFirebaseConfigured) {
-      try {
-        notify('Opening Google sign-in...');
-        const fbResult = await loginWithGoogle();
-        if (fbResult && fbResult.user && fbResult.user.email) {
-          await handleExecuteGoogleLogin(fbResult.user.email, true, fbResult.user.displayName, fbResult.idToken);
-          return;
-        }
-      } catch (err) {
-        console.warn('[Firebase Google Auth Error]:', err.message);
-        if (err?.code === 'auth/popup-closed-by-user') {
-          notify('Google sign-in was cancelled.');
-          return;
-        }
-      }
+    if (!password) {
+      notify('Please enter your password.');
+      return;
     }
+    if (regMode && password.length < 8) {
+      notify('Password must be at least 8 characters.');
+      return;
+    }
+    if (regMode && password !== confirmPassword) {
+      notify('Passwords do not match');
+      return;
+    }
+    const payload = regMode
+      ? { email: cleanMail, password, fullName, mobile: mobileNumber ? `${mobileCode} ${mobileNumber}` : '', plan: selectedPlanForReg?.name || 'Starter' }
+      : { email: cleanMail, password };
+    setAuthBusy(true);
+    const r = await api('POST', regMode ? '/api/auth/register' : '/api/auth/login', payload);
+    setAuthBusy(false);
+    if (r.data?.needsVerification) {
+      goToVerifyStep(r.data.email || cleanMail, r.data.message || r.data.error);
+      return;
+    }
+    if (!r.ok || !r.data?.token) {
+      notify(r.data?.error || 'Authentication failed. Please check your credentials.');
+      return;
+    }
+    await finishSignIn(r.data, '✓ Signed in successfully.');
+  };
 
-    // 2. Otherwise open Google Account selector modal (supports @gmail.com, @ppsu.ac.in, @company.com)
-    setGoogleModalEmail((email || '').trim().toLowerCase());
-    setGoogleModalStep('input');
-    setGoogleModalLoading(false);
-    setGoogleModalOpen(true);
+  const submitVerifyCode = async (e) => {
+    e.preventDefault();
+    if (authBusy) return;
+    setAuthBusy(true);
+    const r = await api('POST', '/api/auth/verify-email', { email: pendingEmail, code: authCode });
+    setAuthBusy(false);
+    if (!r.ok || !r.data?.token) {
+      notify(r.data?.error || 'Could not verify the code.');
+      return;
+    }
+    await finishSignIn(r.data, '🎉 Email verified! Welcome to StarReview AI!');
+  };
+
+  const resendAuthCode = async (purpose) => {
+    if (authBusy) return;
+    setAuthBusy(true);
+    const r = await api('POST', '/api/auth/resend-code', { email: pendingEmail, purpose });
+    setAuthBusy(false);
+    notify(r.ok ? `A new code was sent to ${pendingEmail}.` : (r.data?.error || 'Could not send a new code.'));
+  };
+
+  const submitForgotPassword = async (e) => {
+    e.preventDefault();
+    if (authBusy) return;
+    const cleanMail = (pendingEmail || '').trim().toLowerCase();
+    if (!cleanMail) {
+      notify('Please enter your email.');
+      return;
+    }
+    setAuthBusy(true);
+    const r = await api('POST', '/api/auth/forgot-password', { email: cleanMail });
+    setAuthBusy(false);
+    if (!r.ok) {
+      notify(r.data?.error || 'Could not start the password reset.');
+      return;
+    }
+    setPendingEmail(cleanMail);
+    setAuthCode('');
+    setNewPassword('');
+    setAuthStep('reset');
+    notify(r.data?.message || `If an account exists, we sent a code to ${cleanMail}.`);
+  };
+
+  const submitResetPassword = async (e) => {
+    e.preventDefault();
+    if (authBusy) return;
+    if (newPassword.length < 8) {
+      notify('Password must be at least 8 characters.');
+      return;
+    }
+    setAuthBusy(true);
+    const r = await api('POST', '/api/auth/reset-password', { email: pendingEmail, code: authCode, password: newPassword });
+    setAuthBusy(false);
+    if (!r.ok || !r.data?.token) {
+      notify(r.data?.error || 'Could not reset the password.');
+      return;
+    }
+    await finishSignIn(r.data, '✓ Password updated. You are signed in.');
+  };
+
+  const handleGoogleAuth = async () => {
+    // Google sign-in only works through Firebase; the server checks the Google token
+    if (!isFirebaseConfigured) {
+      notify('Google sign-in is not available yet. Please use your email and password.');
+      return;
+    }
+    try {
+      notify('Opening Google sign-in...');
+      const fbResult = await loginWithGoogle();
+      if (fbResult && fbResult.user && fbResult.user.email && fbResult.idToken) {
+        await handleExecuteGoogleLogin(fbResult.user.email, true, fbResult.user.displayName, fbResult.idToken);
+      }
+    } catch (err) {
+      console.warn('[Firebase Google Auth Error]:', err.message);
+      notify(err?.code === 'auth/popup-closed-by-user' ? 'Google sign-in was cancelled.' : 'Google sign-in failed. Please try again.');
+    }
   };
 
   const handleGoogleModalSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    const cleanMail = googleModalEmail.trim().toLowerCase();
-    if (!cleanMail || !cleanMail.includes('@') || !cleanMail.includes('.')) {
-      notify('Please enter a valid Google email address.');
-      return;
-    }
-    await handleExecuteGoogleLogin(cleanMail, true);
+    // The old "type any Google email" box is retired: Google sign-in must go through Google
+    setGoogleModalOpen(false);
+    await handleGoogleAuth();
   };
 
   const handleExecuteGoogleLogin = async (targetEmail, createIfMissing = true, targetName = '', idToken = null) => {
@@ -754,52 +818,23 @@ export default function App() {
       return;
     }
 
-    try {
-      const r = await api('POST', '/api/auth/register', {
-        name: agencyForm.name,
-        company: agencyForm.company,
-        email: agencyForm.email,
-        phone: agencyForm.phone,
-        password: agencyForm.password,
-        role: 'agency',
-        plan: 'Multi-Business Trial'
-      });
-
-      const registeredUser = r.ok && r.data?.user ? r.data.user : {
-        name: agencyForm.name,
-        email: agencyForm.email,
-        company: agencyForm.company,
-        phone: agencyForm.phone,
-        role: 'agency',
-        plan: 'Multi-Business Trial',
-        access: true
-      };
-
-      setUser(registeredUser);
-      localStorage.setItem('sr_user', JSON.stringify(registeredUser));
-      setSub({
-        plan: 'Multi-Business Standard',
-        active: true,
-        expiresAt: new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString()
-      });
-
-      setAgencySubmitted(true);
-      notify('Multi-Business account activated! Welcome to the Agency Console.');
-    } catch {
-      const fallbackUser = {
-        name: agencyForm.name,
-        email: agencyForm.email,
-        company: agencyForm.company,
-        phone: agencyForm.phone,
-        role: 'agency',
-        plan: 'Multi-Business Standard',
-        access: true
-      };
-      setUser(fallbackUser);
-      localStorage.setItem('sr_user', JSON.stringify(fallbackUser));
-      setAgencySubmitted(true);
-      notify('Multi-Business account activated!');
+    const r = await api('POST', '/api/auth/register', {
+      name: agencyForm.name,
+      company: agencyForm.company,
+      email: agencyForm.email,
+      phone: agencyForm.phone,
+      password: agencyForm.password,
+      role: 'agency',
+      plan: 'Multi-Business Trial'
+    });
+    if (!r.data?.needsVerification) {
+      notify(r.data?.error || 'Could not create the account. Please try again.');
+      return;
     }
+    // Agency accounts verify their email like everyone else, on the sign-in page
+    setRegMode(false);
+    navigate('Account');
+    goToVerifyStep(r.data.email || agencyForm.email.trim().toLowerCase(), r.data.message);
   };
 
   const copy = async (t) => {
@@ -1656,6 +1691,16 @@ export default function App() {
                   ))}
                 </div>
               </div>
+            </section>
+
+            {/* 1b. VIRTUAL DEMO VIDEO: how StarReview AI works, end to end */}
+            <section className="section wrap dv-section" id="demo-video">
+              <div className="section-heading">
+                <div className="eyebrow">SEE IT IN ACTION</div>
+                <h2>How StarReview AI <em>works</em></h2>
+                <p>A 40-second walkthrough: from a QR scan at your counter to a 5-star review on Google, while unhappy feedback comes privately to you.</p>
+              </div>
+              <DemoVideo />
             </section>
 
             {/* 2. FULL-WIDTH EDGE-TO-EDGE CONTINUOUS TICKER / SLIDER */}
@@ -2893,6 +2938,72 @@ export default function App() {
                 </div>
               )}
 
+              {authStep !== 'form' ? (
+                <div className="rf-auth-step">
+                  <h2 className="rf-login-card-title">
+                    {authStep === 'verify' ? 'Verify Your Email' : authStep === 'forgot' ? 'Reset Your Password' : 'Choose a New Password'}
+                  </h2>
+                  <p className="rf-login-card-sub">
+                    {authStep === 'verify' && <>We sent a 6-digit code to <strong>{pendingEmail}</strong>. Enter it below to activate your account.</>}
+                    {authStep === 'forgot' && 'Enter your account email and we will send you a 6-digit reset code.'}
+                    {authStep === 'reset' && <>Enter the code sent to <strong>{pendingEmail}</strong> and your new password.</>}
+                  </p>
+
+                  {authStep === 'forgot' ? (
+                    <form onSubmit={submitForgotPassword}>
+                      <div className="rf-login-form-group">
+                        <label className="rf-login-label">EMAIL</label>
+                        <input className="rf-login-input" type="email" required autoComplete="email" placeholder="name@business.com"
+                          value={pendingEmail} onChange={(e) => setPendingEmail(e.target.value)} />
+                      </div>
+                      <button className="rf-login-submit-btn" type="submit" disabled={authBusy}>
+                        {authBusy ? 'Sending…' : 'Send Reset Code '}<span className="rf-nav-arrow">→</span>
+                      </button>
+                    </form>
+                  ) : (
+                    <form onSubmit={authStep === 'verify' ? submitVerifyCode : submitResetPassword}>
+                      <div className="rf-login-form-group">
+                        <label className="rf-login-label">6-DIGIT CODE</label>
+                        <input className="rf-login-input rf-code-input" type="text" inputMode="numeric" autoComplete="one-time-code"
+                          required maxLength={6} pattern="[0-9]{6}" placeholder="123456" autoFocus
+                          value={authCode} onChange={(e) => setAuthCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          style={{ letterSpacing: '0.5em', fontSize: '1.3rem', textAlign: 'center', fontWeight: 700 }} />
+                      </div>
+                      {authStep === 'reset' && (
+                        <div className="rf-login-form-group">
+                          <label className="rf-login-label">NEW PASSWORD</label>
+                          <div className="rf-pwd-wrapper">
+                            <input className="rf-login-input rf-pwd-input" type={showPassword ? 'text' : 'password'} required minLength="8"
+                              autoComplete="new-password" placeholder="At least 8 characters"
+                              value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                            <button type="button" className="rf-pwd-toggle-btn" onClick={() => setShowPassword(!showPassword)} aria-label="Toggle password visibility">
+                              <i className={showPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'}></i>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      <button className="rf-login-submit-btn" type="submit" disabled={authBusy || authCode.length !== 6}>
+                        {authBusy ? 'Checking…' : authStep === 'verify' ? 'Verify & Continue ' : 'Update Password '}<span className="rf-nav-arrow">→</span>
+                      </button>
+                      <div className="rf-login-aux-row" style={{ marginTop: 14 }}>
+                        <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>Didn't get it? Check spam.</span>
+                        <button type="button" className="rf-login-forgot-link" disabled={authBusy}
+                          onClick={() => resendAuthCode(authStep === 'verify' ? 'verify' : 'reset')}>
+                          Resend code
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  <div className="rf-login-switch-row">
+                    <button type="button" className="rf-login-switch-btn"
+                      onClick={() => { setAuthStep('form'); setAuthCode(''); setNewPassword(''); }}>
+                      ← Back to {regMode ? 'sign up' : 'sign in'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+              <>
               <h2 className="rf-login-card-title">{regMode ? 'Create Your Business Account' : 'Business Login'}</h2>
               <p className="rf-login-card-sub">{regMode ? 'Create your business account in 30 seconds to get started.' : 'Enter your credentials to access your review dashboard'}</p>
 
@@ -2927,8 +3038,8 @@ export default function App() {
                             value={mobileCode}
                             onChange={(e) => setMobileCode(e.target.value)}
                           >
-                            <option value="+1">+1</option>
                             <option value="+91">+91</option>
+                            <option value="+1">+1</option>
                             <option value="+44">+44</option>
                             <option value="+61">+61</option>
                             <option value="+971">+971</option>
@@ -2968,7 +3079,7 @@ export default function App() {
                             className="rf-login-input rf-pwd-input"
                             type={showPassword ? 'text' : 'password'}
                             required
-                            minLength="6"
+                            minLength="8"
                             placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -2990,7 +3101,7 @@ export default function App() {
                             className="rf-login-input rf-pwd-input"
                             type={showConfirmPassword ? 'text' : 'password'}
                             required
-                            minLength="6"
+                            minLength="8"
                             placeholder="••••••••"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -3010,12 +3121,13 @@ export default function App() {
                 ) : (
                   <>
                     <div className="rf-login-form-group">
-                      <label className="rf-login-label">EMAIL OR USERNAME</label>
+                      <label className="rf-login-label">EMAIL</label>
                       <input
                         className="rf-login-input"
-                        type="text"
+                        type="email"
                         required
-                        placeholder="WebpressHub or name@business.com"
+                        autoComplete="email"
+                        placeholder="name@business.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                       />
@@ -3052,7 +3164,7 @@ export default function App() {
                       <button
                         type="button"
                         className="rf-login-forgot-link"
-                        onClick={() => notify('Password reset instructions sent to your registered email.')}
+                        onClick={() => { setPendingEmail((email || '').trim().toLowerCase()); setAuthStep('forgot'); }}
                       >
                         Forgot Password?
                       </button>
@@ -3060,8 +3172,8 @@ export default function App() {
                   </>
                 )}
 
-                <button className="rf-login-submit-btn" type="submit">
-                  {regMode ? 'Create Account ' : 'Sign In to Dashboard '}
+                <button className="rf-login-submit-btn" type="submit" disabled={authBusy}>
+                  {authBusy ? 'Please wait…' : regMode ? 'Create Account ' : 'Sign In to Dashboard '}
                   <span className="rf-nav-arrow">→</span>
                 </button>
               </form>
@@ -3094,6 +3206,9 @@ export default function App() {
                   <>Don't have an account? <button type="button" className="rf-login-switch-btn" onClick={() => { setRegMode(true); window.history.pushState({}, '', '/register'); }}>Create Account</button></>
                 )}
               </div>
+
+              </>
+              )}
 
               {/* Security Strip */}
               <div className="rf-login-security-footer">
@@ -3728,15 +3843,14 @@ export default function App() {
             {paymentStep === 'success' && (
               <div className="rzp-center-box">
                 <div className="rzp-success-icon">✓</div>
-                <h3 style={{ color: '#15803d', margin: '0 0 0.5rem', fontWeight: 900 }}>Payment Successful!</h3>
+                <h3 style={{ color: '#15803d', margin: '0 0 0.5rem', fontWeight: 900 }}>Demo Payment Successful</h3>
                 <p style={{ margin: '0 0 1.25rem', color: '#475569', fontSize: '0.9rem' }}>
-                  ₹{paymentPlan.amount}.00 successfully paid to StarReview AI.
+                  This was a demo checkout. No money was taken and your plan was not changed.
                 </p>
                 <div className="rzp-receipt-card">
-                  <div><span>Transaction ID:</span> <b>{paymentTxnId}</b></div>
-                  <div><span>Plan Activated:</span> <b>{paymentPlan.name} ({paymentPlan.period})</b></div>
-                  <div><span>Status:</span> <b style={{ color: '#16a34a' }}>Active ✓</b></div>
-                  <div><span>Expiry Date:</span> <b>{new Date(Date.now() + (paymentPlan.period === 'Yearly' ? 365 : 30) * 86400000).toLocaleDateString()}</b></div>
+                  <div><span>Demo reference:</span> <b>{paymentTxnId}</b></div>
+                  <div><span>Plan tried:</span> <b>{paymentPlan.name} ({paymentPlan.period}) · ₹{paymentPlan.amount}</b></div>
+                  <div><span>Status:</span> <b style={{ color: '#b45309' }}>Demo only, not charged</b></div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
                   <button
@@ -3752,10 +3866,10 @@ export default function App() {
                     className="btn btn-light"
                     onClick={() => {
                       setRazorpayModal(false);
-                      notify('Invoice receipt downloaded.');
+                      window.open(`https://wa.me/${cfg.whatsappNumber || '919904482945'}?text=${encodeURIComponent(`Hi! I'd like to activate the ${paymentPlan.name} (${paymentPlan.period}) plan for StarReview AI.`)}`, '_blank', 'noopener,noreferrer');
                     }}
                   >
-                    Receipt ↓
+                    Activate via WhatsApp
                   </button>
                 </div>
               </div>

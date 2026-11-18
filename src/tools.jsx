@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { buildReviewDrafts } from './reviewLibrary.js';
 import QRCode from 'qrcode';
 import { api } from './api.js';
 
@@ -194,45 +195,24 @@ export function ReviewFunnel({ slug, notify }) {
     return urlParams.get('c') || urlParams.get('city') || biz?.city || '';
   };
 
-  // Ready-made natural review pools for each star rating (dynamically shuffled so reviews never look repeated or AI-written)
-  const fallbackDrafts = (n, bName, bCity) => {
-    const cleanBiz = (bName && bName.toLowerCase().includes('demo') ? 'this place' : bName) || 'this business';
-    const where = bCity ? ` in ${bCity}` : '';
-    const pool5 = [
-      `Outstanding experience at ${cleanBiz}${where}! The staff was exceptionally welcoming, professional, and quick. 5 stars all the way! ⭐⭐⭐⭐⭐`,
-      `Hands down one of the best experiences in ${bCity || 'the city'}! Everything at ${cleanBiz} exceeded my expectations. Smooth, easy, and top quality. Highly recommended! 😊`,
-      `Exceptional service from the entire team at ${cleanBiz}! Super polite staff, prompt response, and seamless experience. Will definitely be a regular! ✨`,
-      `Truly impressive service! The attention to detail and customer care at ${cleanBiz} was first-class. Thank you so much! 👍`,
-      `10/10 experience! Clean, welcoming environment and very helpful team. Couldn't have asked for better service. Kudos to ${cleanBiz}! ⭐`,
-      `Brilliant service from start to finish. Fast, polite, and very reliable. I will definitely be recommending ${cleanBiz} to friends and family! 🙌`,
-      `Had a wonderful visit to ${cleanBiz}${where}. The team is courteous, efficient, and makes you feel right at home. Keep it up! 💯`,
-      `Very pleased with the top-tier quality and polite staff at ${cleanBiz}. Everything went smoothly and on time. Top marks! ⭐⭐⭐⭐⭐`
-    ];
-    const pool4 = [
-      `Really good experience at ${cleanBiz}${where}! The staff was very polite, prompt, and attentive. Definitely recommended! 👍`,
-      `Very happy with my visit to ${cleanBiz}. Everything was smooth, professional, and well-managed. Great team effort! ⭐`,
-      `Pleasant experience from start to finish. Good customer support and quick response. Will certainly visit again! 😊`,
-      `Solid 4-star service at ${cleanBiz}${where}! Courteous staff and quality service. Just a minor wait, but overall very impressed.`,
-      `Great service and friendly atmosphere. The team at ${cleanBiz} took good care of everything. Keep up the good work! 👍`,
-      `Reliable and dependable team at ${cleanBiz}. Smooth experience and polite assistance throughout. Happy with the service! ✨`,
-      `Good quality service and respectful staff at ${cleanBiz}${where}. Everything was handled properly and on time. Recommended.`,
-      `Nice visit to ${cleanBiz}. The team is responsive and solved all queries patiently. Good overall experience!`
-    ];
-    const pool3 = [
-      `My visit to ${cleanBiz}${where} was overall decent. The staff was polite and helpful. There is a bit of room for improvement in speed, but appreciate the effort.`,
-      `Average experience at ${cleanBiz}. The premises were clean and the team assisted nicely. Service could be a little faster, but overall okay.`,
-      `Fair and honest feedback for ${cleanBiz}. Friendly customer support and good guidance. A few minor delays, but the team handled things respectfully.`,
-      `Visited ${cleanBiz}${where} recently. Staff was respectful and answered questions patiently. Looking forward to seeing improvements next time.`,
-      `Decent service at ${cleanBiz}. Overall satisfied with the interaction, though turnaround time could be improved. Thanks to the team for their help.`,
-      `Satisfactory experience. The team at ${cleanBiz} was accommodating and courteous. A few small things could be improved, but a good visit overall.`,
-      `Balanced review: Staff at ${cleanBiz}${where} is hardworking and polite. Service was fine overall, just needs slightly quicker execution.`,
-      `Okay visit to ${cleanBiz}. Good effort by the team, though there is room for better coordination. Hope this feedback helps constructively.`
-    ];
+  // Ready-made reviews from the offline library: matched to the business type and the star rating,
+  // with thousands of combinations per rating so customers rarely see the same text twice.
+  const libraryDrafts = n => buildReviewDrafts({
+    rating: n,
+    name: getBizName() === 'this business' ? '' : getBizName(),
+    city: getBizCity(),
+    category: biz?.category || '',
+    staff: biz?.staff || [],
+    services: biz?.services || [],
+    count: 3
+  });
 
-    const source = n >= 5 ? pool5 : n === 4 ? pool4 : pool3;
-    // Shuffle and pick 3 distinct drafts
-    const shuffled = [...source].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 3);
+  const showMoreDrafts = () => {
+    const list = libraryDrafts(rating);
+    setDrafts(list);
+    setFinalReview(list[0] || '');
+    setPicked(0);
+    setPosted(false);
   };
 
   // Customer taps a star: 3, 4 or 5 stars get ready-made review messages for that rating;
@@ -248,10 +228,7 @@ export function ReviewFunnel({ slug, notify }) {
 
     setStep('drafts');
     setBusy(false);
-    const bName = getBizName();
-    const bCity = getBizCity();
-    const list = fallbackDrafts(n, bName, bCity);
-
+    const list = libraryDrafts(n);
     setDrafts(list);
     // The first message is filled in right away, so one tap copies it and opens Google
     setFinalReview(list[0] || '');
@@ -340,6 +317,8 @@ export function ReviewFunnel({ slug, notify }) {
     }
 
     setPosted(true);
+    // Save the customer's review for the owner (no login, nothing asked; runs after Google opens)
+    api('POST', '/api/public/reviews', { slug: slug || 'demo', rating, text });
     api('POST', '/api/public/track', { slug: slug || 'demo', type: 'copy' });
     if (target) api('POST', '/api/public/track', { slug: slug || 'demo', type: 'redirect' });
     if (notify) notify(copied ? `✓ ${rating}★ Review copied! Paste & tap Post on Google.` : 'Review copied. Please paste on Google.');
@@ -383,7 +362,7 @@ export function ReviewFunnel({ slug, notify }) {
       <div style={{ display: 'flex', justifyContent: 'center', gap: '0.85rem', marginTop: '1.5rem', fontSize: '0.78rem', color: '#64748b' }}>
         <span>⚡ Quick &amp; Easy</span>
         <span>•</span>
-        <span>✦ AI-Assisted Drafts</span>
+        <span>✦ Ready-made Reviews</span>
         <span>•</span>
         <span>🔒 Secure</span>
       </div>
@@ -447,6 +426,12 @@ export function ReviewFunnel({ slug, notify }) {
                 <span className="rf-review-option-cta">{picked === i ? '✓ Selected' : 'Use this'}</span>
               </button>
             ))}
+          </div>
+          <div style={{ textAlign: 'center', margin: '0.35rem 0 1rem' }}>
+            <button type="button" onClick={showMoreDrafts}
+              style={{ background: 'none', border: '1px solid #bbf7d0', color: '#166534', borderRadius: 999, padding: '6px 14px', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer' }}>
+              🔄 Show different reviews
+            </button>
           </div>
 
           <p className="rf-review-step-title"><span>2</span> Your review <small>(you can edit it)</small></p>
