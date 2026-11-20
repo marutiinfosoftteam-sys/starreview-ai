@@ -746,7 +746,7 @@ export function Dashboard({ user, business, navigate }) {
             <button onClick={() => navigate('My business')}>◈ Business profile <span>→</span></button>
             <button onClick={() => navigate('QR flyer')}>▦ QR flyer <span>→</span></button>
             <button onClick={() => navigate('Reply assistant')}>✉ Reply assistant <span>→</span></button>
-            <button onClick={() => navigate('SEO analyzer')}>◎ SEO analyzer <span>→</span></button>
+            <button onClick={() => navigate('SEO analyzer')}>◎ Google Maps Strategy <span>→</span></button>
             <button onClick={() => navigate('Pricing')}>◇ Plans <span>→</span></button>
           </div>
           <div className="notice small-notice">{user ? 'Numbers update as customers use your review page.' : 'Sign in to see your own live numbers.'}</div>

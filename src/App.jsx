@@ -9,6 +9,7 @@ import TermsOfServicePage from './TermsOfServicePage.jsx';
 import CookiePolicyPage from './CookiePolicyPage.jsx';
 import PlatformFeaturesPage from './PlatformFeaturesPage.jsx';
 import GrowingBusinessesPage from './GrowingBusinessesPage.jsx';
+import GoogleMapsStrategyPage from './GoogleMapsStrategyPage.jsx';
 import DemoVideo from './DemoVideo.jsx';
 import { COMPANY } from './company.js';
 import { isFirebaseConfigured, loginWithGoogle } from './firebase.js';
@@ -20,7 +21,7 @@ const features = [
   ['fa-solid fa-chart-line', 'Reputation analytics', 'Track QR scans, drafts, copies, Google redirects and conversion in one dashboard.'],
   ['fa-solid fa-reply-all', 'Reply assistant', 'Draft sentiment-aware replies to your Google reviews. Included in Pro and Starter plans.'],
   ['fa-solid fa-print', 'Print-ready flyers', 'Pick your brand color and download a clean A6 flyer as a high-resolution PNG.'],
-  ['fa-solid fa-gauge-high', 'Profile health check', 'Run a 20-point check of your Google Business Profile and get a 0 to 100 score with fixes.'],
+  ['fa-solid fa-gauge-high', 'Google Maps Ranking Strategy', 'Understand Google’s 3-pack ranking algorithm, calculate review ROI, and follow our 10-point local SEO checklist.'],
   ['fa-solid fa-user-tag', 'Staff and service mentions', 'Customers can mention the staff member and service they used, so drafts feel specific and real.'],
   ['fa-solid fa-chart-simple', 'Competitor comparison', 'Add up to four local competitors and see how your rating and reviews compare.']
 ];
@@ -30,6 +31,7 @@ const toolTarget = {
   'Print-ready flyers': 'QR flyer',
   'AI review assistant': 'Try the demo',
   'Reply assistant': 'Reply assistant',
+  'Google Maps Ranking Strategy': 'SEO analyzer',
   'Profile health check': 'SEO analyzer',
   'Competitor comparison': 'SEO analyzer',
   'Staff and service mentions': 'My business'
@@ -92,6 +94,8 @@ export const routeMap = {
   '/business': 'My business',
   '/reply-assistant': 'Reply assistant',
   '/seo-analyzer': 'SEO analyzer',
+  '/ranking-strategy': 'SEO analyzer',
+  '/local-seo-strategy': 'SEO analyzer',
   '/about': 'About us',
   '/faq': 'Frequently asked questions',
   '/multi-business': 'Multi-business plan',
@@ -964,7 +968,7 @@ export default function App() {
                   'Smart & Customizable Google Review QR Code',
                   'Printable QR Standee & Direct Review Link',
                   'Review, Rating & Growth Analytics',
-                  'AI Google Business Profile Analyzer',
+                  'Google Maps Ranking Strategy & Checklist',
                   'Customer Review Tracking',
                   'No Review Drop / Loss Guarantee',
                   '100% Ad-Free Funnel Experience',
@@ -1016,7 +1020,7 @@ export default function App() {
                   'Smart & Customizable Google Review QR Code',
                   'Printable QR Standee & Direct Review Link',
                   'Review, Rating & Growth Analytics',
-                  'AI Google Business Profile Analyzer',
+                  'Google Maps Ranking Strategy & Checklist',
                   'Customer Review Tracking',
                   'No Review Drop / Loss Guarantee',
                   '100% Ad-Free Funnel Experience',
@@ -1116,7 +1120,7 @@ export default function App() {
                   'Smart & Customizable Google Review QR Code',
                   'Printable QR Standee & Direct Review Link',
                   'Review, Rating & Growth Analytics',
-                  'AI Google Business Profile Analyzer',
+                  'Google Maps Ranking Strategy & Checklist',
                   'Customer Review Tracking',
                   'No Review Drop / Loss Guarantee',
                   '100% Ad-Free Funnel Experience',
@@ -1168,7 +1172,7 @@ export default function App() {
                   'Smart & Customizable Google Review QR Code',
                   'Printable QR Standee & Direct Review Link',
                   'Review, Rating & Growth Analytics',
-                  'AI Google Business Profile Analyzer',
+                  'Google Maps Ranking Strategy & Checklist',
                   'Customer Review Tracking',
                   'No Review Drop / Loss Guarantee',
                   '100% Ad-Free Funnel Experience',
@@ -3623,62 +3627,7 @@ export default function App() {
       )}
 
       {page === 'SEO analyzer' && (
-        <div className="rf-privacy-page-shell" style={{ background: '#f8fafc' }}>
-          <div className="wrap" style={{ maxWidth: 1160, margin: '0 auto', padding: '40px 20px 80px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-              <button
-                type="button"
-                className="rf-privacy-back-btn"
-                onClick={() => navigate('Home')}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, color: '#334155', cursor: 'pointer' }}
-              >
-                <i className="fa-solid fa-arrow-left"></i> Back to Homepage
-              </button>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#fef3c7', color: '#92400e', padding: '6px 14px', borderRadius: 20, fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.05em' }}>
-                <i className="fa-solid fa-magnifying-glass-chart"></i> LOCAL SEO &amp; GOOGLE MAPS AUDIT
-              </span>
-            </div>
-
-            <header style={{ textAlign: 'center', maxWidth: 840, margin: '0 auto 36px' }}>
-              <h1 style={{ fontFamily: 'Manrope, sans-serif', fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: 14 }}>
-                Google Business Profile <span style={{ color: '#16a34a' }}>Health &amp; SEO Analyzer</span>
-              </h1>
-              <p style={{ fontSize: '1.05rem', color: '#64748b', lineHeight: 1.6, marginBottom: 0 }}>
-                Audit your Google Maps listing across 20 essential ranking factors. Check completeness, identify keyword gaps, and benchmark against local competitors to capture the top position in the Google 3-Pack.
-              </p>
-            </header>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 36 }}>
-              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
-                <div style={{ color: '#16a34a', fontWeight: 800, fontSize: '1.35rem' }}>46%</div>
-                <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, marginTop: 4 }}>Google Searches Have Local Intent</div>
-              </div>
-              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
-                <div style={{ color: '#16a34a', fontWeight: 800, fontSize: '1.35rem' }}>78%</div>
-                <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, marginTop: 4 }}>Local Searches Lead to Visits in 24h</div>
-              </div>
-              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
-                <div style={{ color: '#16a34a', fontWeight: 800, fontSize: '1.35rem' }}>Top 3</div>
-                <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, marginTop: 4 }}>Local 3-Pack Captures 70%+ Clicks</div>
-              </div>
-              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
-                <div style={{ color: '#16a34a', fontWeight: 800, fontSize: '1.35rem' }}>#1 Signal</div>
-                <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, marginTop: 4 }}>Review Velocity &amp; Keywords in Reviews</div>
-              </div>
-            </div>
-
-            <SeoAnalyzer user={user} business={myBusiness} setBusiness={setMyBusiness} notify={notify} />
-
-            <div style={{ marginTop: 36, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 16, padding: '24px 28px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, color: '#15803d', fontWeight: 800, fontSize: '1.02rem' }}>
-                <i className="fa-solid fa-lightbulb"></i> How StarReview AI Helps You Win Google Maps SEO
-              </div>
-              <p style={{ margin: 0, fontSize: '0.88rem', color: '#166534', lineHeight: 1.6 }}>
-                Google ranks local businesses based on three core pillars: <strong>Review Velocity</strong> (fresh reviews every week), <strong>Keywords in Review Text</strong> (e.g. your specific dishes, treatments, or repairs), and <strong>Owner Response Rate</strong> (replying to 90%+ reviews). StarReview AI solves all three seamlessly through automated AI review prompts and our 24/7 reply assistant.
-              </p>
-            </div>
-          </div>
-        </div>
+        <GoogleMapsStrategyPage navigate={navigate} />
       )}
 
       {page === 'Review' && (
@@ -4417,7 +4366,7 @@ function Footer({ navigate }) {
       items: [
         ['Platform Features', 'Features'],
         ['AI vs Normal QR', 'AI vs QR'],
-        ['AI SEO Analyzer', 'SEO analyzer'],
+        ['Google Maps Ranking Strategy', 'SEO analyzer'],
         ['How It Works', 'How it works'],
         ['Growing Businesses', 'Growing businesses']
       ]
