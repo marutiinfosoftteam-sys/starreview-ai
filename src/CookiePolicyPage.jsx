@@ -40,7 +40,7 @@ export default function CookiePolicyPage({ navigate }) {
         {/* Hero Header */}
         <header style={{ textAlign: 'center', maxWidth: 760, margin: '0 auto 40px' }}>
           <h1 style={{ fontFamily: 'Manrope, sans-serif', fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: 14 }}>
-            Cookie &amp; Local Storage <span style={{ color: '#16a34a' }}>Preferences</span>
+            Cookie &amp; Local Storage <span style={{ color: '#16a34a' }}>Policy</span>
           </h1>
           <p style={{ fontSize: '1.02rem', color: '#64748b', lineHeight: 1.6, margin: 0 }}>
             StarReview AI uses minimal, policy-safe browser storage to authenticate dashboard sessions and preserve review funnel states. We never use third-party advertising trackers or sell customer data.
