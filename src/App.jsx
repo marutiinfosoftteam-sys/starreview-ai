@@ -866,7 +866,7 @@ export default function App() {
 
   const choosePlan = (planName, period = 'Monthly') => {
     if (planName === 'Multi-Business' || planName === 'Agency') {
-      window.open(`https://wa.me/${cfg.whatsappNumber || '919904482945'}?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business / Agency Plan for StarReview AI. Please share pricing and business limit details.")}`, '_blank');
+      window.open(`https://wa.me/919904482945?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business / Agency Plan for StarReview AI. Please share pricing and business limit details.")}`, '_blank', 'noopener,noreferrer');
       return;
     }
     const amount = planName === 'Starter'
@@ -1078,7 +1078,7 @@ export default function App() {
                 ))}
               </ul>
               <a
-                href={`https://wa.me/${cfg.whatsappNumber || '919904482945'}?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business Plan for StarReview AI.")}`}
+                href={`https://wa.me/919904482945?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business Plan for StarReview AI.")}`}
                 target="_blank"
                 rel="noreferrer"
                 className="pricing-cta cta-whatsapp"
@@ -1230,7 +1230,7 @@ export default function App() {
                 ))}
               </ul>
               <a
-                href={`https://wa.me/${cfg.whatsappNumber || '919904482945'}?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business Plan for StarReview AI.")}`}
+                href={`https://wa.me/919904482945?text=${encodeURIComponent("Hi! I'm interested in the Multi-Business Plan for StarReview AI.")}`}
                 target="_blank"
                 rel="noreferrer"
                 className="pricing-cta cta-whatsapp"
@@ -3702,35 +3702,33 @@ export default function App() {
               >
                 Submit inquiry →
               </button>
-              {cfg.whatsappNumber && (
-                <a
-                  className="btn"
-                  href={`https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent('Hi StarReview AI, I need help.')}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    width: '100%',
-                    padding: '13px 20px',
-                    borderRadius: '10px',
-                    background: '#ffffff',
-                    border: '1.5px solid #22c55e',
-                    color: '#15803d',
-                    fontWeight: 700,
-                    fontSize: '0.92rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    textDecoration: 'none',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 6px rgba(34, 197, 94, 0.12)'
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.borderColor = '#16a34a'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#22c55e'; }}
-                >
-                  <i className="fa-brands fa-whatsapp" style={{ fontSize: '1.25rem', color: '#25D366' }}></i> Chat on WhatsApp
-                </a>
-              )}
+              <a
+                className="btn"
+                href={`https://wa.me/919904482945?text=${encodeURIComponent('Hello Maruti InfoSoft / StarReview AI Team! I would like to inquire about your services.')}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  width: '100%',
+                  padding: '13px 20px',
+                  borderRadius: '10px',
+                  background: '#ffffff',
+                  border: '1.5px solid #22c55e',
+                  color: '#15803d',
+                  fontWeight: 700,
+                  fontSize: '0.92rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 6px rgba(34, 197, 94, 0.12)'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.borderColor = '#16a34a'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#22c55e'; }}
+              >
+                <i className="fa-brands fa-whatsapp" style={{ fontSize: '1.25rem', color: '#25D366' }}></i> Chat on WhatsApp
+              </a>
             </div>
           </form>
         </PageShell>
@@ -3976,7 +3974,7 @@ export default function App() {
                     className="btn btn-light"
                     onClick={() => {
                       setRazorpayModal(false);
-                      window.open(`https://wa.me/${cfg.whatsappNumber || '919904482945'}?text=${encodeURIComponent(`Hi! I'd like to activate the ${paymentPlan.name} (${paymentPlan.period}) plan for StarReview AI.`)}`, '_blank', 'noopener,noreferrer');
+                      window.open(`https://wa.me/919904482945?text=${encodeURIComponent(`Hi! I'd like to activate the ${paymentPlan.name} (${paymentPlan.period}) plan for StarReview AI.`)}`, '_blank', 'noopener,noreferrer');
                     }}
                   >
                     Activate via WhatsApp
@@ -4328,15 +4326,15 @@ export default function App() {
 
       {page !== 'Review' && !isConsoleView && <Footer navigate={navigate} />}
 
-      {/* Floating Circular WhatsApp Button for Public Website */}
+      {/* Floating Circular WhatsApp Button for Public Website (Direct to Maruti InfoSoft) */}
       {!isConsoleView && page !== 'Review' && (
         <a
-          href={`https://wa.me/${cfg.whatsappNumber || '919904482945'}?text=${encodeURIComponent('Hello StarReview AI Team! I would like to inquire about your Google review management platform and plans.')}`}
+          href={`https://wa.me/919904482945?text=${encodeURIComponent('Hello Maruti InfoSoft / StarReview AI Team! I would like to inquire about your Google review management platform and plans.')}`}
           target="_blank"
           rel="noopener noreferrer"
           className="rf-floating-whatsapp-btn"
           title="Chat on WhatsApp (+91 99044 82945)"
-          aria-label="Chat on WhatsApp"
+          aria-label="Chat on WhatsApp (+91 99044 82945)"
         >
           <span className="rf-whatsapp-halo"></span>
           <i className="fa-brands fa-whatsapp"></i>

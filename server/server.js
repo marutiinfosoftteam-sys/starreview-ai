@@ -360,7 +360,7 @@ app.get('/api/health', (_req, res) => res.json({
   paymentsConfigured: razorpayReady()
 }));
 app.get('/api/public-config', (_req, res) => res.json({
-  whatsappNumber: (process.env.WHATSAPP_NUMBER || '').replace(/\D/g, '') || '919904482945',
+  whatsappNumber: '919904482945',
   publicUrl: process.env.PUBLIC_URL || null,
   languages: LANGUAGES, trialDays: TRIAL_DAYS
 }));

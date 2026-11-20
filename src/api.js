@@ -309,7 +309,9 @@ async function localDispatch(method, path, body) {
       status: 200,
       data: {
         publicUrl: window.location.origin,
-        whatsappNumber: db.businesses[0]?.whatsappNumber || '919904482945',
+        whatsappNumber: '919904482945',
+        companyPhone: '+91 99044 82945',
+        companyName: 'Maruti InfoSoft',
         languages: LANGUAGES,
         status: 'ok',
         provider: 'demo'

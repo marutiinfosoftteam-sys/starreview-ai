@@ -228,9 +228,12 @@ export default function CookiePolicyPage({ navigate }) {
             <p style={{ fontSize: '0.84rem', color: '#475569', lineHeight: 1.55, margin: '0 0 12px' }}>
               Our team is committed to complete data transparency. Feel free to contact us with any questions regarding cookies or data privacy.
             </p>
-            <div style={{ fontSize: '0.84rem', color: '#16a34a', fontWeight: 700 }}>
-              <a href="mailto:marutiinfosoftteam@gmail.com" style={{ color: '#16a34a', textDecoration: 'none' }}>
-                <i className="fa-solid fa-paper-plane" style={{ marginRight: 6 }}></i> marutiinfosoftteam@gmail.com
+            <div style={{ fontSize: '0.84rem', color: '#16a34a', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <a href="mailto:marutiinfosoftteam@gmail.com" style={{ color: '#16a34a', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <i className="fa-solid fa-paper-plane"></i> marutiinfosoftteam@gmail.com
+              </a>
+              <a href="https://wa.me/919904482945?text=Hello%20Maruti%20InfoSoft%2C%20I%20have%20a%20privacy%20or%20cookie%20inquiry." target="_blank" rel="noopener noreferrer" style={{ color: '#15803d', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <i className="fa-brands fa-whatsapp" style={{ color: '#25D366' }}></i> +91 99044 82945
               </a>
             </div>
           </div>

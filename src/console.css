@@ -1202,7 +1202,8 @@
   font-size: 1.75rem;
   box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
   cursor: pointer;
-  z-index: 999;
+  z-index: 99999;
+  pointer-events: auto;
   text-decoration: none;
   transition: transform 0.2s;
 }

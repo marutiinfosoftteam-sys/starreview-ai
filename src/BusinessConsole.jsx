@@ -6587,13 +6587,13 @@ export default function BusinessConsole({
           </div>
         )}
 
-        {/* Floating WhatsApp Bubble */}
+        {/* Floating WhatsApp Bubble (Direct to Maruti InfoSoft Support) */}
         <a
-          href={`https://wa.me/${business?.whatsappNumber || '919904482945'}?text=${encodeURIComponent("Hi! I need assistance with StarReview AI Business Console.")}`}
+          href={`https://wa.me/919904482945?text=${encodeURIComponent(`Hello Maruti InfoSoft Support! I need assistance with StarReview AI Business Console${business?.name ? ' for ' + business.name : ''}.`)}`}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className="bc-whatsapp-fab"
-          title="Chat with WhatsApp Concierge"
+          title="Chat with Maruti InfoSoft Support (+91 99044 82945)"
         >
           <i className="fa-brands fa-whatsapp"></i>
         </a>
